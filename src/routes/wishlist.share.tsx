@@ -110,6 +110,7 @@ function SharePage() {
       const fresh = decoded.filter((id) => !has(id));
 
       if (decoded.length > 0) merge(decoded, "shared_link");
+      setLastImport(fresh);
 
       trackEvent({
         name: "wishlist_import",
