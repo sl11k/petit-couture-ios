@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Lock, MapPin, Pencil } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Lock, MapPin, Pencil } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useBag } from "@/state/BagContext";
 import { useAddress, type Address } from "@/state/AddressContext";
