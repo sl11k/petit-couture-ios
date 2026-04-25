@@ -10,7 +10,7 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import hero from "@/assets/hero-campaign.jpg";
-import { categories } from "@/data/categories";
+import { categories, getProductForCategory } from "@/data/categories";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useBag } from "@/state/BagContext";
@@ -169,6 +169,82 @@ export function HomeScreen() {
               })}
             </div>
           </section>
+
+          {/* Wishlist insights panel */}
+          {(() => {
+            if (wishlist.count === 0) return null;
+            const priced = wishlist.items
+              .map((id) => {
+                if (!id.startsWith("product:") && !id.startsWith("category:")) return null;
+                const slug = id.split(":")[1];
+                const cat = categories.find((c) => c.slug === slug);
+                if (!cat) return null;
+                return getProductForCategory(slug);
+              })
+              .filter((p): p is NonNullable<typeof p> => p !== null);
+            const total = priced.reduce((sum, p) => sum + p.price, 0);
+            const currency = priced[0]?.currency ?? "SAR";
+            const avg = priced.length ? Math.round(total / priced.length) : 0;
+            const fmt = (n: number) =>
+              n.toLocaleString(lang === "ar" ? "ar-EG" : "en-US");
+            const labels = {
+              eyebrow: isRTL ? "نظرة عامة" : "WISHLIST INSIGHTS",
+              title: isRTL ? "قائمة رغباتك" : "Your wishlist",
+              items: isRTL ? "عناصر" : "Items",
+              total: isRTL ? "القيمة" : "Total value",
+              avg: isRTL ? "المتوسط" : "Avg. price",
+              cta: isRTL ? "عرض" : "VIEW",
+            };
+            return (
+              <section className="px-5 mt-8">
+                <Link
+                  to="/wishlist"
+                  className="block rounded-[24px] border border-gold-soft bg-cream-warm/60 p-5 active:scale-[0.99] transition shadow-soft"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] tracking-luxury text-gold-deep">
+                      {labels.eyebrow}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-foreground text-background text-[10px] tracking-luxury">
+                      <Heart className="h-[11px] w-[11px]" strokeWidth={1.8} fill="currentColor" />
+                      {labels.cta}
+                    </span>
+                  </div>
+                  <h3 className="mt-2 font-serif text-[22px] leading-tight text-foreground">
+                    {labels.title}
+                  </h3>
+                  <div className="mt-4 grid grid-cols-3 gap-2">
+                    <div className={isRTL ? "text-right" : "text-left"}>
+                      <p className="font-serif text-[24px] leading-none text-foreground tabular-nums">
+                        {fmt(wishlist.count)}
+                      </p>
+                      <p className="mt-1.5 text-[10px] tracking-luxury text-muted-foreground">
+                        {labels.items}
+                      </p>
+                    </div>
+                    <div className={isRTL ? "text-right" : "text-left"}>
+                      <p className="font-serif text-[24px] leading-none text-foreground tabular-nums">
+                        {priced.length ? fmt(total) : "—"}
+                      </p>
+                      <p className="mt-1.5 text-[10px] tracking-luxury text-muted-foreground">
+                        {labels.total}
+                        {priced.length ? ` · ${currency}` : ""}
+                      </p>
+                    </div>
+                    <div className={isRTL ? "text-right" : "text-left"}>
+                      <p className="font-serif text-[24px] leading-none text-foreground tabular-nums">
+                        {priced.length ? fmt(avg) : "—"}
+                      </p>
+                      <p className="mt-1.5 text-[10px] tracking-luxury text-muted-foreground">
+                        {labels.avg}
+                        {priced.length ? ` · ${currency}` : ""}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              </section>
+            );
+          })()}
 
           {/* Most Popular */}
           <section className="mt-12 px-5">
