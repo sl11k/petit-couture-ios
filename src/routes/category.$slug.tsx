@@ -4,6 +4,8 @@ import { ChevronLeft, ChevronRight, Heart, Share2, ShoppingBag, Truck, RotateCcw
 import { getProductForCategory, categories } from "@/data/categories";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
+import { useBag } from "@/state/BagContext";
+import { useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/category/$slug")({
   head: ({ params }) => {
@@ -35,10 +37,26 @@ function ProductDetails() {
   const [size, setSize] = useState(product.sizes[2]);
   const [color, setColor] = useState(product.colors[0].name);
   const wishlist = useWishlist();
+  const bag = useBag();
+  const navigate = useNavigate();
   const wishId = `product:${slug}`;
   const wished = wishlist.has(wishId);
   const setWished = () => {
     wishlist.toggle(wishId);
+  };
+
+  const addToBag = () => {
+    bag.add({
+      slug,
+      name: product.name,
+      brand: product.brand,
+      price: product.price,
+      currency: product.currency,
+      image: product.images[0],
+      size,
+      color,
+    });
+    navigate({ to: "/bag" });
   };
 
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
@@ -259,7 +277,7 @@ function ProductDetails() {
                 fill={wished ? "currentColor" : "none"}
               />
             </button>
-            <button className="flex-1 h-[56px] rounded-full bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft">
+            <button onClick={addToBag} className="flex-1 h-[56px] rounded-full bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft">
               <ShoppingBag className="h-[18px] w-[18px]" strokeWidth={1.6} />
               {t.product.addToBag} ·{" "}
               {product.price.toLocaleString(lang === "ar" ? "ar-EG" : "en-US")} {product.currency}

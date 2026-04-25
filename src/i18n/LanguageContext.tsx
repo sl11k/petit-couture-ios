@@ -31,6 +31,24 @@ type Dict = {
     shippingFree: string;
     returns: string;
   };
+  bag: {
+    title: string;
+    empty: string;
+    emptyCta: string;
+    item: string;
+    items: string;
+    size: string;
+    color: string;
+    qty: string;
+    remove: string;
+    subtotal: string;
+    shipping: string;
+    shippingFree: string;
+    estimatedTotal: string;
+    checkout: string;
+    secure: string;
+    continueShopping: string;
+  };
 };
 
 const dictionaries: Record<Lang, Dict> = {
@@ -78,6 +96,24 @@ const dictionaries: Record<Lang, Dict> = {
       shippingFree: "Complimentary delivery on orders over 500 SAR",
       returns: "Free returns within 14 days",
     },
+    bag: {
+      title: "Your Bag",
+      empty: "Your bag is empty",
+      emptyCta: "Discover the boutique",
+      item: "item",
+      items: "items",
+      size: "Size",
+      color: "Color",
+      qty: "Qty",
+      remove: "Remove",
+      subtotal: "Subtotal",
+      shipping: "Shipping",
+      shippingFree: "Complimentary",
+      estimatedTotal: "Estimated Total",
+      checkout: "Secure Checkout",
+      secure: "Encrypted payment · Tamara · Apple Pay",
+      continueShopping: "Continue shopping",
+    },
   },
   ar: {
     dir: "rtl",
@@ -122,6 +158,24 @@ const dictionaries: Record<Lang, Dict> = {
       tamara: (n, c) => `أو ٤ دفعات بقيمة ${n} ${c} مع تمارا`,
       shippingFree: "توصيل مجاني للطلبات فوق ٥٠٠ ريال",
       returns: "إرجاع مجاني خلال ١٤ يومًا",
+    },
+    bag: {
+      title: "حقيبتك",
+      empty: "حقيبتك فارغة",
+      emptyCta: "اكتشفي البوتيك",
+      item: "قطعة",
+      items: "قطع",
+      size: "المقاس",
+      color: "اللون",
+      qty: "الكمية",
+      remove: "إزالة",
+      subtotal: "المجموع الفرعي",
+      shipping: "الشحن",
+      shippingFree: "مجاني",
+      estimatedTotal: "الإجمالي المتوقّع",
+      checkout: "إتمام الشراء بأمان",
+      secure: "دفع مشفّر · تمارا · Apple Pay",
+      continueShopping: "متابعة التسوّق",
     },
   },
 };

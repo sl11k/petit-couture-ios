@@ -1,6 +1,7 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { WishlistProvider } from "@/state/WishlistContext";
+import { BagProvider } from "@/state/BagContext";
 
 import appCss from "../styles.css?url";
 
@@ -70,7 +71,9 @@ function RootComponent() {
   return (
     <LanguageProvider>
       <WishlistProvider>
-        <Outlet />
+        <BagProvider>
+          <Outlet />
+        </BagProvider>
       </WishlistProvider>
     </LanguageProvider>
   );
