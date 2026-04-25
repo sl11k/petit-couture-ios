@@ -13,6 +13,7 @@ import hero from "@/assets/hero-campaign.jpg";
 import { categories } from "@/data/categories";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
+import { useBag } from "@/state/BagContext";
 
 const HERO_ID = "hero:spring-15-off";
 
@@ -22,6 +23,7 @@ type NavKey = "menu" | "home" | "account" | "search" | "bag";
 export function HomeScreen() {
   const { t, lang, toggle, isRTL } = useLanguage();
   const wishlist = useWishlist();
+  const bag = useBag();
   const [age, setAge] = useState<AgeKey>("girl");
   const [nav, setNav] = useState<NavKey>("home");
   const [annIdx, setAnnIdx] = useState(0);
@@ -251,30 +253,34 @@ export function HomeScreen() {
             <div className="grid grid-cols-5">
               {(
                 [
-                  { k: "menu", Icon: Menu },
-                  { k: "home", Icon: HomeIcon },
-                  { k: "account", Icon: User },
-                  { k: "search", Icon: Search },
-                  { k: "bag", Icon: ShoppingBag },
-                ] as { k: NavKey; Icon: typeof Menu }[]
-              ).map(({ k, Icon }) => {
+                  { k: "menu", Icon: Menu, to: null },
+                  { k: "home", Icon: HomeIcon, to: "/" as const },
+                  { k: "account", Icon: User, to: null },
+                  { k: "search", Icon: Search, to: null },
+                  { k: "bag", Icon: ShoppingBag, to: "/bag" as const },
+                ] as { k: NavKey; Icon: typeof Menu; to: "/" | "/bag" | null }[]
+              ).map(({ k, Icon, to }) => {
                 const active = nav === k;
-                return (
-                  <button
-                    key={k}
-                    onClick={() => setNav(k)}
-                    className="relative h-[58px] flex flex-col items-center justify-center gap-1 active:scale-95 transition"
-                  >
+                const badge = k === "bag" && bag.count > 0 ? bag.count : null;
+                const inner = (
+                  <>
                     {active && (
                       <span className="absolute inset-x-3 inset-y-1 rounded-full bg-cream-warm" />
                     )}
-                    <Icon
-                      className={[
-                        "relative h-[20px] w-[20px]",
-                        active ? "text-gold-deep" : "text-gold",
-                      ].join(" ")}
-                      strokeWidth={active ? 1.8 : 1.5}
-                    />
+                    <div className="relative">
+                      <Icon
+                        className={[
+                          "h-[20px] w-[20px]",
+                          active ? "text-gold-deep" : "text-gold",
+                        ].join(" ")}
+                        strokeWidth={active ? 1.8 : 1.5}
+                      />
+                      {badge !== null && (
+                        <span className="absolute -top-1.5 -end-2 min-w-[16px] h-[16px] px-1 rounded-full bg-gold text-background text-[9.5px] font-medium grid place-items-center">
+                          {badge}
+                        </span>
+                      )}
+                    </div>
                     <span
                       className={[
                         "relative text-[11px] tracking-soft",
@@ -283,6 +289,24 @@ export function HomeScreen() {
                     >
                       {t.nav[k]}
                     </span>
+                  </>
+                );
+
+                const className =
+                  "relative h-[58px] flex flex-col items-center justify-center gap-1 active:scale-95 transition";
+
+                return to ? (
+                  <Link
+                    key={k}
+                    to={to}
+                    onClick={() => setNav(k)}
+                    className={className}
+                  >
+                    {inner}
+                  </Link>
+                ) : (
+                  <button key={k} onClick={() => setNav(k)} className={className}>
+                    {inner}
                   </button>
                 );
               })}
