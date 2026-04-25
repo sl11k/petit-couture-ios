@@ -99,6 +99,9 @@ type Dict = {
     edit: string;
     useThisAddress: string;
     bagEmptyDuringCheckout: string;
+    confirmEyebrow: string;
+    confirmTitle: string;
+    confirmAwaiting: string;
     steps: { bag: string; address: string; payment: string; stepOf: (n: number, total: number) => string };
     errors: {
       nameRequired: string;
@@ -230,6 +233,9 @@ const dictionaries: Record<Lang, Dict> = {
       edit: "Edit",
       useThisAddress: "Use this address",
       bagEmptyDuringCheckout: "Your bag is empty — add a piece to continue",
+      confirmEyebrow: "CONFIRMING DELIVERY",
+      confirmTitle: "Please review before placing your order",
+      confirmAwaiting: "Complete the address fields above to review your delivery summary.",
       steps: {
         bag: "Bag",
         address: "Address",
@@ -364,6 +370,9 @@ const dictionaries: Record<Lang, Dict> = {
       edit: "تعديل",
       useThisAddress: "استخدام هذا العنوان",
       bagEmptyDuringCheckout: "سلتك فارغة — أضف قطعة للمتابعة",
+      confirmEyebrow: "تأكيد التوصيل",
+      confirmTitle: "يرجى المراجعة قبل تأكيد طلبك",
+      confirmAwaiting: "أكمل حقول العنوان أعلاه لمراجعة ملخص التوصيل.",
       steps: {
         bag: "السلة",
         address: "العنوان",

@@ -1,10 +1,10 @@
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Check, ChevronLeft, ChevronRight, Lock, MapPin, Pencil } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Lock, MapPin, Pencil, ShieldCheck } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useBag } from "@/state/BagContext";
 import { useAddress, type Address } from "@/state/AddressContext";
@@ -201,6 +201,15 @@ function CheckoutPage() {
   };
 
   const errors = form.formState.errors;
+
+  // Live-confirmed address: when editing, derive from current form values via the
+  // strict zod schema; when reviewing, fall back to the persisted saved address.
+  const watched = form.watch();
+  const confirmedAddress: Address | null = useMemo(() => {
+    if (!editing) return address;
+    const parsed = schema.safeParse(watched);
+    return parsed.success ? (parsed.data as Address) : null;
+  }, [editing, address, watched, schema]);
 
   const fieldClass = (hasError: boolean) =>
     [
@@ -637,6 +646,101 @@ function CheckoutPage() {
                   : t.bag.continueShopping}
               </Link>
             </div>
+
+            {/* Confirmation summary — shown above the CTA whenever a valid address is in scope. */}
+            <section
+              aria-live="polite"
+              className={[
+                "rounded-[20px] p-5 transition",
+                confirmedAddress
+                  ? "border border-gold bg-cream-warm/50 shadow-soft"
+                  : "border border-dashed border-border bg-cream-warm/20",
+              ].join(" ")}
+            >
+              <div className="flex items-center gap-2">
+                <ShieldCheck
+                  className={[
+                    "h-[15px] w-[15px]",
+                    confirmedAddress ? "text-gold-deep" : "text-muted-foreground",
+                  ].join(" ")}
+                  strokeWidth={1.7}
+                />
+                <span
+                  className={[
+                    "text-[10.5px] tracking-luxury",
+                    confirmedAddress ? "text-gold-deep" : "text-muted-foreground",
+                  ].join(" ")}
+                >
+                  {lang === "en"
+                    ? t.checkout.confirmEyebrow
+                    : t.checkout.confirmEyebrow}
+                </span>
+              </div>
+
+              {confirmedAddress ? (
+                <>
+                  <p className="mt-3 font-serif text-[17px] text-foreground leading-snug">
+                    {confirmedAddress.fullName}
+                  </p>
+                  <p className="mt-1 text-[13px] text-foreground/85 leading-relaxed">
+                    {confirmedAddress.street}, {confirmedAddress.district}
+                    <br />
+                    {confirmedAddress.city} {confirmedAddress.postalCode}
+                  </p>
+
+                  <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-[12px]">
+                    <div>
+                      <dt className="text-[10px] tracking-luxury text-muted-foreground">
+                        {t.checkout.nationalAddress}
+                      </dt>
+                      <dd
+                        dir="ltr"
+                        className="mt-0.5 font-medium tracking-[0.18em] text-gold-deep tabular-nums"
+                      >
+                        {confirmedAddress.shortCode}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] tracking-luxury text-muted-foreground">
+                        {t.checkout.buildingNumber}
+                      </dt>
+                      <dd dir="ltr" className="mt-0.5 text-foreground/85 tabular-nums">
+                        {confirmedAddress.buildingNumber}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] tracking-luxury text-muted-foreground">
+                        {t.checkout.additionalNumber}
+                      </dt>
+                      <dd dir="ltr" className="mt-0.5 text-foreground/85 tabular-nums">
+                        {confirmedAddress.additionalNumber}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] tracking-luxury text-muted-foreground">
+                        {t.checkout.phone}
+                      </dt>
+                      <dd dir="ltr" className="mt-0.5 text-foreground/85 tabular-nums truncate">
+                        {confirmedAddress.phone}
+                      </dd>
+                    </div>
+                  </dl>
+
+                  <p className="mt-2 text-[11.5px] text-muted-foreground tracking-soft truncate" dir="ltr">
+                    {confirmedAddress.email}
+                  </p>
+                  {confirmedAddress.notes ? (
+                    <p className="mt-2 text-[11.5px] text-muted-foreground italic">
+                      “{confirmedAddress.notes}”
+                    </p>
+                  ) : null}
+                </>
+              ) : (
+                <p className="mt-2 text-[12px] text-muted-foreground tracking-soft">
+                  {t.checkout.confirmAwaiting}
+                </p>
+              )}
+            </section>
 
             {/* Sticky CTA */}
             <div className="fixed sm:absolute bottom-0 inset-x-0 max-w-[440px] mx-auto bg-background/95 backdrop-blur-md border-t border-border">
