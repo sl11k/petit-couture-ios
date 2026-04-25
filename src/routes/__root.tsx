@@ -2,6 +2,8 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/r
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { WishlistProvider } from "@/state/WishlistContext";
 import { BagProvider } from "@/state/BagContext";
+import { AddressProvider } from "@/state/AddressContext";
+import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
 
@@ -72,7 +74,10 @@ function RootComponent() {
     <LanguageProvider>
       <WishlistProvider>
         <BagProvider>
-          <Outlet />
+          <AddressProvider>
+            <Outlet />
+            <Toaster />
+          </AddressProvider>
         </BagProvider>
       </WishlistProvider>
     </LanguageProvider>
