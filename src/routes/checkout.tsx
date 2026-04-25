@@ -297,8 +297,10 @@ function CheckoutPage() {
                 </div>
               </div>
             </section>
+            )}
 
             {/* Saudi National Address */}
+            {editing && (
             <section className="space-y-3">
               <div className="flex items-center gap-2">
                 <MapPin className="h-[15px] w-[15px] text-gold-deep" strokeWidth={1.6} />
