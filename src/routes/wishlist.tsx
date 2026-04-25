@@ -1,10 +1,49 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, Heart, Sparkles, Trash2 } from "lucide-react";
-import { useMemo } from "react";
+import { ChevronLeft, ChevronRight, Heart, Share2, Sparkles, Trash2 } from "lucide-react";
+import { useCallback, useMemo } from "react";
+import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { categories, getProductForCategory } from "@/data/categories";
 import hero from "@/assets/hero-campaign.jpg";
+
+function buildShareUrl(ids: string[]): string {
+  const origin =
+    typeof window !== "undefined" ? window.location.origin : "https://maisonnet.app";
+  const params = new URLSearchParams({ ids: ids.join(",") });
+  return `${origin}/wishlist/share?${params.toString()}`;
+}
+
+async function shareOrCopy(opts: {
+  url: string;
+  title: string;
+  text: string;
+  successMsg: string;
+  failMsg: string;
+  isRTL: boolean;
+}) {
+  const { url, title, text, successMsg, failMsg, isRTL } = opts;
+  const position = isRTL ? ("top-left" as const) : ("top-right" as const);
+  const nav = typeof navigator !== "undefined" ? navigator : undefined;
+
+  if (nav && typeof nav.share === "function") {
+    try {
+      await nav.share({ title, text, url });
+      return;
+    } catch (err) {
+      // User cancellation -> stay silent
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      // Fall through to clipboard
+    }
+  }
+
+  try {
+    await nav?.clipboard?.writeText(url);
+    toast(successMsg, { position, duration: 1800 });
+  } catch {
+    toast(failMsg, { position, duration: 2200 });
+  }
+}
 
 export const Route = createFileRoute("/wishlist")({
   head: () => ({
@@ -41,6 +80,31 @@ function WishlistPage() {
   const { t, lang, isRTL } = useLanguage();
   const wishlist = useWishlist();
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
+
+  const shareItem = useCallback(
+    (id: string, name: string) => {
+      void shareOrCopy({
+        url: buildShareUrl([id]),
+        title: t.wishlist.shareTitle,
+        text: name,
+        successMsg: t.wishlist.linkCopied,
+        failMsg: t.wishlist.shareFailed,
+        isRTL,
+      });
+    },
+    [t.wishlist, isRTL],
+  );
+
+  const shareAll = useCallback(() => {
+    void shareOrCopy({
+      url: buildShareUrl(wishlist.items),
+      title: t.wishlist.shareTitle,
+      text: t.wishlist.shareText,
+      successMsg: t.wishlist.linkCopied,
+      failMsg: t.wishlist.shareFailed,
+      isRTL,
+    });
+  }, [wishlist.items, t.wishlist, isRTL]);
 
   const resolved = useMemo<ResolvedItem[]>(() => {
     return wishlist.items
@@ -107,12 +171,21 @@ function WishlistPage() {
             {lang === "en" ? t.wishlist.eyebrow : t.wishlist.eyebrow}
           </span>
           {resolved.length > 0 ? (
-            <button
-              onClick={() => wishlist.clear()}
-              className="h-10 px-3 -me-2 grid place-items-center rounded-full text-[10.5px] tracking-luxury text-gold-deep active:scale-95 transition"
-            >
-              {lang === "en" ? t.wishlist.clearAll.toUpperCase() : t.wishlist.clearAll}
-            </button>
+            <div className="-me-2 flex items-center gap-1">
+              <button
+                onClick={shareAll}
+                aria-label={t.wishlist.shareAll}
+                className="h-10 w-10 grid place-items-center rounded-full text-gold-deep active:scale-95 transition"
+              >
+                <Share2 className="h-[18px] w-[18px]" strokeWidth={1.5} />
+              </button>
+              <button
+                onClick={() => wishlist.clear()}
+                className="h-10 px-3 grid place-items-center rounded-full text-[10.5px] tracking-luxury text-gold-deep active:scale-95 transition"
+              >
+                {lang === "en" ? t.wishlist.clearAll.toUpperCase() : t.wishlist.clearAll}
+              </button>
+            </div>
           ) : (
             <span className="h-10 w-10" />
           )}
@@ -228,6 +301,13 @@ function WishlistPage() {
                               {t.wishlist.view}
                             </Link>
                           )}
+                          <button
+                            aria-label={t.wishlist.share}
+                            onClick={() => shareItem(it.id, it.name)}
+                            className="h-9 w-9 rounded-full border border-border text-muted-foreground hover:text-foreground active:scale-95 transition grid place-items-center"
+                          >
+                            <Share2 className="h-[13px] w-[13px]" strokeWidth={1.6} />
+                          </button>
                           <button
                             aria-label={ariaLabel}
                             onClick={() => wishlist.remove(it.id)}

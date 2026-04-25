@@ -34,6 +34,15 @@ type Dict = {
     remove: string;
     clearAll: string;
     cleared: string;
+    share: string;
+    shareAll: string;
+    linkCopied: string;
+    shareTitle: string;
+    shareText: string;
+    shareFailed: string;
+    importedOne: string;
+    importedMany: (n: number) => string;
+    importedNone: string;
   };
   product: {
     backToBoutique: string;
@@ -138,6 +147,15 @@ const dictionaries: Record<Lang, Dict> = {
       remove: "Remove",
       clearAll: "Clear all",
       cleared: "Wishlist cleared",
+      share: "Share",
+      shareAll: "Share wishlist",
+      linkCopied: "Share link copied",
+      shareTitle: "My Maisonnét wishlist",
+      shareText: "Take a look at the pieces I'm loving on Maisonnét.",
+      shareFailed: "Couldn't share — link copied instead",
+      importedOne: "1 piece added to your wishlist",
+      importedMany: (n) => `${n} pieces added to your wishlist`,
+      importedNone: "Nothing new to add — already saved",
     },
     categories: {
       "best-sellers": "Best Sellers",
@@ -252,6 +270,15 @@ const dictionaries: Record<Lang, Dict> = {
       remove: "إزالة",
       clearAll: "مسح الكل",
       cleared: "تم مسح المفضلة",
+      share: "مشاركة",
+      shareAll: "مشاركة المفضلة",
+      linkCopied: "تم نسخ رابط المشاركة",
+      shareTitle: "قائمة مفضلتي في ميزون",
+      shareText: "ألقِ نظرة على القطع التي أحبّها في ميزون.",
+      shareFailed: "تعذّرت المشاركة — تم نسخ الرابط بدلاً من ذلك",
+      importedOne: "تمت إضافة قطعة واحدة إلى مفضلتك",
+      importedMany: (n) => `تمت إضافة ${n} قطع إلى مفضلتك`,
+      importedNone: "لا جديد للإضافة — محفوظة مسبقًا",
     },
     categories: {
       "best-sellers": "الأكثر مبيعًا",

@@ -13,6 +13,7 @@ import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as BagRouteImport } from './routes/bag'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WishlistShareRouteImport } from './routes/wishlist.share'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 
 const WishlistRoute = WishlistRouteImport.update({
@@ -35,6 +36,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WishlistShareRoute = WishlistShareRouteImport.update({
+  id: '/share',
+  path: '/share',
+  getParentRoute: () => WishlistRoute,
+} as any)
 const CategorySlugRoute = CategorySlugRouteImport.update({
   id: '/category/$slug',
   path: '/category/$slug',
@@ -45,37 +51,59 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/bag': typeof BagRoute
   '/checkout': typeof CheckoutRoute
-  '/wishlist': typeof WishlistRoute
+  '/wishlist': typeof WishlistRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
+  '/wishlist/share': typeof WishlistShareRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/bag': typeof BagRoute
   '/checkout': typeof CheckoutRoute
-  '/wishlist': typeof WishlistRoute
+  '/wishlist': typeof WishlistRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
+  '/wishlist/share': typeof WishlistShareRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/bag': typeof BagRoute
   '/checkout': typeof CheckoutRoute
-  '/wishlist': typeof WishlistRoute
+  '/wishlist': typeof WishlistRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
+  '/wishlist/share': typeof WishlistShareRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/bag' | '/checkout' | '/wishlist' | '/category/$slug'
+  fullPaths:
+    | '/'
+    | '/bag'
+    | '/checkout'
+    | '/wishlist'
+    | '/category/$slug'
+    | '/wishlist/share'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/bag' | '/checkout' | '/wishlist' | '/category/$slug'
-  id: '__root__' | '/' | '/bag' | '/checkout' | '/wishlist' | '/category/$slug'
+  to:
+    | '/'
+    | '/bag'
+    | '/checkout'
+    | '/wishlist'
+    | '/category/$slug'
+    | '/wishlist/share'
+  id:
+    | '__root__'
+    | '/'
+    | '/bag'
+    | '/checkout'
+    | '/wishlist'
+    | '/category/$slug'
+    | '/wishlist/share'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BagRoute: typeof BagRoute
   CheckoutRoute: typeof CheckoutRoute
-  WishlistRoute: typeof WishlistRoute
+  WishlistRoute: typeof WishlistRouteWithChildren
   CategorySlugRoute: typeof CategorySlugRoute
 }
 
@@ -109,6 +137,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/wishlist/share': {
+      id: '/wishlist/share'
+      path: '/share'
+      fullPath: '/wishlist/share'
+      preLoaderRoute: typeof WishlistShareRouteImport
+      parentRoute: typeof WishlistRoute
+    }
     '/category/$slug': {
       id: '/category/$slug'
       path: '/category/$slug'
@@ -119,22 +154,25 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface WishlistRouteChildren {
+  WishlistShareRoute: typeof WishlistShareRoute
+}
+
+const WishlistRouteChildren: WishlistRouteChildren = {
+  WishlistShareRoute: WishlistShareRoute,
+}
+
+const WishlistRouteWithChildren = WishlistRoute._addFileChildren(
+  WishlistRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BagRoute: BagRoute,
   CheckoutRoute: CheckoutRoute,
-  WishlistRoute: WishlistRoute,
+  WishlistRoute: WishlistRouteWithChildren,
   CategorySlugRoute: CategorySlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
