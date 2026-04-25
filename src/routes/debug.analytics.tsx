@@ -111,6 +111,30 @@ function AnalyticsDebug() {
   // Newest first, capped to 50.
   const recent = events.slice(-50).reverse();
 
+  // ─── Session funnel ───────────────────────────────────────────────────────
+  // Aggregate the in-memory buffer (this session, capped at 200) into a tiny
+  // funnel summary. `clears` count clear events; `cleared` totals the number
+  // of items removed by those clears so net growth stays accurate.
+  const funnel = useMemo(() => {
+    let adds = 0;
+    let removes = 0;
+    let clears = 0;
+    let cleared = 0;
+    let firstTs: number | null = null;
+    let lastTs: number | null = null;
+    for (const ev of events) {
+      if (firstTs === null || ev.ts < firstTs) firstTs = ev.ts;
+      if (lastTs === null || ev.ts > lastTs) lastTs = ev.ts;
+      if (ev.name === "wishlist_add") adds += 1;
+      else if (ev.name === "wishlist_remove") removes += 1;
+      else if (ev.name === "wishlist_clear") {
+        clears += 1;
+        cleared += ev.previousSize;
+      }
+    }
+    return { adds, removes, clears, cleared, net: adds - removes - cleared, firstTs, lastTs };
+  }, [events]);
+
   const labels = {
     eyebrow: isRTL ? "تصحيح" : "DEBUG",
     title: isRTL ? "أحداث المفضلة" : "Wishlist analytics",
@@ -122,6 +146,18 @@ function AnalyticsDebug() {
       ? "تفاعل مع المفضلة لرؤية الأحداث هنا في الوقت الفعلي."
       : "Interact with the wishlist — events stream here in real time.",
     back: isRTL ? "العودة" : "Back",
+    funnelEyebrow: isRTL ? "ملخص الجلسة" : "SESSION FUNNEL",
+    funnelAdds: isRTL ? "إضافات" : "Adds",
+    funnelRemoves: isRTL ? "إزالات" : "Removes",
+    funnelClears: isRTL ? "مسح" : "Clears",
+    funnelNet: isRTL ? "صافي النمو" : "Net growth",
+    funnelClearedItems: (n: number) =>
+      isRTL ? `(${n} عنصر)` : `(${n} item${n === 1 ? "" : "s"})`,
+    funnelWindow: (from: number, to: number) =>
+      isRTL
+        ? `من ${formatTime(from, locale)} إلى ${formatTime(to, locale)}`
+        : `${formatTime(from, locale)} → ${formatTime(to, locale)}`,
+    funnelEmpty: isRTL ? "لا توجد بيانات بعد" : "No data yet",
   };
 
   return (
