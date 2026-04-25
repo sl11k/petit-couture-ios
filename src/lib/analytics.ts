@@ -60,6 +60,14 @@ export type AnalyticsEvent =
       ts: number;
       previousSize: number;
       nextSize: number;
+    }
+  | {
+      name: "wishlist_impression";
+      ts: number;
+      itemId: string;
+      itemKind: WishlistItemKind;
+      itemSlug: string | null;
+      source: WishlistSource;
     };
 
 const MAX_BUFFER = 200;
