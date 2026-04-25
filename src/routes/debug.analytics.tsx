@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Activity } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
@@ -111,6 +111,30 @@ function AnalyticsDebug() {
   // Newest first, capped to 50.
   const recent = events.slice(-50).reverse();
 
+  // ─── Session funnel ───────────────────────────────────────────────────────
+  // Aggregate the in-memory buffer (this session, capped at 200) into a tiny
+  // funnel summary. `clears` count clear events; `cleared` totals the number
+  // of items removed by those clears so net growth stays accurate.
+  const funnel = useMemo(() => {
+    let adds = 0;
+    let removes = 0;
+    let clears = 0;
+    let cleared = 0;
+    let firstTs: number | null = null;
+    let lastTs: number | null = null;
+    for (const ev of events) {
+      if (firstTs === null || ev.ts < firstTs) firstTs = ev.ts;
+      if (lastTs === null || ev.ts > lastTs) lastTs = ev.ts;
+      if (ev.name === "wishlist_add") adds += 1;
+      else if (ev.name === "wishlist_remove") removes += 1;
+      else if (ev.name === "wishlist_clear") {
+        clears += 1;
+        cleared += ev.previousSize;
+      }
+    }
+    return { adds, removes, clears, cleared, net: adds - removes - cleared, firstTs, lastTs };
+  }, [events]);
+
   const labels = {
     eyebrow: isRTL ? "تصحيح" : "DEBUG",
     title: isRTL ? "أحداث المفضلة" : "Wishlist analytics",
@@ -122,6 +146,18 @@ function AnalyticsDebug() {
       ? "تفاعل مع المفضلة لرؤية الأحداث هنا في الوقت الفعلي."
       : "Interact with the wishlist — events stream here in real time.",
     back: isRTL ? "العودة" : "Back",
+    funnelEyebrow: isRTL ? "ملخص الجلسة" : "SESSION FUNNEL",
+    funnelAdds: isRTL ? "إضافات" : "Adds",
+    funnelRemoves: isRTL ? "إزالات" : "Removes",
+    funnelClears: isRTL ? "مسح" : "Clears",
+    funnelNet: isRTL ? "صافي النمو" : "Net growth",
+    funnelClearedItems: (n: number) =>
+      isRTL ? `(${n} عنصر)` : `(${n} item${n === 1 ? "" : "s"})`,
+    funnelWindow: (from: number, to: number) =>
+      isRTL
+        ? `من ${formatTime(from, locale)} إلى ${formatTime(to, locale)}`
+        : `${formatTime(from, locale)} → ${formatTime(to, locale)}`,
+    funnelEmpty: isRTL ? "لا توجد بيانات بعد" : "No data yet",
   };
 
   return (
@@ -163,6 +199,64 @@ function AnalyticsDebug() {
               <p className="text-[11px] tracking-luxury text-gold-deep mt-0.5 tabular-nums">
                 {labels.subtitle}
               </p>
+            </div>
+          </div>
+
+          {/* Session funnel summary */}
+          <div className="mt-5 rounded-[20px] border border-border bg-background px-4 py-4">
+            <div className={["flex items-baseline justify-between gap-3", isRTL ? "flex-row-reverse" : ""].join(" ")}>
+              <span className="text-[10.5px] tracking-luxury text-gold-deep">
+                {labels.funnelEyebrow}
+              </span>
+              <span className="text-[10.5px] text-muted-foreground tabular-nums" dir="ltr">
+                {funnel.firstTs !== null && funnel.lastTs !== null
+                  ? labels.funnelWindow(funnel.firstTs, funnel.lastTs)
+                  : labels.funnelEmpty}
+              </span>
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              <div className="rounded-[14px] border border-border bg-cream-warm/40 px-3 py-2.5 text-center">
+                <p className="text-[10px] tracking-luxury text-gold-deep">{labels.funnelAdds}</p>
+                <p className="mt-1 font-serif text-[22px] leading-none text-foreground tabular-nums">
+                  {funnel.adds}
+                </p>
+              </div>
+              <div className="rounded-[14px] border border-border bg-background px-3 py-2.5 text-center">
+                <p className="text-[10px] tracking-luxury text-muted-foreground">{labels.funnelRemoves}</p>
+                <p className="mt-1 font-serif text-[22px] leading-none text-foreground tabular-nums">
+                  {funnel.removes}
+                </p>
+              </div>
+              <div className="rounded-[14px] border border-border bg-background px-3 py-2.5 text-center">
+                <p className="text-[10px] tracking-luxury text-muted-foreground">{labels.funnelClears}</p>
+                <p className="mt-1 font-serif text-[22px] leading-none text-foreground tabular-nums">
+                  {funnel.clears}
+                </p>
+                {funnel.cleared > 0 && (
+                  <p className="mt-0.5 text-[10px] text-muted-foreground tabular-nums">
+                    {labels.funnelClearedItems(funnel.cleared)}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className={["mt-3 flex items-baseline justify-between gap-3 pt-3 border-t border-border", isRTL ? "flex-row-reverse" : ""].join(" ")}>
+              <span className="text-[11px] tracking-luxury text-foreground/70">
+                {labels.funnelNet}
+              </span>
+              <span
+                className={[
+                  "font-serif text-[24px] leading-none tabular-nums",
+                  funnel.net > 0
+                    ? "text-gold-deep"
+                    : funnel.net < 0
+                      ? "text-foreground/80"
+                      : "text-foreground/60",
+                ].join(" ")}
+                dir="ltr"
+              >
+                {funnel.net > 0 ? "+" : ""}
+                {funnel.net}
+              </span>
             </div>
           </div>
 
