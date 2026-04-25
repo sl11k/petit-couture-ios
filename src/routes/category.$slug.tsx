@@ -312,6 +312,11 @@ function ProductDetails() {
           <div className="mx-auto mb-2 h-[5px] w-[120px] rounded-full bg-foreground/80" />
         </div>
       </div>
+      <ShareSheet
+        open={sharePayload !== null}
+        onClose={() => setSharePayload(null)}
+        payload={sharePayload}
+      />
     </div>
   );
 }
