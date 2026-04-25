@@ -47,6 +47,30 @@ type Dict = {
     importedMany: (n: number) => string;
     importedNone: string;
   };
+  account: {
+    eyebrow: string;
+    titleSignedOut: string;
+    titleSignedIn: string;
+    subtitle: string;
+    syncBannerTitle: string;
+    syncBannerBody: string;
+    syncBannerCta: string;
+    email: string;
+    password: string;
+    signIn: string;
+    signUp: string;
+    signOut: string;
+    switchToSignUp: string;
+    switchToSignIn: string;
+    signedInAs: string;
+    syncedCount: (n: number) => string;
+    error: string;
+    invalidCredentials: string;
+    weakPassword: string;
+    emailInUse: string;
+    welcome: (name: string) => string;
+    mergedOnSignIn: (added: number) => string;
+  };
   product: {
     backToBoutique: string;
     color: string;
