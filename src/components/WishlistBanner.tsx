@@ -15,6 +15,8 @@ type BannerEvent = {
 
 const VISIBLE_MS = 4000;
 const FADE_MS = 220;
+/** Coalesce rapid taps on the same item within this window. */
+const DEBOUNCE_MS = 350;
 
 function resolveName(id: string, heroLabel: string): string | null {
   if (id.startsWith("product:") || id.startsWith("category:")) {
