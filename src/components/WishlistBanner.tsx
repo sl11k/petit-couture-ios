@@ -7,7 +7,10 @@ import { categories, getProductForCategory } from "@/data/categories";
 type BannerEvent = {
   id: string;
   kind: "added" | "removed";
-  message: string;
+  /** Localized eyebrow label, e.g. "Added to wishlist". */
+  label: string;
+  /** Optional resolved item name to render in serif italic. */
+  itemName: string | null;
   /** Snapshot of items right BEFORE this change — used by Undo to revert. */
   prevItems: string[];
   ts: number;
