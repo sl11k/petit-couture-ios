@@ -1,5 +1,6 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { LanguageProvider } from "@/i18n/LanguageContext";
+import { WishlistProvider } from "@/state/WishlistContext";
 
 import appCss from "../styles.css?url";
 
@@ -68,7 +69,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <LanguageProvider>
-      <Outlet />
+      <WishlistProvider>
+        <Outlet />
+      </WishlistProvider>
     </LanguageProvider>
   );
 }

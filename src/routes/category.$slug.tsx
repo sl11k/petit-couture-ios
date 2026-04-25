@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight, Heart, Share2, ShoppingBag, Truck, RotateCcw } from "lucide-react";
 import { getProductForCategory, categories } from "@/data/categories";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useWishlist } from "@/state/WishlistContext";
 
 export const Route = createFileRoute("/category/$slug")({
   head: ({ params }) => {
@@ -33,7 +34,10 @@ function ProductDetails() {
   const [activeImg, setActiveImg] = useState(0);
   const [size, setSize] = useState(product.sizes[2]);
   const [color, setColor] = useState(product.colors[0].name);
-  const [wished, setWished] = useState(false);
+  const wishlist = useWishlist();
+  const wishId = `product:${slug}`;
+  const wished = wishlist.has(wishId);
+  const setWished = () => wishlist.toggle(wishId);
 
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
 
@@ -82,7 +86,7 @@ function ProductDetails() {
               />
               <button
                 aria-label={isRTL ? "أضف إلى المفضلة" : "Add to wishlist"}
-                onClick={() => setWished((v) => !v)}
+                onClick={setWished}
                 className={[
                   "absolute top-4 h-11 w-11 rounded-full bg-background/90 backdrop-blur grid place-items-center border border-gold-soft text-gold-deep active:scale-95 transition",
                   isRTL ? "left-4" : "right-4",
@@ -244,7 +248,7 @@ function ProductDetails() {
           <div className="px-5 pt-3 pb-6 flex items-center gap-3">
             <button
               aria-label={isRTL ? "أضف إلى المفضلة" : "Add to wishlist"}
-              onClick={() => setWished((v) => !v)}
+              onClick={setWished}
               className="h-[56px] w-[56px] rounded-full border border-gold-soft text-gold-deep grid place-items-center active:scale-95 transition shrink-0"
             >
               <Heart

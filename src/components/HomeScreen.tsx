@@ -12,12 +12,16 @@ import {
 import hero from "@/assets/hero-campaign.jpg";
 import { categories } from "@/data/categories";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useWishlist } from "@/state/WishlistContext";
+
+const HERO_ID = "hero:spring-15-off";
 
 type AgeKey = "baby" | "girl" | "boy";
 type NavKey = "menu" | "home" | "account" | "search" | "bag";
 
 export function HomeScreen() {
   const { t, lang, toggle, isRTL } = useLanguage();
+  const wishlist = useWishlist();
   const [age, setAge] = useState<AgeKey>("girl");
   const [nav, setNav] = useState<NavKey>("home");
   const [annIdx, setAnnIdx] = useState(0);
@@ -69,9 +73,20 @@ export function HomeScreen() {
 
           <button
             aria-label={isRTL ? "المفضلة" : "Wishlist"}
-            className="h-10 w-10 -me-2 grid place-items-center rounded-full border border-gold-soft text-gold-deep active:scale-95 transition"
+            aria-pressed={wishlist.has(HERO_ID)}
+            onClick={() => wishlist.toggle(HERO_ID)}
+            className="relative h-10 w-10 -me-2 grid place-items-center rounded-full border border-gold-soft text-gold-deep active:scale-95 transition"
           >
-            <Heart className="h-[18px] w-[18px]" strokeWidth={1.5} />
+            <Heart
+              className="h-[18px] w-[18px]"
+              strokeWidth={1.5}
+              fill={wishlist.has(HERO_ID) ? "currentColor" : "none"}
+            />
+            {wishlist.count > 0 && (
+              <span className="absolute -top-1 -end-1 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-background text-[10px] font-medium grid place-items-center">
+                {wishlist.count}
+              </span>
+            )}
           </button>
         </header>
 
@@ -154,28 +169,57 @@ export function HomeScreen() {
             </div>
 
             <div className="grid grid-cols-2 gap-x-4 gap-y-8 mt-7">
-              {categories.map((c) => (
-                <Link
-                  key={c.slug}
-                  to="/category/$slug"
-                  params={{ slug: c.slug }}
-                  className="group flex flex-col items-center text-left active:scale-[0.99] transition"
-                >
-                  <div className="w-full overflow-hidden rounded-[22px] bg-cream-warm aspect-[1.35/1]">
-                    <img
-                      src={c.img}
-                      alt={t.categories[c.slug] ?? c.name}
-                      loading="lazy"
-                      width={768}
-                      height={576}
-                      className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04] group-active:opacity-90"
-                    />
-                  </div>
-                  <span className="mt-3 text-[15px] text-foreground/85 font-medium tracking-tight text-center">
-                    {t.categories[c.slug] ?? c.name}
-                  </span>
-                </Link>
-              ))}
+              {categories.map((c) => {
+                const wishId = `category:${c.slug}`;
+                const liked = wishlist.has(wishId);
+                return (
+                  <Link
+                    key={c.slug}
+                    to="/category/$slug"
+                    params={{ slug: c.slug }}
+                    className="group flex flex-col items-center text-left active:scale-[0.99] transition"
+                  >
+                    <div className="relative w-full overflow-hidden rounded-[22px] bg-cream-warm aspect-[1.35/1]">
+                      <img
+                        src={c.img}
+                        alt={t.categories[c.slug] ?? c.name}
+                        loading="lazy"
+                        width={768}
+                        height={576}
+                        className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04] group-active:opacity-90"
+                      />
+                      <button
+                        type="button"
+                        aria-label={
+                          isRTL
+                            ? liked
+                              ? "إزالة من المفضلة"
+                              : "أضف إلى المفضلة"
+                            : liked
+                              ? "Remove from wishlist"
+                              : "Add to wishlist"
+                        }
+                        aria-pressed={liked}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          wishlist.toggle(wishId);
+                        }}
+                        className="absolute top-2.5 end-2.5 h-9 w-9 rounded-full bg-background/85 backdrop-blur grid place-items-center text-gold-deep border border-gold-soft active:scale-90 transition"
+                      >
+                        <Heart
+                          className="h-[15px] w-[15px]"
+                          strokeWidth={1.6}
+                          fill={liked ? "currentColor" : "none"}
+                        />
+                      </button>
+                    </div>
+                    <span className="mt-3 text-[15px] text-foreground/85 font-medium tracking-tight text-center">
+                      {t.categories[c.slug] ?? c.name}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
 
             <div className="mt-10 flex justify-center">
