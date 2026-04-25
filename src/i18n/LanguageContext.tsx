@@ -20,7 +20,21 @@ type Dict = {
   footer: string;
   nav: { menu: string; home: string; account: string; search: string; bag: string };
   categories: Record<string, string>;
-  wishlist: { added: string; removed: string };
+  wishlist: {
+    added: string;
+    removed: string;
+    title: string;
+    eyebrow: string;
+    empty: string;
+    emptySubtitle: string;
+    emptyCta: string;
+    item: string;
+    items: string;
+    view: string;
+    remove: string;
+    clearAll: string;
+    cleared: string;
+  };
   product: {
     backToBoutique: string;
     color: string;
@@ -110,7 +124,21 @@ const dictionaries: Record<Lang, Dict> = {
     shopAll: "SHOP ALL",
     footer: "Maison · Riyadh · Dubai · Paris",
     nav: { menu: "Menu", home: "Home", account: "Account", search: "Search", bag: "Bag" },
-    wishlist: { added: "Added to wishlist", removed: "Removed from wishlist" },
+    wishlist: {
+      added: "Added to wishlist",
+      removed: "Removed from wishlist",
+      title: "Wishlist",
+      eyebrow: "SAVED PIECES",
+      empty: "Your wishlist is empty",
+      emptySubtitle: "Tap the heart on any piece you love to save it here.",
+      emptyCta: "Discover the boutique",
+      item: "saved item",
+      items: "saved items",
+      view: "View",
+      remove: "Remove",
+      clearAll: "Clear all",
+      cleared: "Wishlist cleared",
+    },
     categories: {
       "best-sellers": "Best Sellers",
       "new-in": "New In",
@@ -210,7 +238,21 @@ const dictionaries: Record<Lang, Dict> = {
     shopAll: "تسوّق الكل",
     footer: "ميزون · الرياض · دبي · باريس",
     nav: { menu: "القائمة", home: "الرئيسية", account: "الحساب", search: "البحث", bag: "الحقيبة" },
-    wishlist: { added: "أُضيف إلى المفضلة", removed: "أُزيل من المفضلة" },
+    wishlist: {
+      added: "أُضيف إلى المفضلة",
+      removed: "أُزيل من المفضلة",
+      title: "المفضلة",
+      eyebrow: "القطع المحفوظة",
+      empty: "قائمة المفضلة فارغة",
+      emptySubtitle: "اضغطي على القلب لحفظ القطع التي تعجبك هنا.",
+      emptyCta: "اكتشفي البوتيك",
+      item: "قطعة محفوظة",
+      items: "قطع محفوظة",
+      view: "عرض",
+      remove: "إزالة",
+      clearAll: "مسح الكل",
+      cleared: "تم مسح المفضلة",
+    },
     categories: {
       "best-sellers": "الأكثر مبيعًا",
       "new-in": "وصل حديثًا",
