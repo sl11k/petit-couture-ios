@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronLeft, Heart, Share2, ShoppingBag, Truck, RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, Heart, Share2, ShoppingBag, Truck, RotateCcw } from "lucide-react";
 import { getProductForCategory, categories } from "@/data/categories";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export const Route = createFileRoute("/category/$slug")({
   head: ({ params }) => {
