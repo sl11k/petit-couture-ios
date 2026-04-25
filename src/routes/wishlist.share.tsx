@@ -7,6 +7,7 @@ import { Heart } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { categories } from "@/data/categories";
+import { trackEvent } from "@/lib/analytics";
 
 // Accepts ?ids=cat-slug,prod-slug,full:id  -- compact, human-readable
 const searchSchema = z.object({
@@ -73,7 +74,15 @@ function SharePage() {
     const decoded = decodeIds(ids);
     const fresh = decoded.filter((id) => !has(id));
 
-    if (decoded.length > 0) merge(decoded);
+    if (decoded.length > 0) merge(decoded, "shared_link");
+
+    trackEvent({
+      name: "wishlist_import",
+      ts: Date.now(),
+      requested: decoded.length,
+      added: fresh.length,
+      source: "shared_link",
+    });
 
     const w = t.wishlist;
     const message =

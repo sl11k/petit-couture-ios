@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { categories, getProductForCategory } from "@/data/categories";
+import { trackEvent } from "@/lib/analytics";
 import hero from "@/assets/hero-campaign.jpg";
 
 function buildShareUrl(ids: string[]): string {
@@ -83,6 +84,13 @@ function WishlistPage() {
 
   const shareItem = useCallback(
     (id: string, name: string) => {
+      trackEvent({
+        name: "wishlist_share",
+        ts: Date.now(),
+        scope: "item",
+        itemCount: 1,
+        source: "wishlist_screen",
+      });
       void shareOrCopy({
         url: buildShareUrl([id]),
         title: t.wishlist.shareTitle,
@@ -96,6 +104,13 @@ function WishlistPage() {
   );
 
   const shareAll = useCallback(() => {
+    trackEvent({
+      name: "wishlist_share",
+      ts: Date.now(),
+      scope: "all",
+      itemCount: wishlist.items.length,
+      source: "wishlist_screen",
+    });
     void shareOrCopy({
       url: buildShareUrl(wishlist.items),
       title: t.wishlist.shareTitle,
@@ -180,7 +195,7 @@ function WishlistPage() {
                 <Share2 className="h-[18px] w-[18px]" strokeWidth={1.5} />
               </button>
               <button
-                onClick={() => wishlist.clear()}
+                onClick={() => wishlist.clear("wishlist_screen")}
                 className="h-10 px-3 grid place-items-center rounded-full text-[10.5px] tracking-luxury text-gold-deep active:scale-95 transition"
               >
                 {lang === "en" ? t.wishlist.clearAll.toUpperCase() : t.wishlist.clearAll}
@@ -310,7 +325,7 @@ function WishlistPage() {
                           </button>
                           <button
                             aria-label={ariaLabel}
-                            onClick={() => wishlist.remove(it.id)}
+                            onClick={() => wishlist.remove(it.id, "wishlist_screen")}
                             className="h-9 px-3 rounded-full border border-border text-[12px] tracking-soft text-muted-foreground hover:text-foreground active:scale-95 transition inline-flex items-center gap-1.5"
                           >
                             <Trash2 className="h-[13px] w-[13px]" strokeWidth={1.6} />

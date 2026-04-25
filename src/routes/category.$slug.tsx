@@ -42,7 +42,7 @@ function ProductDetails() {
   const wishId = `product:${slug}`;
   const wished = wishlist.has(wishId);
   const setWished = () => {
-    wishlist.toggle(wishId);
+    wishlist.toggle(wishId, "product_detail");
   };
 
   const addToBag = () => {
