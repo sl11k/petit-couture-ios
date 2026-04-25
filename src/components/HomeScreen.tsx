@@ -12,12 +12,16 @@ import {
 import hero from "@/assets/hero-campaign.jpg";
 import { categories } from "@/data/categories";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useWishlist } from "@/state/WishlistContext";
+
+const HERO_ID = "hero:spring-15-off";
 
 type AgeKey = "baby" | "girl" | "boy";
 type NavKey = "menu" | "home" | "account" | "search" | "bag";
 
 export function HomeScreen() {
   const { t, lang, toggle, isRTL } = useLanguage();
+  const wishlist = useWishlist();
   const [age, setAge] = useState<AgeKey>("girl");
   const [nav, setNav] = useState<NavKey>("home");
   const [annIdx, setAnnIdx] = useState(0);
