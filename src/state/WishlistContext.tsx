@@ -4,9 +4,13 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { toast } from "sonner";
+import { Heart } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const STORAGE_KEY = "maisonnet:wishlist:v1";
 
@@ -69,19 +73,51 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
+  const { t, isRTL } = useLanguage();
+  const messages = useRef(t.wishlist);
+  messages.current = t.wishlist;
+
   const has = useCallback((id: string) => items.includes(id), [items]);
+  const notify = useCallback(
+    (kind: "added" | "removed") => {
+      const msg = kind === "added" ? messages.current.added : messages.current.removed;
+      toast(msg, {
+        icon: <Heart className="h-4 w-4" strokeWidth={1.7} fill={kind === "added" ? "currentColor" : "none"} />,
+        position: isRTL ? "top-left" : "top-right",
+        duration: 1800,
+      });
+    },
+    [isRTL],
+  );
   const add = useCallback(
-    (id: string) => setItems((prev) => (prev.includes(id) ? prev : [...prev, id])),
-    [],
+    (id: string) =>
+      setItems((prev) => {
+        if (prev.includes(id)) return prev;
+        notify("added");
+        return [...prev, id];
+      }),
+    [notify],
   );
   const remove = useCallback(
-    (id: string) => setItems((prev) => prev.filter((x) => x !== id)),
-    [],
+    (id: string) =>
+      setItems((prev) => {
+        if (!prev.includes(id)) return prev;
+        notify("removed");
+        return prev.filter((x) => x !== id);
+      }),
+    [notify],
   );
   const toggle = useCallback(
     (id: string) =>
-      setItems((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])),
-    [],
+      setItems((prev) => {
+        if (prev.includes(id)) {
+          notify("removed");
+          return prev.filter((x) => x !== id);
+        }
+        notify("added");
+        return [...prev, id];
+      }),
+    [notify],
   );
   const clear = useCallback(() => setItems([]), []);
 
