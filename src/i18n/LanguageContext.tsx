@@ -31,6 +31,24 @@ type Dict = {
     shippingFree: string;
     returns: string;
   };
+  bag: {
+    title: string;
+    empty: string;
+    emptyCta: string;
+    item: string;
+    items: string;
+    size: string;
+    color: string;
+    qty: string;
+    remove: string;
+    subtotal: string;
+    shipping: string;
+    shippingFree: string;
+    estimatedTotal: string;
+    checkout: string;
+    secure: string;
+    continueShopping: string;
+  };
 };
 
 const dictionaries: Record<Lang, Dict> = {
