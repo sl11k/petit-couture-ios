@@ -1,15 +1,37 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, Heart, Share2, Sparkles, Trash2, UserCircle2, Undo2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight, Heart, Share2, Sparkles, Trash2, UserCircle2, Undo2, ArrowUpDown, Check } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useAuth } from "@/state/AuthContext";
 import { categories, getProductForCategory } from "@/data/categories";
-import { trackEvent } from "@/lib/analytics";
+import { trackEvent, type WishlistSortKey } from "@/lib/analytics";
 import { clearLastImport, readLastImport } from "@/lib/lastImport";
 import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
 import hero from "@/assets/hero-campaign.jpg";
+
+const SORT_STORAGE_KEY = "maisonnet:wishlist:sort:v1";
+const SORT_KEYS: readonly WishlistSortKey[] = [
+  "newest",
+  "oldest",
+  "price_asc",
+  "price_desc",
+  "name_asc",
+] as const;
+
+function readStoredSort(): WishlistSortKey {
+  if (typeof window === "undefined") return "newest";
+  try {
+    const raw = window.localStorage.getItem(SORT_STORAGE_KEY);
+    if (raw && (SORT_KEYS as readonly string[]).includes(raw)) {
+      return raw as WishlistSortKey;
+    }
+  } catch {
+    /* ignore */
+  }
+  return "newest";
+}
 
 function buildShareUrl(ids: string[]): string {
   const origin =
@@ -163,6 +185,98 @@ function WishlistPage() {
 
   const fmt = (n: number) => n.toLocaleString(lang === "ar" ? "ar-EG" : "en-US");
 
+  // ─── Sort ────────────────────────────────────────────────────────────────
+  // Persist the chosen sort across visits. The wishlist's underlying `items`
+  // array preserves insertion order, so we treat that as "oldest first" and
+  // derive every other ordering from it.
+  const [sortKey, setSortKey] = useState<WishlistSortKey>(() => readStoredSort());
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
+  const sortMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(SORT_STORAGE_KEY, sortKey);
+    } catch {
+      /* ignore */
+    }
+  }, [sortKey]);
+
+  // Close the sort menu on outside click / Escape.
+  useEffect(() => {
+    if (!sortMenuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (!sortMenuRef.current) return;
+      if (!sortMenuRef.current.contains(e.target as Node)) setSortMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSortMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [sortMenuOpen]);
+
+  const sortLabels: Record<WishlistSortKey, string> = {
+    newest: t.wishlist.sortNewest,
+    oldest: t.wishlist.sortOldest,
+    price_asc: t.wishlist.sortPriceAsc,
+    price_desc: t.wishlist.sortPriceDesc,
+    name_asc: t.wishlist.sortNameAsc,
+  };
+
+  const sortedResolved = useMemo<ResolvedItem[]>(() => {
+    const arr = [...resolved];
+    const collator = new Intl.Collator(lang === "ar" ? "ar" : "en", {
+      sensitivity: "base",
+    });
+    switch (sortKey) {
+      case "newest":
+        return arr.reverse();
+      case "oldest":
+        return arr;
+      case "price_asc":
+        return arr.sort((a, b) => {
+          if (a.price === null && b.price === null) return 0;
+          if (a.price === null) return 1; // nulls last
+          if (b.price === null) return -1;
+          return a.price - b.price;
+        });
+      case "price_desc":
+        return arr.sort((a, b) => {
+          if (a.price === null && b.price === null) return 0;
+          if (a.price === null) return 1;
+          if (b.price === null) return -1;
+          return b.price - a.price;
+        });
+      case "name_asc":
+        return arr.sort((a, b) => collator.compare(a.name, b.name));
+      default:
+        return arr;
+    }
+  }, [resolved, sortKey, lang]);
+
+  const onSelectSort = useCallback(
+    (next: WishlistSortKey) => {
+      setSortMenuOpen(false);
+      if (next === sortKey) return;
+      const previous = sortKey;
+      setSortKey(next);
+      trackEvent({
+        name: "wishlist_sort_change",
+        ts: Date.now(),
+        sort: next,
+        previousSort: previous,
+        itemCount: resolved.length,
+        source: "wishlist_screen",
+      });
+    },
+    [sortKey, resolved.length],
+  );
+
   return (
     <div className="min-h-screen w-full bg-cream flex justify-center">
       <div className="relative w-full max-w-[440px] bg-background min-h-screen overflow-hidden shadow-soft">
@@ -302,14 +416,71 @@ function WishlistPage() {
                 <h1 className="font-serif text-[30px] leading-tight text-foreground">
                   {t.wishlist.title}
                 </h1>
-                <p className="mt-1 text-[12px] tracking-luxury text-gold-deep">
-                  {fmt(resolved.length)}{" "}
-                  {resolved.length === 1 ? t.wishlist.item : t.wishlist.items}
-                </p>
+                <div className={["mt-1 flex items-center justify-between gap-3", isRTL ? "flex-row-reverse" : ""].join(" ")}>
+                  <p className="text-[12px] tracking-luxury text-gold-deep">
+                    {fmt(resolved.length)}{" "}
+                    {resolved.length === 1 ? t.wishlist.item : t.wishlist.items}
+                  </p>
+                  {resolved.length > 1 && (
+                    <div ref={sortMenuRef} className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setSortMenuOpen((v) => !v)}
+                        aria-haspopup="listbox"
+                        aria-expanded={sortMenuOpen}
+                        aria-label={t.wishlist.sortBy}
+                        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border border-border bg-background text-[11px] tracking-soft text-foreground/80 active:scale-[0.97] transition"
+                      >
+                        <ArrowUpDown className="h-[12px] w-[12px]" strokeWidth={1.6} />
+                        <span className="text-[10.5px] tracking-luxury text-gold-deep">
+                          {lang === "en" ? t.wishlist.sortBy.toUpperCase() : t.wishlist.sortBy}
+                        </span>
+                        <span aria-hidden className="text-foreground/40">·</span>
+                        <span>{sortLabels[sortKey]}</span>
+                      </button>
+                      {sortMenuOpen && (
+                        <ul
+                          role="listbox"
+                          aria-label={t.wishlist.sortBy}
+                          className={[
+                            "absolute z-20 mt-2 min-w-[220px] rounded-[18px] border border-border bg-background shadow-soft py-1.5",
+                            isRTL ? "start-0" : "end-0",
+                          ].join(" ")}
+                        >
+                          {SORT_KEYS.map((k) => {
+                            const selected = k === sortKey;
+                            return (
+                              <li key={k}>
+                                <button
+                                  type="button"
+                                  role="option"
+                                  aria-selected={selected}
+                                  onClick={() => onSelectSort(k)}
+                                  className={[
+                                    "w-full flex items-center gap-2 px-4 py-2.5 text-[13px] tracking-soft transition",
+                                    isRTL ? "text-right flex-row-reverse" : "text-left",
+                                    selected ? "text-foreground" : "text-foreground/75 hover:text-foreground",
+                                  ].join(" ")}
+                                >
+                                  <span className="flex-1 truncate">{sortLabels[k]}</span>
+                                  {selected ? (
+                                    <Check className="h-[14px] w-[14px] text-gold-deep shrink-0" strokeWidth={1.8} />
+                                  ) : (
+                                    <span className="h-[14px] w-[14px] shrink-0" />
+                                  )}
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </div>
               </section>
 
               <section className="px-5 mt-6 space-y-4">
-                {resolved.map((it) => {
+                {sortedResolved.map((it) => {
                   const linkedCard =
                     it.kind === "category" || it.kind === "product";
                   const ariaLabel = isRTL

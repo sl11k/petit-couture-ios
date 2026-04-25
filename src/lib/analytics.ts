@@ -68,7 +68,25 @@ export type AnalyticsEvent =
       itemKind: WishlistItemKind;
       itemSlug: string | null;
       source: WishlistSource;
+    }
+  | {
+      name: "wishlist_sort_change";
+      ts: number;
+      /** Sort key the user switched TO. */
+      sort: WishlistSortKey;
+      /** Previous sort key (for funnel analysis). */
+      previousSort: WishlistSortKey;
+      /** Number of items currently in the wishlist when the change happened. */
+      itemCount: number;
+      source: "wishlist_screen";
     };
+
+export type WishlistSortKey =
+  | "newest"
+  | "oldest"
+  | "price_asc"
+  | "price_desc"
+  | "name_asc";
 
 const MAX_BUFFER = 200;
 const buffer: AnalyticsEvent[] = [];

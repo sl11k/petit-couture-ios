@@ -49,6 +49,8 @@ function summarize(ev: AnalyticsEvent): string {
       return `prev=${ev.previousSize} → next=${ev.nextSize}`;
     case "wishlist_impression":
       return `${ev.itemKind}:${ev.itemSlug ?? "—"}`;
+    case "wishlist_sort_change":
+      return `${ev.previousSort} → ${ev.sort} · ${ev.itemCount} item${ev.itemCount === 1 ? "" : "s"}`;
   }
 }
 
@@ -64,6 +66,7 @@ const NAME_COLORS: Record<AnalyticsEvent["name"], string> = {
   wishlist_import: "bg-cream-warm text-gold-deep border-gold-soft",
   wishlist_undo: "bg-background text-foreground/70 border-border",
   wishlist_impression: "bg-background text-muted-foreground border-border",
+  wishlist_sort_change: "bg-cream-warm text-gold-deep border-gold-soft",
 };
 
 function AnalyticsDebug() {
