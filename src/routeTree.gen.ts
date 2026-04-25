@@ -15,6 +15,7 @@ import { Route as BagRouteImport } from './routes/bag'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WishlistShareRouteImport } from './routes/wishlist.share'
+import { Route as DebugAnalyticsRouteImport } from './routes/debug.analytics'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 
 const WishlistRoute = WishlistRouteImport.update({
@@ -47,6 +48,11 @@ const WishlistShareRoute = WishlistShareRouteImport.update({
   path: '/share',
   getParentRoute: () => WishlistRoute,
 } as any)
+const DebugAnalyticsRoute = DebugAnalyticsRouteImport.update({
+  id: '/debug/analytics',
+  path: '/debug/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CategorySlugRoute = CategorySlugRouteImport.update({
   id: '/category/$slug',
   path: '/category/$slug',
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/checkout': typeof CheckoutRoute
   '/wishlist': typeof WishlistRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
+  '/debug/analytics': typeof DebugAnalyticsRoute
   '/wishlist/share': typeof WishlistShareRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +76,7 @@ export interface FileRoutesByTo {
   '/checkout': typeof CheckoutRoute
   '/wishlist': typeof WishlistRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
+  '/debug/analytics': typeof DebugAnalyticsRoute
   '/wishlist/share': typeof WishlistShareRoute
 }
 export interface FileRoutesById {
@@ -79,6 +87,7 @@ export interface FileRoutesById {
   '/checkout': typeof CheckoutRoute
   '/wishlist': typeof WishlistRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
+  '/debug/analytics': typeof DebugAnalyticsRoute
   '/wishlist/share': typeof WishlistShareRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/wishlist'
     | '/category/$slug'
+    | '/debug/analytics'
     | '/wishlist/share'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/wishlist'
     | '/category/$slug'
+    | '/debug/analytics'
     | '/wishlist/share'
   id:
     | '__root__'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/wishlist'
     | '/category/$slug'
+    | '/debug/analytics'
     | '/wishlist/share'
   fileRoutesById: FileRoutesById
 }
@@ -118,6 +130,7 @@ export interface RootRouteChildren {
   CheckoutRoute: typeof CheckoutRoute
   WishlistRoute: typeof WishlistRouteWithChildren
   CategorySlugRoute: typeof CategorySlugRoute
+  DebugAnalyticsRoute: typeof DebugAnalyticsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -164,6 +177,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WishlistShareRouteImport
       parentRoute: typeof WishlistRoute
     }
+    '/debug/analytics': {
+      id: '/debug/analytics'
+      path: '/debug/analytics'
+      fullPath: '/debug/analytics'
+      preLoaderRoute: typeof DebugAnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/category/$slug': {
       id: '/category/$slug'
       path: '/category/$slug'
@@ -193,6 +213,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutRoute: CheckoutRoute,
   WishlistRoute: WishlistRouteWithChildren,
   CategorySlugRoute: CategorySlugRoute,
+  DebugAnalyticsRoute: DebugAnalyticsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
