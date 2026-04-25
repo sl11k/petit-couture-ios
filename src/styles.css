@@ -9,6 +9,9 @@
 @import "@fontsource/inter/400.css";
 @import "@fontsource/inter/500.css";
 @import "@fontsource/inter/600.css";
+@import "@fontsource/noto-kufi-arabic/400.css";
+@import "@fontsource/noto-kufi-arabic/500.css";
+@import "@fontsource/noto-kufi-arabic/600.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -150,6 +153,17 @@
     font-feature-settings: "ss01", "cv11";
   }
 
+  html[dir="rtl"] body,
+  html[lang="ar"] body {
+    font-family: "Noto Kufi Arabic", var(--font-sans);
+  }
+
+  html[dir="rtl"] .font-serif,
+  html[lang="ar"] .font-serif {
+    font-family: "Noto Kufi Arabic", var(--font-serif);
+    font-feature-settings: normal;
+  }
+
   .font-serif {
     font-family: var(--font-serif);
     font-feature-settings: "liga", "dlig";
@@ -162,6 +176,10 @@
   }
   .tracking-soft {
     letter-spacing: 0.08em;
+  }
+  html[dir="rtl"] .tracking-luxury,
+  html[dir="rtl"] .tracking-soft {
+    letter-spacing: 0;
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
