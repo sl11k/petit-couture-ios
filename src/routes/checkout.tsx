@@ -136,6 +136,7 @@ function CheckoutPage() {
   const [editing, setEditing] = useState<boolean>(!address);
 
   const onSubmit = (values: FormValues) => {
+    if (bagEmpty) return;
     const parsed = schema.parse(values);
     save(parsed as Address);
     setEditing(false);
@@ -143,7 +144,7 @@ function CheckoutPage() {
   };
 
   const onPlaceOrder = () => {
-    if (!address) return;
+    if (bagEmpty || !address) return;
     toast.success(t.checkout.success);
   };
 
