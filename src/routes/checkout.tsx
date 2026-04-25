@@ -450,6 +450,7 @@ function CheckoutPage() {
                 {errors.notes && <p className={errorClass}>{errors.notes.message}</p>}
               </div>
             </section>
+            )}
 
             {/* Order summary */}
             <section className="rounded-[20px] border border-border bg-background p-5 space-y-2">
@@ -485,14 +486,25 @@ function CheckoutPage() {
             {/* Sticky CTA */}
             <div className="fixed sm:absolute bottom-0 inset-x-0 max-w-[440px] mx-auto bg-background/95 backdrop-blur-md border-t border-border">
               <div className="px-5 pt-4 pb-6">
-                <button
-                  type="submit"
-                  disabled={form.formState.isSubmitting}
-                  className="w-full h-[58px] rounded-full bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft disabled:opacity-60"
-                >
-                  <Lock className="h-[16px] w-[16px]" strokeWidth={1.7} />
-                  {t.checkout.submit} · {fmt(total)} {bag.currency}
-                </button>
+                {editing ? (
+                  <button
+                    type="submit"
+                    disabled={form.formState.isSubmitting}
+                    className="w-full h-[58px] rounded-full bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft disabled:opacity-60"
+                  >
+                    <Lock className="h-[16px] w-[16px]" strokeWidth={1.7} />
+                    {address ? t.checkout.useThisAddress : t.checkout.submit} · {fmt(total)} {bag.currency}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={onPlaceOrder}
+                    className="w-full h-[58px] rounded-full bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft"
+                  >
+                    <Lock className="h-[16px] w-[16px]" strokeWidth={1.7} />
+                    {t.checkout.submit} · {fmt(total)} {bag.currency}
+                  </button>
+                )}
                 <p className="mt-2 text-center text-[10.5px] text-muted-foreground tracking-soft">
                   {t.bag.secure}
                 </p>
