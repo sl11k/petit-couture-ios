@@ -209,6 +209,27 @@ function WishlistPage() {
         </header>
 
         <main className="pb-12">
+          {ready && !user && wishlist.count > 0 && (
+            <Link
+              to="/account"
+              className="mx-5 mt-1 mb-4 flex items-center gap-3 rounded-[18px] border border-gold-soft bg-cream-warm/60 px-4 py-3 active:scale-[0.99] transition"
+            >
+              <span className="h-9 w-9 grid place-items-center rounded-full bg-background border border-gold-soft text-gold-deep shrink-0">
+                <UserCircle2 className="h-[18px] w-[18px]" strokeWidth={1.5} />
+              </span>
+              <span className={["min-w-0 flex-1 leading-tight", isRTL ? "text-right" : "text-left"].join(" ")}>
+                <span className="block text-[10.5px] tracking-luxury text-gold-deep">
+                  {isRTL ? t.account.syncBannerTitle : t.account.syncBannerTitle.toUpperCase()}
+                </span>
+                <span className="block text-[12.5px] text-foreground/80 tracking-soft truncate">
+                  {t.account.syncBannerBody}
+                </span>
+              </span>
+              <span className="shrink-0 inline-flex items-center h-8 px-3 rounded-full bg-foreground text-background text-[10.5px] tracking-luxury">
+                {isRTL ? t.account.syncBannerCta : t.account.syncBannerCta.toUpperCase()}
+              </span>
+            </Link>
+          )}
           {resolved.length === 0 ? (
             <section className="px-6 pt-24 flex flex-col items-center text-center">
               <div className="h-[88px] w-[88px] rounded-full bg-cream-warm grid place-items-center border border-gold-soft">
