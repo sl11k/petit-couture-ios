@@ -283,51 +283,52 @@ export function HomeScreen() {
                 const wishId = `category:${c.slug}`;
                 const liked = wishlist.has(wishId);
                 return (
-                  <Link
-                    key={c.slug}
-                    to="/category/$slug"
-                    params={{ slug: c.slug }}
-                    className="group flex flex-col items-center text-left active:scale-[0.99] transition"
-                  >
-                    <div className="relative w-full overflow-hidden rounded-[22px] bg-cream-warm aspect-[1.35/1]">
-                      <img
-                        src={c.img}
-                        alt={t.categories[c.slug] ?? c.name}
-                        loading="lazy"
-                        width={768}
-                        height={576}
-                        className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04] group-active:opacity-90"
-                      />
-                      <button
-                        type="button"
-                        aria-label={
-                          isRTL
-                            ? liked
-                              ? "إزالة من المفضلة"
-                              : "أضف إلى المفضلة"
-                            : liked
-                              ? "Remove from wishlist"
-                              : "Add to wishlist"
-                        }
-                        aria-pressed={liked}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          wishlist.toggle(wishId, "category_card");
-                        }}
-                        className="absolute top-2.5 end-2.5 h-9 w-9 rounded-full bg-background/85 backdrop-blur grid place-items-center text-gold-deep border border-gold-soft active:scale-90 transition"
-                      >
-                        <Heart
-                          className="h-[15px] w-[15px]"
-                          strokeWidth={1.6}
-                          fill={liked ? "currentColor" : "none"}
+                  <ImpressionCell key={c.slug} itemId={wishId} source="category_card">
+                    <Link
+                      to="/category/$slug"
+                      params={{ slug: c.slug }}
+                      className="group flex flex-col items-center text-left active:scale-[0.99] transition"
+                    >
+                      <div className="relative w-full overflow-hidden rounded-[22px] bg-cream-warm aspect-[1.35/1]">
+                        <img
+                          src={c.img}
+                          alt={t.categories[c.slug] ?? c.name}
+                          loading="lazy"
+                          width={768}
+                          height={576}
+                          className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04] group-active:opacity-90"
                         />
-                      </button>
-                    </div>
-                    <span className="mt-3 text-[15px] text-foreground/85 font-medium tracking-tight text-center">
-                      {t.categories[c.slug] ?? c.name}
-                    </span>
-                  </Link>
+                        <button
+                          type="button"
+                          aria-label={
+                            isRTL
+                              ? liked
+                                ? "إزالة من المفضلة"
+                                : "أضف إلى المفضلة"
+                              : liked
+                                ? "Remove from wishlist"
+                                : "Add to wishlist"
+                          }
+                          aria-pressed={liked}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            wishlist.toggle(wishId, "category_card");
+                          }}
+                          className="absolute top-2.5 end-2.5 h-9 w-9 rounded-full bg-background/85 backdrop-blur grid place-items-center text-gold-deep border border-gold-soft active:scale-90 transition"
+                        >
+                          <Heart
+                            className="h-[15px] w-[15px]"
+                            strokeWidth={1.6}
+                            fill={liked ? "currentColor" : "none"}
+                          />
+                        </button>
+                      </div>
+                      <span className="mt-3 text-[15px] text-foreground/85 font-medium tracking-tight text-center">
+                        {t.categories[c.slug] ?? c.name}
+                      </span>
+                    </Link>
+                  </ImpressionCell>
                 );
               })}
             </div>
