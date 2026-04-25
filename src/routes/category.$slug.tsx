@@ -125,6 +125,7 @@ function ProductDetails() {
           </span>
           <button
             aria-label={isRTL ? "مشاركة" : "Share"}
+            onClick={onShare}
             className="h-10 w-10 -me-2 grid place-items-center rounded-full text-foreground/70 active:scale-95 transition"
           >
             <Share2 className="h-[18px] w-[18px]" strokeWidth={1.5} />
