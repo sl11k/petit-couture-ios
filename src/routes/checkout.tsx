@@ -403,17 +403,26 @@ function CheckoutPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className={labelClass}>{t.checkout.phone}</label>
-                  <input
-                    type="tel"
-                    inputMode="tel"
-                    autoComplete="tel"
-                    placeholder="+9665XXXXXXXX"
-                    maxLength={16}
-                    dir="ltr"
-                    aria-invalid={!!errors.phone}
-                    className={fieldClass(!!errors.phone) + " mt-1.5"}
-                    {...form.register("phone")}
-                  />
+                  {(() => {
+                    const reg = form.register("phone");
+                    return (
+                      <input
+                        type="tel"
+                        inputMode="tel"
+                        autoComplete="tel"
+                        placeholder="+966 5X XXX XXXX"
+                        maxLength={16}
+                        dir="ltr"
+                        aria-invalid={!!errors.phone}
+                        className={fieldClass(!!errors.phone) + " mt-1.5 tabular-nums"}
+                        {...reg}
+                        onChange={(e) => {
+                          e.target.value = formatSaudiPhone(e.target.value);
+                          void reg.onChange(e);
+                        }}
+                      />
+                    );
+                  })()}
                   {errors.phone && <p className={errorClass}>{errors.phone.message}</p>}
                 </div>
                 <div>
