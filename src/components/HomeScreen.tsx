@@ -13,6 +13,7 @@ import hero from "@/assets/hero-campaign.jpg";
 import { categories, getProductForCategory } from "@/data/categories";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
+import { useImpression } from "@/hooks/useImpression";
 import { useBag } from "@/state/BagContext";
 
 
