@@ -27,7 +27,7 @@ function resolveName(id: string, heroLabel: string): string | null {
 
 export function WishlistBanner() {
   const { items } = useWishlist();
-  const { t, isRTL, dir } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const prevRef = useRef<string[] | null>(null);
   const [event, setEvent] = useState<BannerEvent | null>(null);
   const [visible, setVisible] = useState(false);
@@ -99,7 +99,7 @@ export function WishlistBanner() {
       className="pointer-events-none fixed inset-x-0 top-9 z-50 flex justify-center px-4"
       aria-live="polite"
       aria-atomic="true"
-      dir={dir}
+      dir={t.dir}
     >
       <div
         role="status"
