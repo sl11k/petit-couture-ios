@@ -49,6 +49,42 @@ type Dict = {
     secure: string;
     continueShopping: string;
   };
+  checkout: {
+    title: string;
+    eyebrow: string;
+    sectionContact: string;
+    sectionAddress: string;
+    fullName: string;
+    phone: string;
+    email: string;
+    nationalAddress: string;
+    nationalAddressHelp: string;
+    buildingNumber: string;
+    street: string;
+    district: string;
+    city: string;
+    postalCode: string;
+    additionalNumber: string;
+    notes: string;
+    notesPlaceholder: string;
+    cityPlaceholder: string;
+    submit: string;
+    success: string;
+    errors: {
+      nameRequired: string;
+      nameTooLong: string;
+      phoneInvalid: string;
+      emailInvalid: string;
+      shortCodeInvalid: string;
+      buildingInvalid: string;
+      streetRequired: string;
+      districtRequired: string;
+      cityRequired: string;
+      postalInvalid: string;
+      additionalInvalid: string;
+      notesTooLong: string;
+    };
+  };
 };
 
 const dictionaries: Record<Lang, Dict> = {
