@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { Heart } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { classifyItem, trackEvent, type WishlistSource } from "@/lib/analytics";
+import { useAuth } from "@/state/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_KEY = "maisonnet:wishlist:v1";
 
