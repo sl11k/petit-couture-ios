@@ -20,6 +20,7 @@ type Dict = {
   footer: string;
   nav: { menu: string; home: string; account: string; search: string; bag: string };
   categories: Record<string, string>;
+  wishlist: { added: string; removed: string };
   product: {
     backToBoutique: string;
     color: string;
