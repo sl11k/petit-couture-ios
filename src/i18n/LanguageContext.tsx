@@ -23,6 +23,8 @@ type Dict = {
   wishlist: {
     added: string;
     removed: string;
+    addedNamed: (name: string) => string;
+    removedNamed: (name: string) => string;
     title: string;
     eyebrow: string;
     empty: string;
@@ -145,6 +147,8 @@ const dictionaries: Record<Lang, Dict> = {
     wishlist: {
       added: "Added to wishlist",
       removed: "Removed from wishlist",
+      addedNamed: (name) => `Added to wishlist · ${name}`,
+      removedNamed: (name) => `Removed from wishlist · ${name}`,
       title: "Wishlist",
       eyebrow: "SAVED PIECES",
       empty: "Your wishlist is empty",
@@ -282,6 +286,8 @@ const dictionaries: Record<Lang, Dict> = {
     wishlist: {
       added: "أُضيف إلى المفضلة",
       removed: "أُزيل من المفضلة",
+      addedNamed: (name) => `أُضيف إلى المفضلة · ${name}`,
+      removedNamed: (name) => `أُزيل من المفضلة · ${name}`,
       title: "المفضلة",
       eyebrow: "القطع المحفوظة",
       empty: "قائمة المفضلة فارغة",
