@@ -15,7 +15,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useBag } from "@/state/BagContext";
 
-const HERO_ID = "hero:spring-15-off";
+
 
 type AgeKey = "baby" | "girl" | "boy";
 type NavKey = "menu" | "home" | "account" | "search" | "bag";
