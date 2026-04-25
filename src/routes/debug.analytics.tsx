@@ -160,6 +160,43 @@ function AnalyticsDebug() {
             </div>
           </div>
 
+          {isDev && (
+            <div className="mt-5 flex items-center gap-3 rounded-[18px] border border-gold-soft bg-cream-warm/60 px-4 py-3">
+              <span className={["min-w-0 flex-1 leading-tight", isRTL ? "text-right" : "text-left"].join(" ")}>
+                <span className="block text-[10.5px] tracking-luxury text-gold-deep">
+                  {isRTL ? "الإرسال (تطوير فقط)" : "DISPATCH · DEV ONLY"}
+                </span>
+                <span className="block text-[12.5px] text-foreground/80 tracking-soft">
+                  {enabled
+                    ? isRTL
+                      ? "الأحداث مفعّلة — يتم بثّها وتسجيلها."
+                      : "Events on — buffered and broadcast."
+                    : isRTL
+                      ? "الأحداث متوقفة — لن يتم تسجيل أي تتبع."
+                      : "Events off — no tracking will fire."}
+                </span>
+              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={enabled}
+                aria-label={isRTL ? "تبديل إرسال الأحداث" : "Toggle analytics dispatch"}
+                onClick={toggle}
+                className={[
+                  "shrink-0 relative h-7 w-12 rounded-full transition-colors",
+                  enabled ? "bg-gold-deep" : "bg-foreground/20",
+                ].join(" ")}
+              >
+                <span
+                  className={[
+                    "absolute top-0.5 h-6 w-6 rounded-full bg-background shadow-soft transition-all",
+                    enabled ? "left-[22px]" : "left-0.5",
+                  ].join(" ")}
+                />
+              </button>
+            </div>
+          )}
+
           {recent.length === 0 ? (
             <div className="mt-10 rounded-[20px] border border-dashed border-border bg-cream-warm/40 px-5 py-10 text-center">
               <p className="font-serif text-[18px] text-foreground">{labels.empty}</p>
