@@ -81,6 +81,31 @@ function WishlistPage() {
   const wishlist = useWishlist();
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
 
+  const shareItem = useCallback(
+    (id: string, name: string) => {
+      void shareOrCopy({
+        url: buildShareUrl([id]),
+        title: t.wishlist.shareTitle,
+        text: name,
+        successMsg: t.wishlist.linkCopied,
+        failMsg: t.wishlist.shareFailed,
+        isRTL,
+      });
+    },
+    [t.wishlist, isRTL],
+  );
+
+  const shareAll = useCallback(() => {
+    void shareOrCopy({
+      url: buildShareUrl(wishlist.items),
+      title: t.wishlist.shareTitle,
+      text: t.wishlist.shareText,
+      successMsg: t.wishlist.linkCopied,
+      failMsg: t.wishlist.shareFailed,
+      isRTL,
+    });
+  }, [wishlist.items, t.wishlist, isRTL]);
+
   const resolved = useMemo<ResolvedItem[]>(() => {
     return wishlist.items
       .map((id): ResolvedItem | null => {
@@ -146,12 +171,21 @@ function WishlistPage() {
             {lang === "en" ? t.wishlist.eyebrow : t.wishlist.eyebrow}
           </span>
           {resolved.length > 0 ? (
-            <button
-              onClick={() => wishlist.clear()}
-              className="h-10 px-3 -me-2 grid place-items-center rounded-full text-[10.5px] tracking-luxury text-gold-deep active:scale-95 transition"
-            >
-              {lang === "en" ? t.wishlist.clearAll.toUpperCase() : t.wishlist.clearAll}
-            </button>
+            <div className="-me-2 flex items-center gap-1">
+              <button
+                onClick={shareAll}
+                aria-label={t.wishlist.shareAll}
+                className="h-10 w-10 grid place-items-center rounded-full text-gold-deep active:scale-95 transition"
+              >
+                <Share2 className="h-[18px] w-[18px]" strokeWidth={1.5} />
+              </button>
+              <button
+                onClick={() => wishlist.clear()}
+                className="h-10 px-3 grid place-items-center rounded-full text-[10.5px] tracking-luxury text-gold-deep active:scale-95 transition"
+              >
+                {lang === "en" ? t.wishlist.clearAll.toUpperCase() : t.wishlist.clearAll}
+              </button>
+            </div>
           ) : (
             <span className="h-10 w-10" />
           )}
