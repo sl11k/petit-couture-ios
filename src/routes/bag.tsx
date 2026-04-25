@@ -17,6 +17,7 @@ export const Route = createFileRoute("/bag")({
 
 function BagPage() {
   const router = useRouter();
+  const navigate = useNavigate();
   const { t, isRTL, lang } = useLanguage();
   const bag = useBag();
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
