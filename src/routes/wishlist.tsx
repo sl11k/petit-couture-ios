@@ -197,7 +197,26 @@ function WishlistPage() {
                 <Share2 className="h-[18px] w-[18px]" strokeWidth={1.5} />
               </button>
               <button
-                onClick={() => wishlist.clear("wishlist_screen")}
+                onClick={() => {
+                  const snapshot = [...wishlist.items];
+                  if (snapshot.length === 0) return;
+                  toast(isRTL ? "مسح جميع العناصر؟" : "Clear all items?", {
+                    description: isRTL
+                      ? "سيتم إزالة كل ما في قائمة الرغبات."
+                      : "Everything in your wishlist will be removed.",
+                    icon: <Trash2 className="h-4 w-4" strokeWidth={1.7} />,
+                    position: isRTL ? "top-left" : "top-right",
+                    duration: 5000,
+                    action: {
+                      label: isRTL ? "مسح" : "Clear",
+                      onClick: () => wishlist.clear("wishlist_screen"),
+                    },
+                    cancel: {
+                      label: isRTL ? "إلغاء" : "Cancel",
+                      onClick: () => { void snapshot; },
+                    },
+                  });
+                }}
                 className="h-10 px-3 grid place-items-center rounded-full text-[10.5px] tracking-luxury text-gold-deep active:scale-95 transition"
               >
                 {lang === "en" ? t.wishlist.clearAll.toUpperCase() : t.wishlist.clearAll}
