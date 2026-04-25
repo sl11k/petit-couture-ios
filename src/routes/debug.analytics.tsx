@@ -84,6 +84,24 @@ function AnalyticsDebug() {
     };
   }, []);
 
+  // Dispatch toggle (dev only). Sync across tabs/components via the custom event.
+  const isDev = import.meta.env.DEV;
+  const [enabled, setEnabled] = useState<boolean>(() => isAnalyticsEnabled());
+  useEffect(() => {
+    const onToggle = () => setEnabled(isAnalyticsEnabled());
+    window.addEventListener(ANALYTICS_TOGGLE_EVENT, onToggle);
+    window.addEventListener("storage", onToggle);
+    return () => {
+      window.removeEventListener(ANALYTICS_TOGGLE_EVENT, onToggle);
+      window.removeEventListener("storage", onToggle);
+    };
+  }, []);
+  const toggle = () => {
+    const next = !enabled;
+    setAnalyticsEnabled(next);
+    setEnabled(next);
+  };
+
   // Newest first, capped to 50.
   const recent = events.slice(-50).reverse();
 
