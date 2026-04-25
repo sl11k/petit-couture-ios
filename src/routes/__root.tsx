@@ -69,7 +69,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <LanguageProvider>
-      <Outlet />
+      <WishlistProvider>
+        <Outlet />
+      </WishlistProvider>
     </LanguageProvider>
   );
 }
