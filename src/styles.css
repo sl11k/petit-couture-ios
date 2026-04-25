@@ -2,21 +2,15 @@
 @source "../src";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+@import "@fontsource/cormorant-garamond/400.css";
+@import "@fontsource/cormorant-garamond/500.css";
+@import "@fontsource/cormorant-garamond/600.css";
+@import "@fontsource/inter/300.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
 
-/*
- * Design system definition.
- *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
- */
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -26,6 +20,7 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -45,7 +40,19 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-ring-offset-background: var(--background);
+
+  /* Luxury palette */
+  --color-gold: var(--gold);
+  --color-gold-deep: var(--gold-deep);
+  --color-gold-soft: var(--gold-soft);
+  --color-cream: var(--cream);
+  --color-cream-warm: var(--cream-warm);
+  --color-pastel-mint: var(--pastel-mint);
+  --color-pastel-peach: var(--pastel-peach);
+  --color-pastel-blue: var(--pastel-blue);
+  --color-pastel-cream: var(--pastel-cream);
+  --color-success: var(--success);
+
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -59,77 +66,73 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  --font-serif: "Cormorant Garamond", Didot, "Playfair Display", Georgia, serif;
+  --font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+
+  --shadow-soft: 0 1px 2px rgba(30, 30, 30, 0.04), 0 8px 24px rgba(30, 30, 30, 0.05);
+  --shadow-gold: 0 8px 22px rgba(185, 145, 59, 0.28);
+  --shadow-nav: 0 -1px 0 rgba(230, 226, 218, 0.9), 0 -8px 24px rgba(30, 30, 30, 0.04);
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
-}
+  --radius: 0.875rem;
 
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  /* Surfaces */
+  --background: oklch(1 0 0);                     /* #FFFFFF */
+  --foreground: oklch(0.245 0 0);                 /* #1E1E1E */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.245 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.245 0 0);
+
+  /* Primary = brand foreground/dark text */
+  --primary: oklch(0.245 0 0);                    /* #1E1E1E */
+  --primary-foreground: oklch(1 0 0);
+
+  --secondary: oklch(0.965 0.012 85);             /* #F8F5EF */
+  --secondary-foreground: oklch(0.245 0 0);
+
+  --muted: oklch(0.96 0.014 80);                  /* #F7F3EA */
+  --muted-foreground: oklch(0.52 0 0);            /* #6F6F6F */
+
+  --accent: oklch(0.93 0.038 82);                 /* soft gold fill #F3E8D0 */
+  --accent-foreground: oklch(0.52 0.10 70);       /* deep gold #9D7628 */
+
+  --destructive: oklch(0.55 0.15 25);             /* #B94A48 */
+  --destructive-foreground: oklch(1 0 0);
+
+  --border: oklch(0.91 0.012 80);                 /* #E6E2DA */
+  --input: oklch(0.91 0.012 80);
+  --ring: oklch(0.66 0.11 75);                    /* gold ring */
+
+  /* Luxury palette */
+  --gold: oklch(0.66 0.11 75);                    /* #B9913B */
+  --gold-deep: oklch(0.55 0.105 72);              /* #9D7628 */
+  --gold-soft: oklch(0.93 0.038 82);              /* #F3E8D0 */
+  --cream: oklch(0.965 0.012 85);                 /* #F8F5EF */
+  --cream-warm: oklch(0.96 0.014 80);             /* #F7F3EA */
+  --pastel-mint: oklch(0.93 0.04 145);            /* #DDEEDB */
+  --pastel-peach: oklch(0.89 0.045 45);           /* #F7D8C5 */
+  --pastel-blue: oklch(0.92 0.03 230);            /* #DCECF4 */
+  --pastel-cream: oklch(0.97 0.05 95);            /* #FFF4D8 */
+  --success: oklch(0.6 0.07 145);                 /* #5E8C61 */
+
+  --chart-1: oklch(0.66 0.11 75);
+  --chart-2: oklch(0.89 0.045 45);
+  --chart-3: oklch(0.92 0.03 230);
+  --chart-4: oklch(0.93 0.04 145);
+  --chart-5: oklch(0.55 0.105 72);
+
+  --sidebar: oklch(0.984 0.003 247.858);
+  --sidebar-foreground: oklch(0.245 0 0);
+  --sidebar-primary: oklch(0.245 0 0);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.93 0.038 82);
+  --sidebar-accent-foreground: oklch(0.52 0.10 70);
+  --sidebar-border: oklch(0.91 0.012 80);
+  --sidebar-ring: oklch(0.66 0.11 75);
 }
 
 @layer base {
@@ -137,8 +140,34 @@
     border-color: var(--color-border);
   }
 
+  html,
   body {
-    background-color: var(--color-background);
+    background-color: var(--color-cream);
     color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  .font-serif {
+    font-family: var(--font-serif);
+    font-feature-settings: "liga", "dlig";
+  }
+}
+
+@layer utilities {
+  .tracking-luxury {
+    letter-spacing: 0.22em;
+  }
+  .tracking-soft {
+    letter-spacing: 0.08em;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
