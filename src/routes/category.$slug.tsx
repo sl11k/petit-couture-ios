@@ -277,7 +277,7 @@ function ProductDetails() {
                 fill={wished ? "currentColor" : "none"}
               />
             </button>
-            <button className="flex-1 h-[56px] rounded-full bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft">
+            <button onClick={addToBag} className="flex-1 h-[56px] rounded-full bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft">
               <ShoppingBag className="h-[18px] w-[18px]" strokeWidth={1.6} />
               {t.product.addToBag} ·{" "}
               {product.price.toLocaleString(lang === "ar" ? "ar-EG" : "en-US")} {product.currency}
