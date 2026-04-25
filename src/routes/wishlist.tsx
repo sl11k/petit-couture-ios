@@ -1,10 +1,49 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, Heart, Sparkles, Trash2 } from "lucide-react";
-import { useMemo } from "react";
+import { ChevronLeft, ChevronRight, Heart, Share2, Sparkles, Trash2 } from "lucide-react";
+import { useCallback, useMemo } from "react";
+import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { categories, getProductForCategory } from "@/data/categories";
 import hero from "@/assets/hero-campaign.jpg";
+
+function buildShareUrl(ids: string[]): string {
+  const origin =
+    typeof window !== "undefined" ? window.location.origin : "https://maisonnet.app";
+  const params = new URLSearchParams({ ids: ids.join(",") });
+  return `${origin}/wishlist/share?${params.toString()}`;
+}
+
+async function shareOrCopy(opts: {
+  url: string;
+  title: string;
+  text: string;
+  successMsg: string;
+  failMsg: string;
+  isRTL: boolean;
+}) {
+  const { url, title, text, successMsg, failMsg, isRTL } = opts;
+  const position = isRTL ? ("top-left" as const) : ("top-right" as const);
+  const nav = typeof navigator !== "undefined" ? navigator : undefined;
+
+  if (nav && typeof nav.share === "function") {
+    try {
+      await nav.share({ title, text, url });
+      return;
+    } catch (err) {
+      // User cancellation -> stay silent
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      // Fall through to clipboard
+    }
+  }
+
+  try {
+    await nav?.clipboard?.writeText(url);
+    toast(successMsg, { position, duration: 1800 });
+  } catch {
+    toast(failMsg, { position, duration: 2200 });
+  }
+}
 
 export const Route = createFileRoute("/wishlist")({
   head: () => ({
