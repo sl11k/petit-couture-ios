@@ -202,6 +202,64 @@ function AnalyticsDebug() {
             </div>
           </div>
 
+          {/* Session funnel summary */}
+          <div className="mt-5 rounded-[20px] border border-border bg-background px-4 py-4">
+            <div className={["flex items-baseline justify-between gap-3", isRTL ? "flex-row-reverse" : ""].join(" ")}>
+              <span className="text-[10.5px] tracking-luxury text-gold-deep">
+                {labels.funnelEyebrow}
+              </span>
+              <span className="text-[10.5px] text-muted-foreground tabular-nums" dir="ltr">
+                {funnel.firstTs !== null && funnel.lastTs !== null
+                  ? labels.funnelWindow(funnel.firstTs, funnel.lastTs)
+                  : labels.funnelEmpty}
+              </span>
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              <div className="rounded-[14px] border border-border bg-cream-warm/40 px-3 py-2.5 text-center">
+                <p className="text-[10px] tracking-luxury text-gold-deep">{labels.funnelAdds}</p>
+                <p className="mt-1 font-serif text-[22px] leading-none text-foreground tabular-nums">
+                  {funnel.adds}
+                </p>
+              </div>
+              <div className="rounded-[14px] border border-border bg-background px-3 py-2.5 text-center">
+                <p className="text-[10px] tracking-luxury text-muted-foreground">{labels.funnelRemoves}</p>
+                <p className="mt-1 font-serif text-[22px] leading-none text-foreground tabular-nums">
+                  {funnel.removes}
+                </p>
+              </div>
+              <div className="rounded-[14px] border border-border bg-background px-3 py-2.5 text-center">
+                <p className="text-[10px] tracking-luxury text-muted-foreground">{labels.funnelClears}</p>
+                <p className="mt-1 font-serif text-[22px] leading-none text-foreground tabular-nums">
+                  {funnel.clears}
+                </p>
+                {funnel.cleared > 0 && (
+                  <p className="mt-0.5 text-[10px] text-muted-foreground tabular-nums">
+                    {labels.funnelClearedItems(funnel.cleared)}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className={["mt-3 flex items-baseline justify-between gap-3 pt-3 border-t border-border", isRTL ? "flex-row-reverse" : ""].join(" ")}>
+              <span className="text-[11px] tracking-luxury text-foreground/70">
+                {labels.funnelNet}
+              </span>
+              <span
+                className={[
+                  "font-serif text-[24px] leading-none tabular-nums",
+                  funnel.net > 0
+                    ? "text-gold-deep"
+                    : funnel.net < 0
+                      ? "text-foreground/80"
+                      : "text-foreground/60",
+                ].join(" ")}
+                dir="ltr"
+              >
+                {funnel.net > 0 ? "+" : ""}
+                {funnel.net}
+              </span>
+            </div>
+          </div>
+
           {isDev && (
             <div className="mt-5 flex items-center gap-3 rounded-[18px] border border-gold-soft bg-cream-warm/60 px-4 py-3">
               <span className={["min-w-0 flex-1 leading-tight", isRTL ? "text-right" : "text-left"].join(" ")}>
