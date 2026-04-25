@@ -74,7 +74,15 @@ function SharePage() {
     const decoded = decodeIds(ids);
     const fresh = decoded.filter((id) => !has(id));
 
-    if (decoded.length > 0) merge(decoded);
+    if (decoded.length > 0) merge(decoded, "shared_link");
+
+    trackEvent({
+      name: "wishlist_import",
+      ts: Date.now(),
+      requested: decoded.length,
+      added: fresh.length,
+      source: "shared_link",
+    });
 
     const w = t.wishlist;
     const message =
