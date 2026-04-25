@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -87,11 +87,29 @@ function CheckoutPage() {
   const locale = lang === "ar" ? "ar-EG" : "en-US";
   const fmt = (n: number) => n.toLocaleString(locale);
   const total = bag.subtotal;
+  const bagEmpty = bag.items.length === 0;
 
-  // If bag empty, send back home
+  // Distinguish "arrived with empty bag" (silent redirect to /bag) vs
+  // "bag became empty while on checkout" (calm toast + delayed redirect so the user sees it).
+  const arrivedEmptyRef = useRef<boolean>(bagEmpty);
+  const notifiedEmptyRef = useRef<boolean>(false);
+
   useEffect(() => {
-    if (bag.items.length === 0) navigate({ to: "/bag" });
-  }, [bag.items.length, navigate]);
+    if (!bagEmpty) return;
+    if (arrivedEmptyRef.current) {
+      navigate({ to: "/bag" });
+      return;
+    }
+    if (notifiedEmptyRef.current) return;
+    notifiedEmptyRef.current = true;
+    toast(t.checkout.bagEmptyDuringCheckout, {
+      icon: "🛍️",
+      position: isRTL ? "top-left" : "top-right",
+      duration: 2600,
+    });
+    const id = window.setTimeout(() => navigate({ to: "/bag" }), 2400);
+    return () => window.clearTimeout(id);
+  }, [bagEmpty, navigate, t.checkout.bagEmptyDuringCheckout, isRTL]);
 
   const schema = buildSchema(t.checkout.errors);
   type FormValues = z.input<typeof schema>;
