@@ -92,61 +92,132 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     [isRTL],
   );
   const add = useCallback(
-    (id: string) =>
+    (id: string, source: WishlistSource = "unknown") =>
       setItems((prev) => {
         if (prev.includes(id)) return prev;
         notify("added");
-        return [...prev, id];
+        const next = [...prev, id];
+        const { kind, slug } = classifyItem(id);
+        trackEvent({
+          name: "wishlist_add",
+          ts: Date.now(),
+          itemId: id,
+          itemKind: kind,
+          itemSlug: slug,
+          source,
+          wishlistSize: next.length,
+        });
+        return next;
       }),
     [notify],
   );
   const remove = useCallback(
-    (id: string) =>
+    (id: string, source: WishlistSource = "unknown") =>
       setItems((prev) => {
         if (!prev.includes(id)) return prev;
         notify("removed");
-        return prev.filter((x) => x !== id);
+        const next = prev.filter((x) => x !== id);
+        const { kind, slug } = classifyItem(id);
+        trackEvent({
+          name: "wishlist_remove",
+          ts: Date.now(),
+          itemId: id,
+          itemKind: kind,
+          itemSlug: slug,
+          source,
+          wishlistSize: next.length,
+        });
+        return next;
       }),
     [notify],
   );
   const toggle = useCallback(
-    (id: string) =>
+    (id: string, source: WishlistSource = "unknown") =>
       setItems((prev) => {
+        const { kind, slug } = classifyItem(id);
         if (prev.includes(id)) {
           notify("removed");
-          return prev.filter((x) => x !== id);
+          const next = prev.filter((x) => x !== id);
+          trackEvent({
+            name: "wishlist_remove",
+            ts: Date.now(),
+            itemId: id,
+            itemKind: kind,
+            itemSlug: slug,
+            source,
+            wishlistSize: next.length,
+          });
+          return next;
         }
         notify("added");
-        return [...prev, id];
+        const next = [...prev, id];
+        trackEvent({
+          name: "wishlist_add",
+          ts: Date.now(),
+          itemId: id,
+          itemKind: kind,
+          itemSlug: slug,
+          source,
+          wishlistSize: next.length,
+        });
+        return next;
       }),
     [notify],
   );
-  const clear = useCallback(() => {
-    setItems((prev) => {
-      if (prev.length === 0) return prev;
-      toast(messages.current.cleared ?? messages.current.removed, {
-        icon: <Heart className="h-4 w-4" strokeWidth={1.7} />,
-        position: isRTL ? "top-left" : "top-right",
-        duration: 1800,
+  const clear = useCallback(
+    (source: WishlistSource = "wishlist_screen") => {
+      setItems((prev) => {
+        if (prev.length === 0) return prev;
+        toast(messages.current.cleared ?? messages.current.removed, {
+          icon: <Heart className="h-4 w-4" strokeWidth={1.7} />,
+          position: isRTL ? "top-left" : "top-right",
+          duration: 1800,
+        });
+        trackEvent({
+          name: "wishlist_clear",
+          ts: Date.now(),
+          previousSize: prev.length,
+          source,
+        });
+        return [];
       });
-      return [];
-    });
-  }, [isRTL]);
+    },
+    [isRTL],
+  );
 
-  const merge = useCallback((ids: string[]) => {
-    setItems((prev) => {
-      const set = new Set(prev);
-      let added = 0;
-      for (const id of ids) {
-        if (typeof id === "string" && id && !set.has(id)) {
-          set.add(id);
-          added++;
+  const merge = useCallback(
+    (ids: string[], source: WishlistSource = "shared_link"): { added: number } => {
+      let addedCount = 0;
+      setItems((prev) => {
+        const set = new Set(prev);
+        const freshlyAdded: string[] = [];
+        for (const id of ids) {
+          if (typeof id === "string" && id && !set.has(id)) {
+            set.add(id);
+            freshlyAdded.push(id);
+          }
         }
-      }
-      if (added === 0) return prev;
-      return Array.from(set);
-    });
-  }, []);
+        addedCount = freshlyAdded.length;
+        if (addedCount === 0) return prev;
+        const next = Array.from(set);
+        for (const id of freshlyAdded) {
+          const { kind, slug } = classifyItem(id);
+          trackEvent({
+            name: "wishlist_add",
+            ts: Date.now(),
+            itemId: id,
+            itemKind: kind,
+            itemSlug: slug,
+            source,
+            wishlistSize: next.length,
+          });
+        }
+        return next;
+      });
+      return { added: addedCount };
+    },
+    [],
+  );
 
   const value = useMemo<Ctx>(
     () => ({ items, has, toggle, add, remove, clear, merge, count: items.length }),
