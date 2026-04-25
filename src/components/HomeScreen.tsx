@@ -204,7 +204,7 @@ export function HomeScreen() {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          wishlist.toggle(wishId);
+                          wishlist.toggle(wishId, "category_card");
                         }}
                         className="absolute top-2.5 end-2.5 h-9 w-9 rounded-full bg-background/85 backdrop-blur grid place-items-center text-gold-deep border border-gold-soft active:scale-90 transition"
                       >
