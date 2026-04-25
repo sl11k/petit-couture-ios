@@ -302,6 +302,13 @@ function WishlistPage() {
                             </Link>
                           )}
                           <button
+                            aria-label={t.wishlist.share}
+                            onClick={() => shareItem(it.id, it.name)}
+                            className="h-9 w-9 rounded-full border border-border text-muted-foreground hover:text-foreground active:scale-95 transition grid place-items-center"
+                          >
+                            <Share2 className="h-[13px] w-[13px]" strokeWidth={1.6} />
+                          </button>
+                          <button
                             aria-label={ariaLabel}
                             onClick={() => wishlist.remove(it.id)}
                             className="h-9 px-3 rounded-full border border-border text-[12px] tracking-soft text-muted-foreground hover:text-foreground active:scale-95 transition inline-flex items-center gap-1.5"
