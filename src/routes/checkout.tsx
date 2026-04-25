@@ -184,7 +184,66 @@ function CheckoutPage() {
             noValidate
             className="px-5 mt-7 space-y-7"
           >
+            {/* Saved address review (when address exists and not editing) */}
+            {address && !editing && (
+              <section className="rounded-[20px] border border-gold-soft bg-cream-warm/30 p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-[15px] w-[15px] text-gold-deep" strokeWidth={1.6} />
+                    <span className="text-[10.5px] tracking-luxury text-gold-deep">
+                      {lang === "en"
+                        ? t.checkout.savedEyebrow
+                        : t.checkout.savedEyebrow}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditing(true)}
+                    aria-label={t.checkout.edit}
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border border-border text-[11.5px] tracking-soft text-foreground/80 hover:text-foreground active:scale-95 transition"
+                  >
+                    <Pencil className="h-[12px] w-[12px]" strokeWidth={1.7} />
+                    {t.checkout.edit}
+                  </button>
+                </div>
+                <p className="mt-3 text-[11px] tracking-luxury text-muted-foreground">
+                  {lang === "en"
+                    ? t.checkout.savedTitle.toUpperCase()
+                    : t.checkout.savedTitle}
+                </p>
+                <p className="mt-1 font-serif text-[18px] text-foreground leading-snug">
+                  {address.fullName}
+                </p>
+                <p className="mt-1 text-[13px] text-foreground/80 leading-relaxed">
+                  {address.street}, {address.district}
+                  <br />
+                  {address.city} {address.postalCode}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11.5px] text-muted-foreground tracking-soft">
+                  <span dir="ltr" className="font-medium tracking-[0.15em] text-gold-deep">
+                    {address.shortCode}
+                  </span>
+                  <span dir="ltr" className="tabular-nums">
+                    {t.checkout.buildingNumber}: {address.buildingNumber}
+                  </span>
+                  <span dir="ltr" className="tabular-nums">
+                    {t.checkout.additionalNumber}: {address.additionalNumber}
+                  </span>
+                </div>
+                <div className="mt-3 pt-3 border-t border-border/60 text-[12px] text-foreground/75 space-y-0.5">
+                  <p dir="ltr" className="tabular-nums">{address.phone}</p>
+                  <p dir="ltr" className="truncate">{address.email}</p>
+                  {address.notes ? (
+                    <p className="mt-1 text-muted-foreground italic">
+                      “{address.notes}”
+                    </p>
+                  ) : null}
+                </div>
+              </section>
+            )}
+
             {/* Contact */}
+            {editing && (
             <section className="space-y-3">
               <h2 className="text-[11px] tracking-luxury text-gold-deep">
                 {lang === "en"
