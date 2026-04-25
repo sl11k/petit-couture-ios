@@ -38,9 +38,6 @@ function ProductDetails() {
   const wishId = `product:${slug}`;
   const wished = wishlist.has(wishId);
   const setWished = () => wishlist.toggle(wishId);
-  const handleWishClick = (_e: React.MouseEvent) => wishlist.toggle(wishId);
-  void setWished;
-  void handleWishClick;
 
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
 
