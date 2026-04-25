@@ -1,12 +1,13 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, Heart, Share2, Sparkles, Trash2, UserCircle2 } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight, Heart, Share2, Sparkles, Trash2, UserCircle2, Undo2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useAuth } from "@/state/AuthContext";
 import { categories, getProductForCategory } from "@/data/categories";
 import { trackEvent } from "@/lib/analytics";
+import { clearLastImport, readLastImport } from "@/lib/lastImport";
 import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
 import hero from "@/assets/hero-campaign.jpg";
 
@@ -55,6 +56,37 @@ function WishlistPage() {
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
 
   const [sharePayload, setSharePayload] = useState<ShareSheetPayload | null>(null);
+
+  // Capture once-per-visit list of IDs that arrived via /wishlist/share, so the
+  // user can roll back the import in a single tap. Reading clears the slot —
+  // the affordance never reappears on back/forward navigation.
+  const [importedIds, setImportedIds] = useState<string[]>([]);
+  useEffect(() => {
+    const last = readLastImport();
+    if (last && last.ids.length > 0) {
+      setImportedIds(last.ids);
+      clearLastImport();
+    }
+  }, []);
+
+  const onUndoImport = useCallback(() => {
+    const ids = importedIds;
+    if (ids.length === 0) return;
+    for (const id of ids) wishlist.remove(id, "shared_link");
+    setImportedIds([]);
+    const message = isRTL
+      ? ids.length === 1
+        ? "تم حذف العنصر المستورد"
+        : `تم حذف ${ids.length} عناصر مستوردة`
+      : ids.length === 1
+        ? "Removed 1 imported piece"
+        : `Removed ${ids.length} imported pieces`;
+    toast(message, {
+      icon: <Undo2 className="h-4 w-4" strokeWidth={1.7} />,
+      position: isRTL ? "top-left" : "top-right",
+      duration: 2200,
+    });
+  }, [importedIds, wishlist, isRTL]);
 
   const shareItem = useCallback(
     (id: string, name: string) => {
@@ -196,6 +228,35 @@ function WishlistPage() {
         </header>
 
         <main className="pb-12">
+          {importedIds.length > 0 && (
+            <div className="mx-5 mt-1 mb-4 flex items-center gap-3 rounded-[18px] border border-gold-soft bg-gold-soft/40 px-4 py-3">
+              <span className="h-9 w-9 grid place-items-center rounded-full bg-background border border-gold-soft text-gold-deep shrink-0">
+                <Heart className="h-[16px] w-[16px]" strokeWidth={1.6} fill="currentColor" />
+              </span>
+              <span className={["min-w-0 flex-1 leading-tight", isRTL ? "text-right" : "text-left"].join(" ")}>
+                <span className="block text-[10.5px] tracking-luxury text-gold-deep">
+                  {isRTL ? "مستورد للتو" : "JUST IMPORTED"}
+                </span>
+                <span className="block text-[12.5px] text-foreground/80 tracking-soft truncate">
+                  {isRTL
+                    ? importedIds.length === 1
+                      ? "تمت إضافة قطعة واحدة من رابط مشترك"
+                      : `تمت إضافة ${importedIds.length} قطع من رابط مشترك`
+                    : importedIds.length === 1
+                      ? "1 piece added from a shared link"
+                      : `${importedIds.length} pieces added from a shared link`}
+                </span>
+              </span>
+              <button
+                type="button"
+                onClick={onUndoImport}
+                className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-foreground text-background text-[10.5px] tracking-luxury active:scale-95 transition"
+              >
+                <Undo2 className="h-[11px] w-[11px]" strokeWidth={1.8} />
+                {isRTL ? "تراجع" : "UNDO"}
+              </button>
+            </div>
+          )}
           {ready && !user && wishlist.count > 0 && (
             <Link
               to="/account"

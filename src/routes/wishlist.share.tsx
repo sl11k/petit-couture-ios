@@ -8,6 +8,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { categories } from "@/data/categories";
 import { trackEvent } from "@/lib/analytics";
+import { setLastImport } from "@/lib/lastImport";
 
 // Accepts ?ids=cat-slug,prod-slug,full:id  -- compact, human-readable
 const searchSchema = z.object({
@@ -109,6 +110,7 @@ function SharePage() {
       const fresh = decoded.filter((id) => !has(id));
 
       if (decoded.length > 0) merge(decoded, "shared_link");
+      setLastImport(fresh);
 
       trackEvent({
         name: "wishlist_import",
