@@ -200,10 +200,10 @@ function WishlistPage() {
                 onClick={() => {
                   const snapshot = [...wishlist.items];
                   if (snapshot.length === 0) return;
-                  toast(t.wishlist.clearConfirm ?? (isRTL ? "مسح جميع العناصر؟" : "Clear all items?"), {
-                    description: t.wishlist.clearConfirmBody ?? (isRTL
+                  toast(isRTL ? "مسح جميع العناصر؟" : "Clear all items?", {
+                    description: isRTL
                       ? "سيتم إزالة كل ما في قائمة الرغبات."
-                      : "Everything in your wishlist will be removed."),
+                      : "Everything in your wishlist will be removed.",
                     icon: <Trash2 className="h-4 w-4" strokeWidth={1.7} />,
                     position: isRTL ? "top-left" : "top-right",
                     duration: 5000,
