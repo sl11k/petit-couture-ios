@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Heart, Share2, ShoppingBag, Truck, RotateCcw } from "lucide-react";
 import { getProductForCategory, categories } from "@/data/categories";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -46,6 +46,22 @@ function ProductDetails() {
   const setWished = () => {
     wishlist.toggle(wishId, "product_detail");
   };
+
+  // One-shot impression for this product detail view (per session, per slug).
+  useEffect(() => {
+    const seenKey = `maisonnet:impression:product:${slug}`;
+    if (typeof sessionStorage === "undefined") return;
+    if (sessionStorage.getItem(seenKey)) return;
+    try { sessionStorage.setItem(seenKey, "1"); } catch { /* ignore */ }
+    trackEvent({
+      name: "wishlist_impression",
+      ts: Date.now(),
+      itemId: wishId,
+      itemKind: "product",
+      itemSlug: slug,
+      source: "product_detail",
+    });
+  }, [slug, wishId]);
 
   const addToBag = () => {
     bag.add({
