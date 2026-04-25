@@ -220,6 +220,8 @@ const dictionaries: Record<Lang, Dict> = {
       welcome: (name) => `Welcome, ${name}`,
       mergedOnSignIn: (added) => (added === 1 ? "1 saved piece added from this device" : `${added} saved pieces added from this device`),
     },
+    categories: {
+      "best-sellers": "Best Sellers",
       "new-in": "New In",
       swimwear: "Swimwear",
       dresses: "Dresses",
