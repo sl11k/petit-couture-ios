@@ -23,6 +23,8 @@ type Ctx = {
   remove: (id: string, source?: WishlistSource) => void;
   clear: (source?: WishlistSource) => void;
   merge: (ids: string[], source?: WishlistSource) => { added: number };
+  /** Replace the entire list. Used for "Undo" reverts; emits a single analytics event. */
+  restore: (snapshot: string[]) => void;
   count: number;
 };
 
