@@ -6,6 +6,7 @@ import { BagProvider } from "@/state/BagContext";
 import { AddressProvider } from "@/state/AddressContext";
 import { Toaster } from "@/components/ui/sonner";
 import { WishlistBanner } from "@/components/WishlistBanner";
+import { DesktopHeader } from "@/components/DesktopHeader";
 
 import appCss from "../styles.css?url";
 
@@ -78,6 +79,7 @@ function RootComponent() {
         <WishlistProvider>
           <BagProvider>
             <AddressProvider>
+              <DesktopHeader />
               <Outlet />
               <WishlistBanner />
               <Toaster />

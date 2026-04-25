@@ -189,3 +189,138 @@
     scrollbar-width: none;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   DESKTOP LAYOUT (lg+ ≥ 1024px)
+   The whole app is composed inside a 440px mobile frame. On large screens
+   we "explode" that frame so the boutique fills the viewport with the same
+   luxury material (cream surfaces, gold accents, serif type, soft shadows).
+   Mobile rendering is left completely untouched.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (min-width: 1024px) {
+  /* The screen-level wrappers each route uses: bg-cream + flex justify-center.
+     Make the wrapper transparent so the desktop header is the only top chrome. */
+  .min-h-screen.bg-cream.flex.justify-center {
+    background-color: var(--background);
+    align-items: stretch;
+    min-height: calc(100vh - 0px);
+  }
+
+  /* The mobile "phone" frame in every route. Promote it to a full-bleed
+     boutique surface. */
+  .relative.bg-background.min-h-screen.shadow-soft {
+    max-width: 100% !important;
+    width: 100%;
+    margin: 0;
+    box-shadow: none;
+    overflow: visible;
+    padding-bottom: 80px;
+  }
+
+  /* Hide the simulated iOS status bar on desktop. Each route renders it as
+     the first child of the frame (a flex row with px-7 pt-3 pb-1). */
+  .relative.bg-background.min-h-screen.shadow-soft
+    > div:first-child.flex.items-center.justify-between {
+    display: none;
+  }
+
+  /* The mobile in-frame header (logo + back/wishlist) and bottom nav.
+     They are replaced by <DesktopHeader /> which is global. */
+  .relative.bg-background.min-h-screen.shadow-soft > header {
+    display: none;
+  }
+  .relative.bg-background.min-h-screen.shadow-soft > nav.absolute.bottom-0,
+  .relative.bg-background.min-h-screen.shadow-soft > button[aria-label][class*="absolute"][class*="bottom-"] {
+    display: none;
+  }
+
+  /* Mobile-only announcement bar lives directly under the in-frame header.
+     The desktop header has its own announcement strip — hide this one. */
+  .relative.bg-background.min-h-screen.shadow-soft > div.relative.bg-cream-warm {
+    display: none;
+  }
+
+  /* Main content gets a generous boutique container instead of the 440px frame. */
+  .relative.bg-background.min-h-screen.shadow-soft > main {
+    max-width: 1480px;
+    margin: 0 auto;
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+    padding-bottom: 4rem !important;
+  }
+
+  /* Section padding inside main was tuned for 440px — relax it on desktop. */
+  .relative.bg-background.min-h-screen.shadow-soft > main > section {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* Hero image is constrained to 440x440-ish on mobile. Let it breathe. */
+  .relative.bg-background.min-h-screen.shadow-soft img[alt*="campaign" i],
+  .relative.bg-background.min-h-screen.shadow-soft img[alt*="حملة" i] {
+    height: 620px !important;
+    object-position: center 20%;
+  }
+
+  /* "Most Popular" category grid: was 2 cols, give it 4 on desktop. */
+  .relative.bg-background.min-h-screen.shadow-soft .grid.grid-cols-2 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.75rem 1.5rem;
+  }
+
+  /* Age chips row stays 3-up but centered, not stretched edge-to-edge. */
+  .relative.bg-background.min-h-screen.shadow-soft .grid.grid-cols-3:not(.lg\:hidden) {
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Wishlist insights / sync banner / clear buttons read full-width on mobile.
+     Center them at desktop width so they don't stretch awkwardly. */
+  .relative.bg-background.min-h-screen.shadow-soft section > .rounded-\[24px\],
+  .relative.bg-background.min-h-screen.shadow-soft main > a[class*="rounded-\\[18px\\]"],
+  .relative.bg-background.min-h-screen.shadow-soft main > div[class*="rounded-\\[18px\\]"] {
+    max-width: 880px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Bag / wishlist single-column item lists become a 2-up grid on desktop. */
+  .relative.bg-background.min-h-screen.shadow-soft section.space-y-4 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+    max-width: 1180px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .relative.bg-background.min-h-screen.shadow-soft section.space-y-4 > * {
+    margin-top: 0 !important;
+  }
+
+  /* Page titles within main feel small at desktop scale; nudge them up. */
+  .relative.bg-background.min-h-screen.shadow-soft main h1.font-serif {
+    font-size: 44px;
+    line-height: 1.05;
+  }
+
+  /* Center long-form headers (wishlist, bag, account) so they don't hug
+     the left edge of a 1480px container. */
+  .relative.bg-background.min-h-screen.shadow-soft main > section:first-of-type {
+    text-align: center;
+    max-width: 880px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 2.5rem !important;
+  }
+  .relative.bg-background.min-h-screen.shadow-soft main > section:first-of-type > div {
+    justify-content: center;
+  }
+}
+
+/* Hide the desktop header below the lg breakpoint as a safety net. */
+@media (max-width: 1023.98px) {
+  [data-desktop-header] {
+    display: none !important;
+  }
+}
