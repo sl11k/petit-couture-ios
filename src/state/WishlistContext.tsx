@@ -79,6 +79,116 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
+  // ─── Cloud sync ────────────────────────────────────────────────────────────
+  // When a user signs in, union-merge local items with whatever is stored on the
+  // server, then mirror every subsequent local change to the DB. When signed
+  // out, the wishlist is purely local (existing behaviour).
+  const { user } = useAuth();
+  const userIdRef = useRef<string | null>(null);
+  const syncedItemsRef = useRef<Set<string>>(new Set());
+  const itemsRef = useRef<string[]>(items);
+  itemsRef.current = items;
+
+  useEffect(() => {
+    let cancelled = false;
+    const uid = user?.id ?? null;
+
+    if (!uid) {
+      // Signed out — clear sync tracking; keep local items as-is.
+      userIdRef.current = null;
+      syncedItemsRef.current = new Set();
+      return;
+    }
+
+    (async () => {
+      const { data, error } = await supabase
+        .from("wishlist_items")
+        .select("item_id")
+        .eq("user_id", uid);
+      if (cancelled) return;
+      if (error) {
+        // Network/RLS error — leave local items alone.
+        // eslint-disable-next-line no-console
+        console.error("[wishlist] load failed", error);
+        return;
+      }
+
+      const serverIds = new Set((data ?? []).map((r) => r.item_id));
+      const localIds = itemsRef.current;
+      const onlyLocal = localIds.filter((id) => !serverIds.has(id));
+
+      // Push local-only items to server.
+      if (onlyLocal.length > 0) {
+        const rows = onlyLocal.map((item_id) => ({ user_id: uid, item_id }));
+        const { error: upsertErr } = await supabase
+          .from("wishlist_items")
+          .upsert(rows, { onConflict: "user_id,item_id" });
+        if (upsertErr) {
+          // eslint-disable-next-line no-console
+          console.error("[wishlist] merge upsert failed", upsertErr);
+        }
+      }
+
+      // Union locally so server-only items become visible.
+      const union = Array.from(new Set([...localIds, ...serverIds]));
+
+      userIdRef.current = uid;
+      syncedItemsRef.current = new Set(union);
+
+      if (
+        union.length !== localIds.length ||
+        union.some((v, i) => v !== localIds[i])
+      ) {
+        setItems(union);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
+
+  // Mirror local diffs to server (only after initial load completed).
+  useEffect(() => {
+    const uid = userIdRef.current;
+    if (!uid) return;
+    const synced = syncedItemsRef.current;
+    const current = new Set(items);
+
+    const toAdd: string[] = [];
+    const toRemove: string[] = [];
+    for (const id of current) if (!synced.has(id)) toAdd.push(id);
+    for (const id of synced) if (!current.has(id)) toRemove.push(id);
+
+    if (toAdd.length === 0 && toRemove.length === 0) return;
+
+    syncedItemsRef.current = current;
+
+    (async () => {
+      if (toAdd.length > 0) {
+        const rows = toAdd.map((item_id) => ({ user_id: uid, item_id }));
+        const { error } = await supabase
+          .from("wishlist_items")
+          .upsert(rows, { onConflict: "user_id,item_id" });
+        if (error) {
+          // eslint-disable-next-line no-console
+          console.error("[wishlist] add sync failed", error);
+        }
+      }
+      if (toRemove.length > 0) {
+        const { error } = await supabase
+          .from("wishlist_items")
+          .delete()
+          .eq("user_id", uid)
+          .in("item_id", toRemove);
+        if (error) {
+          // eslint-disable-next-line no-console
+          console.error("[wishlist] remove sync failed", error);
+        }
+      }
+    })();
+  }, [items]);
+
   const { t, isRTL } = useLanguage();
   const messages = useRef(t.wishlist);
   messages.current = t.wishlist;
