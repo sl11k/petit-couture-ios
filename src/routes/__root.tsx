@@ -79,6 +79,7 @@ function RootComponent() {
         <WishlistProvider>
           <BagProvider>
             <AddressProvider>
+              <DesktopHeader />
               <Outlet />
               <WishlistBanner />
               <Toaster />
