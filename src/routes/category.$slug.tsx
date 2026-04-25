@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight, Heart, Share2, ShoppingBag, Truck, RotateCcw } from "lucide-react";
 import { getProductForCategory, categories } from "@/data/categories";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useWishlist } from "@/state/WishlistContext";
 
 export const Route = createFileRoute("/category/$slug")({
   head: ({ params }) => {
@@ -33,7 +34,10 @@ function ProductDetails() {
   const [activeImg, setActiveImg] = useState(0);
   const [size, setSize] = useState(product.sizes[2]);
   const [color, setColor] = useState(product.colors[0].name);
-  const [wished, setWished] = useState(false);
+  const wishlist = useWishlist();
+  const wishId = `product:${slug}`;
+  const wished = wishlist.has(wishId);
+  const setWished = () => wishlist.toggle(wishId);
 
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
 
