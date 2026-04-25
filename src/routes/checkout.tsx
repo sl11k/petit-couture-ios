@@ -647,6 +647,101 @@ function CheckoutPage() {
               </Link>
             </div>
 
+            {/* Confirmation summary — shown above the CTA whenever a valid address is in scope. */}
+            <section
+              aria-live="polite"
+              className={[
+                "rounded-[20px] p-5 transition",
+                confirmedAddress
+                  ? "border border-gold bg-cream-warm/50 shadow-soft"
+                  : "border border-dashed border-border bg-cream-warm/20",
+              ].join(" ")}
+            >
+              <div className="flex items-center gap-2">
+                <ShieldCheck
+                  className={[
+                    "h-[15px] w-[15px]",
+                    confirmedAddress ? "text-gold-deep" : "text-muted-foreground",
+                  ].join(" ")}
+                  strokeWidth={1.7}
+                />
+                <span
+                  className={[
+                    "text-[10.5px] tracking-luxury",
+                    confirmedAddress ? "text-gold-deep" : "text-muted-foreground",
+                  ].join(" ")}
+                >
+                  {lang === "en"
+                    ? t.checkout.confirmEyebrow
+                    : t.checkout.confirmEyebrow}
+                </span>
+              </div>
+
+              {confirmedAddress ? (
+                <>
+                  <p className="mt-3 font-serif text-[17px] text-foreground leading-snug">
+                    {confirmedAddress.fullName}
+                  </p>
+                  <p className="mt-1 text-[13px] text-foreground/85 leading-relaxed">
+                    {confirmedAddress.street}, {confirmedAddress.district}
+                    <br />
+                    {confirmedAddress.city} {confirmedAddress.postalCode}
+                  </p>
+
+                  <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-[12px]">
+                    <div>
+                      <dt className="text-[10px] tracking-luxury text-muted-foreground">
+                        {t.checkout.nationalAddress}
+                      </dt>
+                      <dd
+                        dir="ltr"
+                        className="mt-0.5 font-medium tracking-[0.18em] text-gold-deep tabular-nums"
+                      >
+                        {confirmedAddress.shortCode}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] tracking-luxury text-muted-foreground">
+                        {t.checkout.buildingNumber}
+                      </dt>
+                      <dd dir="ltr" className="mt-0.5 text-foreground/85 tabular-nums">
+                        {confirmedAddress.buildingNumber}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] tracking-luxury text-muted-foreground">
+                        {t.checkout.additionalNumber}
+                      </dt>
+                      <dd dir="ltr" className="mt-0.5 text-foreground/85 tabular-nums">
+                        {confirmedAddress.additionalNumber}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] tracking-luxury text-muted-foreground">
+                        {t.checkout.phone}
+                      </dt>
+                      <dd dir="ltr" className="mt-0.5 text-foreground/85 tabular-nums truncate">
+                        {confirmedAddress.phone}
+                      </dd>
+                    </div>
+                  </dl>
+
+                  <p className="mt-2 text-[11.5px] text-muted-foreground tracking-soft truncate" dir="ltr">
+                    {confirmedAddress.email}
+                  </p>
+                  {confirmedAddress.notes ? (
+                    <p className="mt-2 text-[11.5px] text-muted-foreground italic">
+                      “{confirmedAddress.notes}”
+                    </p>
+                  ) : null}
+                </>
+              ) : (
+                <p className="mt-2 text-[12px] text-muted-foreground tracking-soft">
+                  {t.checkout.confirmAwaiting}
+                </p>
+              )}
+            </section>
+
             {/* Sticky CTA */}
             <div className="fixed sm:absolute bottom-0 inset-x-0 max-w-[440px] mx-auto bg-background/95 backdrop-blur-md border-t border-border">
               <div className="px-5 pt-4 pb-6">
