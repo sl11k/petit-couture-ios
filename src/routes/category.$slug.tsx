@@ -37,7 +37,9 @@ function ProductDetails() {
   const wishlist = useWishlist();
   const wishId = `product:${slug}`;
   const wished = wishlist.has(wishId);
-  const setWished = () => wishlist.toggle(wishId);
+  const setWished = () => {
+    wishlist.toggle(wishId);
+  };
 
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
 
