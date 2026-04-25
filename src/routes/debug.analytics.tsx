@@ -2,7 +2,13 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Activity } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { getRecentEvents, type AnalyticsEvent } from "@/lib/analytics";
+import {
+  ANALYTICS_TOGGLE_EVENT,
+  getRecentEvents,
+  isAnalyticsEnabled,
+  setAnalyticsEnabled,
+  type AnalyticsEvent,
+} from "@/lib/analytics";
 
 export const Route = createFileRoute("/debug/analytics")({
   head: () => ({
