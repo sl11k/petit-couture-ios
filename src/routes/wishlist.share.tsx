@@ -8,6 +8,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { categories } from "@/data/categories";
 import { trackEvent } from "@/lib/analytics";
+import { setLastImport } from "@/lib/lastImport";
 
 // Accepts ?ids=cat-slug,prod-slug,full:id  -- compact, human-readable
 const searchSchema = z.object({
