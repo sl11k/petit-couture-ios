@@ -234,6 +234,12 @@
     display: none;
   }
 
+  /* Mobile-only announcement bar lives directly under the in-frame header.
+     The desktop header has its own announcement strip — hide this one. */
+  .relative.bg-background.min-h-screen.shadow-soft > div.relative.bg-cream-warm {
+    display: none;
+  }
+
   /* Main content gets a generous boutique container instead of the 440px frame. */
   .relative.bg-background.min-h-screen.shadow-soft > main {
     max-width: 1480px;
