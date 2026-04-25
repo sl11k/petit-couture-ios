@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { categories, getProductForCategory } from "@/data/categories";
+import { trackEvent } from "@/lib/analytics";
 import hero from "@/assets/hero-campaign.jpg";
 
 function buildShareUrl(ids: string[]): string {
