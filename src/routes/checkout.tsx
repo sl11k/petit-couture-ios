@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -87,11 +87,29 @@ function CheckoutPage() {
   const locale = lang === "ar" ? "ar-EG" : "en-US";
   const fmt = (n: number) => n.toLocaleString(locale);
   const total = bag.subtotal;
+  const bagEmpty = bag.items.length === 0;
 
-  // If bag empty, send back home
+  // Distinguish "arrived with empty bag" (silent redirect to /bag) vs
+  // "bag became empty while on checkout" (calm toast + delayed redirect so the user sees it).
+  const arrivedEmptyRef = useRef<boolean>(bagEmpty);
+  const notifiedEmptyRef = useRef<boolean>(false);
+
   useEffect(() => {
-    if (bag.items.length === 0) navigate({ to: "/bag" });
-  }, [bag.items.length, navigate]);
+    if (!bagEmpty) return;
+    if (arrivedEmptyRef.current) {
+      navigate({ to: "/bag" });
+      return;
+    }
+    if (notifiedEmptyRef.current) return;
+    notifiedEmptyRef.current = true;
+    toast(t.checkout.bagEmptyDuringCheckout, {
+      icon: "🛍️",
+      position: isRTL ? "top-left" : "top-right",
+      duration: 2600,
+    });
+    const id = window.setTimeout(() => navigate({ to: "/bag" }), 2400);
+    return () => window.clearTimeout(id);
+  }, [bagEmpty, navigate, t.checkout.bagEmptyDuringCheckout, isRTL]);
 
   const schema = buildSchema(t.checkout.errors);
   type FormValues = z.input<typeof schema>;
@@ -118,6 +136,7 @@ function CheckoutPage() {
   const [editing, setEditing] = useState<boolean>(!address);
 
   const onSubmit = (values: FormValues) => {
+    if (bagEmpty) return;
     const parsed = schema.parse(values);
     save(parsed as Address);
     setEditing(false);
@@ -125,7 +144,7 @@ function CheckoutPage() {
   };
 
   const onPlaceOrder = () => {
-    if (!address) return;
+    if (bagEmpty || !address) return;
     toast.success(t.checkout.success);
   };
 
@@ -552,8 +571,9 @@ function CheckoutPage() {
                 {editing ? (
                   <button
                     type="submit"
-                    disabled={form.formState.isSubmitting}
-                    className="w-full h-[58px] rounded-full bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft disabled:opacity-60"
+                    disabled={form.formState.isSubmitting || bagEmpty}
+                    aria-disabled={bagEmpty || undefined}
+                    className="w-full h-[58px] rounded-full bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
                   >
                     <Lock className="h-[16px] w-[16px]" strokeWidth={1.7} />
                     {address ? t.checkout.useThisAddress : t.checkout.submit} · {fmt(total)} {bag.currency}
@@ -562,7 +582,9 @@ function CheckoutPage() {
                   <button
                     type="button"
                     onClick={onPlaceOrder}
-                    className="w-full h-[58px] rounded-full bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft"
+                    disabled={bagEmpty}
+                    aria-disabled={bagEmpty || undefined}
+                    className="w-full h-[58px] rounded-full bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
                   >
                     <Lock className="h-[16px] w-[16px]" strokeWidth={1.7} />
                     {t.checkout.submit} · {fmt(total)} {bag.currency}

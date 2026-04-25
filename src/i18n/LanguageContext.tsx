@@ -98,6 +98,7 @@ type Dict = {
     savedEyebrow: string;
     edit: string;
     useThisAddress: string;
+    bagEmptyDuringCheckout: string;
     steps: { bag: string; address: string; payment: string; stepOf: (n: number, total: number) => string };
     errors: {
       nameRequired: string;
@@ -228,6 +229,7 @@ const dictionaries: Record<Lang, Dict> = {
       savedEyebrow: "SAVED ADDRESS",
       edit: "Edit",
       useThisAddress: "Use this address",
+      bagEmptyDuringCheckout: "Your bag is empty — add a piece to continue",
       steps: {
         bag: "Bag",
         address: "Address",
@@ -361,6 +363,7 @@ const dictionaries: Record<Lang, Dict> = {
       savedEyebrow: "العنوان المحفوظ",
       edit: "تعديل",
       useThisAddress: "استخدام هذا العنوان",
+      bagEmptyDuringCheckout: "سلتك فارغة — أضف قطعة للمتابعة",
       steps: {
         bag: "السلة",
         address: "العنوان",
