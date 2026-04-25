@@ -1,12 +1,12 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Heart, Share2, ShoppingBag, Truck, RotateCcw } from "lucide-react";
-import { toast } from "sonner";
 import { getProductForCategory, categories } from "@/data/categories";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useBag } from "@/state/BagContext";
 import { trackEvent } from "@/lib/analytics";
+import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
 import { useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/category/$slug")({
