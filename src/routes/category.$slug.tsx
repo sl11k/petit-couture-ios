@@ -1,12 +1,12 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Heart, Share2, ShoppingBag, Truck, RotateCcw } from "lucide-react";
-import { toast } from "sonner";
 import { getProductForCategory, categories } from "@/data/categories";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useBag } from "@/state/BagContext";
 import { trackEvent } from "@/lib/analytics";
+import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
 import { useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/category/$slug")({
@@ -61,14 +61,13 @@ function ProductDetails() {
     navigate({ to: "/bag" });
   };
 
-  const onShare = async () => {
+  const [sharePayload, setSharePayload] = useState<ShareSheetPayload | null>(null);
+
+  const onShare = () => {
     const wishlistItemId = `product:${slug}`;
     const origin =
       typeof window !== "undefined" ? window.location.origin : "https://maisonnet.app";
     const url = `${origin}/wishlist/share?ids=${encodeURIComponent(wishlistItemId)}`;
-    const position = isRTL ? ("top-left" as const) : ("top-right" as const);
-    const successMsg = t.wishlist.linkCopied;
-    const failMsg = t.wishlist.shareFailed;
     trackEvent({
       name: "wishlist_share",
       ts: Date.now(),
@@ -76,25 +75,13 @@ function ProductDetails() {
       itemCount: 1,
       source: "product_detail",
     });
-    const nav = typeof navigator !== "undefined" ? navigator : undefined;
-    if (nav && typeof nav.share === "function") {
-      try {
-        await nav.share({ title: product.name, text: product.name, url });
-        return;
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") return;
-      }
-    }
-    try {
-      await nav?.clipboard?.writeText(url);
-      toast(successMsg, {
-        icon: <Share2 className="h-4 w-4" strokeWidth={1.7} />,
-        position,
-        duration: 1800,
-      });
-    } catch {
-      toast(failMsg, { position, duration: 2200 });
-    }
+    setSharePayload({
+      url,
+      title: product.name,
+      message: isRTL
+        ? `أحببتُ هذه القطعة من ميزون: ${product.name}`
+        : `I'm loving this piece from Maisonnét: ${product.name}`,
+    });
   };
 
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
@@ -325,6 +312,11 @@ function ProductDetails() {
           <div className="mx-auto mb-2 h-[5px] w-[120px] rounded-full bg-foreground/80" />
         </div>
       </div>
+      <ShareSheet
+        open={sharePayload !== null}
+        onClose={() => setSharePayload(null)}
+        payload={sharePayload}
+      />
     </div>
   );
 }

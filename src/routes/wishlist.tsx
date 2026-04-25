@@ -1,12 +1,13 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, Heart, Share2, Sparkles, Trash2, UserCircle2 } from "lucide-react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useAuth } from "@/state/AuthContext";
 import { categories, getProductForCategory } from "@/data/categories";
 import { trackEvent } from "@/lib/analytics";
+import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
 import hero from "@/assets/hero-campaign.jpg";
 
 function buildShareUrl(ids: string[]): string {
@@ -14,37 +15,6 @@ function buildShareUrl(ids: string[]): string {
     typeof window !== "undefined" ? window.location.origin : "https://maisonnet.app";
   const params = new URLSearchParams({ ids: ids.join(",") });
   return `${origin}/wishlist/share?${params.toString()}`;
-}
-
-async function shareOrCopy(opts: {
-  url: string;
-  title: string;
-  text: string;
-  successMsg: string;
-  failMsg: string;
-  isRTL: boolean;
-}) {
-  const { url, title, text, successMsg, failMsg, isRTL } = opts;
-  const position = isRTL ? ("top-left" as const) : ("top-right" as const);
-  const nav = typeof navigator !== "undefined" ? navigator : undefined;
-
-  if (nav && typeof nav.share === "function") {
-    try {
-      await nav.share({ title, text, url });
-      return;
-    } catch (err) {
-      // User cancellation -> stay silent
-      if (err instanceof DOMException && err.name === "AbortError") return;
-      // Fall through to clipboard
-    }
-  }
-
-  try {
-    await nav?.clipboard?.writeText(url);
-    toast(successMsg, { position, duration: 1800 });
-  } catch {
-    toast(failMsg, { position, duration: 2200 });
-  }
 }
 
 export const Route = createFileRoute("/wishlist")({
@@ -84,6 +54,8 @@ function WishlistPage() {
   const { user, ready } = useAuth();
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
 
+  const [sharePayload, setSharePayload] = useState<ShareSheetPayload | null>(null);
+
   const shareItem = useCallback(
     (id: string, name: string) => {
       trackEvent({
@@ -93,16 +65,15 @@ function WishlistPage() {
         itemCount: 1,
         source: "wishlist_screen",
       });
-      void shareOrCopy({
+      setSharePayload({
         url: buildShareUrl([id]),
-        title: t.wishlist.shareTitle,
-        text: name,
-        successMsg: t.wishlist.linkCopied,
-        failMsg: t.wishlist.shareFailed,
-        isRTL,
+        title: name,
+        message: isRTL
+          ? `أحببتُ هذه القطعة من ميزون: ${name}`
+          : `I'm loving this piece from Maisonnét: ${name}`,
       });
     },
-    [t.wishlist, isRTL],
+    [isRTL],
   );
 
   const shareAll = useCallback(() => {
@@ -113,13 +84,10 @@ function WishlistPage() {
       itemCount: wishlist.items.length,
       source: "wishlist_screen",
     });
-    void shareOrCopy({
+    setSharePayload({
       url: buildShareUrl(wishlist.items),
       title: t.wishlist.shareTitle,
-      text: t.wishlist.shareText,
-      successMsg: t.wishlist.linkCopied,
-      failMsg: t.wishlist.shareFailed,
-      isRTL,
+      message: t.wishlist.shareText,
     });
   }, [wishlist.items, t.wishlist, isRTL]);
 
@@ -391,6 +359,11 @@ function WishlistPage() {
           )}
         </main>
       </div>
+      <ShareSheet
+        open={sharePayload !== null}
+        onClose={() => setSharePayload(null)}
+        payload={sharePayload}
+      />
     </div>
   );
 }
