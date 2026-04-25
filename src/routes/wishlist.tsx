@@ -416,14 +416,71 @@ function WishlistPage() {
                 <h1 className="font-serif text-[30px] leading-tight text-foreground">
                   {t.wishlist.title}
                 </h1>
-                <p className="mt-1 text-[12px] tracking-luxury text-gold-deep">
-                  {fmt(resolved.length)}{" "}
-                  {resolved.length === 1 ? t.wishlist.item : t.wishlist.items}
-                </p>
+                <div className={["mt-1 flex items-center justify-between gap-3", isRTL ? "flex-row-reverse" : ""].join(" ")}>
+                  <p className="text-[12px] tracking-luxury text-gold-deep">
+                    {fmt(resolved.length)}{" "}
+                    {resolved.length === 1 ? t.wishlist.item : t.wishlist.items}
+                  </p>
+                  {resolved.length > 1 && (
+                    <div ref={sortMenuRef} className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setSortMenuOpen((v) => !v)}
+                        aria-haspopup="listbox"
+                        aria-expanded={sortMenuOpen}
+                        aria-label={t.wishlist.sortBy}
+                        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border border-border bg-background text-[11px] tracking-soft text-foreground/80 active:scale-[0.97] transition"
+                      >
+                        <ArrowUpDown className="h-[12px] w-[12px]" strokeWidth={1.6} />
+                        <span className="text-[10.5px] tracking-luxury text-gold-deep">
+                          {lang === "en" ? t.wishlist.sortBy.toUpperCase() : t.wishlist.sortBy}
+                        </span>
+                        <span aria-hidden className="text-foreground/40">·</span>
+                        <span>{sortLabels[sortKey]}</span>
+                      </button>
+                      {sortMenuOpen && (
+                        <ul
+                          role="listbox"
+                          aria-label={t.wishlist.sortBy}
+                          className={[
+                            "absolute z-20 mt-2 min-w-[220px] rounded-[18px] border border-border bg-background shadow-soft py-1.5",
+                            isRTL ? "start-0" : "end-0",
+                          ].join(" ")}
+                        >
+                          {SORT_KEYS.map((k) => {
+                            const selected = k === sortKey;
+                            return (
+                              <li key={k}>
+                                <button
+                                  type="button"
+                                  role="option"
+                                  aria-selected={selected}
+                                  onClick={() => onSelectSort(k)}
+                                  className={[
+                                    "w-full flex items-center gap-2 px-4 py-2.5 text-[13px] tracking-soft transition",
+                                    isRTL ? "text-right flex-row-reverse" : "text-left",
+                                    selected ? "text-foreground" : "text-foreground/75 hover:text-foreground",
+                                  ].join(" ")}
+                                >
+                                  <span className="flex-1 truncate">{sortLabels[k]}</span>
+                                  {selected ? (
+                                    <Check className="h-[14px] w-[14px] text-gold-deep shrink-0" strokeWidth={1.8} />
+                                  ) : (
+                                    <span className="h-[14px] w-[14px] shrink-0" />
+                                  )}
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </div>
               </section>
 
               <section className="px-5 mt-6 space-y-4">
-                {resolved.map((it) => {
+                {sortedResolved.map((it) => {
                   const linkedCard =
                     it.kind === "category" || it.kind === "product";
                   const ariaLabel = isRTL
