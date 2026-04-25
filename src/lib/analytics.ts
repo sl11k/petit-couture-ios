@@ -54,6 +54,12 @@ export type AnalyticsEvent =
       requested: number;
       added: number;
       source: "shared_link";
+    }
+  | {
+      name: "wishlist_undo";
+      ts: number;
+      previousSize: number;
+      nextSize: number;
     };
 
 const MAX_BUFFER = 200;

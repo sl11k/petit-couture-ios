@@ -23,6 +23,8 @@ type Ctx = {
   remove: (id: string, source?: WishlistSource) => void;
   clear: (source?: WishlistSource) => void;
   merge: (ids: string[], source?: WishlistSource) => { added: number };
+  /** Replace the entire list. Used for "Undo" reverts; emits a single analytics event. */
+  restore: (snapshot: string[]) => void;
   count: number;
 };
 
@@ -215,9 +217,31 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const restore = useCallback((snapshot: string[]) => {
+    setItems((prev) => {
+      const cleaned = snapshot.filter(
+        (v): v is string => typeof v === "string" && v.length > 0,
+      );
+      // No-op shortcut to avoid spurious renders.
+      if (
+        prev.length === cleaned.length &&
+        prev.every((v, i) => v === cleaned[i])
+      ) {
+        return prev;
+      }
+      trackEvent({
+        name: "wishlist_undo",
+        ts: Date.now(),
+        previousSize: prev.length,
+        nextSize: cleaned.length,
+      });
+      return cleaned;
+    });
+  }, []);
+
   const value = useMemo<Ctx>(
-    () => ({ items, has, toggle, add, remove, clear, merge, count: items.length }),
-    [items, has, toggle, add, remove, clear, merge],
+    () => ({ items, has, toggle, add, remove, clear, merge, restore, count: items.length }),
+    [items, has, toggle, add, remove, clear, merge, restore],
   );
 
   return <WishlistContext.Provider value={value}>{children}</WishlistContext.Provider>;

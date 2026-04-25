@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Heart } from "lucide-react";
+import { Heart, RotateCcw } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { categories, getProductForCategory } from "@/data/categories";
@@ -8,6 +8,8 @@ type BannerEvent = {
   id: string;
   kind: "added" | "removed";
   message: string;
+  /** Snapshot of items right BEFORE this change — used by Undo to revert. */
+  prevItems: string[];
   ts: number;
 };
 
@@ -26,9 +28,13 @@ function resolveName(id: string, heroLabel: string): string | null {
 }
 
 export function WishlistBanner() {
-  const { items } = useWishlist();
+  const { items, restore } = useWishlist();
   const { t, isRTL } = useLanguage();
+
   const prevRef = useRef<string[] | null>(null);
+  // When set, the next items diff is treated as a silent revert (no banner).
+  const skipNextSignatureRef = useRef<string | null>(null);
+
   const [event, setEvent] = useState<BannerEvent | null>(null);
   const [visible, setVisible] = useState(false);
   const hideTimer = useRef<number | null>(null);
@@ -37,8 +43,21 @@ export function WishlistBanner() {
   useEffect(() => {
     const prev = prevRef.current;
     prevRef.current = items;
+
     // First mount: don't fire for hydration.
     if (prev === null) return;
+
+    // Suppress the diff caused by an Undo revert.
+    const currentSig = items.join("|");
+    if (skipNextSignatureRef.current === currentSig) {
+      skipNextSignatureRef.current = null;
+      // Also clear any visible event since we just reverted it.
+      if (hideTimer.current) window.clearTimeout(hideTimer.current);
+      if (removeTimer.current) window.clearTimeout(removeTimer.current);
+      setVisible(false);
+      removeTimer.current = window.setTimeout(() => setEvent(null), FADE_MS);
+      return;
+    }
 
     const prevSet = new Set(prev);
     const currSet = new Set(items);
@@ -60,7 +79,6 @@ export function WishlistBanner() {
         }
       }
     }
-    // Only update when wishlist state actually changes.
     if (!changedId || !kind) return;
 
     const name = resolveName(changedId, t.hero.eyebrow);
@@ -72,7 +90,7 @@ export function WishlistBanner() {
         ? t.wishlist.added
         : t.wishlist.removed;
 
-    setEvent({ id: changedId, kind, message, ts: Date.now() });
+    setEvent({ id: changedId, kind, message, prevItems: prev, ts: Date.now() });
     setVisible(true);
 
     if (hideTimer.current) window.clearTimeout(hideTimer.current);
@@ -93,9 +111,15 @@ export function WishlistBanner() {
 
   if (!event) return null;
 
+  const onUndo = () => {
+    // Mark the upcoming items diff (which will match prevItems exactly) as silent
+    // so the banner doesn't echo an opposite "Removed/Added" event.
+    skipNextSignatureRef.current = event.prevItems.join("|");
+    restore(event.prevItems);
+  };
+
   return (
     <div
-      // Pinned just below the iOS status bar of the centered phone shell.
       className="pointer-events-none fixed inset-x-0 top-9 z-50 flex justify-center px-4"
       aria-live="polite"
       aria-atomic="true"
@@ -105,11 +129,9 @@ export function WishlistBanner() {
         role="status"
         className={[
           "pointer-events-auto w-full max-w-[420px] rounded-full border border-gold-soft bg-background/95 backdrop-blur-md shadow-soft",
-          "px-4 py-2.5 flex items-center gap-3",
+          "px-4 py-2 flex items-center gap-3",
           "transition-all duration-200 ease-out",
-          visible
-            ? "opacity-100 translate-y-0"
-            : "opacity-0 -translate-y-2",
+          visible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2",
         ].join(" ")}
       >
         <span
@@ -128,13 +150,21 @@ export function WishlistBanner() {
         </span>
         <p
           className={[
-            "text-[12.5px] tracking-soft text-foreground truncate",
+            "text-[12.5px] tracking-soft text-foreground truncate flex-1",
             isRTL ? "text-right" : "text-left",
-            "flex-1",
           ].join(" ")}
         >
           {event.message}
         </p>
+        <button
+          type="button"
+          onClick={onUndo}
+          aria-label={t.wishlist.undo}
+          className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3 -me-1 rounded-full bg-foreground text-background text-[11.5px] tracking-luxury active:scale-95 transition"
+        >
+          <RotateCcw className="h-[12px] w-[12px]" strokeWidth={2} />
+          {isRTL ? t.wishlist.undo : t.wishlist.undo.toUpperCase()}
+        </button>
       </div>
     </div>
   );
