@@ -1,10 +1,12 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Heart, Share2, ShoppingBag, Truck, RotateCcw } from "lucide-react";
+import { toast } from "sonner";
 import { getProductForCategory, categories } from "@/data/categories";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useBag } from "@/state/BagContext";
+import { trackEvent } from "@/lib/analytics";
 import { useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/category/$slug")({
@@ -59,6 +61,42 @@ function ProductDetails() {
     navigate({ to: "/bag" });
   };
 
+  const onShare = async () => {
+    const wishlistItemId = `product:${slug}`;
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : "https://maisonnet.app";
+    const url = `${origin}/wishlist/share?ids=${encodeURIComponent(wishlistItemId)}`;
+    const position = isRTL ? ("top-left" as const) : ("top-right" as const);
+    const successMsg = t.wishlist.linkCopied;
+    const failMsg = t.wishlist.shareFailed;
+    trackEvent({
+      name: "wishlist_share",
+      ts: Date.now(),
+      scope: "item",
+      itemCount: 1,
+      source: "product_detail",
+    });
+    const nav = typeof navigator !== "undefined" ? navigator : undefined;
+    if (nav && typeof nav.share === "function") {
+      try {
+        await nav.share({ title: product.name, text: product.name, url });
+        return;
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+      }
+    }
+    try {
+      await nav?.clipboard?.writeText(url);
+      toast(successMsg, {
+        icon: <Share2 className="h-4 w-4" strokeWidth={1.7} />,
+        position,
+        duration: 1800,
+      });
+    } catch {
+      toast(failMsg, { position, duration: 2200 });
+    }
+  };
+
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
 
   return (
@@ -87,6 +125,7 @@ function ProductDetails() {
           </span>
           <button
             aria-label={isRTL ? "مشاركة" : "Share"}
+            onClick={onShare}
             className="h-10 w-10 -me-2 grid place-items-center rounded-full text-foreground/70 active:scale-95 transition"
           >
             <Share2 className="h-[18px] w-[18px]" strokeWidth={1.5} />
