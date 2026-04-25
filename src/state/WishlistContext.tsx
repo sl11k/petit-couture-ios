@@ -21,6 +21,7 @@ type Ctx = {
   add: (id: string) => void;
   remove: (id: string) => void;
   clear: () => void;
+  merge: (ids: string[]) => void;
   count: number;
 };
 
