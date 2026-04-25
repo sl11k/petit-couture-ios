@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import {
   Heart,
   MessageCircle,
@@ -9,32 +10,10 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import hero from "@/assets/hero-campaign.jpg";
-import catBestsellers from "@/assets/cat-bestsellers.jpg";
-import catNewIn from "@/assets/cat-newin.jpg";
-import catSwimwear from "@/assets/cat-swimwear.jpg";
-import catDresses from "@/assets/cat-dresses.jpg";
-import catTops from "@/assets/cat-tops.jpg";
-import catShoes from "@/assets/cat-shoes.jpg";
-import catOutfits from "@/assets/cat-outfits.jpg";
-import catGifts from "@/assets/cat-gifts.jpg";
-import catBabysuits from "@/assets/cat-babysuits.jpg";
-import catBags from "@/assets/cat-bags.jpg";
+import { categories } from "@/data/categories";
 
 type AgeKey = "baby" | "girl" | "boy";
 type NavKey = "menu" | "home" | "account" | "search" | "bag";
-
-const categories = [
-  { name: "Best Sellers", img: catBestsellers },
-  { name: "New In", img: catNewIn },
-  { name: "Swimwear", img: catSwimwear },
-  { name: "Dresses", img: catDresses },
-  { name: "Tops", img: catTops },
-  { name: "Shoes", img: catShoes },
-  { name: "Outfit Sets", img: catOutfits },
-  { name: "Gifts", img: catGifts },
-  { name: "Babysuits", img: catBabysuits },
-  { name: "Bags", img: catBags },
-];
 
 const announcements = [
   "Buy Now, Pay Later with Tamara",
@@ -177,8 +156,10 @@ export function HomeScreen() {
 
             <div className="grid grid-cols-2 gap-x-4 gap-y-8 mt-7">
               {categories.map((c) => (
-                <button
-                  key={c.name}
+                <Link
+                  key={c.slug}
+                  to="/category/$slug"
+                  params={{ slug: c.slug }}
                   className="group flex flex-col items-center text-left active:scale-[0.99] transition"
                 >
                   <div className="w-full overflow-hidden rounded-[22px] bg-cream-warm aspect-[1.35/1]">
@@ -194,7 +175,7 @@ export function HomeScreen() {
                   <span className="mt-3 text-[15px] text-foreground/85 font-medium tracking-tight">
                     {c.name}
                   </span>
-                </button>
+                </Link>
               ))}
             </div>
 
