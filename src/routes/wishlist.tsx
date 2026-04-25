@@ -81,6 +81,7 @@ function WishlistPage() {
   const router = useRouter();
   const { t, lang, isRTL } = useLanguage();
   const wishlist = useWishlist();
+  const { user, ready } = useAuth();
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
 
   const shareItem = useCallback(
