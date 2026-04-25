@@ -84,6 +84,13 @@ function WishlistPage() {
 
   const shareItem = useCallback(
     (id: string, name: string) => {
+      trackEvent({
+        name: "wishlist_share",
+        ts: Date.now(),
+        scope: "item",
+        itemCount: 1,
+        source: "wishlist_screen",
+      });
       void shareOrCopy({
         url: buildShareUrl([id]),
         title: t.wishlist.shareTitle,
@@ -97,6 +104,13 @@ function WishlistPage() {
   );
 
   const shareAll = useCallback(() => {
+    trackEvent({
+      name: "wishlist_share",
+      ts: Date.now(),
+      scope: "all",
+      itemCount: wishlist.items.length,
+      source: "wishlist_screen",
+    });
     void shareOrCopy({
       url: buildShareUrl(wishlist.items),
       title: t.wishlist.shareTitle,
