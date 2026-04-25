@@ -21,6 +21,26 @@ import { useBag } from "@/state/BagContext";
 type AgeKey = "baby" | "girl" | "boy";
 type NavKey = "menu" | "home" | "account" | "search" | "bag";
 
+/** Wishlist impression target — fires once per (source, id) per session. */
+function ImpressionCell({
+  itemId,
+  source,
+  className,
+  children,
+}: {
+  itemId: string;
+  source: "category_card";
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const ref = useImpression<HTMLDivElement>({ itemId, source });
+  return (
+    <div ref={ref} className={className}>
+      {children}
+    </div>
+  );
+}
+
 export function HomeScreen() {
   const { t, lang, toggle, isRTL } = useLanguage();
   const wishlist = useWishlist();
