@@ -11,17 +11,18 @@ import {
 import { toast } from "sonner";
 import { Heart } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { classifyItem, trackEvent, type WishlistSource } from "@/lib/analytics";
 
 const STORAGE_KEY = "maisonnet:wishlist:v1";
 
 type Ctx = {
   items: string[];
   has: (id: string) => boolean;
-  toggle: (id: string) => void;
-  add: (id: string) => void;
-  remove: (id: string) => void;
-  clear: () => void;
-  merge: (ids: string[]) => void;
+  toggle: (id: string, source?: WishlistSource) => void;
+  add: (id: string, source?: WishlistSource) => void;
+  remove: (id: string, source?: WishlistSource) => void;
+  clear: (source?: WishlistSource) => void;
+  merge: (ids: string[], source?: WishlistSource) => { added: number };
   count: number;
 };
 
