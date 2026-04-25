@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, Lock, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useBag } from "@/state/BagContext";
@@ -188,7 +188,7 @@ function BagPage() {
         {bag.items.length > 0 && (
           <div className="absolute bottom-0 inset-x-0 bg-background/95 backdrop-blur-md border-t border-border">
             <div className="px-5 pt-4 pb-6">
-              <button className="w-full h-[58px] rounded-full bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft">
+              <button onClick={() => navigate({ to: "/checkout" })} className="w-full h-[58px] rounded-full bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft">
                 <Lock className="h-[16px] w-[16px]" strokeWidth={1.7} />
                 {t.bag.checkout} · {fmt(total)} {bag.currency}
               </button>
