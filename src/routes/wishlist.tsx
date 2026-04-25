@@ -359,6 +359,11 @@ function WishlistPage() {
           )}
         </main>
       </div>
+      <ShareSheet
+        open={sharePayload !== null}
+        onClose={() => setSharePayload(null)}
+        payload={sharePayload}
+      />
     </div>
   );
 }
