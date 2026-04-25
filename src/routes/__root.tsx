@@ -74,15 +74,17 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <LanguageProvider>
-      <WishlistProvider>
-        <BagProvider>
-          <AddressProvider>
-            <Outlet />
-            <WishlistBanner />
-            <Toaster />
-          </AddressProvider>
-        </BagProvider>
-      </WishlistProvider>
+      <AuthProvider>
+        <WishlistProvider>
+          <BagProvider>
+            <AddressProvider>
+              <Outlet />
+              <WishlistBanner />
+              <Toaster />
+            </AddressProvider>
+          </BagProvider>
+        </WishlistProvider>
+      </AuthProvider>
     </LanguageProvider>
   );
 }
