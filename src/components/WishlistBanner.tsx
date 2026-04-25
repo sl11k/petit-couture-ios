@@ -199,41 +199,49 @@ export function WishlistBanner() {
       <div
         role="status"
         className={[
-          "pointer-events-auto w-full max-w-[420px] rounded-full border border-gold-soft bg-background/95 backdrop-blur-md shadow-soft",
-          "px-4 py-2 flex items-center gap-3",
-          "transition-all duration-200 ease-out",
+          "pointer-events-auto w-full max-w-[420px]",
+          "rounded-full border border-gold-soft bg-cream/95 backdrop-blur-md shadow-soft",
+          "ps-2 pe-2 py-1.5 flex items-center gap-3",
+          "transition-all duration-300 ease-out",
           visible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2",
         ].join(" ")}
       >
         <span
           className={[
-            "h-7 w-7 grid place-items-center rounded-full shrink-0",
+            "h-8 w-8 grid place-items-center rounded-full shrink-0 border",
             event.kind === "added"
-              ? "bg-gold-deep/10 text-gold-deep"
-              : "bg-muted text-muted-foreground",
+              ? "bg-gold-soft border-gold-soft text-gold-deep"
+              : "bg-background border-border text-muted-foreground",
           ].join(" ")}
         >
           <Heart
             className="h-[14px] w-[14px]"
-            strokeWidth={1.7}
+            strokeWidth={1.6}
             fill={event.kind === "added" ? "currentColor" : "none"}
           />
         </span>
-        <p
+        <div
           className={[
-            "text-[12.5px] tracking-soft text-foreground truncate flex-1",
+            "min-w-0 flex-1 leading-tight",
             isRTL ? "text-right" : "text-left",
           ].join(" ")}
         >
-          {event.message}
-        </p>
+          <p className="text-[9.5px] tracking-luxury text-gold-deep uppercase truncate">
+            {isRTL ? event.label : event.label.toUpperCase()}
+          </p>
+          {event.itemName && (
+            <p className="font-serif italic text-[14px] text-foreground truncate -mt-px">
+              {event.itemName}
+            </p>
+          )}
+        </div>
         <button
           type="button"
           onClick={onUndo}
           aria-label={t.wishlist.undo}
-          className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3 -me-1 rounded-full bg-foreground text-background text-[11.5px] tracking-luxury active:scale-95 transition"
+          className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full bg-gold-deep text-background text-[10.5px] tracking-luxury active:scale-95 transition shadow-gold/40"
         >
-          <RotateCcw className="h-[12px] w-[12px]" strokeWidth={2} />
+          <RotateCcw className="h-[11px] w-[11px]" strokeWidth={1.8} />
           {isRTL ? t.wishlist.undo : t.wishlist.undo.toUpperCase()}
         </button>
       </div>
