@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Lock, MapPin, Pencil } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Lock, MapPin, Pencil } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useBag } from "@/state/BagContext";
 import { useAddress, type Address } from "@/state/AddressContext";
@@ -178,6 +178,69 @@ function CheckoutPage() {
               {t.announcements[2]}
             </p>
           </section>
+
+          {/* Step indicator */}
+          <nav
+            aria-label={t.checkout.steps.stepOf(editing ? 2 : 3, 3)}
+            className="px-5 mt-6"
+          >
+            <ol className="flex items-center gap-2">
+              {[
+                { key: "bag", label: t.checkout.steps.bag, n: 1 },
+                { key: "address", label: t.checkout.steps.address, n: 2 },
+                { key: "payment", label: t.checkout.steps.payment, n: 3 },
+              ].map((step, idx, arr) => {
+                const activeStep = editing ? 2 : 3;
+                const status: "done" | "active" | "upcoming" =
+                  step.n < activeStep ? "done" : step.n === activeStep ? "active" : "upcoming";
+                const isLast = idx === arr.length - 1;
+                return (
+                  <li key={step.key} className="flex items-center flex-1 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span
+                        aria-current={status === "active" ? "step" : undefined}
+                        className={[
+                          "h-7 w-7 shrink-0 grid place-items-center rounded-full text-[11px] font-medium tabular-nums transition",
+                          status === "done"
+                            ? "bg-gold-deep text-background"
+                            : status === "active"
+                              ? "bg-foreground text-background ring-4 ring-foreground/10"
+                              : "bg-cream-warm text-muted-foreground border border-border",
+                        ].join(" ")}
+                      >
+                        {status === "done" ? (
+                          <Check className="h-[13px] w-[13px]" strokeWidth={2.2} />
+                        ) : (
+                          step.n.toLocaleString(locale)
+                        )}
+                      </span>
+                      <span
+                        className={[
+                          "text-[11px] tracking-luxury truncate",
+                          status === "active"
+                            ? "text-foreground"
+                            : status === "done"
+                              ? "text-gold-deep"
+                              : "text-muted-foreground",
+                        ].join(" ")}
+                      >
+                        {lang === "en" ? step.label.toUpperCase() : step.label}
+                      </span>
+                    </div>
+                    {!isLast && (
+                      <span
+                        aria-hidden="true"
+                        className={[
+                          "flex-1 h-px mx-2 transition",
+                          step.n < activeStep ? "bg-gold-deep/60" : "bg-border",
+                        ].join(" ")}
+                      />
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
 
           <form
             onSubmit={form.handleSubmit(onSubmit)}

@@ -98,6 +98,7 @@ type Dict = {
     savedEyebrow: string;
     edit: string;
     useThisAddress: string;
+    steps: { bag: string; address: string; payment: string; stepOf: (n: number, total: number) => string };
     errors: {
       nameRequired: string;
       nameTooLong: string;
@@ -227,6 +228,12 @@ const dictionaries: Record<Lang, Dict> = {
       savedEyebrow: "SAVED ADDRESS",
       edit: "Edit",
       useThisAddress: "Use this address",
+      steps: {
+        bag: "Bag",
+        address: "Address",
+        payment: "Payment",
+        stepOf: (n, total) => `Step ${n} of ${total}`,
+      },
       errors: {
         nameRequired: "Please enter your full name",
         nameTooLong: "Name must be under 80 characters",
@@ -354,6 +361,12 @@ const dictionaries: Record<Lang, Dict> = {
       savedEyebrow: "العنوان المحفوظ",
       edit: "تعديل",
       useThisAddress: "استخدام هذا العنوان",
+      steps: {
+        bag: "السلة",
+        address: "العنوان",
+        payment: "الدفع",
+        stepOf: (n, total) => `الخطوة ${n} من ${total}`,
+      },
       errors: {
         nameRequired: "يرجى إدخال الاسم الكامل",
         nameTooLong: "الاسم يجب أن يكون أقل من ٨٠ حرفًا",
