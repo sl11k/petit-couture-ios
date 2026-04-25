@@ -571,8 +571,9 @@ function CheckoutPage() {
                 {editing ? (
                   <button
                     type="submit"
-                    disabled={form.formState.isSubmitting}
-                    className="w-full h-[58px] rounded-full bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft disabled:opacity-60"
+                    disabled={form.formState.isSubmitting || bagEmpty}
+                    aria-disabled={bagEmpty || undefined}
+                    className="w-full h-[58px] rounded-full bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
                   >
                     <Lock className="h-[16px] w-[16px]" strokeWidth={1.7} />
                     {address ? t.checkout.useThisAddress : t.checkout.submit} · {fmt(total)} {bag.currency}
@@ -581,7 +582,9 @@ function CheckoutPage() {
                   <button
                     type="button"
                     onClick={onPlaceOrder}
-                    className="w-full h-[58px] rounded-full bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft"
+                    disabled={bagEmpty}
+                    aria-disabled={bagEmpty || undefined}
+                    className="w-full h-[58px] rounded-full bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
                   >
                     <Lock className="h-[16px] w-[16px]" strokeWidth={1.7} />
                     {t.checkout.submit} · {fmt(total)} {bag.currency}
