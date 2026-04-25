@@ -94,6 +94,10 @@ type Dict = {
     cityPlaceholder: string;
     submit: string;
     success: string;
+    savedTitle: string;
+    savedEyebrow: string;
+    edit: string;
+    useThisAddress: string;
     errors: {
       nameRequired: string;
       nameTooLong: string;
@@ -219,6 +223,10 @@ const dictionaries: Record<Lang, Dict> = {
       cityPlaceholder: "Riyadh",
       submit: "Confirm & Pay",
       success: "Address saved — proceeding to payment",
+      savedTitle: "Deliver to",
+      savedEyebrow: "SAVED ADDRESS",
+      edit: "Edit",
+      useThisAddress: "Use this address",
       errors: {
         nameRequired: "Please enter your full name",
         nameTooLong: "Name must be under 80 characters",
@@ -342,6 +350,10 @@ const dictionaries: Record<Lang, Dict> = {
       cityPlaceholder: "الرياض",
       submit: "تأكيد والدفع",
       success: "تم حفظ العنوان — جارٍ الانتقال للدفع",
+      savedTitle: "التوصيل إلى",
+      savedEyebrow: "العنوان المحفوظ",
+      edit: "تعديل",
+      useThisAddress: "استخدام هذا العنوان",
       errors: {
         nameRequired: "يرجى إدخال الاسم الكامل",
         nameTooLong: "الاسم يجب أن يكون أقل من ٨٠ حرفًا",
