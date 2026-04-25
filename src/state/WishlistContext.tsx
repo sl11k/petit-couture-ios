@@ -119,7 +119,17 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
       }),
     [notify],
   );
-  const clear = useCallback(() => setItems([]), []);
+  const clear = useCallback(() => {
+    setItems((prev) => {
+      if (prev.length === 0) return prev;
+      toast(messages.current.cleared ?? messages.current.removed, {
+        icon: <Heart className="h-4 w-4" strokeWidth={1.7} />,
+        position: isRTL ? "top-left" : "top-right",
+        duration: 1800,
+      });
+      return [];
+    });
+  }, [isRTL]);
 
   const value = useMemo<Ctx>(
     () => ({ items, has, toggle, add, remove, clear, count: items.length }),
