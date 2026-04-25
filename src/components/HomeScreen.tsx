@@ -10,7 +10,7 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import hero from "@/assets/hero-campaign.jpg";
-import { categories } from "@/data/categories";
+import { categories, getProductForCategory } from "@/data/categories";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useBag } from "@/state/BagContext";
