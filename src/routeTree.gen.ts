@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as BagRouteImport } from './routes/bag'
+import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WishlistShareRouteImport } from './routes/wishlist.share'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
@@ -29,6 +30,11 @@ const CheckoutRoute = CheckoutRouteImport.update({
 const BagRoute = BagRouteImport.update({
   id: '/bag',
   path: '/bag',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -49,6 +55,7 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/bag': typeof BagRoute
   '/checkout': typeof CheckoutRoute
   '/wishlist': typeof WishlistRouteWithChildren
@@ -57,6 +64,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/bag': typeof BagRoute
   '/checkout': typeof CheckoutRoute
   '/wishlist': typeof WishlistRouteWithChildren
@@ -66,6 +74,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/bag': typeof BagRoute
   '/checkout': typeof CheckoutRoute
   '/wishlist': typeof WishlistRouteWithChildren
@@ -76,6 +85,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/account'
     | '/bag'
     | '/checkout'
     | '/wishlist'
@@ -84,6 +94,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/account'
     | '/bag'
     | '/checkout'
     | '/wishlist'
@@ -92,6 +103,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/account'
     | '/bag'
     | '/checkout'
     | '/wishlist'
@@ -101,6 +113,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRoute
   BagRoute: typeof BagRoute
   CheckoutRoute: typeof CheckoutRoute
   WishlistRoute: typeof WishlistRouteWithChildren
@@ -128,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/bag'
       fullPath: '/bag'
       preLoaderRoute: typeof BagRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -168,6 +188,7 @@ const WishlistRouteWithChildren = WishlistRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRoute,
   BagRoute: BagRoute,
   CheckoutRoute: CheckoutRoute,
   WishlistRoute: WishlistRouteWithChildren,

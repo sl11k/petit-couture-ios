@@ -1,5 +1,6 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { LanguageProvider } from "@/i18n/LanguageContext";
+import { AuthProvider } from "@/state/AuthContext";
 import { WishlistProvider } from "@/state/WishlistContext";
 import { BagProvider } from "@/state/BagContext";
 import { AddressProvider } from "@/state/AddressContext";
@@ -73,15 +74,17 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <LanguageProvider>
-      <WishlistProvider>
-        <BagProvider>
-          <AddressProvider>
-            <Outlet />
-            <WishlistBanner />
-            <Toaster />
-          </AddressProvider>
-        </BagProvider>
-      </WishlistProvider>
+      <AuthProvider>
+        <WishlistProvider>
+          <BagProvider>
+            <AddressProvider>
+              <Outlet />
+              <WishlistBanner />
+              <Toaster />
+            </AddressProvider>
+          </BagProvider>
+        </WishlistProvider>
+      </AuthProvider>
     </LanguageProvider>
   );
 }

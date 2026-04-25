@@ -47,6 +47,30 @@ type Dict = {
     importedMany: (n: number) => string;
     importedNone: string;
   };
+  account: {
+    eyebrow: string;
+    titleSignedOut: string;
+    titleSignedIn: string;
+    subtitle: string;
+    syncBannerTitle: string;
+    syncBannerBody: string;
+    syncBannerCta: string;
+    email: string;
+    password: string;
+    signIn: string;
+    signUp: string;
+    signOut: string;
+    switchToSignUp: string;
+    switchToSignIn: string;
+    signedInAs: string;
+    syncedCount: (n: number) => string;
+    error: string;
+    invalidCredentials: string;
+    weakPassword: string;
+    emailInUse: string;
+    welcome: (name: string) => string;
+    mergedOnSignIn: (added: number) => string;
+  };
   product: {
     backToBoutique: string;
     color: string;
@@ -171,6 +195,30 @@ const dictionaries: Record<Lang, Dict> = {
       importedOne: "1 piece added to your wishlist",
       importedMany: (n) => `${n} pieces added to your wishlist`,
       importedNone: "Nothing new to add — already saved",
+    },
+    account: {
+      eyebrow: "MY ACCOUNT",
+      titleSignedOut: "Sync across devices",
+      titleSignedIn: "Your Maisonnét account",
+      subtitle: "Sign in with your email to keep your wishlist with you, on any device.",
+      syncBannerTitle: "Save across devices",
+      syncBannerBody: "Sign in to keep your wishlist synced wherever you shop.",
+      syncBannerCta: "Sign in",
+      email: "Email",
+      password: "Password",
+      signIn: "Sign in",
+      signUp: "Create account",
+      signOut: "Sign out",
+      switchToSignUp: "New here? Create an account",
+      switchToSignIn: "Already have an account? Sign in",
+      signedInAs: "Signed in as",
+      syncedCount: (n) => (n === 1 ? "1 piece synced" : `${n} pieces synced`),
+      error: "Something went wrong. Please try again.",
+      invalidCredentials: "Email or password is incorrect.",
+      weakPassword: "Password must be at least 6 characters.",
+      emailInUse: "An account already exists with that email.",
+      welcome: (name) => `Welcome, ${name}`,
+      mergedOnSignIn: (added) => (added === 1 ? "1 saved piece added from this device" : `${added} saved pieces added from this device`),
     },
     categories: {
       "best-sellers": "Best Sellers",
@@ -311,6 +359,30 @@ const dictionaries: Record<Lang, Dict> = {
       importedOne: "تمت إضافة قطعة واحدة إلى مفضلتك",
       importedMany: (n) => `تمت إضافة ${n} قطع إلى مفضلتك`,
       importedNone: "لا جديد للإضافة — محفوظة مسبقًا",
+    },
+    account: {
+      eyebrow: "حسابي",
+      titleSignedOut: "زامن بين أجهزتك",
+      titleSignedIn: "حسابك في ميزون",
+      subtitle: "سجّلي الدخول ببريدك الإلكتروني للاحتفاظ بمفضلتك على أي جهاز.",
+      syncBannerTitle: "احفظي بين الأجهزة",
+      syncBannerBody: "سجّلي الدخول للاحتفاظ بمفضلتك أينما تتسوّقين.",
+      syncBannerCta: "تسجيل الدخول",
+      email: "البريد الإلكتروني",
+      password: "كلمة المرور",
+      signIn: "تسجيل الدخول",
+      signUp: "إنشاء حساب",
+      signOut: "تسجيل الخروج",
+      switchToSignUp: "جديدة هنا؟ أنشئي حسابًا",
+      switchToSignIn: "لديك حساب؟ سجّلي الدخول",
+      signedInAs: "مسجّلة باسم",
+      syncedCount: (n) => (n === 1 ? "قطعة واحدة مزامنة" : `${n} قطع مزامنة`),
+      error: "حدث خطأ. يرجى المحاولة مرة أخرى.",
+      invalidCredentials: "البريد أو كلمة المرور غير صحيحة.",
+      weakPassword: "يجب أن تتكوّن كلمة المرور من 6 أحرف على الأقل.",
+      emailInUse: "يوجد حساب بهذا البريد بالفعل.",
+      welcome: (name) => `مرحبًا، ${name}`,
+      mergedOnSignIn: (added) => (added === 1 ? "أُضيفت قطعة واحدة من هذا الجهاز" : `أُضيفت ${added} قطع من هذا الجهاز`),
     },
     categories: {
       "best-sellers": "الأكثر مبيعًا",

@@ -266,10 +266,10 @@ export function HomeScreen() {
                 [
                   { k: "menu", Icon: Menu, to: null },
                   { k: "home", Icon: HomeIcon, to: "/" as const },
-                  { k: "account", Icon: User, to: null },
+                  { k: "account", Icon: User, to: "/account" as const },
                   { k: "search", Icon: Search, to: null },
                   { k: "bag", Icon: ShoppingBag, to: "/bag" as const },
-                ] as { k: NavKey; Icon: typeof Menu; to: "/" | "/bag" | null }[]
+                ] as { k: NavKey; Icon: typeof Menu; to: "/" | "/bag" | "/account" | null }[]
               ).map(({ k, Icon, to }) => {
                 const active = nav === k;
                 const badge = k === "bag" && bag.count > 0 ? bag.count : null;
