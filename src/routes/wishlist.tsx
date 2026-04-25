@@ -17,37 +17,6 @@ function buildShareUrl(ids: string[]): string {
   return `${origin}/wishlist/share?${params.toString()}`;
 }
 
-async function shareOrCopy(opts: {
-  url: string;
-  title: string;
-  text: string;
-  successMsg: string;
-  failMsg: string;
-  isRTL: boolean;
-}) {
-  const { url, title, text, successMsg, failMsg, isRTL } = opts;
-  const position = isRTL ? ("top-left" as const) : ("top-right" as const);
-  const nav = typeof navigator !== "undefined" ? navigator : undefined;
-
-  if (nav && typeof nav.share === "function") {
-    try {
-      await nav.share({ title, text, url });
-      return;
-    } catch (err) {
-      // User cancellation -> stay silent
-      if (err instanceof DOMException && err.name === "AbortError") return;
-      // Fall through to clipboard
-    }
-  }
-
-  try {
-    await nav?.clipboard?.writeText(url);
-    toast(successMsg, { position, duration: 1800 });
-  } catch {
-    toast(failMsg, { position, duration: 2200 });
-  }
-}
-
 export const Route = createFileRoute("/wishlist")({
   head: () => ({
     meta: [
