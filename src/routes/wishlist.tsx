@@ -54,6 +54,8 @@ function WishlistPage() {
   const { user, ready } = useAuth();
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
 
+  const [sharePayload, setSharePayload] = useState<ShareSheetPayload | null>(null);
+
   const shareItem = useCallback(
     (id: string, name: string) => {
       trackEvent({
@@ -63,16 +65,15 @@ function WishlistPage() {
         itemCount: 1,
         source: "wishlist_screen",
       });
-      void shareOrCopy({
+      setSharePayload({
         url: buildShareUrl([id]),
-        title: t.wishlist.shareTitle,
-        text: name,
-        successMsg: t.wishlist.linkCopied,
-        failMsg: t.wishlist.shareFailed,
-        isRTL,
+        title: name,
+        message: isRTL
+          ? `أحببتُ هذه القطعة من ميزون: ${name}`
+          : `I'm loving this piece from Maisonnét: ${name}`,
       });
     },
-    [t.wishlist, isRTL],
+    [isRTL],
   );
 
   const shareAll = useCallback(() => {
@@ -83,13 +84,10 @@ function WishlistPage() {
       itemCount: wishlist.items.length,
       source: "wishlist_screen",
     });
-    void shareOrCopy({
+    setSharePayload({
       url: buildShareUrl(wishlist.items),
       title: t.wishlist.shareTitle,
-      text: t.wishlist.shareText,
-      successMsg: t.wishlist.linkCopied,
-      failMsg: t.wishlist.shareFailed,
-      isRTL,
+      message: t.wishlist.shareText,
     });
   }, [wishlist.items, t.wishlist, isRTL]);
 
