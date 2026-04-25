@@ -64,16 +64,10 @@ export function WishlistBanner() {
     kind: "added" | "removed",
     prevItems: string[],
   ) => {
-    const name = resolveName(changedId, t.hero.eyebrow);
-    const message = name
-      ? kind === "added"
-        ? t.wishlist.addedNamed(name)
-        : t.wishlist.removedNamed(name)
-      : kind === "added"
-        ? t.wishlist.added
-        : t.wishlist.removed;
+    const itemName = resolveName(changedId, t.hero.eyebrow);
+    const label = kind === "added" ? t.wishlist.added : t.wishlist.removed;
 
-    setEvent({ id: changedId, kind, message, prevItems, ts: Date.now() });
+    setEvent({ id: changedId, kind, label, itemName, prevItems, ts: Date.now() });
     setVisible(true);
 
     if (hideTimer.current) window.clearTimeout(hideTimer.current);
