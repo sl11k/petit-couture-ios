@@ -7,6 +7,7 @@ import { Heart } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { categories } from "@/data/categories";
+import { trackEvent } from "@/lib/analytics";
 
 // Accepts ?ids=cat-slug,prod-slug,full:id  -- compact, human-readable
 const searchSchema = z.object({
