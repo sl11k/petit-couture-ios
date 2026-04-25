@@ -20,6 +20,7 @@ type Dict = {
   footer: string;
   nav: { menu: string; home: string; account: string; search: string; bag: string };
   categories: Record<string, string>;
+  wishlist: { added: string; removed: string };
   product: {
     backToBoutique: string;
     color: string;
@@ -109,6 +110,7 @@ const dictionaries: Record<Lang, Dict> = {
     shopAll: "SHOP ALL",
     footer: "Maison · Riyadh · Dubai · Paris",
     nav: { menu: "Menu", home: "Home", account: "Account", search: "Search", bag: "Bag" },
+    wishlist: { added: "Added to wishlist", removed: "Removed from wishlist" },
     categories: {
       "best-sellers": "Best Sellers",
       "new-in": "New In",
@@ -208,6 +210,7 @@ const dictionaries: Record<Lang, Dict> = {
     shopAll: "تسوّق الكل",
     footer: "ميزون · الرياض · دبي · باريس",
     nav: { menu: "القائمة", home: "الرئيسية", account: "الحساب", search: "البحث", bag: "الحقيبة" },
+    wishlist: { added: "أُضيف إلى المفضلة", removed: "أُزيل من المفضلة" },
     categories: {
       "best-sellers": "الأكثر مبيعًا",
       "new-in": "وصل حديثًا",
