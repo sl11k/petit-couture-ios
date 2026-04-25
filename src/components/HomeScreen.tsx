@@ -75,7 +75,15 @@ export function HomeScreen() {
 
           <Link
             to="/wishlist"
-            aria-label={isRTL ? "المفضلة" : "Wishlist"}
+            aria-label={
+              wishlist.count > 0
+                ? isRTL
+                  ? `المفضلة، ${wishlist.count} عنصر`
+                  : `Wishlist, ${wishlist.count} item${wishlist.count === 1 ? "" : "s"}`
+                : isRTL
+                  ? "المفضلة"
+                  : "Wishlist"
+            }
             className="relative h-10 w-10 -me-2 grid place-items-center rounded-full border border-gold-soft text-gold-deep active:scale-95 transition"
           >
             <Heart
@@ -84,8 +92,12 @@ export function HomeScreen() {
               fill={wishlist.count > 0 ? "currentColor" : "none"}
             />
             {wishlist.count > 0 && (
-              <span className="absolute -top-1 -end-1 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-background text-[10px] font-medium grid place-items-center">
-                {wishlist.count}
+              <span
+                key={wishlist.count}
+                aria-hidden="true"
+                className="absolute -top-1 -end-1 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-background text-[10px] font-medium grid place-items-center shadow-soft animate-in zoom-in-50 fade-in duration-200"
+              >
+                {wishlist.count > 99 ? "99+" : wishlist.count}
               </span>
             )}
           </Link>
