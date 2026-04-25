@@ -71,6 +71,45 @@ declare global {
   }
 }
 
+// ─── Dev dispatch toggle ─────────────────────────────────────────────────────
+// In development, allow disabling analytics dispatch so flows can be tested
+// without polluting the buffer or notifying listeners. The setting is
+// persisted in localStorage and ignored in production builds.
+const TOGGLE_KEY = "maisonnet:analytics:enabled:v1";
+const TOGGLE_EVENT = "maisonnet:analytics-toggle";
+
+export function isAnalyticsEnabled(): boolean {
+  if (!import.meta.env.DEV) return true;
+  if (typeof localStorage === "undefined") return true;
+  try {
+    const raw = localStorage.getItem(TOGGLE_KEY);
+    // Default ON unless explicitly disabled.
+    return raw !== "false";
+  } catch {
+    return true;
+  }
+}
+
+export function setAnalyticsEnabled(enabled: boolean): void {
+  if (typeof localStorage === "undefined") return;
+  try {
+    localStorage.setItem(TOGGLE_KEY, enabled ? "true" : "false");
+  } catch {
+    /* ignore */
+  }
+  if (typeof window !== "undefined") {
+    try {
+      window.dispatchEvent(
+        new CustomEvent(TOGGLE_EVENT, { detail: { enabled } }),
+      );
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+export const ANALYTICS_TOGGLE_EVENT = TOGGLE_EVENT;
+
 export function classifyItem(id: string): {
   kind: WishlistItemKind;
   slug: string | null;
@@ -82,6 +121,14 @@ export function classifyItem(id: string): {
 }
 
 export function trackEvent(event: AnalyticsEvent): void {
+  if (!isAnalyticsEnabled()) {
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.debug("[analytics] suppressed (toggle off)", event.name);
+    }
+    return;
+  }
+
   buffer.push(event);
   if (buffer.length > MAX_BUFFER) buffer.shift();
 
