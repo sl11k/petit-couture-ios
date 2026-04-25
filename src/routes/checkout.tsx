@@ -456,18 +456,30 @@ function CheckoutPage() {
 
               <div>
                 <label className={labelClass}>{t.checkout.nationalAddress}</label>
-                <input
-                  type="text"
-                  placeholder="RIYD2342"
-                  maxLength={8}
-                  dir="ltr"
-                  aria-invalid={!!errors.shortCode}
-                  className={
-                    fieldClass(!!errors.shortCode) +
-                    " mt-1.5 uppercase tracking-[0.2em] font-medium"
-                  }
-                  {...form.register("shortCode")}
-                />
+                {(() => {
+                  const reg = form.register("shortCode");
+                  return (
+                    <input
+                      type="text"
+                      placeholder="RIYD2342"
+                      maxLength={8}
+                      dir="ltr"
+                      autoCapitalize="characters"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      aria-invalid={!!errors.shortCode}
+                      className={
+                        fieldClass(!!errors.shortCode) +
+                        " mt-1.5 uppercase tracking-[0.2em] font-medium"
+                      }
+                      {...reg}
+                      onChange={(e) => {
+                        e.target.value = formatShortCode(e.target.value);
+                        void reg.onChange(e);
+                      }}
+                    />
+                  );
+                })()}
                 {errors.shortCode ? (
                   <p className={errorClass}>{errors.shortCode.message}</p>
                 ) : (
