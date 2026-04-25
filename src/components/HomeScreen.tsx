@@ -73,23 +73,22 @@ export function HomeScreen() {
             </span>
           </div>
 
-          <button
+          <Link
+            to="/wishlist"
             aria-label={isRTL ? "المفضلة" : "Wishlist"}
-            aria-pressed={wishlist.has(HERO_ID)}
-            onClick={() => wishlist.toggle(HERO_ID)}
             className="relative h-10 w-10 -me-2 grid place-items-center rounded-full border border-gold-soft text-gold-deep active:scale-95 transition"
           >
             <Heart
               className="h-[18px] w-[18px]"
               strokeWidth={1.5}
-              fill={wishlist.has(HERO_ID) ? "currentColor" : "none"}
+              fill={wishlist.count > 0 ? "currentColor" : "none"}
             />
             {wishlist.count > 0 && (
               <span className="absolute -top-1 -end-1 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-background text-[10px] font-medium grid place-items-center">
                 {wishlist.count}
               </span>
             )}
-          </button>
+          </Link>
         </header>
 
         {/* Announcement bar */}
