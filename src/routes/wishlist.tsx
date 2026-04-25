@@ -185,6 +185,98 @@ function WishlistPage() {
 
   const fmt = (n: number) => n.toLocaleString(lang === "ar" ? "ar-EG" : "en-US");
 
+  // ─── Sort ────────────────────────────────────────────────────────────────
+  // Persist the chosen sort across visits. The wishlist's underlying `items`
+  // array preserves insertion order, so we treat that as "oldest first" and
+  // derive every other ordering from it.
+  const [sortKey, setSortKey] = useState<WishlistSortKey>(() => readStoredSort());
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
+  const sortMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(SORT_STORAGE_KEY, sortKey);
+    } catch {
+      /* ignore */
+    }
+  }, [sortKey]);
+
+  // Close the sort menu on outside click / Escape.
+  useEffect(() => {
+    if (!sortMenuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (!sortMenuRef.current) return;
+      if (!sortMenuRef.current.contains(e.target as Node)) setSortMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSortMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [sortMenuOpen]);
+
+  const sortLabels: Record<WishlistSortKey, string> = {
+    newest: t.wishlist.sortNewest,
+    oldest: t.wishlist.sortOldest,
+    price_asc: t.wishlist.sortPriceAsc,
+    price_desc: t.wishlist.sortPriceDesc,
+    name_asc: t.wishlist.sortNameAsc,
+  };
+
+  const sortedResolved = useMemo<ResolvedItem[]>(() => {
+    const arr = [...resolved];
+    const collator = new Intl.Collator(lang === "ar" ? "ar" : "en", {
+      sensitivity: "base",
+    });
+    switch (sortKey) {
+      case "newest":
+        return arr.reverse();
+      case "oldest":
+        return arr;
+      case "price_asc":
+        return arr.sort((a, b) => {
+          if (a.price === null && b.price === null) return 0;
+          if (a.price === null) return 1; // nulls last
+          if (b.price === null) return -1;
+          return a.price - b.price;
+        });
+      case "price_desc":
+        return arr.sort((a, b) => {
+          if (a.price === null && b.price === null) return 0;
+          if (a.price === null) return 1;
+          if (b.price === null) return -1;
+          return b.price - a.price;
+        });
+      case "name_asc":
+        return arr.sort((a, b) => collator.compare(a.name, b.name));
+      default:
+        return arr;
+    }
+  }, [resolved, sortKey, lang]);
+
+  const onSelectSort = useCallback(
+    (next: WishlistSortKey) => {
+      setSortMenuOpen(false);
+      if (next === sortKey) return;
+      const previous = sortKey;
+      setSortKey(next);
+      trackEvent({
+        name: "wishlist_sort_change",
+        ts: Date.now(),
+        sort: next,
+        previousSort: previous,
+        itemCount: resolved.length,
+        source: "wishlist_screen",
+      });
+    },
+    [sortKey, resolved.length],
+  );
+
   return (
     <div className="min-h-screen w-full bg-cream flex justify-center">
       <div className="relative w-full max-w-[440px] bg-background min-h-screen overflow-hidden shadow-soft">
