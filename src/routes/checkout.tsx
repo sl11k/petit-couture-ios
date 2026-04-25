@@ -37,6 +37,58 @@ const shortCodeRegex = /^[A-Z]{4}\d{4}$/;
 const fourDigitRegex = /^\d{4}$/;
 const fiveDigitRegex = /^\d{5}$/;
 
+// Live-format helpers — keep raw value submission-friendly while improving readability as the user types.
+// Phone: accepts +966…, 00966…, or local 05… and groups digits in luxury-friendly chunks.
+function formatSaudiPhone(raw: string): string {
+  // Strip everything except digits and a leading +
+  const cleaned = raw.replace(/[^\d+]/g, "");
+  let core = cleaned;
+  let prefix = "";
+
+  if (core.startsWith("+966")) {
+    prefix = "+966 ";
+    core = core.slice(4);
+  } else if (core.startsWith("00966")) {
+    prefix = "+966 ";
+    core = core.slice(5);
+  } else if (core.startsWith("+")) {
+    // Unsupported country code while typing — keep the + and let validation flag it.
+    prefix = "+";
+    core = core.slice(1).replace(/\D/g, "");
+  } else if (core.startsWith("0")) {
+    // Local format 05XXXXXXXX → "05X XXX XXXX"
+    const digits = core.replace(/\D/g, "").slice(0, 10);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`;
+    return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+  } else {
+    core = core.replace(/\D/g, "");
+  }
+
+  // International: 9 digits after +966 → "5X XXX XXXX"
+  const digits = core.replace(/\D/g, "").slice(0, 9);
+  if (digits.length === 0) return prefix.trimEnd();
+  if (digits.length <= 2) return `${prefix}${digits}`;
+  if (digits.length <= 5) return `${prefix}${digits.slice(0, 2)} ${digits.slice(2)}`;
+  return `${prefix}${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5)}`;
+}
+
+// Short code: 4 uppercase letters + 4 digits (e.g. RIYD2342). Accept letters in first 4 slots, digits after.
+function formatShortCode(raw: string): string {
+  const cleaned = raw.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  let letters = "";
+  let digits = "";
+  for (const ch of cleaned) {
+    if (letters.length < 4) {
+      if (/[A-Z]/.test(ch)) letters += ch;
+      // skip stray digits while letters slot is open
+    } else if (digits.length < 4 && /\d/.test(ch)) {
+      digits += ch;
+    }
+  }
+  return letters + digits;
+}
+
 function buildSchema(e: ReturnType<typeof useLanguage>["t"]["checkout"]["errors"]) {
   return z.object({
     fullName: z
@@ -351,17 +403,26 @@ function CheckoutPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className={labelClass}>{t.checkout.phone}</label>
-                  <input
-                    type="tel"
-                    inputMode="tel"
-                    autoComplete="tel"
-                    placeholder="+9665XXXXXXXX"
-                    maxLength={16}
-                    dir="ltr"
-                    aria-invalid={!!errors.phone}
-                    className={fieldClass(!!errors.phone) + " mt-1.5"}
-                    {...form.register("phone")}
-                  />
+                  {(() => {
+                    const reg = form.register("phone");
+                    return (
+                      <input
+                        type="tel"
+                        inputMode="tel"
+                        autoComplete="tel"
+                        placeholder="+966 5X XXX XXXX"
+                        maxLength={16}
+                        dir="ltr"
+                        aria-invalid={!!errors.phone}
+                        className={fieldClass(!!errors.phone) + " mt-1.5 tabular-nums"}
+                        {...reg}
+                        onChange={(e) => {
+                          e.target.value = formatSaudiPhone(e.target.value);
+                          void reg.onChange(e);
+                        }}
+                      />
+                    );
+                  })()}
                   {errors.phone && <p className={errorClass}>{errors.phone.message}</p>}
                 </div>
                 <div>
@@ -395,18 +456,30 @@ function CheckoutPage() {
 
               <div>
                 <label className={labelClass}>{t.checkout.nationalAddress}</label>
-                <input
-                  type="text"
-                  placeholder="RIYD2342"
-                  maxLength={8}
-                  dir="ltr"
-                  aria-invalid={!!errors.shortCode}
-                  className={
-                    fieldClass(!!errors.shortCode) +
-                    " mt-1.5 uppercase tracking-[0.2em] font-medium"
-                  }
-                  {...form.register("shortCode")}
-                />
+                {(() => {
+                  const reg = form.register("shortCode");
+                  return (
+                    <input
+                      type="text"
+                      placeholder="RIYD2342"
+                      maxLength={8}
+                      dir="ltr"
+                      autoCapitalize="characters"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      aria-invalid={!!errors.shortCode}
+                      className={
+                        fieldClass(!!errors.shortCode) +
+                        " mt-1.5 uppercase tracking-[0.2em] font-medium"
+                      }
+                      {...reg}
+                      onChange={(e) => {
+                        e.target.value = formatShortCode(e.target.value);
+                        void reg.onChange(e);
+                      }}
+                    />
+                  );
+                })()}
                 {errors.shortCode ? (
                   <p className={errorClass}>{errors.shortCode.message}</p>
                 ) : (
