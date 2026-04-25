@@ -131,9 +131,24 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     });
   }, [isRTL]);
 
+  const merge = useCallback((ids: string[]) => {
+    setItems((prev) => {
+      const set = new Set(prev);
+      let added = 0;
+      for (const id of ids) {
+        if (typeof id === "string" && id && !set.has(id)) {
+          set.add(id);
+          added++;
+        }
+      }
+      if (added === 0) return prev;
+      return Array.from(set);
+    });
+  }, []);
+
   const value = useMemo<Ctx>(
-    () => ({ items, has, toggle, add, remove, clear, count: items.length }),
-    [items, has, toggle, add, remove, clear],
+    () => ({ items, has, toggle, add, remove, clear, merge, count: items.length }),
+    [items, has, toggle, add, remove, clear, merge],
   );
 
   return <WishlistContext.Provider value={value}>{children}</WishlistContext.Provider>;
