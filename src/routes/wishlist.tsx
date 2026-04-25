@@ -57,6 +57,37 @@ function WishlistPage() {
 
   const [sharePayload, setSharePayload] = useState<ShareSheetPayload | null>(null);
 
+  // Capture once-per-visit list of IDs that arrived via /wishlist/share, so the
+  // user can roll back the import in a single tap. Reading clears the slot —
+  // the affordance never reappears on back/forward navigation.
+  const [importedIds, setImportedIds] = useState<string[]>([]);
+  useEffect(() => {
+    const last = readLastImport();
+    if (last && last.ids.length > 0) {
+      setImportedIds(last.ids);
+      clearLastImport();
+    }
+  }, []);
+
+  const onUndoImport = useCallback(() => {
+    const ids = importedIds;
+    if (ids.length === 0) return;
+    for (const id of ids) wishlist.remove(id, "shared_link");
+    setImportedIds([]);
+    const message = isRTL
+      ? ids.length === 1
+        ? "تم حذف العنصر المستورد"
+        : `تم حذف ${ids.length} عناصر مستوردة`
+      : ids.length === 1
+        ? "Removed 1 imported piece"
+        : `Removed ${ids.length} imported pieces`;
+    toast(message, {
+      icon: <Undo2 className="h-4 w-4" strokeWidth={1.7} />,
+      position: isRTL ? "top-left" : "top-right",
+      duration: 2200,
+    });
+  }, [importedIds, wishlist, isRTL]);
+
   const shareItem = useCallback(
     (id: string, name: string) => {
       trackEvent({
