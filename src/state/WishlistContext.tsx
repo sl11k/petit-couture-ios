@@ -230,11 +230,11 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         return prev;
       }
       trackEvent({
-        name: "wishlist_undo" as never, // analytics layer accepts unknown names; keeps payload minimal
+        name: "wishlist_undo",
         ts: Date.now(),
         previousSize: prev.length,
         nextSize: cleaned.length,
-      } as never);
+      });
       return cleaned;
     });
   }, []);
