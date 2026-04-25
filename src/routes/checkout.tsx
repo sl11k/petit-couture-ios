@@ -202,6 +202,15 @@ function CheckoutPage() {
 
   const errors = form.formState.errors;
 
+  // Live-confirmed address: when editing, derive from current form values via the
+  // strict zod schema; when reviewing, fall back to the persisted saved address.
+  const watched = form.watch();
+  const confirmedAddress: Address | null = useMemo(() => {
+    if (!editing) return address;
+    const parsed = schema.safeParse(watched);
+    return parsed.success ? (parsed.data as Address) : null;
+  }, [editing, address, watched, schema]);
+
   const fieldClass = (hasError: boolean) =>
     [
       "w-full h-[52px] rounded-[16px] bg-cream-warm/40 px-4 text-[14px] text-foreground placeholder:text-muted-foreground/70 tracking-soft outline-none transition border",
