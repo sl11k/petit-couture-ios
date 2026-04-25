@@ -46,6 +46,12 @@ type Dict = {
     importedOne: string;
     importedMany: (n: number) => string;
     importedNone: string;
+    sortBy: string;
+    sortNewest: string;
+    sortOldest: string;
+    sortPriceAsc: string;
+    sortPriceDesc: string;
+    sortNameAsc: string;
   };
   account: {
     eyebrow: string;
@@ -195,6 +201,12 @@ const dictionaries: Record<Lang, Dict> = {
       importedOne: "1 piece added to your wishlist",
       importedMany: (n) => `${n} pieces added to your wishlist`,
       importedNone: "Nothing new to add — already saved",
+      sortBy: "Sort",
+      sortNewest: "Newest",
+      sortOldest: "Oldest",
+      sortPriceAsc: "Price · low to high",
+      sortPriceDesc: "Price · high to low",
+      sortNameAsc: "Name · A to Z",
     },
     account: {
       eyebrow: "MY ACCOUNT",
@@ -359,6 +371,12 @@ const dictionaries: Record<Lang, Dict> = {
       importedOne: "تمت إضافة قطعة واحدة إلى مفضلتك",
       importedMany: (n) => `تمت إضافة ${n} قطع إلى مفضلتك`,
       importedNone: "لا جديد للإضافة — محفوظة مسبقًا",
+      sortBy: "ترتيب",
+      sortNewest: "الأحدث",
+      sortOldest: "الأقدم",
+      sortPriceAsc: "السعر · من الأقل إلى الأعلى",
+      sortPriceDesc: "السعر · من الأعلى إلى الأقل",
+      sortNameAsc: "الاسم · أ إلى ي",
     },
     account: {
       eyebrow: "حسابي",
