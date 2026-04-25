@@ -80,17 +80,13 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   messages.current = t.wishlist;
 
   const has = useCallback((id: string) => items.includes(id), [items]);
-  const notify = useCallback(
-    (kind: "added" | "removed") => {
-      const msg = kind === "added" ? messages.current.added : messages.current.removed;
-      toast(msg, {
-        icon: <Heart className="h-4 w-4" strokeWidth={1.7} fill={kind === "added" ? "currentColor" : "none"} />,
-        position: isRTL ? "top-left" : "top-right",
-        duration: 1800,
-      });
-    },
-    [isRTL],
-  );
+  // Per-item feedback is handled by the persistent <WishlistBanner /> at the app
+  // shell. Keep notify as a no-op so the existing call sites stay intact while
+  // we avoid double feedback (banner + sonner toast).
+  const notify = useCallback((_kind: "added" | "removed") => {
+    void _kind;
+    void isRTL;
+  }, [isRTL]);
   const add = useCallback(
     (id: string, source: WishlistSource = "unknown") =>
       setItems((prev) => {
