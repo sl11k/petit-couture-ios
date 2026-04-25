@@ -114,9 +114,18 @@ function CheckoutPage() {
     },
   });
 
+  // If no saved address, start in edit mode; otherwise review first.
+  const [editing, setEditing] = useState<boolean>(!address);
+
   const onSubmit = (values: FormValues) => {
     const parsed = schema.parse(values);
     save(parsed as Address);
+    setEditing(false);
+    toast.success(t.checkout.success);
+  };
+
+  const onPlaceOrder = () => {
+    if (!address) return;
     toast.success(t.checkout.success);
   };
 
