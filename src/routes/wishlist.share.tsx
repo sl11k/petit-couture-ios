@@ -60,6 +60,33 @@ function decodeIds(raw: string): string[] {
     .slice(0, 100);
 }
 
+const SEEN_KEY = "maisonnet:wishlist-share:seen:v1";
+
+function loadSeen(): Set<string> {
+  if (typeof sessionStorage === "undefined") return new Set();
+  try {
+    const raw = sessionStorage.getItem(SEEN_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? new Set(parsed.filter((v) => typeof v === "string")) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function markSeen(token: string) {
+  if (typeof sessionStorage === "undefined") return;
+  try {
+    const seen = loadSeen();
+    seen.add(token);
+    // Cap to avoid unbounded growth across a long session.
+    const trimmed = Array.from(seen).slice(-50);
+    sessionStorage.setItem(SEEN_KEY, JSON.stringify(trimmed));
+  } catch {
+    /* quota or privacy mode — ignore */
+  }
+}
+
 function SharePage() {
   const { ids } = Route.useSearch();
   const navigate = useNavigate();
@@ -71,32 +98,42 @@ function SharePage() {
     if (ranRef.current) return;
     ranRef.current = true;
 
-    const decoded = decodeIds(ids);
-    const fresh = decoded.filter((id) => !has(id));
+    // Dedupe per exact ids payload across the whole session, so back/forward
+    // navigation to the same /wishlist/share?ids=... never re-fires the toast
+    // or re-runs the merge.
+    const token = (ids ?? "").trim();
+    const alreadySeen = loadSeen().has(token);
 
-    if (decoded.length > 0) merge(decoded, "shared_link");
+    if (!alreadySeen) {
+      const decoded = decodeIds(ids);
+      const fresh = decoded.filter((id) => !has(id));
 
-    trackEvent({
-      name: "wishlist_import",
-      ts: Date.now(),
-      requested: decoded.length,
-      added: fresh.length,
-      source: "shared_link",
-    });
+      if (decoded.length > 0) merge(decoded, "shared_link");
 
-    const w = t.wishlist;
-    const message =
-      fresh.length === 0
-        ? w.importedNone
-        : fresh.length === 1
-          ? w.importedOne
-          : w.importedMany(fresh.length);
+      trackEvent({
+        name: "wishlist_import",
+        ts: Date.now(),
+        requested: decoded.length,
+        added: fresh.length,
+        source: "shared_link",
+      });
 
-    toast(message, {
-      icon: <Heart className="h-4 w-4" strokeWidth={1.7} fill="currentColor" />,
-      position: isRTL ? "top-left" : "top-right",
-      duration: 2200,
-    });
+      const w = t.wishlist;
+      const message =
+        fresh.length === 0
+          ? w.importedNone
+          : fresh.length === 1
+            ? w.importedOne
+            : w.importedMany(fresh.length);
+
+      toast(message, {
+        icon: <Heart className="h-4 w-4" strokeWidth={1.7} fill="currentColor" />,
+        position: isRTL ? "top-left" : "top-right",
+        duration: 2200,
+      });
+
+      markSeen(token);
+    }
 
     navigate({ to: "/wishlist", replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
