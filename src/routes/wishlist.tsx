@@ -1,12 +1,13 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, Heart, Share2, Sparkles, Trash2, UserCircle2 } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight, Heart, Share2, Sparkles, Trash2, UserCircle2, Undo2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useAuth } from "@/state/AuthContext";
 import { categories, getProductForCategory } from "@/data/categories";
 import { trackEvent } from "@/lib/analytics";
+import { clearLastImport, readLastImport } from "@/lib/lastImport";
 import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
 import hero from "@/assets/hero-campaign.jpg";
 
