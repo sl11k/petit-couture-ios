@@ -17,7 +17,7 @@ function OrdersPage() {
   const [items, setItems] = useState<any[]>([]);
 
   async function load() {
-    let q = supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(200);
+    let q: any = supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(200);
     if (filter !== "all") q = q.eq("status", filter);
     const { data } = await q;
     setOrders(data ?? []);
@@ -34,7 +34,7 @@ function OrdersPage() {
   }
 
   async function updateStatus(id: string, status: string) {
-    await supabase.from("orders").update({ status }).eq("id", id);
+    await (supabase.from("orders") as any).update({ status }).eq("id", id);
     await load();
     if (selected?.id === id) setSelected({ ...selected, status });
   }

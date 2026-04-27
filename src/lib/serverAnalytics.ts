@@ -22,7 +22,7 @@ export async function trackServerEvent(
   try {
     const session_id = getSessionId();
     const { data: auth } = await supabase.auth.getUser();
-    await supabase.from("analytics_events").insert({
+    await (supabase.from("analytics_events") as any).insert({
       session_id,
       user_id: auth.user?.id ?? null,
       event_name: eventName,
