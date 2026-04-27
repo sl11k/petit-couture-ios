@@ -209,7 +209,7 @@ function Input({ label, value, onChange, type = "text", className = "" }: { labe
     </div>
   );
 }
-function Textarea({ label, value, onChange, className = "" }: any) {
+function Textarea({ label, value, onChange, className = "" }: { label: string; value: any; onChange: (v: string) => void; className?: string }) {
   return (
     <div className={className}>
       <label className="mb-1 block text-xs text-muted-foreground">{label}</label>
@@ -222,7 +222,7 @@ function Textarea({ label, value, onChange, className = "" }: any) {
     </div>
   );
 }
-function Select({ label, value, onChange, options, className = "" }: any) {
+function Select({ label, value, onChange, options, className = "" }: { label: string; value: any; onChange: (v: string) => void; options: { value: string; label: string }[]; className?: string }) {
   return (
     <div className={className}>
       <label className="mb-1 block text-xs text-muted-foreground">{label}</label>

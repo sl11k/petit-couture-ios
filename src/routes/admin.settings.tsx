@@ -100,7 +100,7 @@ function Section({ title, children }: any) {
     </div>
   );
 }
-function Field({ label, value, onChange, type = "text" }: any) {
+function Field({ label, value, onChange, type = "text" }: { label: string; value: any; onChange: (v: string) => void; type?: string }) {
   return (
     <div>
       <label className="mb-1 block text-xs text-muted-foreground">{label}</label>
