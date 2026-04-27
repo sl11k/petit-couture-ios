@@ -11,6 +11,7 @@ import { useAddress, type Address } from "@/state/AddressContext";
 import { db } from "@/lib/db";
 import { trackServerEvent, getCurrentSessionId } from "@/lib/serverAnalytics";
 import { supabase } from "@/integrations/supabase/client";
+import { placeOrder } from "@/server/placeOrder";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -275,54 +276,35 @@ function CheckoutPage() {
       const { data: auth } = await supabase.auth.getUser();
       const { subtotal, shipping_fee, tax, total, shipping_method } = pricing;
 
-      const { data: order, error: orderErr } = await db
-        .from("orders")
-        .insert({
+      // Server-side idempotent order creation. Same (session_id + cart_hash)
+      // returns the existing order instead of inserting a duplicate.
+      const { order, duplicate } = await placeOrder({
+        data: {
+          session_id: getCurrentSessionId(),
           user_id: auth.user?.id ?? null,
-          customer_name: address.fullName,
-          customer_email: address.email,
-          customer_phone: address.phone,
-          status: "pending",
-          payment_method: PAYMENT_METHOD,
-          subtotal,
-          shipping_fee,
-          tax,
-          total,
+          items: bag.items.map((it) => ({
+            slug: it.slug,
+            name: it.name,
+            brand: it.brand ?? null,
+            image: it.image ?? null,
+            price: it.price,
+            qty: it.qty,
+            size: it.size ?? null,
+            color: it.color ?? null,
+          })),
+          address: address as Record<string, unknown> as never,
           currency: bag.currency,
-          shipping_address: address,
-          notes: address.notes ?? null,
-        })
-        .select()
-        .single();
+          payment_method: PAYMENT_METHOD,
+          pricing: { subtotal, shipping_fee, tax, total, shipping_method },
+        },
+      });
 
-      if (orderErr || !order) throw orderErr ?? new Error("Order failed");
-
-      const items = bag.items.map((it) => ({
-        order_id: order.id,
-        product_slug: it.slug,
-        product_name: it.name,
-        brand: it.brand,
-        image_url: it.image,
-        unit_price: it.price,
-        qty: it.qty,
-        size: it.size,
-        color: it.color,
-        line_total: it.price * it.qty,
-      }));
-      await db.from("order_items").insert(items);
-
-      // Mark abandoned cart converted
-      await db
-        .from("abandoned_carts")
-        .update({ converted: true, updated_at: new Date().toISOString() })
-        .eq("session_id", getCurrentSessionId());
-
-      // Dedup purchase event by order_id
+      // Dedup purchase event by order_id (covers duplicate-submit replays too)
       const PURCHASE_KEY = "maisonnet:purchase:v1";
-      let purchasedAlready = false;
+      let purchasedAlready = duplicate;
       try {
         const fired = JSON.parse(window.sessionStorage.getItem(PURCHASE_KEY) ?? "[]") as string[];
-        purchasedAlready = fired.includes(order.id);
+        if (fired.includes(order.id)) purchasedAlready = true;
         if (!purchasedAlready) {
           fired.push(order.id);
           window.sessionStorage.setItem(PURCHASE_KEY, JSON.stringify(fired.slice(-20)));
