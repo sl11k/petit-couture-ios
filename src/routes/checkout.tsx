@@ -273,10 +273,7 @@ function CheckoutPage() {
     setPlacing(true);
     try {
       const { data: auth } = await supabase.auth.getUser();
-      const subtotal = bag.subtotal;
-      const shippingFee = subtotal >= 500 ? 0 : 25;
-      const tax = Math.round(subtotal * 0.15 * 100) / 100;
-      const totalAmount = subtotal + shippingFee + tax;
+      const { subtotal, shipping_fee, tax, total, shipping_method } = pricing;
 
       const { data: order, error: orderErr } = await db
         .from("orders")
@@ -286,11 +283,11 @@ function CheckoutPage() {
           customer_email: address.email,
           customer_phone: address.phone,
           status: "pending",
-          payment_method: "cod",
+          payment_method: PAYMENT_METHOD,
           subtotal,
-          shipping_fee: shippingFee,
+          shipping_fee,
           tax,
-          total: totalAmount,
+          total,
           currency: bag.currency,
           shipping_address: address,
           notes: address.notes ?? null,
@@ -336,9 +333,14 @@ function CheckoutPage() {
         void trackServerEvent("purchase", {
           order_id: order.id,
           order_number: order.order_number,
-          total: totalAmount,
-          currency: bag.currency,
           item_count: bag.count,
+          currency: bag.currency,
+          subtotal,
+          shipping_fee,
+          tax,
+          total,
+          shipping_method,
+          payment_method: PAYMENT_METHOD,
         });
       }
 
