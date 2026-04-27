@@ -8,6 +8,9 @@ import { Check, ChevronLeft, ChevronRight, Lock, MapPin, Pencil, ShieldCheck } f
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useBag } from "@/state/BagContext";
 import { useAddress, type Address } from "@/state/AddressContext";
+import { db } from "@/lib/db";
+import { trackServerEvent, getCurrentSessionId } from "@/lib/serverAnalytics";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -162,6 +165,40 @@ function CheckoutPage() {
     const id = window.setTimeout(() => navigate({ to: "/bag" }), 2400);
     return () => window.clearTimeout(id);
   }, [bagEmpty, navigate, t.checkout.bagEmptyDuringCheckout, isRTL]);
+
+  // Track begin_checkout once when entering with items
+  const beganRef = useRef(false);
+  useEffect(() => {
+    if (bagEmpty || beganRef.current) return;
+    beganRef.current = true;
+    void trackServerEvent("begin_checkout", {
+      item_count: bag.count,
+      subtotal: bag.subtotal,
+      currency: bag.currency,
+    });
+    // Save/update abandoned cart snapshot
+    void (async () => {
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        await db.from("abandoned_carts").upsert(
+          {
+            session_id: getCurrentSessionId(),
+            user_id: auth.user?.id ?? null,
+            email: auth.user?.email ?? null,
+            items: bag.items,
+            subtotal: bag.subtotal,
+            currency: bag.currency,
+            reached_checkout: true,
+            converted: false,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "session_id" },
+        );
+      } catch {
+        /* ignore */
+      }
+    })();
+  }, [bagEmpty, bag.count, bag.subtotal, bag.currency, bag.items]);
 
   const schema = buildSchema(t.checkout.errors);
   type FormValues = z.input<typeof schema>;
