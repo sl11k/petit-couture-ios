@@ -166,30 +166,48 @@ function CheckoutPage() {
     return () => window.clearTimeout(id);
   }, [bagEmpty, navigate, t.checkout.bagEmptyDuringCheckout, isRTL]);
 
-  // Track begin_checkout once when entering with items
+  // Track begin_checkout once per session-cart-signature; upsert abandoned cart by session_id.
+  const BEGIN_KEY = "maisonnet:begin_checkout:v1";
   const beganRef = useRef(false);
   useEffect(() => {
     if (bagEmpty || beganRef.current) return;
     beganRef.current = true;
-    void trackServerEvent("begin_checkout", {
-      item_count: bag.count,
-      subtotal: bag.subtotal,
-      currency: bag.currency,
-    });
-    // Save/update abandoned cart snapshot
+
+    const session_id = getCurrentSessionId();
+    // Dedup begin_checkout per session+subtotal+count signature
+    const signature = `${session_id}|${bag.count}|${bag.subtotal}`;
+    let alreadyFired = false;
+    try {
+      alreadyFired = window.sessionStorage.getItem(BEGIN_KEY) === signature;
+    } catch { /* ignore */ }
+
+    if (!alreadyFired) {
+      void trackServerEvent("begin_checkout", {
+        item_count: bag.count,
+        subtotal: bag.subtotal,
+        currency: bag.currency,
+      });
+      try { window.sessionStorage.setItem(BEGIN_KEY, signature); } catch { /* ignore */ }
+    }
+
+    // Upsert abandoned cart snapshot (one row per session_id)
     void (async () => {
       try {
         const { data: auth } = await supabase.auth.getUser();
-        await db.from("abandoned_carts").insert({
-          session_id: getCurrentSessionId(),
-          user_id: auth.user?.id ?? null,
-          email: auth.user?.email ?? null,
-          items: bag.items,
-          subtotal: bag.subtotal,
-          currency: bag.currency,
-          reached_checkout: true,
-          converted: false,
-        });
+        await db.from("abandoned_carts").upsert(
+          {
+            session_id,
+            user_id: auth.user?.id ?? null,
+            email: auth.user?.email ?? null,
+            items: bag.items,
+            subtotal: bag.subtotal,
+            currency: bag.currency,
+            reached_checkout: true,
+            converted: false,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "session_id" },
+        );
       } catch {
         /* ignore */
       }
