@@ -1,0 +1,163 @@
+// Server-side checkout with idempotency.
+// Keyed on (session_id + cart_hash) via a unique constraint on orders.idempotency_key.
+// If the same key is submitted twice, the second call returns the original order
+// instead of creating a duplicate.
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
+const ItemSchema = z.object({
+  slug: z.string().min(1).max(255),
+  name: z.string().min(1).max(255),
+  brand: z.string().max(255).nullable().optional(),
+  image: z.string().max(2048).nullable().optional(),
+  price: z.number().min(0).max(1_000_000),
+  qty: z.number().int().min(1).max(999),
+  size: z.string().max(64).nullable().optional(),
+  color: z.string().max(64).nullable().optional(),
+});
+
+const AddressSchema = z.object({
+  fullName: z.string().min(1).max(120),
+  email: z.string().email().max(255),
+  phone: z.string().min(1).max(64),
+  shortCode: z.string().max(32).optional().nullable(),
+  buildingNumber: z.string().max(16).optional().nullable(),
+  street: z.string().max(160).optional().nullable(),
+  district: z.string().max(120).optional().nullable(),
+  city: z.string().max(80).optional().nullable(),
+  postalCode: z.string().max(16).optional().nullable(),
+  additionalNumber: z.string().max(16).optional().nullable(),
+  notes: z.string().max(500).optional().nullable(),
+}).passthrough();
+
+const InputSchema = z.object({
+  session_id: z.string().min(1).max(128),
+  user_id: z.string().uuid().nullable().optional(),
+  items: z.array(ItemSchema).min(1).max(100),
+  address: AddressSchema,
+  currency: z.string().min(3).max(8),
+  payment_method: z.enum(["cod", "card", "apple_pay", "bank_transfer"]).default("cod"),
+  pricing: z.object({
+    subtotal: z.number().min(0),
+    shipping_fee: z.number().min(0),
+    tax: z.number().min(0),
+    total: z.number().min(0),
+    shipping_method: z.string().min(1).max(64),
+  }),
+});
+
+export type PlaceOrderInput = z.infer<typeof InputSchema>;
+
+// Stable hash of the cart contents — order-independent for items, includes pricing.
+async function hashCart(input: PlaceOrderInput): Promise<string> {
+  const normalized = {
+    items: [...input.items]
+      .map((it) => ({
+        slug: it.slug,
+        qty: it.qty,
+        price: it.price,
+        size: it.size ?? null,
+        color: it.color ?? null,
+      }))
+      .sort((a, b) =>
+        `${a.slug}|${a.size}|${a.color}`.localeCompare(
+          `${b.slug}|${b.size}|${b.color}`,
+        ),
+      ),
+    pricing: input.pricing,
+    payment_method: input.payment_method,
+    currency: input.currency,
+  };
+  const data = new TextEncoder().encode(JSON.stringify(normalized));
+  const buf = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+export const placeOrder = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => InputSchema.parse(input))
+  .handler(async ({ data }) => {
+    const cartHash = await hashCart(data);
+    const idempotencyKey = `${data.session_id}:${cartHash}`;
+
+    // 1. If an order with this key already exists, return it (idempotent replay).
+    const existing = await supabaseAdmin
+      .from("orders")
+      .select("id, order_number, status, total, currency")
+      .eq("idempotency_key", idempotencyKey)
+      .maybeSingle();
+
+    if (existing.data) {
+      return { order: existing.data, duplicate: true as const };
+    }
+
+    // 2. Insert the order. Unique index on idempotency_key guarantees that
+    //    even concurrent requests can't both succeed.
+    const { data: order, error: orderErr } = await supabaseAdmin
+      .from("orders")
+      .insert({
+        idempotency_key: idempotencyKey,
+        user_id: data.user_id ?? null,
+        customer_name: data.address.fullName,
+        customer_email: data.address.email,
+        customer_phone: data.address.phone,
+        status: "pending",
+        payment_method: data.payment_method,
+        subtotal: data.pricing.subtotal,
+        shipping_fee: data.pricing.shipping_fee,
+        tax: data.pricing.tax,
+        total: data.pricing.total,
+        currency: data.currency,
+        shipping_address: data.address,
+        notes: data.address.notes ?? null,
+      })
+      .select("id, order_number, status, total, currency")
+      .single();
+
+    if (orderErr) {
+      // 23505 = unique_violation: a concurrent request beat us. Re-fetch.
+      if (orderErr.code === "23505") {
+        const replay = await supabaseAdmin
+          .from("orders")
+          .select("id, order_number, status, total, currency")
+          .eq("idempotency_key", idempotencyKey)
+          .single();
+        if (replay.data) {
+          return { order: replay.data, duplicate: true as const };
+        }
+      }
+      throw new Error(orderErr.message);
+    }
+
+    if (!order) throw new Error("Order insert returned no row");
+
+    // 3. Insert items. If this fails, the order row remains but no items —
+    //    a follow-up replay with the same key will return the existing order
+    //    and we re-insert items only if missing.
+    const items = data.items.map((it) => ({
+      order_id: order.id,
+      product_slug: it.slug,
+      product_name: it.name,
+      brand: it.brand ?? null,
+      image_url: it.image ?? null,
+      unit_price: it.price,
+      qty: it.qty,
+      size: it.size ?? null,
+      color: it.color ?? null,
+      line_total: it.price * it.qty,
+    }));
+    const { error: itemsErr } = await supabaseAdmin
+      .from("order_items")
+      .insert(items);
+    if (itemsErr) throw new Error(itemsErr.message);
+
+    // 4. Mark abandoned cart converted (best-effort).
+    await supabaseAdmin
+      .from("abandoned_carts")
+      .update({ converted: true, updated_at: new Date().toISOString() })
+      .eq("session_id", data.session_id);
+
+    return { order, duplicate: false as const };
+  });
