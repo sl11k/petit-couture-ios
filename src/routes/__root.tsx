@@ -7,6 +7,7 @@ import { AddressProvider } from "@/state/AddressContext";
 import { Toaster } from "@/components/ui/sonner";
 import { WishlistBanner } from "@/components/WishlistBanner";
 import { DesktopHeader } from "@/components/DesktopHeader";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 
 import appCss from "../styles.css?url";
 
@@ -82,6 +83,7 @@ function RootComponent() {
               <DesktopHeader />
               <Outlet />
               <WishlistBanner />
+              <WhatsAppButton />
               <Toaster />
             </AddressProvider>
           </BagProvider>
