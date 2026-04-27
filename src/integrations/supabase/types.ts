@@ -200,6 +200,7 @@ export type Database = {
           customer_name: string
           customer_phone: string
           id: string
+          idempotency_key: string | null
           notes: string | null
           order_number: string
           payment_method: Database["public"]["Enums"]["payment_method"]
@@ -223,6 +224,7 @@ export type Database = {
           customer_name: string
           customer_phone: string
           id?: string
+          idempotency_key?: string | null
           notes?: string | null
           order_number?: string
           payment_method?: Database["public"]["Enums"]["payment_method"]
@@ -246,6 +248,7 @@ export type Database = {
           customer_name?: string
           customer_phone?: string
           id?: string
+          idempotency_key?: string | null
           notes?: string | null
           order_number?: string
           payment_method?: Database["public"]["Enums"]["payment_method"]
