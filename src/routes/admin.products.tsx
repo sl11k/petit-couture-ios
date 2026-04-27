@@ -196,7 +196,7 @@ function ProductsPage() {
   );
 }
 
-function Input({ label, value, onChange, type = "text", className = "" }: any) {
+function Input({ label, value, onChange, type = "text", className = "" }: { label: string; value: any; onChange: (v: string) => void; type?: string; className?: string }) {
   return (
     <div className={className}>
       <label className="mb-1 block text-xs text-muted-foreground">{label}</label>
