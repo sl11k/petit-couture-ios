@@ -166,6 +166,21 @@ function CheckoutPage() {
     return () => window.clearTimeout(id);
   }, [bagEmpty, navigate, t.checkout.bagEmptyDuringCheckout, isRTL]);
 
+  // Pricing + fulfillment defaults shared across begin_checkout, abandoned cart, and purchase.
+  const SHIPPING_THRESHOLD = 500;
+  const SHIPPING_FEE = 25;
+  const TAX_RATE = 0.15;
+  const PAYMENT_METHOD = "cod" as const;
+
+  const pricing = useMemo(() => {
+    const subtotal = bag.subtotal;
+    const shipping_fee = subtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+    const tax = Math.round(subtotal * TAX_RATE * 100) / 100;
+    const total = subtotal + shipping_fee + tax;
+    const shipping_method = shipping_fee === 0 ? "standard_free" : "standard";
+    return { subtotal, shipping_fee, tax, total, shipping_method };
+  }, [bag.subtotal]);
+
   // Track begin_checkout once per session-cart-signature; upsert abandoned cart by session_id.
   const BEGIN_KEY = "maisonnet:begin_checkout:v1";
   const beganRef = useRef(false);
@@ -174,8 +189,8 @@ function CheckoutPage() {
     beganRef.current = true;
 
     const session_id = getCurrentSessionId();
-    // Dedup begin_checkout per session+subtotal+count signature
-    const signature = `${session_id}|${bag.count}|${bag.subtotal}`;
+    // Dedup begin_checkout per session+totals signature
+    const signature = `${session_id}|${bag.count}|${pricing.subtotal}|${pricing.total}`;
     let alreadyFired = false;
     try {
       alreadyFired = window.sessionStorage.getItem(BEGIN_KEY) === signature;
@@ -184,8 +199,13 @@ function CheckoutPage() {
     if (!alreadyFired) {
       void trackServerEvent("begin_checkout", {
         item_count: bag.count,
-        subtotal: bag.subtotal,
         currency: bag.currency,
+        subtotal: pricing.subtotal,
+        shipping_fee: pricing.shipping_fee,
+        tax: pricing.tax,
+        total: pricing.total,
+        shipping_method: pricing.shipping_method,
+        payment_method: PAYMENT_METHOD,
       });
       try { window.sessionStorage.setItem(BEGIN_KEY, signature); } catch { /* ignore */ }
     }
@@ -200,7 +220,7 @@ function CheckoutPage() {
             user_id: auth.user?.id ?? null,
             email: auth.user?.email ?? null,
             items: bag.items,
-            subtotal: bag.subtotal,
+            subtotal: pricing.subtotal,
             currency: bag.currency,
             reached_checkout: true,
             converted: false,
@@ -212,7 +232,7 @@ function CheckoutPage() {
         /* ignore */
       }
     })();
-  }, [bagEmpty, bag.count, bag.subtotal, bag.currency, bag.items]);
+  }, [bagEmpty, bag.count, bag.currency, bag.items, pricing]);
 
   const schema = buildSchema(t.checkout.errors);
   type FormValues = z.input<typeof schema>;
