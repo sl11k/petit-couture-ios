@@ -166,30 +166,48 @@ function CheckoutPage() {
     return () => window.clearTimeout(id);
   }, [bagEmpty, navigate, t.checkout.bagEmptyDuringCheckout, isRTL]);
 
-  // Track begin_checkout once when entering with items
+  // Track begin_checkout once per session-cart-signature; upsert abandoned cart by session_id.
+  const BEGIN_KEY = "maisonnet:begin_checkout:v1";
   const beganRef = useRef(false);
   useEffect(() => {
     if (bagEmpty || beganRef.current) return;
     beganRef.current = true;
-    void trackServerEvent("begin_checkout", {
-      item_count: bag.count,
-      subtotal: bag.subtotal,
-      currency: bag.currency,
-    });
-    // Save/update abandoned cart snapshot
+
+    const session_id = getCurrentSessionId();
+    // Dedup begin_checkout per session+subtotal+count signature
+    const signature = `${session_id}|${bag.count}|${bag.subtotal}`;
+    let alreadyFired = false;
+    try {
+      alreadyFired = window.sessionStorage.getItem(BEGIN_KEY) === signature;
+    } catch { /* ignore */ }
+
+    if (!alreadyFired) {
+      void trackServerEvent("begin_checkout", {
+        item_count: bag.count,
+        subtotal: bag.subtotal,
+        currency: bag.currency,
+      });
+      try { window.sessionStorage.setItem(BEGIN_KEY, signature); } catch { /* ignore */ }
+    }
+
+    // Upsert abandoned cart snapshot (one row per session_id)
     void (async () => {
       try {
         const { data: auth } = await supabase.auth.getUser();
-        await db.from("abandoned_carts").insert({
-          session_id: getCurrentSessionId(),
-          user_id: auth.user?.id ?? null,
-          email: auth.user?.email ?? null,
-          items: bag.items,
-          subtotal: bag.subtotal,
-          currency: bag.currency,
-          reached_checkout: true,
-          converted: false,
-        });
+        await db.from("abandoned_carts").upsert(
+          {
+            session_id,
+            user_id: auth.user?.id ?? null,
+            email: auth.user?.email ?? null,
+            items: bag.items,
+            subtotal: bag.subtotal,
+            currency: bag.currency,
+            reached_checkout: true,
+            converted: false,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "session_id" },
+        );
       } catch {
         /* ignore */
       }
@@ -229,8 +247,9 @@ function CheckoutPage() {
   };
 
   const [placing, setPlacing] = useState(false);
+  const placedRef = useRef(false);
   const onPlaceOrder = async () => {
-    if (bagEmpty || !address || placing) return;
+    if (bagEmpty || !address || placing || placedRef.current) return;
     setPlacing(true);
     try {
       const { data: auth } = await supabase.auth.getUser();
@@ -281,17 +300,34 @@ function CheckoutPage() {
         .update({ converted: true, updated_at: new Date().toISOString() })
         .eq("session_id", getCurrentSessionId());
 
-      void trackServerEvent("purchase", {
-        order_id: order.id,
-        order_number: order.order_number,
-        total: totalAmount,
-        currency: bag.currency,
-        item_count: bag.count,
-      });
+      // Dedup purchase event by order_id
+      const PURCHASE_KEY = "maisonnet:purchase:v1";
+      let purchasedAlready = false;
+      try {
+        const fired = JSON.parse(window.sessionStorage.getItem(PURCHASE_KEY) ?? "[]") as string[];
+        purchasedAlready = fired.includes(order.id);
+        if (!purchasedAlready) {
+          fired.push(order.id);
+          window.sessionStorage.setItem(PURCHASE_KEY, JSON.stringify(fired.slice(-20)));
+        }
+      } catch { /* ignore */ }
 
-      toast.success(t.checkout.success);
+      if (!purchasedAlready) {
+        void trackServerEvent("purchase", {
+          order_id: order.id,
+          order_number: order.order_number,
+          total: totalAmount,
+          currency: bag.currency,
+          item_count: bag.count,
+        });
+      }
+
+      placedRef.current = true;
       bag.clear();
-      navigate({ to: "/", search: {} as never });
+      navigate({
+        to: "/order-confirmation/$orderNumber",
+        params: { orderNumber: order.order_number },
+      });
     } catch (e) {
       console.error(e);
       toast.error(isRTL ? "تعذّر إنشاء الطلب" : "Could not place order");
