@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { WishlistBanner } from "@/components/WishlistBanner";
 import { DesktopHeader } from "@/components/DesktopHeader";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 
 import appCss from "../styles.css?url";
 
@@ -81,6 +82,7 @@ function RootComponent() {
           <BagProvider>
             <AddressProvider>
               <DesktopHeader />
+              <AnalyticsTracker />
               <Outlet />
               <WishlistBanner />
               <WhatsAppButton />

@@ -8,6 +8,9 @@ import { Check, ChevronLeft, ChevronRight, Lock, MapPin, Pencil, ShieldCheck } f
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useBag } from "@/state/BagContext";
 import { useAddress, type Address } from "@/state/AddressContext";
+import { db } from "@/lib/db";
+import { trackServerEvent, getCurrentSessionId } from "@/lib/serverAnalytics";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -163,6 +166,36 @@ function CheckoutPage() {
     return () => window.clearTimeout(id);
   }, [bagEmpty, navigate, t.checkout.bagEmptyDuringCheckout, isRTL]);
 
+  // Track begin_checkout once when entering with items
+  const beganRef = useRef(false);
+  useEffect(() => {
+    if (bagEmpty || beganRef.current) return;
+    beganRef.current = true;
+    void trackServerEvent("begin_checkout", {
+      item_count: bag.count,
+      subtotal: bag.subtotal,
+      currency: bag.currency,
+    });
+    // Save/update abandoned cart snapshot
+    void (async () => {
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        await db.from("abandoned_carts").insert({
+          session_id: getCurrentSessionId(),
+          user_id: auth.user?.id ?? null,
+          email: auth.user?.email ?? null,
+          items: bag.items,
+          subtotal: bag.subtotal,
+          currency: bag.currency,
+          reached_checkout: true,
+          converted: false,
+        });
+      } catch {
+        /* ignore */
+      }
+    })();
+  }, [bagEmpty, bag.count, bag.subtotal, bag.currency, bag.items]);
+
   const schema = buildSchema(t.checkout.errors);
   type FormValues = z.input<typeof schema>;
 
@@ -195,9 +228,76 @@ function CheckoutPage() {
     toast.success(t.checkout.success);
   };
 
-  const onPlaceOrder = () => {
-    if (bagEmpty || !address) return;
-    toast.success(t.checkout.success);
+  const [placing, setPlacing] = useState(false);
+  const onPlaceOrder = async () => {
+    if (bagEmpty || !address || placing) return;
+    setPlacing(true);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const subtotal = bag.subtotal;
+      const shippingFee = subtotal >= 500 ? 0 : 25;
+      const tax = Math.round(subtotal * 0.15 * 100) / 100;
+      const totalAmount = subtotal + shippingFee + tax;
+
+      const { data: order, error: orderErr } = await db
+        .from("orders")
+        .insert({
+          user_id: auth.user?.id ?? null,
+          customer_name: address.fullName,
+          customer_email: address.email,
+          customer_phone: address.phone,
+          status: "pending",
+          payment_method: "cod",
+          subtotal,
+          shipping_fee: shippingFee,
+          tax,
+          total: totalAmount,
+          currency: bag.currency,
+          shipping_address: address,
+          notes: address.notes ?? null,
+        })
+        .select()
+        .single();
+
+      if (orderErr || !order) throw orderErr ?? new Error("Order failed");
+
+      const items = bag.items.map((it) => ({
+        order_id: order.id,
+        product_slug: it.slug,
+        product_name: it.name,
+        brand: it.brand,
+        image_url: it.image,
+        unit_price: it.price,
+        qty: it.qty,
+        size: it.size,
+        color: it.color,
+        line_total: it.price * it.qty,
+      }));
+      await db.from("order_items").insert(items);
+
+      // Mark abandoned cart converted
+      await db
+        .from("abandoned_carts")
+        .update({ converted: true, updated_at: new Date().toISOString() })
+        .eq("session_id", getCurrentSessionId());
+
+      void trackServerEvent("purchase", {
+        order_id: order.id,
+        order_number: order.order_number,
+        total: totalAmount,
+        currency: bag.currency,
+        item_count: bag.count,
+      });
+
+      toast.success(t.checkout.success);
+      bag.clear();
+      navigate({ to: "/", search: {} as never });
+    } catch (e) {
+      console.error(e);
+      toast.error(isRTL ? "تعذّر إنشاء الطلب" : "Could not place order");
+    } finally {
+      setPlacing(false);
+    }
   };
 
   const errors = form.formState.errors;

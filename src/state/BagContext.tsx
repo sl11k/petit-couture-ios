@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { trackServerEvent } from "@/lib/serverAnalytics";
 
 const STORAGE_KEY = "maisonnet:bag:v1";
 
@@ -95,6 +96,14 @@ export function BagProvider({ children }: { children: ReactNode }) {
         return prev.map((p) => (p.id === id ? { ...p, qty: p.qty + qty } : p));
       }
       return [...prev, { ...input, qty, id }];
+    });
+    void trackServerEvent("add_to_cart", {
+      slug: input.slug,
+      name: input.name,
+      price: input.price,
+      qty,
+      size: input.size,
+      color: input.color,
     });
   }, []);
 
