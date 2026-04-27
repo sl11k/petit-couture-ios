@@ -180,20 +180,16 @@ function CheckoutPage() {
     void (async () => {
       try {
         const { data: auth } = await supabase.auth.getUser();
-        await db.from("abandoned_carts").upsert(
-          {
-            session_id: getCurrentSessionId(),
-            user_id: auth.user?.id ?? null,
-            email: auth.user?.email ?? null,
-            items: bag.items,
-            subtotal: bag.subtotal,
-            currency: bag.currency,
-            reached_checkout: true,
-            converted: false,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "session_id" },
-        );
+        await db.from("abandoned_carts").insert({
+          session_id: getCurrentSessionId(),
+          user_id: auth.user?.id ?? null,
+          email: auth.user?.email ?? null,
+          items: bag.items,
+          subtotal: bag.subtotal,
+          currency: bag.currency,
+          reached_checkout: true,
+          converted: false,
+        });
       } catch {
         /* ignore */
       }
