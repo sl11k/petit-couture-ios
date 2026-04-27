@@ -11,6 +11,7 @@ import { useAddress, type Address } from "@/state/AddressContext";
 import { db } from "@/lib/db";
 import { trackServerEvent, getCurrentSessionId } from "@/lib/serverAnalytics";
 import { supabase } from "@/integrations/supabase/client";
+import { placeOrder } from "@/server/placeOrder";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
