@@ -95,8 +95,8 @@ export const placeOrder = createServerFn({ method: "POST" })
 
     // 2. Insert the order. Unique index on idempotency_key guarantees that
     //    even concurrent requests can't both succeed.
-    const { data: order, error: orderErr } = await supabaseAdmin
-      .from("orders")
+    const { data: order, error: orderErr } = await (supabaseAdmin
+      .from("orders") as any)
       .insert({
         idempotency_key: idempotencyKey,
         user_id: data.user_id ?? null,
