@@ -17,6 +17,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WishlistShareRouteImport } from './routes/wishlist.share'
+import { Route as OrderConfirmationOrderNumberRouteImport } from './routes/order-confirmation.$orderNumber'
 import { Route as DebugAnalyticsRouteImport } from './routes/debug.analytics'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
@@ -66,6 +67,12 @@ const WishlistShareRoute = WishlistShareRouteImport.update({
   path: '/share',
   getParentRoute: () => WishlistRoute,
 } as any)
+const OrderConfirmationOrderNumberRoute =
+  OrderConfirmationOrderNumberRouteImport.update({
+    id: '/order-confirmation/$orderNumber',
+    path: '/order-confirmation/$orderNumber',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const DebugAnalyticsRoute = DebugAnalyticsRouteImport.update({
   id: '/debug/analytics',
   path: '/debug/analytics',
@@ -123,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AdminSettingsRoute
   '/category/$slug': typeof CategorySlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
+  '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/wishlist/share': typeof WishlistShareRoute
 }
 export interface FileRoutesByTo {
@@ -141,6 +149,7 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AdminSettingsRoute
   '/category/$slug': typeof CategorySlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
+  '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/wishlist/share': typeof WishlistShareRoute
 }
 export interface FileRoutesById {
@@ -160,6 +169,7 @@ export interface FileRoutesById {
   '/admin/settings': typeof AdminSettingsRoute
   '/category/$slug': typeof CategorySlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
+  '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/wishlist/share': typeof WishlistShareRoute
 }
 export interface FileRouteTypes {
@@ -180,6 +190,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/category/$slug'
     | '/debug/analytics'
+    | '/order-confirmation/$orderNumber'
     | '/wishlist/share'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/category/$slug'
     | '/debug/analytics'
+    | '/order-confirmation/$orderNumber'
     | '/wishlist/share'
   id:
     | '__root__'
@@ -216,6 +228,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/category/$slug'
     | '/debug/analytics'
+    | '/order-confirmation/$orderNumber'
     | '/wishlist/share'
   fileRoutesById: FileRoutesById
 }
@@ -229,6 +242,7 @@ export interface RootRouteChildren {
   WishlistRoute: typeof WishlistRouteWithChildren
   CategorySlugRoute: typeof CategorySlugRoute
   DebugAnalyticsRoute: typeof DebugAnalyticsRoute
+  OrderConfirmationOrderNumberRoute: typeof OrderConfirmationOrderNumberRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -288,6 +302,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/wishlist/share'
       preLoaderRoute: typeof WishlistShareRouteImport
       parentRoute: typeof WishlistRoute
+    }
+    '/order-confirmation/$orderNumber': {
+      id: '/order-confirmation/$orderNumber'
+      path: '/order-confirmation/$orderNumber'
+      fullPath: '/order-confirmation/$orderNumber'
+      preLoaderRoute: typeof OrderConfirmationOrderNumberRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/debug/analytics': {
       id: '/debug/analytics'
@@ -390,6 +411,7 @@ const rootRouteChildren: RootRouteChildren = {
   WishlistRoute: WishlistRouteWithChildren,
   CategorySlugRoute: CategorySlugRoute,
   DebugAnalyticsRoute: DebugAnalyticsRoute,
+  OrderConfirmationOrderNumberRoute: OrderConfirmationOrderNumberRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
