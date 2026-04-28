@@ -333,8 +333,8 @@ function Input(props: { value: any; onChange: (v: string) => void; type?: string
     value={props.value ?? ""} onChange={(e) => props.onChange(e.target.value)} className={inputCls} />;
 }
 
-function Textarea(props: { value: any; onChange: (v: string) => void; rows?: number }) {
-  return <textarea rows={props.rows ?? 3} value={props.value ?? ""} onChange={(e) => props.onChange(e.target.value)}
+function Textarea(props: { value: any; onChange: (v: string) => void; rows?: number; placeholder?: string }) {
+  return <textarea rows={props.rows ?? 3} placeholder={props.placeholder} value={props.value ?? ""} onChange={(e) => props.onChange(e.target.value)}
     className={inputCls + " min-h-[80px]"} />;
 }
 
