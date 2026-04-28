@@ -49,6 +49,7 @@ export async function logAudit(entry: AuditEntry): Promise<void> {
     });
   } catch (err) {
     console.warn("[audit] failed", err);
+  }
 }
 
 /** Log an integration failure (external API error, webhook reject, etc). */
@@ -85,7 +86,6 @@ export async function logDataExport(opts: { kind: string; rows: number; filters?
     entity: opts.kind,
     metadata: { rows: opts.rows, filters: opts.filters ?? null },
   });
-}
 }
 
 export const ROLE_LABELS: Record<string, string> = {
