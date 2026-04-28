@@ -89,6 +89,48 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          event_code: string
+          id: string
+          link: string | null
+          metadata: Json
+          read_by: Json
+          related_entity: string | null
+          related_entity_id: string | null
+          severity: string
+          title: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          event_code: string
+          id?: string
+          link?: string | null
+          metadata?: Json
+          read_by?: Json
+          related_entity?: string | null
+          related_entity_id?: string | null
+          severity?: string
+          title: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          event_code?: string
+          id?: string
+          link?: string | null
+          metadata?: Json
+          read_by?: Json
+          related_entity?: string | null
+          related_entity_id?: string | null
+          severity?: string
+          title?: string
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string
@@ -438,6 +480,216 @@ export type Database = {
           phone?: string | null
           product_id?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      notification_log: {
+        Row: {
+          attempts: number
+          audience: string
+          body_preview: string | null
+          channel: string
+          created_at: string
+          error_message: string | null
+          event_code: string
+          failed_at: string | null
+          id: string
+          metadata: Json
+          recipient_email: string | null
+          recipient_phone: string | null
+          recipient_user_id: string | null
+          related_entity: string | null
+          related_entity_id: string | null
+          sent_at: string | null
+          status: string
+          subject: string | null
+          template_key: string | null
+          triggered_by: string | null
+          triggered_by_email: string | null
+        }
+        Insert: {
+          attempts?: number
+          audience?: string
+          body_preview?: string | null
+          channel: string
+          created_at?: string
+          error_message?: string | null
+          event_code: string
+          failed_at?: string | null
+          id?: string
+          metadata?: Json
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          recipient_user_id?: string | null
+          related_entity?: string | null
+          related_entity_id?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          template_key?: string | null
+          triggered_by?: string | null
+          triggered_by_email?: string | null
+        }
+        Update: {
+          attempts?: number
+          audience?: string
+          body_preview?: string | null
+          channel?: string
+          created_at?: string
+          error_message?: string | null
+          event_code?: string
+          failed_at?: string | null
+          id?: string
+          metadata?: Json
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          recipient_user_id?: string | null
+          related_entity?: string | null
+          related_entity_id?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          template_key?: string | null
+          triggered_by?: string | null
+          triggered_by_email?: string | null
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          email_enabled: boolean
+          id: string
+          marketing_email: boolean
+          marketing_sms: boolean
+          marketing_whatsapp: boolean
+          push_enabled: boolean
+          sms_enabled: boolean
+          updated_at: string
+          user_id: string
+          whatsapp_enabled: boolean
+        }
+        Insert: {
+          created_at?: string
+          email_enabled?: boolean
+          id?: string
+          marketing_email?: boolean
+          marketing_sms?: boolean
+          marketing_whatsapp?: boolean
+          push_enabled?: boolean
+          sms_enabled?: boolean
+          updated_at?: string
+          user_id: string
+          whatsapp_enabled?: boolean
+        }
+        Update: {
+          created_at?: string
+          email_enabled?: boolean
+          id?: string
+          marketing_email?: boolean
+          marketing_sms?: boolean
+          marketing_whatsapp?: boolean
+          push_enabled?: boolean
+          sms_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+          whatsapp_enabled?: boolean
+        }
+        Relationships: []
+      }
+      notification_rules: {
+        Row: {
+          allow_resend: boolean
+          audience: string
+          channels: Json
+          created_at: string
+          delay_minutes: number
+          description: string | null
+          event_code: string
+          id: string
+          is_enabled: boolean
+          max_retries: number
+          trigger_mode: string
+          updated_at: string
+        }
+        Insert: {
+          allow_resend?: boolean
+          audience?: string
+          channels?: Json
+          created_at?: string
+          delay_minutes?: number
+          description?: string | null
+          event_code: string
+          id?: string
+          is_enabled?: boolean
+          max_retries?: number
+          trigger_mode?: string
+          updated_at?: string
+        }
+        Update: {
+          allow_resend?: boolean
+          audience?: string
+          channels?: Json
+          created_at?: string
+          delay_minutes?: number
+          description?: string | null
+          event_code?: string
+          id?: string
+          is_enabled?: boolean
+          max_retries?: number
+          trigger_mode?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notification_templates: {
+        Row: {
+          audience: string
+          body: string
+          body_html: string | null
+          channel: string
+          created_at: string
+          description: string | null
+          event_code: string
+          id: string
+          is_enabled: boolean
+          language: string
+          subject: string | null
+          template_key: string
+          updated_at: string
+          variables: Json
+        }
+        Insert: {
+          audience?: string
+          body: string
+          body_html?: string | null
+          channel: string
+          created_at?: string
+          description?: string | null
+          event_code: string
+          id?: string
+          is_enabled?: boolean
+          language?: string
+          subject?: string | null
+          template_key: string
+          updated_at?: string
+          variables?: Json
+        }
+        Update: {
+          audience?: string
+          body?: string
+          body_html?: string | null
+          channel?: string
+          created_at?: string
+          description?: string | null
+          event_code?: string
+          id?: string
+          is_enabled?: boolean
+          language?: string
+          subject?: string | null
+          template_key?: string
+          updated_at?: string
+          variables?: Json
         }
         Relationships: []
       }
@@ -1313,6 +1565,39 @@ export type Database = {
           tag?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          is_active: boolean
+          p256dh: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          is_active?: boolean
+          p256dh: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          is_active?: boolean
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
