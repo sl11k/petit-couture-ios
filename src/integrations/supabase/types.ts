@@ -130,36 +130,122 @@ export type Database = {
       }
       categories: {
         Row: {
+          banner_link: string | null
+          banner_url: string | null
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          display_order: number
+          display_rules: Json
+          icon: string | null
+          id: string
+          image_alt: string | null
+          image_url: string | null
+          is_active: boolean
+          meta_description: string | null
+          meta_title: string | null
+          name_ar: string
+          name_en: string
+          og_image: string | null
+          parent_id: string | null
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          banner_link?: string | null
+          banner_url?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          display_order?: number
+          display_rules?: Json
+          icon?: string | null
+          id?: string
+          image_alt?: string | null
+          image_url?: string | null
+          is_active?: boolean
+          meta_description?: string | null
+          meta_title?: string | null
+          name_ar: string
+          name_en: string
+          og_image?: string | null
+          parent_id?: string | null
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          banner_link?: string | null
+          banner_url?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          display_order?: number
+          display_rules?: Json
+          icon?: string | null
+          id?: string
+          image_alt?: string | null
+          image_url?: string | null
+          is_active?: boolean
+          meta_description?: string | null
+          meta_title?: string | null
+          name_ar?: string
+          name_en?: string
+          og_image?: string | null
+          parent_id?: string | null
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      category_products: {
+        Row: {
+          category_id: string
           created_at: string
           display_order: number
           id: string
-          image_url: string | null
-          is_active: boolean
-          name_ar: string
-          name_en: string
-          slug: string
+          is_pinned: boolean
+          product_id: string
         }
         Insert: {
+          category_id: string
           created_at?: string
           display_order?: number
           id?: string
-          image_url?: string | null
-          is_active?: boolean
-          name_ar: string
-          name_en: string
-          slug: string
+          is_pinned?: boolean
+          product_id: string
         }
         Update: {
+          category_id?: string
           created_at?: string
           display_order?: number
           id?: string
-          image_url?: string | null
-          is_active?: boolean
-          name_ar?: string
-          name_en?: string
-          slug?: string
+          is_pinned?: boolean
+          product_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "category_products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "category_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       coupons: {
         Row: {
