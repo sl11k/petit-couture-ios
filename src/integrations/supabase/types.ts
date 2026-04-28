@@ -907,6 +907,24 @@ export type Database = {
         }
         Relationships: []
       }
+      non_returnable_products: {
+        Row: {
+          created_at: string
+          product_id: string
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          product_id: string
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          product_id?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
       notification_log: {
         Row: {
           attempts: number
@@ -2113,6 +2131,180 @@ export type Database = {
           next_run_at?: string | null
           recipients?: Json
           report_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      return_items: {
+        Row: {
+          created_at: string
+          id: string
+          inspection_notes: string | null
+          inspection_status: string | null
+          order_item_id: string | null
+          product_id: string | null
+          product_name: string
+          qty: number
+          reason: string | null
+          restock: boolean
+          return_request_id: string
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inspection_notes?: string | null
+          inspection_status?: string | null
+          order_item_id?: string | null
+          product_id?: string | null
+          product_name: string
+          qty?: number
+          reason?: string | null
+          restock?: boolean
+          return_request_id: string
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inspection_notes?: string | null
+          inspection_status?: string | null
+          order_item_id?: string | null
+          product_id?: string | null
+          product_name?: string
+          qty?: number
+          reason?: string | null
+          restock?: boolean
+          return_request_id?: string
+          unit_price?: number
+        }
+        Relationships: []
+      }
+      return_requests: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          customer_email: string
+          customer_name: string | null
+          customer_notes: string | null
+          customer_phone: string | null
+          decision_reason: string | null
+          exchange_order_id: string | null
+          id: string
+          internal_notes: Json
+          order_id: string
+          order_number: string | null
+          photos: Json
+          reason: string
+          reason_details: string | null
+          refund_amount: number | null
+          refund_method: string
+          refunded_at: string | null
+          return_number: string
+          return_shipping_carrier: string | null
+          return_tracking_number: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewed_by_email: string | null
+          shipping_fee_deducted: number | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          customer_email: string
+          customer_name?: string | null
+          customer_notes?: string | null
+          customer_phone?: string | null
+          decision_reason?: string | null
+          exchange_order_id?: string | null
+          id?: string
+          internal_notes?: Json
+          order_id: string
+          order_number?: string | null
+          photos?: Json
+          reason: string
+          reason_details?: string | null
+          refund_amount?: number | null
+          refund_method?: string
+          refunded_at?: string | null
+          return_number?: string
+          return_shipping_carrier?: string | null
+          return_tracking_number?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewed_by_email?: string | null
+          shipping_fee_deducted?: number | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          customer_email?: string
+          customer_name?: string | null
+          customer_notes?: string | null
+          customer_phone?: string | null
+          decision_reason?: string | null
+          exchange_order_id?: string | null
+          id?: string
+          internal_notes?: Json
+          order_id?: string
+          order_number?: string | null
+          photos?: Json
+          reason?: string
+          reason_details?: string | null
+          refund_amount?: number | null
+          refund_method?: string
+          refunded_at?: string | null
+          return_number?: string
+          return_shipping_carrier?: string | null
+          return_tracking_number?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewed_by_email?: string | null
+          shipping_fee_deducted?: number | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      return_settings: {
+        Row: {
+          deduct_shipping_fee: boolean
+          id: string
+          policy_text_ar: string | null
+          policy_text_en: string | null
+          reasons: Json
+          refund_methods: Json
+          return_window_days: number
+          shipping_fee_amount: number
+          updated_at: string
+        }
+        Insert: {
+          deduct_shipping_fee?: boolean
+          id?: string
+          policy_text_ar?: string | null
+          policy_text_en?: string | null
+          reasons?: Json
+          refund_methods?: Json
+          return_window_days?: number
+          shipping_fee_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          deduct_shipping_fee?: boolean
+          id?: string
+          policy_text_ar?: string | null
+          policy_text_en?: string | null
+          reasons?: Json
+          refund_methods?: Json
+          return_window_days?: number
+          shipping_fee_amount?: number
           updated_at?: string
         }
         Relationships: []

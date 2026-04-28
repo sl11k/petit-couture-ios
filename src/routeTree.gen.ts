@@ -55,6 +55,7 @@ import { Route as ApiPublicPaymentWebhookRouteImport } from './routes/api.public
 import { Route as AdminProductsIdRouteImport } from './routes/admin.products.$id'
 import { Route as AdminOrdersIdRouteImport } from './routes/admin.orders.$id'
 import { Route as AdminCustomersIdRouteImport } from './routes/admin.customers.$id'
+import { Route as AccountReturnsNewRouteImport } from './routes/account.returns.new'
 
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
@@ -288,10 +289,15 @@ const AdminCustomersIdRoute = AdminCustomersIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AdminCustomersRoute,
 } as any)
+const AccountReturnsNewRoute = AccountReturnsNewRouteImport.update({
+  id: '/returns/new',
+  path: '/returns/new',
+  getParentRoute: () => AccountRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/account': typeof AccountRoute
+  '/account': typeof AccountRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
   '/bag': typeof BagRoute
   '/checkout': typeof CheckoutRoute
@@ -331,6 +337,7 @@ export interface FileRoutesByFullPath {
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/support/new': typeof SupportNewRoute
   '/wishlist/share': typeof WishlistShareRoute
+  '/account/returns/new': typeof AccountReturnsNewRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
@@ -339,7 +346,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/account': typeof AccountRoute
+  '/account': typeof AccountRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
   '/bag': typeof BagRoute
   '/checkout': typeof CheckoutRoute
@@ -379,6 +386,7 @@ export interface FileRoutesByTo {
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/support/new': typeof SupportNewRoute
   '/wishlist/share': typeof WishlistShareRoute
+  '/account/returns/new': typeof AccountReturnsNewRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
@@ -388,7 +396,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/account': typeof AccountRoute
+  '/account': typeof AccountRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
   '/bag': typeof BagRoute
   '/checkout': typeof CheckoutRoute
@@ -428,6 +436,7 @@ export interface FileRoutesById {
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/support/new': typeof SupportNewRoute
   '/wishlist/share': typeof WishlistShareRoute
+  '/account/returns/new': typeof AccountReturnsNewRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
@@ -478,6 +487,7 @@ export interface FileRouteTypes {
     | '/order-confirmation/$orderNumber'
     | '/support/new'
     | '/wishlist/share'
+    | '/account/returns/new'
     | '/admin/customers/$id'
     | '/admin/orders/$id'
     | '/admin/products/$id'
@@ -526,6 +536,7 @@ export interface FileRouteTypes {
     | '/order-confirmation/$orderNumber'
     | '/support/new'
     | '/wishlist/share'
+    | '/account/returns/new'
     | '/admin/customers/$id'
     | '/admin/orders/$id'
     | '/admin/products/$id'
@@ -574,6 +585,7 @@ export interface FileRouteTypes {
     | '/order-confirmation/$orderNumber'
     | '/support/new'
     | '/wishlist/share'
+    | '/account/returns/new'
     | '/admin/customers/$id'
     | '/admin/orders/$id'
     | '/admin/products/$id'
@@ -583,7 +595,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AccountRoute: typeof AccountRoute
+  AccountRoute: typeof AccountRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   BagRoute: typeof BagRoute
   CheckoutRoute: typeof CheckoutRoute
@@ -924,8 +936,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCustomersIdRouteImport
       parentRoute: typeof AdminCustomersRoute
     }
+    '/account/returns/new': {
+      id: '/account/returns/new'
+      path: '/returns/new'
+      fullPath: '/account/returns/new'
+      preLoaderRoute: typeof AccountReturnsNewRouteImport
+      parentRoute: typeof AccountRoute
+    }
   }
 }
+
+interface AccountRouteChildren {
+  AccountReturnsNewRoute: typeof AccountReturnsNewRoute
+}
+
+const AccountRouteChildren: AccountRouteChildren = {
+  AccountReturnsNewRoute: AccountReturnsNewRoute,
+}
+
+const AccountRouteWithChildren =
+  AccountRoute._addFileChildren(AccountRouteChildren)
 
 interface AdminCustomersRouteChildren {
   AdminCustomersIdRoute: typeof AdminCustomersIdRoute
@@ -1037,7 +1067,7 @@ const WishlistRouteWithChildren = WishlistRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AccountRoute: AccountRoute,
+  AccountRoute: AccountRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   BagRoute: BagRoute,
   CheckoutRoute: CheckoutRoute,

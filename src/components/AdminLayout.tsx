@@ -68,7 +68,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/admin/create-order", label: "إنشاء طلب", icon: Plus },
       { to: "/admin/payments", label: "المدفوعات", icon: CreditCard },
       { to: "/admin/shipping", label: "الشحن", icon: Truck },
-      { to: "/admin/returns", label: "المرتجعات", icon: Undo2, badge: "soon" },
+      { to: "/admin/returns", label: "المرتجعات", icon: Undo2 },
     ],
   },
   {
