@@ -176,7 +176,11 @@ export type Database = {
           entity: string | null
           entity_id: string | null
           id: string
+          ip_address: string | null
           metadata: Json
+          new_data: Json | null
+          old_data: Json | null
+          user_agent: string | null
         }
         Insert: {
           action: string
@@ -186,7 +190,11 @@ export type Database = {
           entity?: string | null
           entity_id?: string | null
           id?: string
+          ip_address?: string | null
           metadata?: Json
+          new_data?: Json | null
+          old_data?: Json | null
+          user_agent?: string | null
         }
         Update: {
           action?: string
@@ -196,7 +204,11 @@ export type Database = {
           entity?: string | null
           entity_id?: string | null
           id?: string
+          ip_address?: string | null
           metadata?: Json
+          new_data?: Json | null
+          old_data?: Json | null
+          user_agent?: string | null
         }
         Relationships: []
       }
@@ -2444,6 +2456,27 @@ export type Database = {
         }
         Relationships: []
       }
+      role_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          permission: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permission: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permission?: string
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
       shipment_tracking_events: {
         Row: {
           created_at: string
@@ -3379,6 +3412,10 @@ export type Database = {
     }
     Functions: {
       auto_cancel_expired_orders: { Args: never; Returns: number }
+      has_permission: {
+        Args: { _permission: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -3394,7 +3431,21 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "staff" | "customer" | "manager" | "viewer"
+      app_role:
+        | "admin"
+        | "staff"
+        | "customer"
+        | "manager"
+        | "viewer"
+        | "super_admin"
+        | "store_manager"
+        | "orders_manager"
+        | "support"
+        | "inventory_manager"
+        | "marketing_manager"
+        | "finance_manager"
+        | "content_manager"
+        | "developer"
       order_status:
         | "pending"
         | "paid"
@@ -3539,7 +3590,22 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "staff", "customer", "manager", "viewer"],
+      app_role: [
+        "admin",
+        "staff",
+        "customer",
+        "manager",
+        "viewer",
+        "super_admin",
+        "store_manager",
+        "orders_manager",
+        "support",
+        "inventory_manager",
+        "marketing_manager",
+        "finance_manager",
+        "content_manager",
+        "developer",
+      ],
       order_status: [
         "pending",
         "paid",
