@@ -295,6 +295,45 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_communications: {
+        Row: {
+          actor_email: string | null
+          actor_id: string | null
+          body: string | null
+          channel: string
+          created_at: string
+          customer_user_id: string
+          direction: string
+          id: string
+          metadata: Json
+          subject: string | null
+        }
+        Insert: {
+          actor_email?: string | null
+          actor_id?: string | null
+          body?: string | null
+          channel: string
+          created_at?: string
+          customer_user_id: string
+          direction?: string
+          id?: string
+          metadata?: Json
+          subject?: string | null
+        }
+        Update: {
+          actor_email?: string | null
+          actor_id?: string | null
+          body?: string | null
+          channel?: string
+          created_at?: string
+          customer_user_id?: string
+          direction?: string
+          id?: string
+          metadata?: Json
+          subject?: string | null
+        }
+        Relationships: []
+      }
       inventory_alerts: {
         Row: {
           created_at: string
@@ -795,29 +834,50 @@ export type Database = {
       }
       profiles: {
         Row: {
+          city: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          internal_notes: Json
+          last_contact_at: string | null
+          loyalty_points: number
           phone: string | null
+          source: string
+          status: string
+          tag: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          city?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          internal_notes?: Json
+          last_contact_at?: string | null
+          loyalty_points?: number
           phone?: string | null
+          source?: string
+          status?: string
+          tag?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          city?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          internal_notes?: Json
+          last_contact_at?: string | null
+          loyalty_points?: number
           phone?: string | null
+          source?: string
+          status?: string
+          tag?: string | null
           updated_at?: string
           user_id?: string
         }
