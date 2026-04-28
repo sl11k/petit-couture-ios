@@ -2034,6 +2034,48 @@ export type Database = {
         }
         Relationships: []
       }
+      perf_metrics: {
+        Row: {
+          connection: string | null
+          created_at: string
+          device: string | null
+          id: string
+          metric: string
+          navigation_type: string | null
+          page: string | null
+          rating: string | null
+          session_id: string | null
+          user_id: string | null
+          value: number
+        }
+        Insert: {
+          connection?: string | null
+          created_at?: string
+          device?: string | null
+          id?: string
+          metric: string
+          navigation_type?: string | null
+          page?: string | null
+          rating?: string | null
+          session_id?: string | null
+          user_id?: string | null
+          value: number
+        }
+        Update: {
+          connection?: string | null
+          created_at?: string
+          device?: string | null
+          id?: string
+          metric?: string
+          navigation_type?: string | null
+          page?: string | null
+          rating?: string | null
+          session_id?: string | null
+          user_id?: string | null
+          value?: number
+        }
+        Relationships: []
+      }
       product_offers: {
         Row: {
           config: Json
