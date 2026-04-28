@@ -306,7 +306,7 @@ function ProductDetails() {
         </main>
 
         {/* Sticky bottom CTA */}
-        <div className="absolute bottom-0 inset-x-0 bg-background/95 backdrop-blur-md border-t border-border">
+        <div className="fixed lg:absolute bottom-0 inset-x-0 max-w-[440px] mx-auto bg-background/95 backdrop-blur-md border-t border-border z-40">
           <div className="px-5 pt-3 pb-6 flex items-center gap-3">
             <button
               aria-label={isRTL ? "أضف إلى المفضلة" : "Add to wishlist"}

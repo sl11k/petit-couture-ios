@@ -229,7 +229,7 @@
   .relative.bg-background.min-h-screen.shadow-soft > header {
     display: none;
   }
-  .relative.bg-background.min-h-screen.shadow-soft > nav.absolute.bottom-0,
+  .relative.bg-background.min-h-screen.shadow-soft > nav[class*="bottom-0"],
   .relative.bg-background.min-h-screen.shadow-soft > button[aria-label][class*="absolute"][class*="bottom-"] {
     display: none;
   }

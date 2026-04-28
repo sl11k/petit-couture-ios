@@ -187,7 +187,7 @@ function BagPage() {
 
         {/* Sticky checkout CTA */}
         {bag.items.length > 0 && (
-          <div className="absolute bottom-0 inset-x-0 bg-background/95 backdrop-blur-md border-t border-border">
+          <div className="fixed lg:absolute bottom-0 inset-x-0 max-w-[440px] mx-auto bg-background/95 backdrop-blur-md border-t border-border z-40">
             <div className="px-5 pt-4 pb-6">
               <button onClick={() => navigate({ to: "/checkout" })} className="w-full h-[58px] rounded-full bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft">
                 <Lock className="h-[16px] w-[16px]" strokeWidth={1.7} />

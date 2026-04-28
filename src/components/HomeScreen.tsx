@@ -349,7 +349,7 @@ export function HomeScreen() {
         <button
           aria-label={isRTL ? "خدمة العملاء" : "Customer support"}
           className={[
-            "absolute bottom-[108px] h-[60px] w-[60px] rounded-full bg-gold text-background grid place-items-center shadow-gold active:scale-95 transition",
+            "fixed lg:absolute bottom-[108px] h-[60px] w-[60px] rounded-full bg-gold text-background grid place-items-center shadow-gold active:scale-95 transition z-40",
             isRTL ? "left-5" : "right-5",
           ].join(" ")}
         >
@@ -357,7 +357,7 @@ export function HomeScreen() {
         </button>
 
         {/* Bottom nav */}
-        <nav className="absolute bottom-0 inset-x-0 bg-background/95 backdrop-blur-md border-t border-border">
+        <nav className="fixed lg:absolute bottom-0 inset-x-0 max-w-[440px] mx-auto bg-background/95 backdrop-blur-md border-t border-border z-40">
           <div className="px-3 pt-2 pb-6">
             <div className="grid grid-cols-5">
               {(
