@@ -304,6 +304,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          assigned_to: string | null
           created_at: string
           created_by_admin: boolean
           currency: string
@@ -312,22 +313,30 @@ export type Database = {
           customer_phone: string
           id: string
           idempotency_key: string | null
+          internal_notes: Json
+          invoice_number: string | null
           notes: string | null
           order_number: string
           payment_method: Database["public"]["Enums"]["payment_method"]
+          payment_status: string
           shipping_address: Json
+          shipping_carrier: string | null
           shipping_fee: number
           shipping_lat: number | null
           shipping_lng: number | null
+          shipping_status: string
+          source: string
           status: Database["public"]["Enums"]["order_status"]
           subtotal: number
           tax: number
           total: number
           tracking_number: string | null
+          tracking_url: string | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          assigned_to?: string | null
           created_at?: string
           created_by_admin?: boolean
           currency?: string
@@ -336,22 +345,30 @@ export type Database = {
           customer_phone: string
           id?: string
           idempotency_key?: string | null
+          internal_notes?: Json
+          invoice_number?: string | null
           notes?: string | null
           order_number?: string
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          payment_status?: string
           shipping_address?: Json
+          shipping_carrier?: string | null
           shipping_fee?: number
           shipping_lat?: number | null
           shipping_lng?: number | null
+          shipping_status?: string
+          source?: string
           status?: Database["public"]["Enums"]["order_status"]
           subtotal?: number
           tax?: number
           total?: number
           tracking_number?: string | null
+          tracking_url?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          assigned_to?: string | null
           created_at?: string
           created_by_admin?: boolean
           currency?: string
@@ -360,18 +377,25 @@ export type Database = {
           customer_phone?: string
           id?: string
           idempotency_key?: string | null
+          internal_notes?: Json
+          invoice_number?: string | null
           notes?: string | null
           order_number?: string
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          payment_status?: string
           shipping_address?: Json
+          shipping_carrier?: string | null
           shipping_fee?: number
           shipping_lat?: number | null
           shipping_lng?: number | null
+          shipping_status?: string
+          source?: string
           status?: Database["public"]["Enums"]["order_status"]
           subtotal?: number
           tax?: number
           total?: number
           tracking_number?: string | null
+          tracking_url?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -597,6 +621,14 @@ export type Database = {
         | "delivered"
         | "cancelled"
         | "refunded"
+        | "payment_failed"
+        | "under_review"
+        | "ready_to_ship"
+        | "out_for_delivery"
+        | "returned"
+        | "partially_refunded"
+        | "fraud"
+        | "pending_customer"
       payment_method: "cod" | "card" | "apple_pay" | "bank_transfer"
     }
     CompositeTypes: {
@@ -734,6 +766,14 @@ export const Constants = {
         "delivered",
         "cancelled",
         "refunded",
+        "payment_failed",
+        "under_review",
+        "ready_to_ship",
+        "out_for_delivery",
+        "returned",
+        "partially_refunded",
+        "fraud",
+        "pending_customer",
       ],
       payment_method: ["cod", "card", "apple_pay", "bank_transfer"],
     },
