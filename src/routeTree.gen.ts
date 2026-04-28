@@ -44,6 +44,7 @@ import { Route as AdminCampaignsRouteImport } from './routes/admin.campaigns'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAbandonedRouteImport } from './routes/admin.abandoned'
+import { Route as ApiPublicShippingWebhookRouteImport } from './routes/api.public.shipping-webhook'
 import { Route as ApiPublicPaymentWebhookRouteImport } from './routes/api.public.payment-webhook'
 import { Route as AdminProductsIdRouteImport } from './routes/admin.products.$id'
 import { Route as AdminOrdersIdRouteImport } from './routes/admin.orders.$id'
@@ -225,6 +226,12 @@ const AdminAbandonedRoute = AdminAbandonedRouteImport.update({
   path: '/abandoned',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicShippingWebhookRoute =
+  ApiPublicShippingWebhookRouteImport.update({
+    id: '/api/public/shipping-webhook',
+    path: '/api/public/shipping-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPaymentWebhookRoute = ApiPublicPaymentWebhookRouteImport.update({
   id: '/api/public/payment-webhook',
   path: '/api/public/payment-webhook',
@@ -286,6 +293,7 @@ export interface FileRoutesByFullPath {
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
+  '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -327,6 +335,7 @@ export interface FileRoutesByTo {
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
+  '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -369,6 +378,7 @@ export interface FileRoutesById {
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
+  '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -412,6 +422,7 @@ export interface FileRouteTypes {
     | '/admin/orders/$id'
     | '/admin/products/$id'
     | '/api/public/payment-webhook'
+    | '/api/public/shipping-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -453,6 +464,7 @@ export interface FileRouteTypes {
     | '/admin/orders/$id'
     | '/admin/products/$id'
     | '/api/public/payment-webhook'
+    | '/api/public/shipping-webhook'
   id:
     | '__root__'
     | '/'
@@ -494,6 +506,7 @@ export interface FileRouteTypes {
     | '/admin/orders/$id'
     | '/admin/products/$id'
     | '/api/public/payment-webhook'
+    | '/api/public/shipping-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -508,6 +521,7 @@ export interface RootRouteChildren {
   DebugAnalyticsRoute: typeof DebugAnalyticsRoute
   OrderConfirmationOrderNumberRoute: typeof OrderConfirmationOrderNumberRoute
   ApiPublicPaymentWebhookRoute: typeof ApiPublicPaymentWebhookRoute
+  ApiPublicShippingWebhookRoute: typeof ApiPublicShippingWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -757,6 +771,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAbandonedRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/shipping-webhook': {
+      id: '/api/public/shipping-webhook'
+      path: '/api/public/shipping-webhook'
+      fullPath: '/api/public/shipping-webhook'
+      preLoaderRoute: typeof ApiPublicShippingWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payment-webhook': {
       id: '/api/public/payment-webhook'
       path: '/api/public/payment-webhook'
@@ -904,6 +925,7 @@ const rootRouteChildren: RootRouteChildren = {
   DebugAnalyticsRoute: DebugAnalyticsRoute,
   OrderConfirmationOrderNumberRoute: OrderConfirmationOrderNumberRoute,
   ApiPublicPaymentWebhookRoute: ApiPublicPaymentWebhookRoute,
+  ApiPublicShippingWebhookRoute: ApiPublicShippingWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
