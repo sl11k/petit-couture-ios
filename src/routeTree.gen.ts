@@ -46,6 +46,7 @@ import { Route as AdminHelpRouteImport } from './routes/admin.help'
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
 import { Route as AdminCreateOrderRouteImport } from './routes/admin.create-order'
 import { Route as AdminCouponsRouteImport } from './routes/admin.coupons'
+import { Route as AdminConversionRouteImport } from './routes/admin.conversion'
 import { Route as AdminContentRouteImport } from './routes/admin.content'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
 import { Route as AdminCampaignsRouteImport } from './routes/admin.campaigns'
@@ -246,6 +247,11 @@ const AdminCouponsRoute = AdminCouponsRouteImport.update({
   path: '/coupons',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminConversionRoute = AdminConversionRouteImport.update({
+  id: '/conversion',
+  path: '/conversion',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminContentRoute = AdminContentRouteImport.update({
   id: '/content',
   path: '/content',
@@ -331,6 +337,7 @@ export interface FileRoutesByFullPath {
   '/admin/campaigns': typeof AdminCampaignsRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/content': typeof AdminContentRoute
+  '/admin/conversion': typeof AdminConversionRoute
   '/admin/coupons': typeof AdminCouponsRoute
   '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
@@ -383,6 +390,7 @@ export interface FileRoutesByTo {
   '/admin/campaigns': typeof AdminCampaignsRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/content': typeof AdminContentRoute
+  '/admin/conversion': typeof AdminConversionRoute
   '/admin/coupons': typeof AdminCouponsRoute
   '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
@@ -436,6 +444,7 @@ export interface FileRoutesById {
   '/admin/campaigns': typeof AdminCampaignsRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/content': typeof AdminContentRoute
+  '/admin/conversion': typeof AdminConversionRoute
   '/admin/coupons': typeof AdminCouponsRoute
   '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
@@ -490,6 +499,7 @@ export interface FileRouteTypes {
     | '/admin/campaigns'
     | '/admin/categories'
     | '/admin/content'
+    | '/admin/conversion'
     | '/admin/coupons'
     | '/admin/create-order'
     | '/admin/customers'
@@ -542,6 +552,7 @@ export interface FileRouteTypes {
     | '/admin/campaigns'
     | '/admin/categories'
     | '/admin/content'
+    | '/admin/conversion'
     | '/admin/coupons'
     | '/admin/create-order'
     | '/admin/customers'
@@ -594,6 +605,7 @@ export interface FileRouteTypes {
     | '/admin/campaigns'
     | '/admin/categories'
     | '/admin/content'
+    | '/admin/conversion'
     | '/admin/coupons'
     | '/admin/create-order'
     | '/admin/customers'
@@ -910,6 +922,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCouponsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/conversion': {
+      id: '/admin/conversion'
+      path: '/conversion'
+      fullPath: '/admin/conversion'
+      preLoaderRoute: typeof AdminConversionRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/content': {
       id: '/admin/content'
       path: '/content'
@@ -1059,6 +1078,7 @@ interface AdminRouteChildren {
   AdminCampaignsRoute: typeof AdminCampaignsRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminContentRoute: typeof AdminContentRoute
+  AdminConversionRoute: typeof AdminConversionRoute
   AdminCouponsRoute: typeof AdminCouponsRoute
   AdminCreateOrderRoute: typeof AdminCreateOrderRoute
   AdminCustomersRoute: typeof AdminCustomersRouteWithChildren
@@ -1090,6 +1110,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCampaignsRoute: AdminCampaignsRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminContentRoute: AdminContentRoute,
+  AdminConversionRoute: AdminConversionRoute,
   AdminCouponsRoute: AdminCouponsRoute,
   AdminCreateOrderRoute: AdminCreateOrderRoute,
   AdminCustomersRoute: AdminCustomersRouteWithChildren,
