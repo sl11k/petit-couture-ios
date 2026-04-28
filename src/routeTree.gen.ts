@@ -44,6 +44,7 @@ import { Route as AdminCampaignsRouteImport } from './routes/admin.campaigns'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAbandonedRouteImport } from './routes/admin.abandoned'
+import { Route as ApiPublicPaymentWebhookRouteImport } from './routes/api.public.payment-webhook'
 import { Route as AdminProductsIdRouteImport } from './routes/admin.products.$id'
 import { Route as AdminOrdersIdRouteImport } from './routes/admin.orders.$id'
 import { Route as AdminCustomersIdRouteImport } from './routes/admin.customers.$id'
@@ -224,6 +225,11 @@ const AdminAbandonedRoute = AdminAbandonedRouteImport.update({
   path: '/abandoned',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicPaymentWebhookRoute = ApiPublicPaymentWebhookRouteImport.update({
+  id: '/api/public/payment-webhook',
+  path: '/api/public/payment-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminProductsIdRoute = AdminProductsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -279,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
+  '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -319,6 +326,7 @@ export interface FileRoutesByTo {
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
+  '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -360,6 +368,7 @@ export interface FileRoutesById {
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
+  '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -402,6 +411,7 @@ export interface FileRouteTypes {
     | '/admin/customers/$id'
     | '/admin/orders/$id'
     | '/admin/products/$id'
+    | '/api/public/payment-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -442,6 +452,7 @@ export interface FileRouteTypes {
     | '/admin/customers/$id'
     | '/admin/orders/$id'
     | '/admin/products/$id'
+    | '/api/public/payment-webhook'
   id:
     | '__root__'
     | '/'
@@ -482,6 +493,7 @@ export interface FileRouteTypes {
     | '/admin/customers/$id'
     | '/admin/orders/$id'
     | '/admin/products/$id'
+    | '/api/public/payment-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -495,6 +507,7 @@ export interface RootRouteChildren {
   CategorySlugRoute: typeof CategorySlugRoute
   DebugAnalyticsRoute: typeof DebugAnalyticsRoute
   OrderConfirmationOrderNumberRoute: typeof OrderConfirmationOrderNumberRoute
+  ApiPublicPaymentWebhookRoute: typeof ApiPublicPaymentWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -744,6 +757,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAbandonedRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/payment-webhook': {
+      id: '/api/public/payment-webhook'
+      path: '/api/public/payment-webhook'
+      fullPath: '/api/public/payment-webhook'
+      preLoaderRoute: typeof ApiPublicPaymentWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/products/$id': {
       id: '/admin/products/$id'
       path: '/$id'
@@ -883,6 +903,7 @@ const rootRouteChildren: RootRouteChildren = {
   CategorySlugRoute: CategorySlugRoute,
   DebugAnalyticsRoute: DebugAnalyticsRoute,
   OrderConfirmationOrderNumberRoute: OrderConfirmationOrderNumberRoute,
+  ApiPublicPaymentWebhookRoute: ApiPublicPaymentWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
