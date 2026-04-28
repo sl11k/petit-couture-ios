@@ -107,19 +107,21 @@ function ThemeTab() {
   }
 
   async function save() {
-    const errs = validateTheme(draft!);
+    if (!draft) return;
+    const errs = validateTheme(draft);
     if (errs.length) { toast.error(errs[0]); return; }
     setSaving(true);
     if (theme) await saveRevision("theme", theme.id, theme, "حفظ تلقائي قبل التعديل");
+    const d = draft;
     const { error } = await supabase.from("site_themes")
       .update({
-        colors: draft.colors, fonts: draft.fonts, branding: draft.branding,
-        components: draft.components, tokens: draft.tokens,
+        colors: d.colors, fonts: d.fonts, branding: d.branding,
+        components: d.components, tokens: d.tokens,
       })
-      .eq("id", draft.id);
+      .eq("id", d.id);
     setSaving(false);
     if (error) toast.error(error.message);
-    else { toast.success("تم نشر الثيم"); setTheme(draft); applyTheme(draft); }
+    else { toast.success("تم نشر الثيم"); setTheme(d); applyTheme(d); }
   }
 
   function resetPreview() {
