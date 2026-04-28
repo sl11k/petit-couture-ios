@@ -49,6 +49,7 @@ import { Route as AdminCouponsRouteImport } from './routes/admin.coupons'
 import { Route as AdminContentRouteImport } from './routes/admin.content'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
 import { Route as AdminCampaignsRouteImport } from './routes/admin.campaigns'
+import { Route as AdminAuditLoginsRouteImport } from './routes/admin.audit-logins'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAbandonedRouteImport } from './routes/admin.abandoned'
@@ -260,6 +261,11 @@ const AdminCampaignsRoute = AdminCampaignsRouteImport.update({
   path: '/campaigns',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAuditLoginsRoute = AdminAuditLoginsRouteImport.update({
+  id: '/audit-logins',
+  path: '/audit-logins',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAuditRoute = AdminAuditRouteImport.update({
   id: '/audit',
   path: '/audit',
@@ -321,6 +327,7 @@ export interface FileRoutesByFullPath {
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
+  '/admin/audit-logins': typeof AdminAuditLoginsRoute
   '/admin/campaigns': typeof AdminCampaignsRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/content': typeof AdminContentRoute
@@ -372,6 +379,7 @@ export interface FileRoutesByTo {
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
+  '/admin/audit-logins': typeof AdminAuditLoginsRoute
   '/admin/campaigns': typeof AdminCampaignsRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/content': typeof AdminContentRoute
@@ -424,6 +432,7 @@ export interface FileRoutesById {
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
+  '/admin/audit-logins': typeof AdminAuditLoginsRoute
   '/admin/campaigns': typeof AdminCampaignsRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/content': typeof AdminContentRoute
@@ -477,6 +486,7 @@ export interface FileRouteTypes {
     | '/admin/abandoned'
     | '/admin/analytics'
     | '/admin/audit'
+    | '/admin/audit-logins'
     | '/admin/campaigns'
     | '/admin/categories'
     | '/admin/content'
@@ -528,6 +538,7 @@ export interface FileRouteTypes {
     | '/admin/abandoned'
     | '/admin/analytics'
     | '/admin/audit'
+    | '/admin/audit-logins'
     | '/admin/campaigns'
     | '/admin/categories'
     | '/admin/content'
@@ -579,6 +590,7 @@ export interface FileRouteTypes {
     | '/admin/abandoned'
     | '/admin/analytics'
     | '/admin/audit'
+    | '/admin/audit-logins'
     | '/admin/campaigns'
     | '/admin/categories'
     | '/admin/content'
@@ -919,6 +931,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCampaignsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/audit-logins': {
+      id: '/admin/audit-logins'
+      path: '/audit-logins'
+      fullPath: '/admin/audit-logins'
+      preLoaderRoute: typeof AdminAuditLoginsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/audit': {
       id: '/admin/audit'
       path: '/audit'
@@ -1036,6 +1055,7 @@ interface AdminRouteChildren {
   AdminAbandonedRoute: typeof AdminAbandonedRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminAuditRoute: typeof AdminAuditRoute
+  AdminAuditLoginsRoute: typeof AdminAuditLoginsRoute
   AdminCampaignsRoute: typeof AdminCampaignsRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminContentRoute: typeof AdminContentRoute
@@ -1066,6 +1086,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAbandonedRoute: AdminAbandonedRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminAuditRoute: AdminAuditRoute,
+  AdminAuditLoginsRoute: AdminAuditLoginsRoute,
   AdminCampaignsRoute: AdminCampaignsRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminContentRoute: AdminContentRoute,

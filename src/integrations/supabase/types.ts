@@ -599,6 +599,36 @@ export type Database = {
         }
         Relationships: []
       }
+      failed_login_attempts: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          ip_address: string | null
+          metadata: Json
+          reason: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json
+          reason?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json
+          reason?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       faq_items: {
         Row: {
           answer_ar: string
@@ -3422,6 +3452,19 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      log_audit_event: {
+        Args: {
+          _action: string
+          _entity?: string
+          _entity_id?: string
+          _ip?: string
+          _metadata?: Json
+          _new_data?: Json
+          _old_data?: Json
+          _ua?: string
+        }
+        Returns: string
       }
       next_invoice_number: { Args: { _prefix?: string }; Returns: string }
       refresh_product_sales_counts: { Args: never; Returns: undefined }

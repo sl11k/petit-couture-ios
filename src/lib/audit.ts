@@ -1,14 +1,18 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type AuditAction =
-  | "order.create" | "order.update" | "order.cancel" | "order.refund"
-  | "order.manual_discount" | "product.create" | "product.update" | "product.delete"
+  | "auth.login" | "auth.logout" | "auth.login_failed"
+  | "order.create" | "order.update" | "order.status_change" | "order.cancel" | "order.refund"
+  | "order.manual_discount"
+  | "product.create" | "product.update" | "product.delete"
+  | "product.price_change" | "product.stock_change"
   | "inventory.adjust" | "customer.update" | "customer.export"
   | "coupon.create" | "coupon.update" | "coupon.delete"
   | "user.role_grant" | "user.role_revoke" | "user.invite"
+  | "permission.grant" | "permission.revoke"
   | "settings.payment" | "settings.shipping" | "settings.theme"
-  | "integration.connect" | "integration.disconnect"
-  | "report.export" | "auth.login" | "auth.logout"
+  | "integration.connect" | "integration.disconnect" | "integration.failure"
+  | "message.sent" | "report.export" | "data.export"
   | string;
 
 export interface AuditEntry {
@@ -46,6 +50,42 @@ export async function logAudit(entry: AuditEntry): Promise<void> {
   } catch (err) {
     console.warn("[audit] failed", err);
   }
+}
+
+/** Log an integration failure (external API error, webhook reject, etc). */
+export async function logIntegrationFailure(provider: string, reason: string, payload?: any) {
+  return logAudit({
+    action: "integration.failure",
+    entity: "integration",
+    entity_id: provider,
+    metadata: { reason, payload: payload ?? null },
+  });
+}
+
+/** Log a customer-facing message sent (email/SMS/WhatsApp/notification). */
+export async function logMessageSent(opts: {
+  channel: "email" | "sms" | "whatsapp" | "push";
+  recipient: string;
+  template?: string;
+  subject?: string;
+  related_entity?: string;
+  related_id?: string;
+}) {
+  return logAudit({
+    action: "message.sent",
+    entity: opts.related_entity ?? "message",
+    entity_id: opts.related_id ?? opts.recipient,
+    metadata: { channel: opts.channel, recipient: opts.recipient, template: opts.template, subject: opts.subject },
+  });
+}
+
+/** Log a data export (CSV/PDF/Excel). */
+export async function logDataExport(opts: { kind: string; rows: number; filters?: any }) {
+  return logAudit({
+    action: "data.export",
+    entity: opts.kind,
+    metadata: { rows: opts.rows, filters: opts.filters ?? null },
+  });
 }
 
 export const ROLE_LABELS: Record<string, string> = {
