@@ -366,6 +366,50 @@ export type Database = {
           },
         ]
       }
+      contact_submissions: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+          phone: string | null
+          status: string
+          subject: string | null
+          ticket_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+          phone?: string | null
+          status?: string
+          subject?: string | null
+          ticket_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          phone?: string | null
+          status?: string
+          subject?: string | null
+          ticket_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_submissions_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coupons: {
         Row: {
           code: string
@@ -450,6 +494,45 @@ export type Database = {
           id?: string
           metadata?: Json
           subject?: string | null
+        }
+        Relationships: []
+      }
+      faq_items: {
+        Row: {
+          answer_ar: string
+          answer_en: string | null
+          category: string
+          created_at: string
+          id: string
+          is_enabled: boolean
+          question_ar: string
+          question_en: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          answer_ar: string
+          answer_en?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          question_ar: string
+          question_en?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          answer_ar?: string
+          answer_en?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          question_ar?: string
+          question_en?: string | null
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2346,6 +2429,187 @@ export type Database = {
           max_attempts?: number
           phone?: string
           purpose?: string
+        }
+        Relationships: []
+      }
+      support_canned_replies: {
+        Row: {
+          body: string
+          category: string | null
+          created_at: string
+          id: string
+          is_enabled: boolean
+          sort_order: number | null
+          template_key: string | null
+          title: string
+        }
+        Insert: {
+          body: string
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          sort_order?: number | null
+          template_key?: string | null
+          title: string
+        }
+        Update: {
+          body?: string
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          sort_order?: number | null
+          template_key?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      support_ticket_messages: {
+        Row: {
+          attachments: Json
+          author_email: string | null
+          author_id: string | null
+          author_name: string | null
+          body: string
+          created_at: string
+          direction: string
+          id: string
+          is_internal_note: boolean
+          ticket_id: string
+        }
+        Insert: {
+          attachments?: Json
+          author_email?: string | null
+          author_id?: string | null
+          author_name?: string | null
+          body: string
+          created_at?: string
+          direction: string
+          id?: string
+          is_internal_note?: boolean
+          ticket_id: string
+        }
+        Update: {
+          attachments?: Json
+          author_email?: string | null
+          author_id?: string | null
+          author_name?: string | null
+          body?: string
+          created_at?: string
+          direction?: string
+          id?: string
+          is_internal_note?: boolean
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_ticket_ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          customer_user_id: string | null
+          id: string
+          rating: number
+          ticket_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          customer_user_id?: string | null
+          id?: string
+          rating: number
+          ticket_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          customer_user_id?: string | null
+          id?: string
+          rating?: number
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_ratings_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: true
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          closed_at: string | null
+          created_at: string
+          customer_email: string
+          customer_name: string | null
+          customer_phone: string | null
+          customer_user_id: string | null
+          id: string
+          last_reply_at: string | null
+          last_reply_by: string | null
+          priority: string
+          related_order_id: string | null
+          related_order_number: string | null
+          source: string
+          status: string
+          subject: string
+          ticket_number: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: string
+          closed_at?: string | null
+          created_at?: string
+          customer_email: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          customer_user_id?: string | null
+          id?: string
+          last_reply_at?: string | null
+          last_reply_by?: string | null
+          priority?: string
+          related_order_id?: string | null
+          related_order_number?: string | null
+          source?: string
+          status?: string
+          subject: string
+          ticket_number?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          closed_at?: string | null
+          created_at?: string
+          customer_email?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          customer_user_id?: string | null
+          id?: string
+          last_reply_at?: string | null
+          last_reply_by?: string | null
+          priority?: string
+          related_order_id?: string | null
+          related_order_number?: string | null
+          source?: string
+          status?: string
+          subject?: string
+          ticket_number?: string
+          updated_at?: string
         }
         Relationships: []
       }
