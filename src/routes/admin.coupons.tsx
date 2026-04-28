@@ -204,7 +204,6 @@ function CouponsAdmin() {
                       !c.is_active ? "bg-gray-100 text-gray-700" : expired ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
                     }`}>
                       {!c.is_active ? "معطل" : expired ? "منتهي" : "نشط"}
-                    </span>
                     </button>
                   </td>
                   <td className="p-3">
