@@ -14,14 +14,18 @@ export type Address = {
   fullName: string;
   phone: string;
   email: string;
-  shortCode: string;
-  buildingNumber: string;
-  street: string;
-  district: string;
+  shortCode?: string;
+  buildingNumber?: string;
+  street?: string;
+  district?: string;
   city: string;
-  postalCode: string;
-  additionalNumber: string;
+  postalCode?: string;
+  additionalNumber?: string;
   notes?: string;
+  // Geo (from map picker)
+  lat?: number;
+  lng?: number;
+  geoAddress?: string;
 };
 
 type Ctx = {
