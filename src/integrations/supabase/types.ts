@@ -483,6 +483,257 @@ export type Database = {
         }
         Relationships: []
       }
+      messaging_conversations: {
+        Row: {
+          assigned_to: string | null
+          channel: string
+          created_at: string
+          customer_name: string | null
+          customer_phone: string
+          customer_user_id: string | null
+          id: string
+          last_message_at: string | null
+          last_message_preview: string | null
+          related_order_id: string | null
+          status: string
+          unread_count: number
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          channel: string
+          created_at?: string
+          customer_name?: string | null
+          customer_phone: string
+          customer_user_id?: string | null
+          id?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          related_order_id?: string | null
+          status?: string
+          unread_count?: number
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          channel?: string
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string
+          customer_user_id?: string | null
+          id?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          related_order_id?: string | null
+          status?: string
+          unread_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      messaging_costs_log: {
+        Row: {
+          channel: string
+          created_at: string
+          day: string
+          id: string
+          message_count: number
+          provider_id: string | null
+          total_cost: number
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          day?: string
+          id?: string
+          message_count?: number
+          provider_id?: string | null
+          total_cost?: number
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          day?: string
+          id?: string
+          message_count?: number
+          provider_id?: string | null
+          total_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messaging_costs_log_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "messaging_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messaging_messages: {
+        Row: {
+          body: string
+          channel: string
+          conversation_id: string
+          cost: number | null
+          created_at: string
+          delivered_at: string | null
+          direction: string
+          error_message: string | null
+          failed_at: string | null
+          id: string
+          media_url: string | null
+          metadata: Json | null
+          provider_id: string | null
+          provider_message_id: string | null
+          related_entity: string | null
+          related_entity_id: string | null
+          related_order_id: string | null
+          sent_by: string | null
+          sent_by_email: string | null
+          status: string
+          template_key: string | null
+        }
+        Insert: {
+          body: string
+          channel: string
+          conversation_id: string
+          cost?: number | null
+          created_at?: string
+          delivered_at?: string | null
+          direction: string
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          media_url?: string | null
+          metadata?: Json | null
+          provider_id?: string | null
+          provider_message_id?: string | null
+          related_entity?: string | null
+          related_entity_id?: string | null
+          related_order_id?: string | null
+          sent_by?: string | null
+          sent_by_email?: string | null
+          status?: string
+          template_key?: string | null
+        }
+        Update: {
+          body?: string
+          channel?: string
+          conversation_id?: string
+          cost?: number | null
+          created_at?: string
+          delivered_at?: string | null
+          direction?: string
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          media_url?: string | null
+          metadata?: Json | null
+          provider_id?: string | null
+          provider_message_id?: string | null
+          related_entity?: string | null
+          related_entity_id?: string | null
+          related_order_id?: string | null
+          sent_by?: string | null
+          sent_by_email?: string | null
+          status?: string
+          template_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messaging_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "messaging_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messaging_messages_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "messaging_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messaging_providers: {
+        Row: {
+          channel: string
+          config: Json
+          cost_per_message: number | null
+          created_at: string
+          id: string
+          is_enabled: boolean
+          monthly_budget: number | null
+          monthly_spend: number
+          name: string
+          priority: number
+          provider_type: string
+          spend_reset_at: string
+          updated_at: string
+        }
+        Insert: {
+          channel: string
+          config?: Json
+          cost_per_message?: number | null
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          monthly_budget?: number | null
+          monthly_spend?: number
+          name: string
+          priority?: number
+          provider_type: string
+          spend_reset_at?: string
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          config?: Json
+          cost_per_message?: number | null
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          monthly_budget?: number | null
+          monthly_spend?: number
+          name?: string
+          priority?: number
+          provider_type?: string
+          spend_reset_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      messaging_quick_replies: {
+        Row: {
+          body: string
+          channel: string | null
+          created_at: string
+          id: string
+          is_enabled: boolean
+          sort_order: number | null
+          title: string
+        }
+        Insert: {
+          body: string
+          channel?: string | null
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          sort_order?: number | null
+          title: string
+        }
+        Update: {
+          body?: string
+          channel?: string | null
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          sort_order?: number | null
+          title?: string
+        }
+        Relationships: []
+      }
       notification_log: {
         Row: {
           attempts: number
@@ -2059,6 +2310,42 @@ export type Database = {
           tax_rate?: number | null
           updated_at?: string
           whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
+      sms_otp_codes: {
+        Row: {
+          attempts: number
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          max_attempts: number
+          phone: string
+          purpose: string
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          max_attempts?: number
+          phone: string
+          purpose?: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          max_attempts?: number
+          phone?: string
+          purpose?: string
         }
         Relationships: []
       }
