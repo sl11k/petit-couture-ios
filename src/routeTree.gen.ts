@@ -27,6 +27,7 @@ import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminSupportRouteImport } from './routes/admin.support'
 import { Route as AdminStorefrontRouteImport } from './routes/admin.storefront'
+import { Route as AdminSiteAnalyticsRouteImport } from './routes/admin.site-analytics'
 import { Route as AdminShippingRouteImport } from './routes/admin.shipping'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminReturnsRouteImport } from './routes/admin.returns'
@@ -144,6 +145,11 @@ const AdminSupportRoute = AdminSupportRouteImport.update({
 const AdminStorefrontRoute = AdminStorefrontRouteImport.update({
   id: '/storefront',
   path: '/storefront',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSiteAnalyticsRoute = AdminSiteAnalyticsRouteImport.update({
+  id: '/site-analytics',
+  path: '/site-analytics',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminShippingRoute = AdminShippingRouteImport.update({
@@ -316,6 +322,7 @@ export interface FileRoutesByFullPath {
   '/admin/returns': typeof AdminReturnsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/shipping': typeof AdminShippingRoute
+  '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/users': typeof AdminUsersRoute
@@ -363,6 +370,7 @@ export interface FileRoutesByTo {
   '/admin/returns': typeof AdminReturnsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/shipping': typeof AdminShippingRoute
+  '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/users': typeof AdminUsersRoute
@@ -411,6 +419,7 @@ export interface FileRoutesById {
   '/admin/returns': typeof AdminReturnsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/shipping': typeof AdminShippingRoute
+  '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/users': typeof AdminUsersRoute
@@ -460,6 +469,7 @@ export interface FileRouteTypes {
     | '/admin/returns'
     | '/admin/settings'
     | '/admin/shipping'
+    | '/admin/site-analytics'
     | '/admin/storefront'
     | '/admin/support'
     | '/admin/users'
@@ -507,6 +517,7 @@ export interface FileRouteTypes {
     | '/admin/returns'
     | '/admin/settings'
     | '/admin/shipping'
+    | '/admin/site-analytics'
     | '/admin/storefront'
     | '/admin/support'
     | '/admin/users'
@@ -554,6 +565,7 @@ export interface FileRouteTypes {
     | '/admin/returns'
     | '/admin/settings'
     | '/admin/shipping'
+    | '/admin/site-analytics'
     | '/admin/storefront'
     | '/admin/support'
     | '/admin/users'
@@ -714,6 +726,13 @@ declare module '@tanstack/react-router' {
       path: '/storefront'
       fullPath: '/admin/storefront'
       preLoaderRoute: typeof AdminStorefrontRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/site-analytics': {
+      id: '/admin/site-analytics'
+      path: '/site-analytics'
+      fullPath: '/admin/site-analytics'
+      preLoaderRoute: typeof AdminSiteAnalyticsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/shipping': {
@@ -967,6 +986,7 @@ interface AdminRouteChildren {
   AdminReturnsRoute: typeof AdminReturnsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminShippingRoute: typeof AdminShippingRoute
+  AdminSiteAnalyticsRoute: typeof AdminSiteAnalyticsRoute
   AdminStorefrontRoute: typeof AdminStorefrontRoute
   AdminSupportRoute: typeof AdminSupportRoute
   AdminUsersRoute: typeof AdminUsersRoute
@@ -995,6 +1015,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminReturnsRoute: AdminReturnsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminShippingRoute: AdminShippingRoute,
+  AdminSiteAnalyticsRoute: AdminSiteAnalyticsRoute,
   AdminStorefrontRoute: AdminStorefrontRoute,
   AdminSupportRoute: AdminSupportRoute,
   AdminUsersRoute: AdminUsersRoute,

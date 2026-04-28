@@ -55,6 +55,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: "/admin", label: "الرئيسية", icon: LayoutDashboard, exact: true },
       { to: "/admin/reports", label: "التقارير الشاملة", icon: BarChart3 },
+      { to: "/admin/site-analytics", label: "تحليلات الموقع", icon: BarChart3 },
       { to: "/admin/analytics", label: "التحليلات", icon: BarChart3 },
     ],
   },
