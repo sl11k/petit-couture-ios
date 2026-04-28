@@ -656,6 +656,141 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_counters: {
+        Row: {
+          last_number: number
+          year: number
+        }
+        Insert: {
+          last_number?: number
+          year: number
+        }
+        Update: {
+          last_number?: number
+          year?: number
+        }
+        Relationships: []
+      }
+      invoices: {
+        Row: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          currency: string
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          customer_snapshot: Json
+          customer_tax_number: string | null
+          discount_total: number
+          due_date: string | null
+          email_sent_at: string | null
+          email_sent_count: number
+          id: string
+          invoice_number: string
+          invoice_type: string
+          issued_at: string
+          items: Json
+          notes: string | null
+          order_id: string | null
+          order_number: string | null
+          paid_at: string | null
+          payment_method: string | null
+          payment_status: string
+          pdf_url: string | null
+          related_invoice_id: string | null
+          shipping_fee: number
+          status: string
+          store_snapshot: Json
+          subtotal: number
+          tax_inclusive: boolean
+          tax_rate: number
+          tax_total: number
+          total: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          customer_snapshot?: Json
+          customer_tax_number?: string | null
+          discount_total?: number
+          due_date?: string | null
+          email_sent_at?: string | null
+          email_sent_count?: number
+          id?: string
+          invoice_number: string
+          invoice_type?: string
+          issued_at?: string
+          items?: Json
+          notes?: string | null
+          order_id?: string | null
+          order_number?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_status?: string
+          pdf_url?: string | null
+          related_invoice_id?: string | null
+          shipping_fee?: number
+          status?: string
+          store_snapshot?: Json
+          subtotal?: number
+          tax_inclusive?: boolean
+          tax_rate?: number
+          tax_total?: number
+          total?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          customer_snapshot?: Json
+          customer_tax_number?: string | null
+          discount_total?: number
+          due_date?: string | null
+          email_sent_at?: string | null
+          email_sent_count?: number
+          id?: string
+          invoice_number?: string
+          invoice_type?: string
+          issued_at?: string
+          items?: Json
+          notes?: string | null
+          order_id?: string | null
+          order_number?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_status?: string
+          pdf_url?: string | null
+          related_invoice_id?: string | null
+          shipping_fee?: number
+          status?: string
+          store_snapshot?: Json
+          subtotal?: number
+          tax_inclusive?: boolean
+          tax_rate?: number
+          tax_total?: number
+          total?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       messaging_conversations: {
         Row: {
           assigned_to: string | null
@@ -2838,6 +2973,11 @@ export type Database = {
       site_settings: {
         Row: {
           announcement_bar: string | null
+          auto_issue_on_payment: boolean
+          commercial_register: string | null
+          company_legal_name: string | null
+          currency_code: string | null
+          currency_symbol: string | null
           free_shipping_threshold: number | null
           hero_image_url: string | null
           hero_subtitle_ar: string | null
@@ -2845,16 +2985,32 @@ export type Database = {
           hero_title_ar: string | null
           hero_title_en: string | null
           id: number
+          invoice_footer_note: string | null
+          invoice_logo_url: string | null
+          invoice_prefix: string | null
+          issue_tax_invoice: boolean
           primary_color: string | null
           shipping_fee: number | null
+          store_address: string | null
+          store_city: string | null
+          store_country: string | null
           store_name: string
+          store_phone: string | null
           support_email: string | null
+          tax_inclusive: boolean
+          tax_label: string | null
+          tax_number: string | null
           tax_rate: number | null
           updated_at: string
           whatsapp_number: string | null
         }
         Insert: {
           announcement_bar?: string | null
+          auto_issue_on_payment?: boolean
+          commercial_register?: string | null
+          company_legal_name?: string | null
+          currency_code?: string | null
+          currency_symbol?: string | null
           free_shipping_threshold?: number | null
           hero_image_url?: string | null
           hero_subtitle_ar?: string | null
@@ -2862,16 +3018,32 @@ export type Database = {
           hero_title_ar?: string | null
           hero_title_en?: string | null
           id?: number
+          invoice_footer_note?: string | null
+          invoice_logo_url?: string | null
+          invoice_prefix?: string | null
+          issue_tax_invoice?: boolean
           primary_color?: string | null
           shipping_fee?: number | null
+          store_address?: string | null
+          store_city?: string | null
+          store_country?: string | null
           store_name?: string
+          store_phone?: string | null
           support_email?: string | null
+          tax_inclusive?: boolean
+          tax_label?: string | null
+          tax_number?: string | null
           tax_rate?: number | null
           updated_at?: string
           whatsapp_number?: string | null
         }
         Update: {
           announcement_bar?: string | null
+          auto_issue_on_payment?: boolean
+          commercial_register?: string | null
+          company_legal_name?: string | null
+          currency_code?: string | null
+          currency_symbol?: string | null
           free_shipping_threshold?: number | null
           hero_image_url?: string | null
           hero_subtitle_ar?: string | null
@@ -2879,10 +3051,21 @@ export type Database = {
           hero_title_ar?: string | null
           hero_title_en?: string | null
           id?: number
+          invoice_footer_note?: string | null
+          invoice_logo_url?: string | null
+          invoice_prefix?: string | null
+          issue_tax_invoice?: boolean
           primary_color?: string | null
           shipping_fee?: number | null
+          store_address?: string | null
+          store_city?: string | null
+          store_country?: string | null
           store_name?: string
+          store_phone?: string | null
           support_email?: string | null
+          tax_inclusive?: boolean
+          tax_label?: string | null
+          tax_number?: string | null
           tax_rate?: number | null
           updated_at?: string
           whatsapp_number?: string | null
@@ -3203,6 +3386,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      next_invoice_number: { Args: { _prefix?: string }; Returns: string }
       refresh_product_sales_counts: { Args: never; Returns: undefined }
       release_expired_order_stock: {
         Args: { _order_id: string }

@@ -22,6 +22,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as WishlistShareRouteImport } from './routes/wishlist.share'
 import { Route as SupportNewRouteImport } from './routes/support.new'
 import { Route as OrderConfirmationOrderNumberRouteImport } from './routes/order-confirmation.$orderNumber'
+import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
 import { Route as DebugAnalyticsRouteImport } from './routes/debug.analytics'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
@@ -37,6 +38,7 @@ import { Route as AdminPaymentsRouteImport } from './routes/admin.payments'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
+import { Route as AdminInvoicesRouteImport } from './routes/admin.invoices'
 import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
 import { Route as AdminIntegrationsRouteImport } from './routes/admin.integrations'
 import { Route as AdminIncompleteRouteImport } from './routes/admin.incomplete'
@@ -123,6 +125,11 @@ const OrderConfirmationOrderNumberRoute =
     path: '/order-confirmation/$orderNumber',
     getParentRoute: () => rootRouteImport,
   } as any)
+const InvoiceIdRoute = InvoiceIdRouteImport.update({
+  id: '/invoice/$id',
+  path: '/invoice/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DebugAnalyticsRoute = DebugAnalyticsRouteImport.update({
   id: '/debug/analytics',
   path: '/debug/analytics',
@@ -196,6 +203,11 @@ const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
 const AdminMessagesRoute = AdminMessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminInvoicesRoute = AdminInvoicesRouteImport.update({
+  id: '/invoices',
+  path: '/invoices',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminInventoryRoute = AdminInventoryRouteImport.update({
@@ -319,6 +331,7 @@ export interface FileRoutesByFullPath {
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
@@ -334,6 +347,7 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/category/$slug': typeof CategorySlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
+  '/invoice/$id': typeof InvoiceIdRoute
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/support/new': typeof SupportNewRoute
   '/wishlist/share': typeof WishlistShareRoute
@@ -368,6 +382,7 @@ export interface FileRoutesByTo {
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
@@ -383,6 +398,7 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/category/$slug': typeof CategorySlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
+  '/invoice/$id': typeof InvoiceIdRoute
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/support/new': typeof SupportNewRoute
   '/wishlist/share': typeof WishlistShareRoute
@@ -418,6 +434,7 @@ export interface FileRoutesById {
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
@@ -433,6 +450,7 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/category/$slug': typeof CategorySlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
+  '/invoice/$id': typeof InvoiceIdRoute
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/support/new': typeof SupportNewRoute
   '/wishlist/share': typeof WishlistShareRoute
@@ -469,6 +487,7 @@ export interface FileRouteTypes {
     | '/admin/incomplete'
     | '/admin/integrations'
     | '/admin/inventory'
+    | '/admin/invoices'
     | '/admin/messages'
     | '/admin/notifications'
     | '/admin/orders'
@@ -484,6 +503,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/category/$slug'
     | '/debug/analytics'
+    | '/invoice/$id'
     | '/order-confirmation/$orderNumber'
     | '/support/new'
     | '/wishlist/share'
@@ -518,6 +538,7 @@ export interface FileRouteTypes {
     | '/admin/incomplete'
     | '/admin/integrations'
     | '/admin/inventory'
+    | '/admin/invoices'
     | '/admin/messages'
     | '/admin/notifications'
     | '/admin/orders'
@@ -533,6 +554,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/category/$slug'
     | '/debug/analytics'
+    | '/invoice/$id'
     | '/order-confirmation/$orderNumber'
     | '/support/new'
     | '/wishlist/share'
@@ -567,6 +589,7 @@ export interface FileRouteTypes {
     | '/admin/incomplete'
     | '/admin/integrations'
     | '/admin/inventory'
+    | '/admin/invoices'
     | '/admin/messages'
     | '/admin/notifications'
     | '/admin/orders'
@@ -582,6 +605,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/category/$slug'
     | '/debug/analytics'
+    | '/invoice/$id'
     | '/order-confirmation/$orderNumber'
     | '/support/new'
     | '/wishlist/share'
@@ -606,6 +630,7 @@ export interface RootRouteChildren {
   WishlistRoute: typeof WishlistRouteWithChildren
   CategorySlugRoute: typeof CategorySlugRoute
   DebugAnalyticsRoute: typeof DebugAnalyticsRoute
+  InvoiceIdRoute: typeof InvoiceIdRoute
   OrderConfirmationOrderNumberRoute: typeof OrderConfirmationOrderNumberRoute
   SupportNewRoute: typeof SupportNewRoute
   ApiPublicPaymentWebhookRoute: typeof ApiPublicPaymentWebhookRoute
@@ -703,6 +728,13 @@ declare module '@tanstack/react-router' {
       path: '/order-confirmation/$orderNumber'
       fullPath: '/order-confirmation/$orderNumber'
       preLoaderRoute: typeof OrderConfirmationOrderNumberRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invoice/$id': {
+      id: '/invoice/$id'
+      path: '/invoice/$id'
+      fullPath: '/invoice/$id'
+      preLoaderRoute: typeof InvoiceIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/debug/analytics': {
@@ -808,6 +840,13 @@ declare module '@tanstack/react-router' {
       path: '/messages'
       fullPath: '/admin/messages'
       preLoaderRoute: typeof AdminMessagesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/invoices': {
+      id: '/admin/invoices'
+      path: '/invoices'
+      fullPath: '/admin/invoices'
+      preLoaderRoute: typeof AdminInvoicesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/inventory': {
@@ -1007,6 +1046,7 @@ interface AdminRouteChildren {
   AdminIncompleteRoute: typeof AdminIncompleteRoute
   AdminIntegrationsRoute: typeof AdminIntegrationsRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
+  AdminInvoicesRoute: typeof AdminInvoicesRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminOrdersRoute: typeof AdminOrdersRouteWithChildren
@@ -1036,6 +1076,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminIncompleteRoute: AdminIncompleteRoute,
   AdminIntegrationsRoute: AdminIntegrationsRoute,
   AdminInventoryRoute: AdminInventoryRoute,
+  AdminInvoicesRoute: AdminInvoicesRoute,
   AdminMessagesRoute: AdminMessagesRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminOrdersRoute: AdminOrdersRouteWithChildren,
@@ -1078,6 +1119,7 @@ const rootRouteChildren: RootRouteChildren = {
   WishlistRoute: WishlistRouteWithChildren,
   CategorySlugRoute: CategorySlugRoute,
   DebugAnalyticsRoute: DebugAnalyticsRoute,
+  InvoiceIdRoute: InvoiceIdRoute,
   OrderConfirmationOrderNumberRoute: OrderConfirmationOrderNumberRoute,
   SupportNewRoute: SupportNewRoute,
   ApiPublicPaymentWebhookRoute: ApiPublicPaymentWebhookRoute,
