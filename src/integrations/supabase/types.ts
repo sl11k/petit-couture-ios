@@ -1935,6 +1935,98 @@ export type Database = {
         }
         Relationships: []
       }
+      report_runs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          recipients: Json
+          report_key: string
+          rows_count: number | null
+          schedule_id: string | null
+          status: string
+          triggered_by: string | null
+          triggered_by_email: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          recipients?: Json
+          report_key: string
+          rows_count?: number | null
+          schedule_id?: string | null
+          status?: string
+          triggered_by?: string | null
+          triggered_by_email?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          recipients?: Json
+          report_key?: string
+          rows_count?: number | null
+          schedule_id?: string | null
+          status?: string
+          triggered_by?: string | null
+          triggered_by_email?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_runs_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "report_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_schedules: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          filters: Json
+          frequency: string
+          id: string
+          is_enabled: boolean
+          last_run_at: string | null
+          name: string
+          next_run_at: string | null
+          recipients: Json
+          report_key: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          filters?: Json
+          frequency?: string
+          id?: string
+          is_enabled?: boolean
+          last_run_at?: string | null
+          name: string
+          next_run_at?: string | null
+          recipients?: Json
+          report_key: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          filters?: Json
+          frequency?: string
+          id?: string
+          is_enabled?: boolean
+          last_run_at?: string | null
+          name?: string
+          next_run_at?: string | null
+          recipients?: Json
+          report_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       shipment_tracking_events: {
         Row: {
           created_at: string
