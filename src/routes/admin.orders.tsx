@@ -176,7 +176,7 @@ function OrdersPage() {
     if (bulkAction.startsWith("status:")) {
       const newStatus = bulkAction.split(":")[1];
       if (!confirm(`تغيير حالة ${ids.length} طلب إلى "${ORDER_STATUS_LABEL[newStatus]}"؟`)) return;
-      await supabase.from("orders").update({ status: newStatus }).in("id", ids);
+      await supabase.from("orders").update({ status: newStatus as any }).in("id", ids);
       await Promise.all(ids.map((id) => logOrderEvent(id, "bulk_status_change", { to: newStatus })));
       await load();
     }
