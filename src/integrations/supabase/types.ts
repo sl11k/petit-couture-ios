@@ -668,6 +668,63 @@ export type Database = {
         }
         Relationships: []
       }
+      integrations: {
+        Row: {
+          api_key: string | null
+          api_secret: string | null
+          category: string
+          config: Json
+          created_at: string
+          display_name: string | null
+          enabled: boolean
+          id: string
+          last_test_at: string | null
+          last_test_message: string | null
+          last_test_ok: boolean | null
+          mode: string
+          provider: string
+          updated_at: string
+          webhook_secret: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          api_secret?: string | null
+          category: string
+          config?: Json
+          created_at?: string
+          display_name?: string | null
+          enabled?: boolean
+          id?: string
+          last_test_at?: string | null
+          last_test_message?: string | null
+          last_test_ok?: boolean | null
+          mode?: string
+          provider: string
+          updated_at?: string
+          webhook_secret?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          api_secret?: string | null
+          category?: string
+          config?: Json
+          created_at?: string
+          display_name?: string | null
+          enabled?: boolean
+          id?: string
+          last_test_at?: string | null
+          last_test_message?: string | null
+          last_test_ok?: boolean | null
+          mode?: string
+          provider?: string
+          updated_at?: string
+          webhook_secret?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
       inventory_alerts: {
         Row: {
           created_at: string
@@ -3415,6 +3472,48 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      webhook_endpoints: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          events: string[]
+          failure_count: number
+          id: string
+          last_delivery_at: string | null
+          last_delivery_status: number | null
+          name: string
+          secret: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          events?: string[]
+          failure_count?: number
+          id?: string
+          last_delivery_at?: string | null
+          last_delivery_status?: number | null
+          name: string
+          secret?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          events?: string[]
+          failure_count?: number
+          id?: string
+          last_delivery_at?: string | null
+          last_delivery_status?: number | null
+          name?: string
+          secret?: string | null
+          updated_at?: string
+          url?: string
         }
         Relationships: []
       }
