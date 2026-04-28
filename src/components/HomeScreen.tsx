@@ -356,7 +356,7 @@ export function HomeScreen() {
                   { k: "menu", Icon: Menu, to: null },
                   { k: "home", Icon: HomeIcon, to: "/" as const },
                   { k: "account", Icon: User, to: "/account" as const },
-                  { k: "search", Icon: Search, to: null },
+                  { k: "search", Icon: Search, to: "/search" as any },
                   { k: "bag", Icon: ShoppingBag, to: "/bag" as const },
                 ] as { k: NavKey; Icon: typeof Menu; to: "/" | "/bag" | "/account" | null }[]
               ).map(({ k, Icon, to }) => {
