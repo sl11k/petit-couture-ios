@@ -1,14 +1,18 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type AuditAction =
-  | "order.create" | "order.update" | "order.cancel" | "order.refund"
-  | "order.manual_discount" | "product.create" | "product.update" | "product.delete"
+  | "auth.login" | "auth.logout" | "auth.login_failed"
+  | "order.create" | "order.update" | "order.status_change" | "order.cancel" | "order.refund"
+  | "order.manual_discount"
+  | "product.create" | "product.update" | "product.delete"
+  | "product.price_change" | "product.stock_change"
   | "inventory.adjust" | "customer.update" | "customer.export"
   | "coupon.create" | "coupon.update" | "coupon.delete"
   | "user.role_grant" | "user.role_revoke" | "user.invite"
+  | "permission.grant" | "permission.revoke"
   | "settings.payment" | "settings.shipping" | "settings.theme"
-  | "integration.connect" | "integration.disconnect"
-  | "report.export" | "auth.login" | "auth.logout"
+  | "integration.connect" | "integration.disconnect" | "integration.failure"
+  | "message.sent" | "report.export" | "data.export"
   | string;
 
 export interface AuditEntry {
