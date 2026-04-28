@@ -420,7 +420,7 @@ export function HomeScreen() {
                 );
               })}
             </div>
-            <div className="mx-auto mt-1 h-[5px] w-[120px] rounded-full bg-foreground/80" />
+            
           </div>
         </nav>
       </div>

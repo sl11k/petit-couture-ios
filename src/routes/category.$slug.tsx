@@ -325,7 +325,7 @@ function ProductDetails() {
               {product.price.toLocaleString(lang === "ar" ? "ar-EG" : "en-US")} {product.currency}
             </button>
           </div>
-          <div className="mx-auto mb-2 h-[5px] w-[120px] rounded-full bg-foreground/80" />
+          
         </div>
       </div>
       <ShareSheet

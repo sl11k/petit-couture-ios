@@ -911,7 +911,7 @@ function CheckoutPage() {
                   {t.bag.secure}
                 </p>
               </div>
-              <div className="mx-auto mb-2 h-[5px] w-[120px] rounded-full bg-foreground/80" />
+              
             </div>
           </form>
         </main>
