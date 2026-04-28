@@ -257,7 +257,7 @@ function AdminHome() {
           )}
         </Panel>
 
-        <Panel title="طرق الدفع" icon={CreditCardIcon}>
+        <Panel title="طرق الدفع" icon={Wallet}>
           {payments.length === 0 ? (
             <Empty>لا توجد بيانات</Empty>
           ) : (
@@ -359,10 +359,6 @@ function paymentLabel(m: string) {
     stripe: "Stripe",
   };
   return map[m] ?? m;
-}
-
-function CreditCardIcon(props: any) {
-  return <Wallet {...props} />;
 }
 
 function KpiCard({
