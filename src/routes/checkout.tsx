@@ -233,7 +233,7 @@ function CheckoutPage() {
       lng: loc.lng,
       geoAddress: loc.geoAddress,
     } as Address);
-    setStep((s) => Math.min(4, (s + 1) as Step));
+    setStep((s) => (Math.min(4, s + 1) as Step));
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const prev = () => {
@@ -241,7 +241,7 @@ function CheckoutPage() {
       router.history.back();
       return;
     }
-    setStep((s) => Math.max(1, (s - 1) as Step));
+    setStep((s) => (Math.max(1, s - 1) as Step));
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
