@@ -357,7 +357,7 @@ export function HomeScreen() {
         </button>
 
         {/* Bottom nav */}
-        <nav className="absolute bottom-0 inset-x-0 bg-background/95 backdrop-blur-md border-t border-border">
+        <nav className="fixed lg:absolute bottom-0 inset-x-0 max-w-[440px] mx-auto bg-background/95 backdrop-blur-md border-t border-border z-40">
           <div className="px-3 pt-2 pb-6">
             <div className="grid grid-cols-5">
               {(
