@@ -125,7 +125,7 @@ function BagPage() {
   };
 
   const moveToWishlist = (itemId: string, slug: string) => {
-    wishlist.toggle(`product:${slug}`, "bag");
+    wishlist.toggle(`product:${slug}`, "wishlist_screen");
     bag.remove(itemId);
   };
 
