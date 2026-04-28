@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as TrackOrderRouteImport } from './routes/track-order'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -31,6 +32,7 @@ import { Route as AdminStorefrontRouteImport } from './routes/admin.storefront'
 import { Route as AdminSiteAnalyticsRouteImport } from './routes/admin.site-analytics'
 import { Route as AdminShippingRouteImport } from './routes/admin.shipping'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminSearchRouteImport } from './routes/admin.search'
 import { Route as AdminReturnsRouteImport } from './routes/admin.returns'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
@@ -69,6 +71,11 @@ const WishlistRoute = WishlistRouteImport.update({
 const TrackOrderRoute = TrackOrderRouteImport.update({
   id: '/track-order',
   path: '/track-order',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -170,6 +177,11 @@ const AdminShippingRoute = AdminShippingRouteImport.update({
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSearchRoute = AdminSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminReturnsRoute = AdminReturnsRouteImport.update({
@@ -328,6 +340,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
+  '/search': typeof SearchRoute
   '/track-order': typeof TrackOrderRoute
   '/wishlist': typeof WishlistRouteWithChildren
   '/admin/abandoned': typeof AdminAbandonedRoute
@@ -353,6 +366,7 @@ export interface FileRoutesByFullPath {
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
+  '/admin/search': typeof AdminSearchRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/shipping': typeof AdminShippingRoute
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
@@ -381,6 +395,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
+  '/search': typeof SearchRoute
   '/track-order': typeof TrackOrderRoute
   '/wishlist': typeof WishlistRouteWithChildren
   '/admin/abandoned': typeof AdminAbandonedRoute
@@ -406,6 +421,7 @@ export interface FileRoutesByTo {
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
+  '/admin/search': typeof AdminSearchRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/shipping': typeof AdminShippingRoute
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
@@ -435,6 +451,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
+  '/search': typeof SearchRoute
   '/track-order': typeof TrackOrderRoute
   '/wishlist': typeof WishlistRouteWithChildren
   '/admin/abandoned': typeof AdminAbandonedRoute
@@ -460,6 +477,7 @@ export interface FileRoutesById {
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
+  '/admin/search': typeof AdminSearchRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/shipping': typeof AdminShippingRoute
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
@@ -490,6 +508,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/help'
     | '/login'
+    | '/search'
     | '/track-order'
     | '/wishlist'
     | '/admin/abandoned'
@@ -515,6 +534,7 @@ export interface FileRouteTypes {
     | '/admin/products'
     | '/admin/reports'
     | '/admin/returns'
+    | '/admin/search'
     | '/admin/settings'
     | '/admin/shipping'
     | '/admin/site-analytics'
@@ -543,6 +563,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/help'
     | '/login'
+    | '/search'
     | '/track-order'
     | '/wishlist'
     | '/admin/abandoned'
@@ -568,6 +589,7 @@ export interface FileRouteTypes {
     | '/admin/products'
     | '/admin/reports'
     | '/admin/returns'
+    | '/admin/search'
     | '/admin/settings'
     | '/admin/shipping'
     | '/admin/site-analytics'
@@ -596,6 +618,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/help'
     | '/login'
+    | '/search'
     | '/track-order'
     | '/wishlist'
     | '/admin/abandoned'
@@ -621,6 +644,7 @@ export interface FileRouteTypes {
     | '/admin/products'
     | '/admin/reports'
     | '/admin/returns'
+    | '/admin/search'
     | '/admin/settings'
     | '/admin/shipping'
     | '/admin/site-analytics'
@@ -650,6 +674,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   HelpRoute: typeof HelpRoute
   LoginRoute: typeof LoginRoute
+  SearchRoute: typeof SearchRoute
   TrackOrderRoute: typeof TrackOrderRoute
   WishlistRoute: typeof WishlistRouteWithChildren
   CategorySlugRoute: typeof CategorySlugRoute
@@ -675,6 +700,13 @@ declare module '@tanstack/react-router' {
       path: '/track-order'
       fullPath: '/track-order'
       preLoaderRoute: typeof TrackOrderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -815,6 +847,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/admin/settings'
       preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/search': {
+      id: '/admin/search'
+      path: '/search'
+      fullPath: '/admin/search'
+      preLoaderRoute: typeof AdminSearchRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/returns': {
@@ -1094,6 +1133,7 @@ interface AdminRouteChildren {
   AdminProductsRoute: typeof AdminProductsRouteWithChildren
   AdminReportsRoute: typeof AdminReportsRoute
   AdminReturnsRoute: typeof AdminReturnsRoute
+  AdminSearchRoute: typeof AdminSearchRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminShippingRoute: typeof AdminShippingRoute
   AdminSiteAnalyticsRoute: typeof AdminSiteAnalyticsRoute
@@ -1126,6 +1166,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminProductsRoute: AdminProductsRouteWithChildren,
   AdminReportsRoute: AdminReportsRoute,
   AdminReturnsRoute: AdminReturnsRoute,
+  AdminSearchRoute: AdminSearchRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminShippingRoute: AdminShippingRoute,
   AdminSiteAnalyticsRoute: AdminSiteAnalyticsRoute,
@@ -1157,6 +1198,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   HelpRoute: HelpRoute,
   LoginRoute: LoginRoute,
+  SearchRoute: SearchRoute,
   TrackOrderRoute: TrackOrderRoute,
   WishlistRoute: WishlistRouteWithChildren,
   CategorySlugRoute: CategorySlugRoute,

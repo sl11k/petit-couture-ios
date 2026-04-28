@@ -47,13 +47,13 @@ export function DesktopHeader() {
       {/* Brand row */}
       <div className="mx-auto max-w-[1480px] px-10 h-[78px] grid grid-cols-3 items-center">
         <div className="flex items-center gap-3">
-          <button
-            type="button"
+          <Link
+            to="/search"
             aria-label={isRTL ? "بحث" : "Search"}
             className="h-10 w-10 grid place-items-center rounded-full text-foreground/75 hover:text-foreground hover:bg-cream-warm transition"
           >
             <Search className="h-[18px] w-[18px]" strokeWidth={1.5} />
-          </button>
+          </Link>
         </div>
 
         <Link to="/" className="flex flex-col items-center select-none group">

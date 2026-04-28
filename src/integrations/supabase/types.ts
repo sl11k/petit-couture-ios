@@ -2310,6 +2310,7 @@ export type Database = {
           sale_ends_at: string | null
           sale_starts_at: string | null
           sales_count: number
+          search_vector: unknown
           short_description_ar: string | null
           short_description_en: string | null
           sizes: Json
@@ -2320,6 +2321,7 @@ export type Database = {
           tax_rate: number | null
           updated_at: string
           video_url: string | null
+          views_count: number
           weight: number | null
         }
         Insert: {
@@ -2356,6 +2358,7 @@ export type Database = {
           sale_ends_at?: string | null
           sale_starts_at?: string | null
           sales_count?: number
+          search_vector?: unknown
           short_description_ar?: string | null
           short_description_en?: string | null
           sizes?: Json
@@ -2366,6 +2369,7 @@ export type Database = {
           tax_rate?: number | null
           updated_at?: string
           video_url?: string | null
+          views_count?: number
           weight?: number | null
         }
         Update: {
@@ -2402,6 +2406,7 @@ export type Database = {
           sale_ends_at?: string | null
           sale_starts_at?: string | null
           sales_count?: number
+          search_vector?: unknown
           short_description_ar?: string | null
           short_description_en?: string | null
           sizes?: Json
@@ -2412,6 +2417,7 @@ export type Database = {
           tax_rate?: number | null
           updated_at?: string
           video_url?: string | null
+          views_count?: number
           weight?: number | null
         }
         Relationships: [
@@ -4106,6 +4112,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_product_views: {
+        Args: { _product_id: string }
+        Returns: undefined
+      }
       log_audit_event: {
         Args: {
           _action: string
@@ -4125,6 +4135,23 @@ export type Database = {
         Args: { _order_id: string }
         Returns: undefined
       }
+      search_autocomplete: {
+        Args: { _limit?: number; _q: string }
+        Returns: {
+          id: string
+          image_url: string
+          kind: string
+          label_ar: string
+          label_en: string
+          price: number
+          similarity: number
+          slug: string
+        }[]
+      }
+      search_spell_suggest: { Args: { _q: string }; Returns: string }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
+      unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
       app_role:
