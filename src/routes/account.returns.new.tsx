@@ -116,9 +116,9 @@ function NewReturnRequest() {
       const order = orders.find((o) => o.id === orderId);
       const { data: req, error: reqErr } = await supabase.from("return_requests").insert({
         order_id: orderId, order_number: order?.order_number, user_id: user.id,
-        customer_email: user.email, reason, reason_details: reasonDetails || null,
-        refund_method: refundMethod, customer_notes: notes || null, photos,
-      }).select("id").single();
+        customer_email: user.email!, reason, reason_details: reasonDetails || null,
+        refund_method: refundMethod, customer_notes: notes || null, photos: photos as unknown as any,
+      } as any).select("id").single();
       if (reqErr) throw reqErr;
       const itemsToInsert = items.map((it) => ({ ...it, return_request_id: req.id }));
       const { error: itErr } = await supabase.from("return_items").insert(itemsToInsert);
