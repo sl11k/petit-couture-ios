@@ -32,12 +32,12 @@ function AdminSearchPage() {
     const t = newTerm.trim().toLowerCase(); const s = newSyn.trim().toLowerCase();
     if (!t || !s) return;
     await supabase.from("search_synonyms").insert({ term: t, synonym: s });
-    await logAudit("synonym.create", { entity: "search_synonyms", new_data: { term: t, synonym: s } });
+    await logAudit({ action: "synonym.create", entity: "search_synonyms", new_data: { term: t, synonym: s } });
     setNewTerm(""); setNewSyn(""); reload();
   }
   async function removeSynonym(id: string) {
     await supabase.from("search_synonyms").delete().eq("id", id);
-    await logAudit("synonym.delete", { entity: "search_synonyms", entity_id: id });
+    await logAudit({ action: "synonym.delete", entity: "search_synonyms", entity_id: id });
     reload();
   }
 
