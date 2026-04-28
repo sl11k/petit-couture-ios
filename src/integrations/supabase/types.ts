@@ -1003,6 +1003,48 @@ export type Database = {
           },
         ]
       }
+      product_shipping_restrictions: {
+        Row: {
+          city: string | null
+          created_at: string
+          id: string
+          product_id: string | null
+          reason: string | null
+          zone_id: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          id?: string
+          product_id?: string | null
+          reason?: string | null
+          zone_id?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          id?: string
+          product_id?: string | null
+          reason?: string | null
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_shipping_restrictions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_shipping_restrictions_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_variants: {
         Row: {
           barcode: string | null
@@ -1273,6 +1315,413 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      shipment_tracking_events: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          location: string | null
+          occurred_at: string
+          raw: Json | null
+          shipment_id: string
+          source: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          occurred_at?: string
+          raw?: Json | null
+          shipment_id: string
+          source?: string
+          status: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          occurred_at?: string
+          raw?: Json | null
+          shipment_id?: string
+          source?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipment_tracking_events_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shipments: {
+        Row: {
+          attempts: number
+          awb_url: string | null
+          carrier_code: string | null
+          carrier_id: string | null
+          city: string | null
+          cod_amount: number | null
+          country_code: string | null
+          created_at: string
+          created_by: string | null
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          declared_value: number | null
+          delivered_at: string | null
+          dimensions: Json | null
+          estimated_delivery_at: string | null
+          failure_reason: string | null
+          id: string
+          is_returned: boolean
+          last_polled_at: string | null
+          lat: number | null
+          lng: number | null
+          metadata: Json
+          order_id: string | null
+          order_number: string | null
+          raw_response: Json | null
+          return_reason: string | null
+          shipped_at: string | null
+          shipping_address: Json
+          shipping_fee: number | null
+          status: string
+          tracking_number: string | null
+          tracking_url: string | null
+          updated_at: string
+          weight_kg: number | null
+          zone_id: string | null
+        }
+        Insert: {
+          attempts?: number
+          awb_url?: string | null
+          carrier_code?: string | null
+          carrier_id?: string | null
+          city?: string | null
+          cod_amount?: number | null
+          country_code?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          declared_value?: number | null
+          delivered_at?: string | null
+          dimensions?: Json | null
+          estimated_delivery_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          is_returned?: boolean
+          last_polled_at?: string | null
+          lat?: number | null
+          lng?: number | null
+          metadata?: Json
+          order_id?: string | null
+          order_number?: string | null
+          raw_response?: Json | null
+          return_reason?: string | null
+          shipped_at?: string | null
+          shipping_address?: Json
+          shipping_fee?: number | null
+          status?: string
+          tracking_number?: string | null
+          tracking_url?: string | null
+          updated_at?: string
+          weight_kg?: number | null
+          zone_id?: string | null
+        }
+        Update: {
+          attempts?: number
+          awb_url?: string | null
+          carrier_code?: string | null
+          carrier_id?: string | null
+          city?: string | null
+          cod_amount?: number | null
+          country_code?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          declared_value?: number | null
+          delivered_at?: string | null
+          dimensions?: Json | null
+          estimated_delivery_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          is_returned?: boolean
+          last_polled_at?: string | null
+          lat?: number | null
+          lng?: number | null
+          metadata?: Json
+          order_id?: string | null
+          order_number?: string | null
+          raw_response?: Json | null
+          return_reason?: string | null
+          shipped_at?: string | null
+          shipping_address?: Json
+          shipping_fee?: number | null
+          status?: string
+          tracking_number?: string | null
+          tracking_url?: string | null
+          updated_at?: string
+          weight_kg?: number | null
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipments_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_carriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipments_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shipping_carriers: {
+        Row: {
+          api_credentials: Json
+          api_endpoint: string | null
+          carrier_type: string
+          code: string
+          created_at: string
+          default_delivery_days_max: number | null
+          default_delivery_days_min: number | null
+          display_order: number
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          name_ar: string
+          name_en: string
+          supports_cod: boolean
+          supports_international: boolean
+          supports_tracking: boolean
+          supports_webhook: boolean
+          updated_at: string
+          webhook_secret_name: string | null
+        }
+        Insert: {
+          api_credentials?: Json
+          api_endpoint?: string | null
+          carrier_type?: string
+          code: string
+          created_at?: string
+          default_delivery_days_max?: number | null
+          default_delivery_days_min?: number | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name_ar: string
+          name_en: string
+          supports_cod?: boolean
+          supports_international?: boolean
+          supports_tracking?: boolean
+          supports_webhook?: boolean
+          updated_at?: string
+          webhook_secret_name?: string | null
+        }
+        Update: {
+          api_credentials?: Json
+          api_endpoint?: string | null
+          carrier_type?: string
+          code?: string
+          created_at?: string
+          default_delivery_days_max?: number | null
+          default_delivery_days_min?: number | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name_ar?: string
+          name_en?: string
+          supports_cod?: boolean
+          supports_international?: boolean
+          supports_tracking?: boolean
+          supports_webhook?: boolean
+          updated_at?: string
+          webhook_secret_name?: string | null
+        }
+        Relationships: []
+      }
+      shipping_rates: {
+        Row: {
+          base_fee: number
+          carrier_id: string | null
+          cod_extra_fee: number | null
+          created_at: string
+          free_shipping_threshold: number | null
+          id: string
+          is_active: boolean
+          max_order_value: number | null
+          max_weight_kg: number | null
+          min_order_value: number | null
+          min_weight_kg: number | null
+          per_kg_fee: number | null
+          priority: number
+          rate_type: string
+          zone_id: string | null
+        }
+        Insert: {
+          base_fee?: number
+          carrier_id?: string | null
+          cod_extra_fee?: number | null
+          created_at?: string
+          free_shipping_threshold?: number | null
+          id?: string
+          is_active?: boolean
+          max_order_value?: number | null
+          max_weight_kg?: number | null
+          min_order_value?: number | null
+          min_weight_kg?: number | null
+          per_kg_fee?: number | null
+          priority?: number
+          rate_type?: string
+          zone_id?: string | null
+        }
+        Update: {
+          base_fee?: number
+          carrier_id?: string | null
+          cod_extra_fee?: number | null
+          created_at?: string
+          free_shipping_threshold?: number | null
+          id?: string
+          is_active?: boolean
+          max_order_value?: number | null
+          max_weight_kg?: number | null
+          min_order_value?: number | null
+          min_weight_kg?: number | null
+          per_kg_fee?: number | null
+          priority?: number
+          rate_type?: string
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipping_rates_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_carriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipping_rates_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shipping_webhooks_log: {
+        Row: {
+          carrier_code: string
+          created_at: string
+          event_type: string | null
+          id: string
+          ip_address: string | null
+          payload: Json
+          processed: boolean
+          processing_error: string | null
+          related_shipment_id: string | null
+          signature: string | null
+          signature_valid: boolean
+        }
+        Insert: {
+          carrier_code: string
+          created_at?: string
+          event_type?: string | null
+          id?: string
+          ip_address?: string | null
+          payload?: Json
+          processed?: boolean
+          processing_error?: string | null
+          related_shipment_id?: string | null
+          signature?: string | null
+          signature_valid?: boolean
+        }
+        Update: {
+          carrier_code?: string
+          created_at?: string
+          event_type?: string | null
+          id?: string
+          ip_address?: string | null
+          payload?: Json
+          processed?: boolean
+          processing_error?: string | null
+          related_shipment_id?: string | null
+          signature?: string | null
+          signature_valid?: boolean
+        }
+        Relationships: []
+      }
+      shipping_zones: {
+        Row: {
+          carrier_id: string | null
+          cities: Json
+          country_code: string
+          created_at: string
+          delivery_days_max: number | null
+          delivery_days_min: number | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+        }
+        Insert: {
+          carrier_id?: string | null
+          cities?: Json
+          country_code?: string
+          created_at?: string
+          delivery_days_max?: number | null
+          delivery_days_min?: number | null
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+        }
+        Update: {
+          carrier_id?: string | null
+          cities?: Json
+          country_code?: string
+          created_at?: string
+          delivery_days_max?: number | null
+          delivery_days_min?: number | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipping_zones_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_carriers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_settings: {
         Row: {
