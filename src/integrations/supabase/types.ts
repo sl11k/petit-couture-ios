@@ -16,43 +16,73 @@ export type Database = {
     Tables: {
       abandoned_carts: {
         Row: {
+          abandonment_reason: string | null
+          contact_attempts: number
+          contact_status: string
           converted: boolean
           created_at: string
           currency: string
           email: string | null
+          first_seen_at: string
           id: string
           items: Json
+          last_contacted_at: string | null
           phone: string | null
           reached_checkout: boolean
+          recovered_order_id: string | null
+          recovery_coupon_code: string | null
+          recovery_token: string | null
           session_id: string
+          source: string
+          stage: string
           subtotal: number
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          abandonment_reason?: string | null
+          contact_attempts?: number
+          contact_status?: string
           converted?: boolean
           created_at?: string
           currency?: string
           email?: string | null
+          first_seen_at?: string
           id?: string
           items?: Json
+          last_contacted_at?: string | null
           phone?: string | null
           reached_checkout?: boolean
+          recovered_order_id?: string | null
+          recovery_coupon_code?: string | null
+          recovery_token?: string | null
           session_id: string
+          source?: string
+          stage?: string
           subtotal?: number
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          abandonment_reason?: string | null
+          contact_attempts?: number
+          contact_status?: string
           converted?: boolean
           created_at?: string
           currency?: string
           email?: string | null
+          first_seen_at?: string
           id?: string
           items?: Json
+          last_contacted_at?: string | null
           phone?: string | null
           reached_checkout?: boolean
+          recovered_order_id?: string | null
+          recovery_coupon_code?: string | null
+          recovery_token?: string | null
           session_id?: string
+          source?: string
+          stage?: string
           subtotal?: number
           updated_at?: string
           user_id?: string | null
@@ -127,6 +157,53 @@ export type Database = {
           metadata?: Json
         }
         Relationships: []
+      }
+      cart_recovery_attempts: {
+        Row: {
+          actor_email: string | null
+          actor_id: string | null
+          cart_id: string
+          channel: string
+          coupon_code: string | null
+          created_at: string
+          id: string
+          message: string | null
+          metadata: Json
+          status: string
+        }
+        Insert: {
+          actor_email?: string | null
+          actor_id?: string | null
+          cart_id: string
+          channel: string
+          coupon_code?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          metadata?: Json
+          status?: string
+        }
+        Update: {
+          actor_email?: string | null
+          actor_id?: string | null
+          cart_id?: string
+          channel?: string
+          coupon_code?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          metadata?: Json
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_recovery_attempts_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "abandoned_carts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       categories: {
         Row: {
