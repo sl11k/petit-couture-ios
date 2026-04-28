@@ -111,7 +111,9 @@ export const placeOrder = createServerFn({ method: "POST" })
         total: data.pricing.total,
         currency: data.currency,
         shipping_address: data.address,
-        notes: data.address.notes ?? null,
+        shipping_lat: (data.address as any).lat ?? null,
+        shipping_lng: (data.address as any).lng ?? null,
+        notes: (data.address as any).notes ?? null,
       })
       .select("id, order_number, status, total, currency")
       .single();
