@@ -96,7 +96,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "الاتصالات",
     items: [
       { to: "/admin/notifications", label: "الإشعارات", icon: Bell },
-      { to: "/admin/messages", label: "الرسائل", icon: MessageSquare, badge: "soon" },
+      { to: "/admin/messages", label: "الرسائل", icon: MessageSquare },
       { to: "/admin/support", label: "خدمة العملاء", icon: HeadphonesIcon, badge: "soon" },
     ],
   },
