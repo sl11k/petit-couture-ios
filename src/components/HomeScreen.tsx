@@ -349,7 +349,7 @@ export function HomeScreen() {
         <button
           aria-label={isRTL ? "خدمة العملاء" : "Customer support"}
           className={[
-            "absolute bottom-[108px] h-[60px] w-[60px] rounded-full bg-gold text-background grid place-items-center shadow-gold active:scale-95 transition",
+            "fixed lg:absolute bottom-[108px] h-[60px] w-[60px] rounded-full bg-gold text-background grid place-items-center shadow-gold active:scale-95 transition z-40",
             isRTL ? "left-5" : "right-5",
           ].join(" ")}
         >
