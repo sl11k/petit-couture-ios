@@ -9,6 +9,8 @@ import { WishlistBanner } from "@/components/WishlistBanner";
 import { DesktopHeader } from "@/components/DesktopHeader";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
+import { useEffect } from "react";
+import { startWebVitals } from "@/lib/perf";
 
 import appCss from "../styles.css?url";
 
@@ -79,6 +81,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  useEffect(() => { startWebVitals(); }, []);
   return (
     <LanguageProvider>
       <AuthProvider>
