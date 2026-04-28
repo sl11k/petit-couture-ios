@@ -713,7 +713,7 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
   );
 }
 function Grid2({ children }: any) { return <div className="grid gap-3 sm:grid-cols-2">{children}</div>; }
-function Field({ label, value, onChange, type = "text", step }: any) {
+function Field({ label, value, onChange, type = "text", step }: { label: string; value: any; onChange: (v: any) => void; type?: string; step?: string }) {
   return (
     <div>
       <label className="text-xs text-muted-foreground">{label}</label>
@@ -722,7 +722,7 @@ function Field({ label, value, onChange, type = "text", step }: any) {
     </div>
   );
 }
-function Textarea({ label, value, onChange, rows = 3 }: any) {
+function Textarea({ label, value, onChange, rows = 3 }: { label: string; value: any; onChange: (v: any) => void; rows?: number }) {
   return (
     <div>
       <label className="text-xs text-muted-foreground">{label}</label>
@@ -731,7 +731,7 @@ function Textarea({ label, value, onChange, rows = 3 }: any) {
     </div>
   );
 }
-function Select({ label, value, onChange, children }: any) {
+function Select({ label, value, onChange, children }: { label: string; value: any; onChange: (v: any) => void; children: React.ReactNode }) {
   return (
     <div>
       <label className="text-xs text-muted-foreground">{label}</label>
@@ -742,7 +742,7 @@ function Select({ label, value, onChange, children }: any) {
     </div>
   );
 }
-function Toggle({ label, checked, onChange }: any) {
+function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <label className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background p-2 text-sm">
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
