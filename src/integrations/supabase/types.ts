@@ -511,6 +511,7 @@ export type Database = {
           bank_transfer_proof_url: string | null
           bank_transfer_reference: string | null
           bank_transfer_reviewed_at: string | null
+          captured_amount: number | null
           created_at: string
           created_by_admin: boolean
           currency: string
@@ -524,14 +525,17 @@ export type Database = {
           invoice_number: string | null
           last_payment_attempt_at: string | null
           last_stage: string | null
+          last_transaction_id: string | null
           notes: string | null
           order_number: string
           payment_attempts: number
           payment_failure_reason: string | null
+          payment_gateway: string | null
           payment_link: string | null
           payment_link_sent_at: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_status: string
+          refunded_amount: number | null
           shipping_address: Json
           shipping_carrier: string | null
           shipping_fee: number
@@ -556,6 +560,7 @@ export type Database = {
           bank_transfer_proof_url?: string | null
           bank_transfer_reference?: string | null
           bank_transfer_reviewed_at?: string | null
+          captured_amount?: number | null
           created_at?: string
           created_by_admin?: boolean
           currency?: string
@@ -569,14 +574,17 @@ export type Database = {
           invoice_number?: string | null
           last_payment_attempt_at?: string | null
           last_stage?: string | null
+          last_transaction_id?: string | null
           notes?: string | null
           order_number?: string
           payment_attempts?: number
           payment_failure_reason?: string | null
+          payment_gateway?: string | null
           payment_link?: string | null
           payment_link_sent_at?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_status?: string
+          refunded_amount?: number | null
           shipping_address?: Json
           shipping_carrier?: string | null
           shipping_fee?: number
@@ -601,6 +609,7 @@ export type Database = {
           bank_transfer_proof_url?: string | null
           bank_transfer_reference?: string | null
           bank_transfer_reviewed_at?: string | null
+          captured_amount?: number | null
           created_at?: string
           created_by_admin?: boolean
           currency?: string
@@ -614,14 +623,17 @@ export type Database = {
           invoice_number?: string | null
           last_payment_attempt_at?: string | null
           last_stage?: string | null
+          last_transaction_id?: string | null
           notes?: string | null
           order_number?: string
           payment_attempts?: number
           payment_failure_reason?: string | null
+          payment_gateway?: string | null
           payment_link?: string | null
           payment_link_sent_at?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_status?: string
+          refunded_amount?: number | null
           shipping_address?: Json
           shipping_carrier?: string | null
           shipping_fee?: number
@@ -639,6 +651,269 @@ export type Database = {
           tracking_url?: string | null
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      payment_method_configs: {
+        Row: {
+          config: Json
+          created_at: string
+          display_name_ar: string
+          display_name_en: string
+          display_order: number
+          gateway: string | null
+          icon: string | null
+          id: string
+          is_enabled: boolean
+          max_amount: number | null
+          method_key: string
+          min_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          display_name_ar: string
+          display_name_en: string
+          display_order?: number
+          gateway?: string | null
+          icon?: string | null
+          id?: string
+          is_enabled?: boolean
+          max_amount?: number | null
+          method_key: string
+          min_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          display_name_ar?: string
+          display_name_en?: string
+          display_order?: number
+          gateway?: string | null
+          icon?: string | null
+          id?: string
+          is_enabled?: boolean
+          max_amount?: number | null
+          method_key?: string
+          min_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payment_refunds: {
+        Row: {
+          amount: number
+          approved_by: string | null
+          approved_by_email: string | null
+          completed_at: string | null
+          created_at: string
+          currency: string
+          error_message: string | null
+          gateway_refund_id: string | null
+          id: string
+          is_partial: boolean
+          metadata: Json
+          order_id: string | null
+          reason: string | null
+          status: string
+          transaction_id: string | null
+        }
+        Insert: {
+          amount: number
+          approved_by?: string | null
+          approved_by_email?: string | null
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          error_message?: string | null
+          gateway_refund_id?: string | null
+          id?: string
+          is_partial?: boolean
+          metadata?: Json
+          order_id?: string | null
+          reason?: string | null
+          status?: string
+          transaction_id?: string | null
+        }
+        Update: {
+          amount?: number
+          approved_by?: string | null
+          approved_by_email?: string | null
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          error_message?: string | null
+          gateway_refund_id?: string | null
+          id?: string
+          is_partial?: boolean
+          metadata?: Json
+          order_id?: string | null
+          reason?: string | null
+          status?: string
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_refunds_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_refunds_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "payment_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_transactions: {
+        Row: {
+          amount: number
+          authorized_at: string | null
+          captured_at: string | null
+          card_brand: string | null
+          card_last4: string | null
+          created_at: string
+          currency: string
+          customer_email: string | null
+          customer_name: string | null
+          error_code: string | null
+          error_message: string | null
+          failed_at: string | null
+          gateway: string
+          gateway_fee: number | null
+          gateway_method: string | null
+          gateway_reference: string | null
+          gateway_transaction_id: string | null
+          id: string
+          idempotency_key: string | null
+          ip_address: string | null
+          metadata: Json
+          net_amount: number | null
+          order_id: string | null
+          order_number: string | null
+          raw_response: Json | null
+          status: string
+          updated_at: string
+          user_agent: string | null
+          webhook_verified: boolean
+        }
+        Insert: {
+          amount?: number
+          authorized_at?: string | null
+          captured_at?: string | null
+          card_brand?: string | null
+          card_last4?: string | null
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          failed_at?: string | null
+          gateway: string
+          gateway_fee?: number | null
+          gateway_method?: string | null
+          gateway_reference?: string | null
+          gateway_transaction_id?: string | null
+          id?: string
+          idempotency_key?: string | null
+          ip_address?: string | null
+          metadata?: Json
+          net_amount?: number | null
+          order_id?: string | null
+          order_number?: string | null
+          raw_response?: Json | null
+          status?: string
+          updated_at?: string
+          user_agent?: string | null
+          webhook_verified?: boolean
+        }
+        Update: {
+          amount?: number
+          authorized_at?: string | null
+          captured_at?: string | null
+          card_brand?: string | null
+          card_last4?: string | null
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          failed_at?: string | null
+          gateway?: string
+          gateway_fee?: number | null
+          gateway_method?: string | null
+          gateway_reference?: string | null
+          gateway_transaction_id?: string | null
+          id?: string
+          idempotency_key?: string | null
+          ip_address?: string | null
+          metadata?: Json
+          net_amount?: number | null
+          order_id?: string | null
+          order_number?: string | null
+          raw_response?: Json | null
+          status?: string
+          updated_at?: string
+          user_agent?: string | null
+          webhook_verified?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_webhooks_log: {
+        Row: {
+          created_at: string
+          event_type: string | null
+          gateway: string
+          id: string
+          ip_address: string | null
+          payload: Json
+          processed: boolean
+          processing_error: string | null
+          related_transaction_id: string | null
+          signature: string | null
+          signature_valid: boolean
+        }
+        Insert: {
+          created_at?: string
+          event_type?: string | null
+          gateway: string
+          id?: string
+          ip_address?: string | null
+          payload?: Json
+          processed?: boolean
+          processing_error?: string | null
+          related_transaction_id?: string | null
+          signature?: string | null
+          signature_valid?: boolean
+        }
+        Update: {
+          created_at?: string
+          event_type?: string | null
+          gateway?: string
+          id?: string
+          ip_address?: string | null
+          payload?: Json
+          processed?: boolean
+          processing_error?: string | null
+          related_transaction_id?: string | null
+          signature?: string | null
+          signature_valid?: boolean
         }
         Relationships: []
       }
