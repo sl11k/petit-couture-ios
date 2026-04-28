@@ -33,6 +33,7 @@ import {
   Sun,
   LogOut,
   Plus,
+  AlertCircle,
 } from "lucide-react";
 
 type NavItem = {
