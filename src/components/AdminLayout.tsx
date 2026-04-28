@@ -33,6 +33,7 @@ import {
   Sun,
   LogOut,
   Plus,
+  AlertCircle,
 } from "lucide-react";
 
 type NavItem = {
@@ -61,6 +62,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: "/admin/orders", label: "الطلبات", icon: ShoppingBag },
       { to: "/admin/abandoned", label: "السلات المتروكة", icon: ShoppingCart },
+      { to: "/admin/incomplete", label: "الطلبات غير المكتملة", icon: AlertCircle },
       { to: "/admin/create-order", label: "إنشاء طلب", icon: Plus },
       { to: "/admin/payments", label: "المدفوعات", icon: CreditCard, badge: "soon" },
       { to: "/admin/shipping", label: "الشحن", icon: Truck, badge: "soon" },

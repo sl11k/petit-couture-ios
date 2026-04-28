@@ -33,6 +33,7 @@ import { Route as AdminNotificationsRouteImport } from './routes/admin.notificat
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
 import { Route as AdminIntegrationsRouteImport } from './routes/admin.integrations'
+import { Route as AdminIncompleteRouteImport } from './routes/admin.incomplete'
 import { Route as AdminHelpRouteImport } from './routes/admin.help'
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
 import { Route as AdminCreateOrderRouteImport } from './routes/admin.create-order'
@@ -168,6 +169,11 @@ const AdminIntegrationsRoute = AdminIntegrationsRouteImport.update({
   path: '/integrations',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminIncompleteRoute = AdminIncompleteRouteImport.update({
+  id: '/incomplete',
+  path: '/incomplete',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminHelpRoute = AdminHelpRouteImport.update({
   id: '/help',
   path: '/help',
@@ -252,6 +258,7 @@ export interface FileRoutesByFullPath {
   '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/help': typeof AdminHelpRoute
+  '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -291,6 +298,7 @@ export interface FileRoutesByTo {
   '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/help': typeof AdminHelpRoute
+  '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -331,6 +339,7 @@ export interface FileRoutesById {
   '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/help': typeof AdminHelpRoute
+  '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -372,6 +381,7 @@ export interface FileRouteTypes {
     | '/admin/create-order'
     | '/admin/customers'
     | '/admin/help'
+    | '/admin/incomplete'
     | '/admin/integrations'
     | '/admin/inventory'
     | '/admin/messages'
@@ -411,6 +421,7 @@ export interface FileRouteTypes {
     | '/admin/create-order'
     | '/admin/customers'
     | '/admin/help'
+    | '/admin/incomplete'
     | '/admin/integrations'
     | '/admin/inventory'
     | '/admin/messages'
@@ -450,6 +461,7 @@ export interface FileRouteTypes {
     | '/admin/create-order'
     | '/admin/customers'
     | '/admin/help'
+    | '/admin/incomplete'
     | '/admin/integrations'
     | '/admin/inventory'
     | '/admin/messages'
@@ -655,6 +667,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIntegrationsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/incomplete': {
+      id: '/admin/incomplete'
+      path: '/incomplete'
+      fullPath: '/admin/incomplete'
+      preLoaderRoute: typeof AdminIncompleteRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/help': {
       id: '/admin/help'
       path: '/help'
@@ -796,6 +815,7 @@ interface AdminRouteChildren {
   AdminCreateOrderRoute: typeof AdminCreateOrderRoute
   AdminCustomersRoute: typeof AdminCustomersRouteWithChildren
   AdminHelpRoute: typeof AdminHelpRoute
+  AdminIncompleteRoute: typeof AdminIncompleteRoute
   AdminIntegrationsRoute: typeof AdminIntegrationsRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
@@ -822,6 +842,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCreateOrderRoute: AdminCreateOrderRoute,
   AdminCustomersRoute: AdminCustomersRouteWithChildren,
   AdminHelpRoute: AdminHelpRoute,
+  AdminIncompleteRoute: AdminIncompleteRoute,
   AdminIntegrationsRoute: AdminIntegrationsRoute,
   AdminInventoryRoute: AdminInventoryRoute,
   AdminMessagesRoute: AdminMessagesRoute,
