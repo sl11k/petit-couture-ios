@@ -43,7 +43,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    if (error) {
+      // Log failed attempt (best-effort, never blocks)
+      try {
+        const ua = typeof navigator !== "undefined" ? navigator.userAgent : null;
+        await supabase.from("failed_login_attempts").insert({
+          email, user_agent: ua, reason: error.message, metadata: { code: (error as any).code ?? null },
+        });
+      } catch { /* ignore */ }
+      throw error;
+    }
+    // Log successful login
+    try {
+      const { logAudit } = await import("@/lib/audit");
+      await logAudit({ action: "auth.login", entity: "user", metadata: { email } });
+    } catch { /* ignore */ }
   }, []);
 
   const signUp = useCallback(async (email: string, password: string) => {
@@ -58,6 +72,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    try {
+      const { logAudit } = await import("@/lib/audit");
+      await logAudit({ action: "auth.logout", entity: "user" });
+    } catch { /* ignore */ }
     await supabase.auth.signOut();
   }, []);
 
