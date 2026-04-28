@@ -2434,6 +2434,125 @@ export type Database = {
           },
         ]
       }
+      site_pages: {
+        Row: {
+          created_at: string
+          id: string
+          is_landing: boolean
+          is_published: boolean
+          layout: string
+          meta_description: string | null
+          slug: string
+          title_ar: string
+          title_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_landing?: boolean
+          is_published?: boolean
+          layout?: string
+          meta_description?: string | null
+          slug: string
+          title_ar: string
+          title_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_landing?: boolean
+          is_published?: boolean
+          layout?: string
+          meta_description?: string | null
+          slug?: string
+          title_ar?: string
+          title_en?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      site_revisions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          created_by_email: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          note: string | null
+          snapshot: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          created_by_email?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          note?: string | null
+          snapshot: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          created_by_email?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          note?: string | null
+          snapshot?: Json
+        }
+        Relationships: []
+      }
+      site_sections: {
+        Row: {
+          config: Json
+          created_at: string
+          display_order: number
+          ends_at: string | null
+          id: string
+          is_visible: boolean
+          page_id: string
+          section_type: string
+          starts_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          display_order?: number
+          ends_at?: string | null
+          id?: string
+          is_visible?: boolean
+          page_id: string
+          section_type: string
+          starts_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          display_order?: number
+          ends_at?: string | null
+          id?: string
+          is_visible?: boolean
+          page_id?: string
+          section_type?: string
+          starts_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_sections_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "site_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_settings: {
         Row: {
           announcement_bar: string | null
@@ -2485,6 +2604,51 @@ export type Database = {
           tax_rate?: number | null
           updated_at?: string
           whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
+      site_themes: {
+        Row: {
+          branding: Json
+          colors: Json
+          components: Json
+          created_at: string
+          created_by: string | null
+          fonts: Json
+          id: string
+          is_active: boolean
+          is_draft: boolean
+          name: string
+          tokens: Json
+          updated_at: string
+        }
+        Insert: {
+          branding?: Json
+          colors?: Json
+          components?: Json
+          created_at?: string
+          created_by?: string | null
+          fonts?: Json
+          id?: string
+          is_active?: boolean
+          is_draft?: boolean
+          name: string
+          tokens?: Json
+          updated_at?: string
+        }
+        Update: {
+          branding?: Json
+          colors?: Json
+          components?: Json
+          created_at?: string
+          created_by?: string | null
+          fonts?: Json
+          id?: string
+          is_active?: boolean
+          is_draft?: boolean
+          name?: string
+          tokens?: Json
+          updated_at?: string
         }
         Relationships: []
       }
