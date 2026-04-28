@@ -190,7 +190,7 @@ function OrderConfirmationPage() {
             {t.summary}
           </h2>
           <ul className="space-y-3">
-            {order.order_items.map((it) => (
+            {order.order_items.map((it: any) => (
               <li
                 key={it.id}
                 className="flex gap-3 p-3 rounded-[14px] border border-border bg-cream-warm/20"
