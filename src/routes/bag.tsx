@@ -30,15 +30,6 @@ function BagPage() {
   return (
     <div className="min-h-screen w-full bg-cream flex justify-center">
       <div className="relative w-full max-w-[440px] bg-background min-h-screen overflow-hidden shadow-soft">
-        {/* iOS status bar */}
-        <div className="flex items-center justify-between px-7 pt-3 pb-1 text-[13px] font-semibold text-foreground tracking-tight">
-          <span>9:41</span>
-          <div className="flex items-center gap-1.5">
-            <span className="inline-block h-2 w-4 rounded-[2px] border border-foreground/80" />
-            <span className="text-[11px]">100%</span>
-          </div>
-        </div>
-
         {/* Header */}
         <header className="px-5 pt-2 pb-3 flex items-center justify-between">
           <button
@@ -197,7 +188,7 @@ function BagPage() {
                 {t.bag.secure}
               </p>
             </div>
-            <div className="mx-auto mb-2 h-[5px] w-[120px] rounded-full bg-foreground/80" />
+            
           </div>
         )}
       </div>
