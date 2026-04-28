@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      ab_tests: {
+        Row: {
+          conversions_a: number
+          conversions_b: number
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          scope: string
+          variant_a: Json
+          variant_b: Json
+          views_a: number
+          views_b: number
+        }
+        Insert: {
+          conversions_a?: number
+          conversions_b?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          scope: string
+          variant_a?: Json
+          variant_b?: Json
+          views_a?: number
+          views_b?: number
+        }
+        Update: {
+          conversions_a?: number
+          conversions_b?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          scope?: string
+          variant_a?: Json
+          variant_b?: Json
+          views_a?: number
+          views_b?: number
+        }
+        Relationships: []
+      }
       abandoned_carts: {
         Row: {
           abandonment_reason: string | null
@@ -209,6 +251,48 @@ export type Database = {
           new_data?: Json | null
           old_data?: Json | null
           user_agent?: string | null
+        }
+        Relationships: []
+      }
+      bundles: {
+        Row: {
+          bundle_price: number | null
+          created_at: string
+          description: string | null
+          discount_percent: number | null
+          ends_at: string | null
+          id: string
+          is_active: boolean
+          name: string
+          product_ids: string[]
+          starts_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          bundle_price?: number | null
+          created_at?: string
+          description?: string | null
+          discount_percent?: number | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          product_ids?: string[]
+          starts_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bundle_price?: number | null
+          created_at?: string
+          description?: string | null
+          discount_percent?: number | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          product_ids?: string[]
+          starts_at?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -887,6 +971,111 @@ export type Database = {
           total?: number
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      landing_pages: {
+        Row: {
+          coupon_code: string | null
+          created_at: string
+          cta_text: string | null
+          cta_url: string | null
+          hero_image: string | null
+          id: string
+          is_active: boolean
+          product_ids: string[]
+          slug: string
+          subtitle: string | null
+          title: string
+          updated_at: string
+          utm_campaign: string | null
+          views: number
+        }
+        Insert: {
+          coupon_code?: string | null
+          created_at?: string
+          cta_text?: string | null
+          cta_url?: string | null
+          hero_image?: string | null
+          id?: string
+          is_active?: boolean
+          product_ids?: string[]
+          slug: string
+          subtitle?: string | null
+          title: string
+          updated_at?: string
+          utm_campaign?: string | null
+          views?: number
+        }
+        Update: {
+          coupon_code?: string | null
+          created_at?: string
+          cta_text?: string | null
+          cta_url?: string | null
+          hero_image?: string | null
+          id?: string
+          is_active?: boolean
+          product_ids?: string[]
+          slug?: string
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+          utm_campaign?: string | null
+          views?: number
+        }
+        Relationships: []
+      }
+      loyalty_accounts: {
+        Row: {
+          balance: number
+          lifetime_earned: number
+          tier: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          lifetime_earned?: number
+          tier?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          lifetime_earned?: number
+          tier?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      loyalty_transactions: {
+        Row: {
+          created_at: string
+          delta: number
+          id: string
+          metadata: Json
+          reason: string
+          related_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delta: number
+          id?: string
+          metadata?: Json
+          reason: string
+          related_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          id?: string
+          metadata?: Json
+          reason?: string
+          related_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -1889,6 +2078,48 @@ export type Database = {
           },
         ]
       }
+      product_recommendations: {
+        Row: {
+          created_at: string
+          id: string
+          position: number
+          product_id: string
+          recommended_id: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          position?: number
+          product_id: string
+          recommended_id: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          position?: number
+          product_id?: string
+          recommended_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_recommendations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_recommendations_recommended_id_fkey"
+            columns: ["recommended_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_relations: {
         Row: {
           created_at: string
@@ -2277,6 +2508,48 @@ export type Database = {
         }
         Relationships: []
       }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          referral_code: string
+          referred_email: string | null
+          referred_user_id: string | null
+          referrer_user_id: string
+          related_order_id: string | null
+          reward_amount: number | null
+          reward_type: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referral_code: string
+          referred_email?: string | null
+          referred_user_id?: string | null
+          referrer_user_id: string
+          related_order_id?: string | null
+          reward_amount?: number | null
+          reward_type?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referred_email?: string | null
+          referred_user_id?: string | null
+          referrer_user_id?: string
+          related_order_id?: string | null
+          reward_amount?: number | null
+          reward_type?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       report_runs: {
         Row: {
           created_at: string
@@ -2543,6 +2816,65 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          body: string | null
+          created_at: string
+          customer_name: string | null
+          helpful_count: number
+          id: string
+          images: Json
+          order_id: string | null
+          product_id: string
+          rating: number
+          status: string
+          title: string | null
+          updated_at: string
+          user_id: string | null
+          verified_purchase: boolean
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          customer_name?: string | null
+          helpful_count?: number
+          id?: string
+          images?: Json
+          order_id?: string | null
+          product_id: string
+          rating: number
+          status?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+          verified_purchase?: boolean
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          customer_name?: string | null
+          helpful_count?: number
+          id?: string
+          images?: Json
+          order_id?: string | null
+          product_id?: string
+          rating?: number
+          status?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+          verified_purchase?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_permissions: {
         Row: {
           created_at: string
@@ -2561,6 +2893,57 @@ export type Database = {
           id?: string
           permission?: string
           role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
+      search_logs: {
+        Row: {
+          clicked_product_id: string | null
+          created_at: string
+          id: string
+          query: string
+          results_count: number
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          clicked_product_id?: string | null
+          created_at?: string
+          id?: string
+          query: string
+          results_count?: number
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          clicked_product_id?: string | null
+          created_at?: string
+          id?: string
+          query?: string
+          results_count?: number
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      search_synonyms: {
+        Row: {
+          created_at: string
+          id: string
+          synonym: string
+          term: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          synonym: string
+          term: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          synonym?: string
+          term?: string
         }
         Relationships: []
       }
@@ -3092,6 +3475,8 @@ export type Database = {
       }
       site_settings: {
         Row: {
+          abandoned_cart_delay_minutes: number
+          abandoned_cart_recovery_enabled: boolean
           announcement_bar: string | null
           auto_issue_on_payment: boolean
           backup_auto_enabled: boolean
@@ -3104,6 +3489,8 @@ export type Database = {
           currency_symbol: string | null
           default_language: string
           favicon_url: string | null
+          first_order_coupon_code: string | null
+          first_order_coupon_discount: number | null
           free_shipping_threshold: number | null
           guest_checkout_enabled: boolean
           hero_image_url: string | null
@@ -3121,6 +3508,10 @@ export type Database = {
           invoice_prefix: string | null
           issue_tax_invoice: boolean
           logo_url: string | null
+          loyalty_enabled: boolean
+          loyalty_points_per_currency: number
+          loyalty_redeem_rate: number
+          loyalty_signup_bonus: number
           maintenance_allowed_ips: string[] | null
           maintenance_message: string | null
           maintenance_mode: boolean
@@ -3138,6 +3529,9 @@ export type Database = {
           privacy_data_retention_days: number
           privacy_marketing_consent: boolean
           privacy_policy: string | null
+          referral_enabled: boolean
+          referral_referred_reward: number
+          referral_referrer_reward: number
           return_policy: string | null
           seo_description: string | null
           seo_keywords: string | null
@@ -3146,6 +3540,7 @@ export type Database = {
           seo_title: string | null
           shipping_fee: number | null
           shipping_policy: string | null
+          show_trust_badges: boolean
           social_facebook: string | null
           social_instagram: string | null
           social_snapchat: string | null
@@ -3164,10 +3559,14 @@ export type Database = {
           tax_number: string | null
           tax_rate: number | null
           terms_of_service: string | null
+          trust_badges: Json
           updated_at: string
+          upsell_enabled: boolean
           whatsapp_number: string | null
         }
         Insert: {
+          abandoned_cart_delay_minutes?: number
+          abandoned_cart_recovery_enabled?: boolean
           announcement_bar?: string | null
           auto_issue_on_payment?: boolean
           backup_auto_enabled?: boolean
@@ -3180,6 +3579,8 @@ export type Database = {
           currency_symbol?: string | null
           default_language?: string
           favicon_url?: string | null
+          first_order_coupon_code?: string | null
+          first_order_coupon_discount?: number | null
           free_shipping_threshold?: number | null
           guest_checkout_enabled?: boolean
           hero_image_url?: string | null
@@ -3197,6 +3598,10 @@ export type Database = {
           invoice_prefix?: string | null
           issue_tax_invoice?: boolean
           logo_url?: string | null
+          loyalty_enabled?: boolean
+          loyalty_points_per_currency?: number
+          loyalty_redeem_rate?: number
+          loyalty_signup_bonus?: number
           maintenance_allowed_ips?: string[] | null
           maintenance_message?: string | null
           maintenance_mode?: boolean
@@ -3214,6 +3619,9 @@ export type Database = {
           privacy_data_retention_days?: number
           privacy_marketing_consent?: boolean
           privacy_policy?: string | null
+          referral_enabled?: boolean
+          referral_referred_reward?: number
+          referral_referrer_reward?: number
           return_policy?: string | null
           seo_description?: string | null
           seo_keywords?: string | null
@@ -3222,6 +3630,7 @@ export type Database = {
           seo_title?: string | null
           shipping_fee?: number | null
           shipping_policy?: string | null
+          show_trust_badges?: boolean
           social_facebook?: string | null
           social_instagram?: string | null
           social_snapchat?: string | null
@@ -3240,10 +3649,14 @@ export type Database = {
           tax_number?: string | null
           tax_rate?: number | null
           terms_of_service?: string | null
+          trust_badges?: Json
           updated_at?: string
+          upsell_enabled?: boolean
           whatsapp_number?: string | null
         }
         Update: {
+          abandoned_cart_delay_minutes?: number
+          abandoned_cart_recovery_enabled?: boolean
           announcement_bar?: string | null
           auto_issue_on_payment?: boolean
           backup_auto_enabled?: boolean
@@ -3256,6 +3669,8 @@ export type Database = {
           currency_symbol?: string | null
           default_language?: string
           favicon_url?: string | null
+          first_order_coupon_code?: string | null
+          first_order_coupon_discount?: number | null
           free_shipping_threshold?: number | null
           guest_checkout_enabled?: boolean
           hero_image_url?: string | null
@@ -3273,6 +3688,10 @@ export type Database = {
           invoice_prefix?: string | null
           issue_tax_invoice?: boolean
           logo_url?: string | null
+          loyalty_enabled?: boolean
+          loyalty_points_per_currency?: number
+          loyalty_redeem_rate?: number
+          loyalty_signup_bonus?: number
           maintenance_allowed_ips?: string[] | null
           maintenance_message?: string | null
           maintenance_mode?: boolean
@@ -3290,6 +3709,9 @@ export type Database = {
           privacy_data_retention_days?: number
           privacy_marketing_consent?: boolean
           privacy_policy?: string | null
+          referral_enabled?: boolean
+          referral_referred_reward?: number
+          referral_referrer_reward?: number
           return_policy?: string | null
           seo_description?: string | null
           seo_keywords?: string | null
@@ -3298,6 +3720,7 @@ export type Database = {
           seo_title?: string | null
           shipping_fee?: number | null
           shipping_policy?: string | null
+          show_trust_badges?: boolean
           social_facebook?: string | null
           social_instagram?: string | null
           social_snapchat?: string | null
@@ -3316,7 +3739,9 @@ export type Database = {
           tax_number?: string | null
           tax_rate?: number | null
           terms_of_service?: string | null
+          trust_badges?: Json
           updated_at?: string
+          upsell_enabled?: boolean
           whatsapp_number?: string | null
         }
         Relationships: []
