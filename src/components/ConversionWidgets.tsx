@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Shield, Truck, RefreshCw, Award, Lock } from "lucide-react";
 
 const ICONS: Record<string, any> = {
