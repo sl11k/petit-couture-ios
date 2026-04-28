@@ -410,48 +410,138 @@ export type Database = {
           },
         ]
       }
+      coupon_redemptions: {
+        Row: {
+          coupon_id: string
+          created_at: string
+          customer_email: string | null
+          customer_phone: string | null
+          discount_amount: number
+          id: string
+          order_id: string | null
+          order_total: number
+          user_id: string | null
+        }
+        Insert: {
+          coupon_id: string
+          created_at?: string
+          customer_email?: string | null
+          customer_phone?: string | null
+          discount_amount?: number
+          id?: string
+          order_id?: string | null
+          order_total?: number
+          user_id?: string | null
+        }
+        Update: {
+          coupon_id?: string
+          created_at?: string
+          customer_email?: string | null
+          customer_phone?: string | null
+          discount_amount?: number
+          id?: string
+          order_id?: string | null
+          order_total?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
+          allowed_cities: Json
+          allowed_payment_methods: Json
+          allowed_shipping_zones: Json
+          allowed_user_ids: Json
+          auto_apply: boolean
+          bundle_config: Json
+          bxgy_config: Json
           code: string
           created_at: string
           description: string | null
+          discount_total: number
           discount_type: string
           discount_value: number
+          excluded_product_ids: Json
           expires_at: string | null
+          first_order_only: boolean
           id: string
+          included_category_ids: Json
+          included_product_ids: Json
           is_active: boolean
           max_uses: number | null
           min_subtotal: number | null
+          name: string | null
+          no_combine: boolean
+          offer_type: string
+          per_customer_limit: number | null
+          priority: number
+          revenue_total: number
           starts_at: string | null
           updated_at: string
           used_count: number
         }
         Insert: {
+          allowed_cities?: Json
+          allowed_payment_methods?: Json
+          allowed_shipping_zones?: Json
+          allowed_user_ids?: Json
+          auto_apply?: boolean
+          bundle_config?: Json
+          bxgy_config?: Json
           code: string
           created_at?: string
           description?: string | null
+          discount_total?: number
           discount_type?: string
           discount_value?: number
+          excluded_product_ids?: Json
           expires_at?: string | null
+          first_order_only?: boolean
           id?: string
+          included_category_ids?: Json
+          included_product_ids?: Json
           is_active?: boolean
           max_uses?: number | null
           min_subtotal?: number | null
+          name?: string | null
+          no_combine?: boolean
+          offer_type?: string
+          per_customer_limit?: number | null
+          priority?: number
+          revenue_total?: number
           starts_at?: string | null
           updated_at?: string
           used_count?: number
         }
         Update: {
+          allowed_cities?: Json
+          allowed_payment_methods?: Json
+          allowed_shipping_zones?: Json
+          allowed_user_ids?: Json
+          auto_apply?: boolean
+          bundle_config?: Json
+          bxgy_config?: Json
           code?: string
           created_at?: string
           description?: string | null
+          discount_total?: number
           discount_type?: string
           discount_value?: number
+          excluded_product_ids?: Json
           expires_at?: string | null
+          first_order_only?: boolean
           id?: string
+          included_category_ids?: Json
+          included_product_ids?: Json
           is_active?: boolean
           max_uses?: number | null
           min_subtotal?: number | null
+          name?: string | null
+          no_combine?: boolean
+          offer_type?: string
+          per_customer_limit?: number | null
+          priority?: number
+          revenue_total?: number
           starts_at?: string | null
           updated_at?: string
           used_count?: number
