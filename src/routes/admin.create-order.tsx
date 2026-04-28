@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/AdminLayout";
 import { useAuth } from "@/state/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
-import { LocationPicker, type ResolvedLocation } from "@/components/checkout/LocationPicker";
+import LocationPicker, { type ResolvedLocation } from "@/components/checkout/LocationPicker";
 import {
   Search, User, UserPlus, Package, Trash2, Plus, Minus,
   MapPin, Truck, CreditCard, FileText, Check, ChevronRight,
