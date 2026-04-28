@@ -84,6 +84,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: "/admin/customers", label: "العملاء", icon: Users },
       { to: "/admin/coupons", label: "الكوبونات", icon: Ticket },
+      { to: "/admin/invoices", label: "الفواتير والضرائب", icon: FileText },
       { to: "/admin/campaigns", label: "العروض والحملات", icon: Megaphone, badge: "soon" },
     ],
   },
