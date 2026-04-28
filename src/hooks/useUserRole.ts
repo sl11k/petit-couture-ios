@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/state/AuthContext";
 
-export type AppRole = "admin" | "staff" | "customer";
+export type AppRole = "admin" | "manager" | "staff" | "viewer" | "customer";
 
 export function useUserRole() {
   const { user, ready } = useAuth();
@@ -32,10 +32,27 @@ export function useUserRole() {
     };
   }, [user, ready]);
 
+  const isAdmin = roles.includes("admin");
+  const isManager = roles.includes("manager");
+  const isStaff = roles.includes("staff");
+  const isViewer = roles.includes("viewer");
+
+  // canAccessAdmin: any back-office role
+  const canAccessAdmin = isAdmin || isManager || isStaff || isViewer;
+  // canManage: write access (excludes viewer + staff for sensitive ops)
+  const canManage = isAdmin || isManager;
+  // canEditOrders: staff + above
+  const canEditOrders = isAdmin || isManager || isStaff;
+
   return {
     roles,
     loading,
-    isAdmin: roles.includes("admin"),
-    isStaff: roles.includes("staff") || roles.includes("admin"),
+    isAdmin,
+    isManager,
+    isStaff: isStaff || isAdmin,
+    isViewer,
+    canAccessAdmin,
+    canManage,
+    canEditOrders,
   };
 }
