@@ -310,8 +310,12 @@ function IncompleteOrdersPage() {
   }
 
   return (
-    <AdminShell title="الطلبات غير المكتملة" subtitle="سلات متروكة، Checkout ناقص، وطلبات بانتظار الدفع">
+    <AdminShell>
       <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">الطلبات غير المكتملة</h1>
+          <p className="text-sm text-muted-foreground">سلات متروكة، Checkout ناقص، وطلبات بانتظار الدفع</p>
+        </div>
         {/* Top actions */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="relative flex-1 min-w-64">
