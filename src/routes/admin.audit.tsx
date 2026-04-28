@@ -33,7 +33,7 @@ function AuditAdmin() {
 
   useEffect(() => {
     setLoading(true);
-    void supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(1000)
+    void supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(200)
       .then(({ data }) => { setLogs((data ?? []) as Log[]); setLoading(false); });
   }, []);
 

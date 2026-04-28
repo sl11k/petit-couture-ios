@@ -112,6 +112,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/admin/audit-logins", label: "محاولات الدخول الفاشلة", icon: ScrollText },
       { to: "/admin/conversion", label: "تحسين التحويل", icon: ScrollText },
       { to: "/admin/search", label: "تقارير البحث", icon: ScrollText },
+      { to: "/admin/performance", label: "مراقبة الأداء", icon: ScrollText },
       { to: "/admin/settings", label: "الإعدادات", icon: Settings },
       { to: "/admin/help", label: "الدعم الفني", icon: LifeBuoy, badge: "soon" },
     ],
