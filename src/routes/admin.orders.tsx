@@ -75,11 +75,11 @@ function OrdersPage() {
       .order("created_at", { ascending: false })
       .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 
-    if (statusF !== "all") q = q.eq("status", statusF);
+    if (statusF !== "all") q = q.eq("status", statusF as any);
     if (paymentF !== "all") q = q.eq("payment_status", paymentF);
     if (shippingF !== "all") q = q.eq("shipping_status", shippingF);
     if (carrierF !== "all") q = q.eq("shipping_carrier", carrierF);
-    if (paymentMethodF !== "all") q = q.eq("payment_method", paymentMethodF);
+    if (paymentMethodF !== "all") q = q.eq("payment_method", paymentMethodF as any);
     if (sourceF !== "all") q = q.eq("source", sourceF);
     if (dateFrom) q = q.gte("created_at", dateFrom);
     if (dateTo) q = q.lte("created_at", dateTo + "T23:59:59");
