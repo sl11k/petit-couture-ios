@@ -1,224 +1,483 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/AdminLayout";
-import { StatusBadge } from "./admin";
+import {
+  ORDER_STATUSES, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR,
+  PAYMENT_STATUSES, PAYMENT_STATUS_LABEL, PAYMENT_STATUS_COLOR,
+  SHIPPING_STATUSES, SHIPPING_STATUS_LABEL, SHIPPING_STATUS_COLOR,
+  SHIPPING_CARRIERS, ORDER_SOURCE_LABEL,
+  Pill, logOrderEvent,
+} from "@/lib/orderStatus";
+import {
+  Search, Filter, Download, Printer, MessageCircle, Mail, MapPin,
+  Copy, Eye, X, ChevronDown, AlertTriangle,
+} from "lucide-react";
 
 export const Route = createFileRoute("/admin/orders")({
   component: OrdersPage,
 });
 
-const STATUSES = ["pending", "paid", "processing", "shipped", "delivered", "cancelled", "refunded"];
+type Order = {
+  id: string;
+  order_number: string;
+  created_at: string;
+  updated_at: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_email: string;
+  total: number;
+  currency: string;
+  status: string;
+  payment_status: string;
+  shipping_status: string;
+  payment_method: string;
+  shipping_carrier: string | null;
+  tracking_number: string | null;
+  tracking_url: string | null;
+  source: string;
+  assigned_to: string | null;
+  shipping_address: any;
+  notes: string | null;
+};
+
+const PAGE_SIZE = 50;
 
 function OrdersPage() {
-  const [orders, setOrders] = useState<any[]>([]);
-  const [filter, setFilter] = useState<string>("all");
-  const [selected, setSelected] = useState<any | null>(null);
-  const [items, setItems] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+
+  // Filters
+  const [search, setSearch] = useState("");
+  const [statusF, setStatusF] = useState("all");
+  const [paymentF, setPaymentF] = useState("all");
+  const [shippingF, setShippingF] = useState("all");
+  const [carrierF, setCarrierF] = useState("all");
+  const [cityF, setCityF] = useState("");
+  const [paymentMethodF, setPaymentMethodF] = useState("all");
+  const [sourceF, setSourceF] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [quickFilter, setQuickFilter] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Selection
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkAction, setBulkAction] = useState("");
 
   async function load() {
-    let q: any = supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(200);
-    if (filter !== "all") q = q.eq("status", filter);
-    const { data } = await q;
-    setOrders(data ?? []);
+    setLoading(true);
+    let q = supabase
+      .from("orders")
+      .select("*", { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
+
+    if (statusF !== "all") q = q.eq("status", statusF);
+    if (paymentF !== "all") q = q.eq("payment_status", paymentF);
+    if (shippingF !== "all") q = q.eq("shipping_status", shippingF);
+    if (carrierF !== "all") q = q.eq("shipping_carrier", carrierF);
+    if (paymentMethodF !== "all") q = q.eq("payment_method", paymentMethodF);
+    if (sourceF !== "all") q = q.eq("source", sourceF);
+    if (dateFrom) q = q.gte("created_at", dateFrom);
+    if (dateTo) q = q.lte("created_at", dateTo + "T23:59:59");
+
+    // Quick filters
+    if (quickFilter === "overdue") {
+      const cutoff = new Date(Date.now() - 3 * 86400000).toISOString();
+      q = q.eq("status", "pending").lt("created_at", cutoff);
+    }
+    if (quickFilter === "payment_failed") q = q.eq("payment_status", "failed");
+    if (quickFilter === "no_shipment") q = q.in("status", ["paid", "processing", "ready_to_ship"]).eq("shipping_status", "not_created");
+    if (quickFilter === "needs_review") q = q.eq("status", "under_review");
+
+    if (search.trim()) {
+      const s = `%${search.trim()}%`;
+      q = q.or(
+        `order_number.ilike.${s},customer_name.ilike.${s},customer_phone.ilike.${s},customer_email.ilike.${s},tracking_number.ilike.${s}`,
+      );
+    }
+
+    const { data, count } = await q;
+    let result = (data ?? []) as Order[];
+
+    // City filter (client-side because shipping_address is JSONB)
+    if (cityF.trim()) {
+      const c = cityF.trim().toLowerCase();
+      result = result.filter((o) => {
+        const city = (o.shipping_address?.city ?? o.shipping_address?.cityName ?? "").toLowerCase();
+        return city.includes(c);
+      });
+    }
+
+    setOrders(result);
+    setTotalCount(count ?? 0);
+    setLoading(false);
+    setSelected(new Set());
   }
 
   useEffect(() => {
-    load();
-  }, [filter]);
+    void load();
+  }, [page, statusF, paymentF, shippingF, carrierF, paymentMethodF, sourceF, dateFrom, dateTo, quickFilter]);
 
-  async function openOrder(o: any) {
-    setSelected(o);
-    const { data } = await supabase.from("order_items").select("*").eq("order_id", o.id);
-    setItems(data ?? []);
+  // Debounced search
+  useEffect(() => {
+    const t = setTimeout(() => { setPage(0); void load(); }, 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, cityF]);
+
+  function clearFilters() {
+    setSearch(""); setStatusF("all"); setPaymentF("all"); setShippingF("all");
+    setCarrierF("all"); setCityF(""); setPaymentMethodF("all"); setSourceF("all");
+    setDateFrom(""); setDateTo(""); setQuickFilter(null); setPage(0);
   }
 
-  async function updateStatus(id: string, status: string) {
-    await (supabase.from("orders") as any).update({ status }).eq("id", id);
-    await load();
-    if (selected?.id === id) setSelected({ ...selected, status });
+  const activeFiltersCount = useMemo(() => {
+    let n = 0;
+    if (statusF !== "all") n++;
+    if (paymentF !== "all") n++;
+    if (shippingF !== "all") n++;
+    if (carrierF !== "all") n++;
+    if (paymentMethodF !== "all") n++;
+    if (sourceF !== "all") n++;
+    if (cityF) n++;
+    if (dateFrom || dateTo) n++;
+    if (quickFilter) n++;
+    return n;
+  }, [statusF, paymentF, shippingF, carrierF, paymentMethodF, sourceF, cityF, dateFrom, dateTo, quickFilter]);
+
+  // Toggle selection
+  function toggleOne(id: string) {
+    const n = new Set(selected);
+    if (n.has(id)) n.delete(id); else n.add(id);
+    setSelected(n);
+  }
+  function toggleAll() {
+    if (selected.size === orders.length) setSelected(new Set());
+    else setSelected(new Set(orders.map((o) => o.id)));
   }
 
-  async function updateTracking(id: string, tracking: string) {
-    await supabase.from("orders").update({ tracking_number: tracking }).eq("id", id);
-    await load();
-    if (selected?.id === id) setSelected({ ...selected, tracking_number: tracking });
+  // Bulk actions
+  async function runBulk() {
+    if (selected.size === 0 || !bulkAction) return;
+    const ids = [...selected];
+    if (bulkAction === "export") return exportCsv(orders.filter((o) => selected.has(o.id)));
+    if (bulkAction === "print_invoices") {
+      ids.forEach((id, i) => setTimeout(() => window.open(`/admin/orders/${id}/invoice`, "_blank"), i * 200));
+      return;
+    }
+    if (bulkAction === "print_awb") {
+      ids.forEach((id, i) => setTimeout(() => window.open(`/admin/orders/${id}/awb`, "_blank"), i * 200));
+      return;
+    }
+    if (bulkAction.startsWith("status:")) {
+      const newStatus = bulkAction.split(":")[1];
+      if (!confirm(`تغيير حالة ${ids.length} طلب إلى "${ORDER_STATUS_LABEL[newStatus]}"؟`)) return;
+      await supabase.from("orders").update({ status: newStatus }).in("id", ids);
+      await Promise.all(ids.map((id) => logOrderEvent(id, "bulk_status_change", { to: newStatus })));
+      await load();
+    }
+    if (bulkAction === "mark_reviewed") {
+      await supabase.from("orders").update({ status: "processing" }).in("id", ids).eq("status", "under_review");
+      await Promise.all(ids.map((id) => logOrderEvent(id, "marked_reviewed")));
+      await load();
+    }
+    setBulkAction("");
   }
+
+  function exportCsv(rows: Order[]) {
+    const headers = [
+      "رقم الطلب", "التاريخ", "العميل", "الجوال", "البريد", "المدينة",
+      "الإجمالي", "العملة", "حالة الطلب", "حالة الدفع", "حالة الشحن",
+      "طريقة الدفع", "شركة الشحن", "رقم التتبع", "المصدر",
+    ];
+    const lines = rows.map((o) => [
+      o.order_number,
+      new Date(o.created_at).toLocaleString("ar"),
+      o.customer_name, o.customer_phone, o.customer_email,
+      o.shipping_address?.city ?? "",
+      o.total, o.currency,
+      ORDER_STATUS_LABEL[o.status] ?? o.status,
+      PAYMENT_STATUS_LABEL[o.payment_status] ?? o.payment_status,
+      SHIPPING_STATUS_LABEL[o.shipping_status] ?? o.shipping_status,
+      o.payment_method, o.shipping_carrier ?? "", o.tracking_number ?? "",
+      ORDER_SOURCE_LABEL[o.source] ?? o.source,
+    ].map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(","));
+    const csv = "\uFEFF" + [headers.join(","), ...lines].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `orders-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const pageCount = Math.ceil(totalCount / PAGE_SIZE);
 
   return (
     <AdminShell>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">الطلبات</h1>
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
-        >
-          <option value="all">الكل</option>
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="mt-6 overflow-x-auto rounded-xl border border-border bg-card">
-        <table className="w-full text-sm">
-          <thead className="border-b border-border text-left text-xs text-muted-foreground">
-            <tr>
-              <th className="p-3">رقم</th>
-              <th className="p-3">العميل</th>
-              <th className="p-3">الهاتف</th>
-              <th className="p-3">المبلغ</th>
-              <th className="p-3">الحالة</th>
-              <th className="p-3">التاريخ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((o) => (
-              <tr
-                key={o.id}
-                onClick={() => openOrder(o)}
-                className="cursor-pointer border-b border-border/50 hover:bg-muted/40"
-              >
-                <td className="p-3 font-mono text-xs">{o.order_number}</td>
-                <td className="p-3">{o.customer_name}</td>
-                <td className="p-3 text-xs">{o.customer_phone}</td>
-                <td className="p-3">
-                  {Number(o.total).toFixed(2)} {o.currency}
-                </td>
-                <td className="p-3">
-                  <StatusBadge status={o.status} />
-                </td>
-                <td className="p-3 text-xs text-muted-foreground">
-                  {new Date(o.created_at).toLocaleString("ar")}
-                </td>
-              </tr>
-            ))}
-            {orders.length === 0 && (
-              <tr>
-                <td colSpan={6} className="p-6 text-center text-sm text-muted-foreground">
-                  لا توجد طلبات.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {selected && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-          onClick={() => setSelected(null)}
-        >
-          <div
-            className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-xl bg-card p-6"
-            onClick={(e) => e.stopPropagation()}
+      {/* Header */}
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold text-foreground">الطلبات</h1>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {totalCount} طلب · صفحة {page + 1} من {Math.max(pageCount, 1)}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => exportCsv(orders)}
+            className="flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted"
           >
-            <div className="flex items-start justify-between">
-              <div>
-                <h2 className="text-lg font-semibold">طلب {selected.order_number}</h2>
-                <p className="text-xs text-muted-foreground">
-                  {new Date(selected.created_at).toLocaleString("ar")}
-                </p>
-              </div>
-              <button onClick={() => setSelected(null)} className="text-2xl leading-none">
-                ×
-              </button>
-            </div>
+            <Download className="h-3.5 w-3.5" /> تصدير CSV
+          </button>
+          <Link to="/admin/create-order" className="rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground hover:opacity-90">
+            + طلب جديد
+          </Link>
+        </div>
+      </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-              <Field label="العميل" value={selected.customer_name} />
-              <Field label="الهاتف" value={selected.customer_phone} />
-              <Field label="الإيميل" value={selected.customer_email} />
-              <Field label="طريقة الدفع" value={selected.payment_method} />
-            </div>
+      {/* Quick filters */}
+      <div className="mb-3 flex flex-wrap gap-2">
+        {([
+          ["overdue", "متأخرة (>3 أيام)", "border-red-200 text-red-700"],
+          ["payment_failed", "فشل الدفع", "border-orange-200 text-orange-700"],
+          ["no_shipment", "لم تُشحن بعد", "border-amber-200 text-amber-700"],
+          ["needs_review", "قيد المراجعة", "border-blue-200 text-blue-700"],
+        ] as const).map(([k, l, c]) => (
+          <button
+            key={k}
+            onClick={() => setQuickFilter(quickFilter === k ? null : k)}
+            className={`flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] transition ${
+              quickFilter === k ? "bg-primary border-primary text-primary-foreground" : `bg-card ${c} hover:bg-muted`
+            }`}
+          >
+            <AlertTriangle className="h-3 w-3" /> {l}
+          </button>
+        ))}
+      </div>
 
-            <div className="mt-4 rounded-md bg-muted/40 p-3 text-sm">
-              <div className="text-xs text-muted-foreground">عنوان الشحن</div>
-              <div className="mt-1">
-                {Object.values(selected.shipping_address ?? {}).filter(Boolean).join(" — ")}
-              </div>
-              {selected.shipping_lat && (
-                <a
-                  href={`https://maps.google.com/?q=${selected.shipping_lat},${selected.shipping_lng}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-1 inline-block text-xs text-primary underline"
-                >
-                  فتح الموقع في الخريطة
-                </a>
-              )}
-            </div>
+      {/* Search + filter toggle */}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <div className="relative flex-1 min-w-[260px]">
+          <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="بحث برقم الطلب، الاسم، الجوال، البريد، رقم التتبع..."
+            className="w-full rounded-md border border-border bg-background py-2 pr-9 pl-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+        </div>
+        <button
+          onClick={() => setShowFilters((s) => !s)}
+          className="flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-2 text-xs hover:bg-muted"
+        >
+          <Filter className="h-3.5 w-3.5" />
+          فلاتر
+          {activeFiltersCount > 0 && (
+            <span className="rounded-full bg-primary px-1.5 text-[10px] text-primary-foreground">{activeFiltersCount}</span>
+          )}
+          <ChevronDown className={`h-3 w-3 transition ${showFilters ? "rotate-180" : ""}`} />
+        </button>
+        {activeFiltersCount > 0 && (
+          <button onClick={clearFilters} className="flex items-center gap-1 rounded-md border border-border px-3 py-2 text-xs text-muted-foreground hover:bg-muted">
+            <X className="h-3 w-3" /> مسح
+          </button>
+        )}
+      </div>
 
-            <div className="mt-4">
-              <div className="mb-2 text-xs font-medium text-muted-foreground">المنتجات</div>
-              <div className="space-y-2">
-                {items.map((it) => (
-                  <div key={it.id} className="flex items-center gap-3 rounded-md border border-border p-2">
-                    {it.image_url && (
-                      <img src={it.image_url} alt="" className="h-12 w-12 rounded object-cover" />
-                    )}
-                    <div className="flex-1">
-                      <div className="text-sm">{it.product_name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {it.size} / {it.color} × {it.qty}
-                      </div>
-                    </div>
-                    <div className="text-sm">{Number(it.line_total).toFixed(2)}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-4 space-y-1 rounded-md bg-muted/40 p-3 text-sm">
-              <Row label="المجموع الفرعي" value={Number(selected.subtotal).toFixed(2)} />
-              <Row label="الشحن" value={Number(selected.shipping_fee).toFixed(2)} />
-              <Row label="الضريبة" value={Number(selected.tax).toFixed(2)} />
-              <Row label="الإجمالي" value={`${Number(selected.total).toFixed(2)} ${selected.currency}`} bold />
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              <select
-                value={selected.status}
-                onChange={(e) => updateStatus(selected.id, e.target.value)}
-                className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
-              >
-                {STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="text"
-                placeholder="رقم التتبع"
-                defaultValue={selected.tracking_number ?? ""}
-                onBlur={(e) => updateTracking(selected.id, e.target.value)}
-                className="flex-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm"
-              />
-            </div>
+      {/* Advanced filter panel */}
+      {showFilters && (
+        <div className="mb-3 grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Select label="حالة الطلب" value={statusF} onChange={setStatusF} options={[["all", "الكل"], ...ORDER_STATUSES.map((s) => [s, ORDER_STATUS_LABEL[s]] as [string, string])]} />
+          <Select label="حالة الدفع" value={paymentF} onChange={setPaymentF} options={[["all", "الكل"], ...PAYMENT_STATUSES.map((s) => [s, PAYMENT_STATUS_LABEL[s]] as [string, string])]} />
+          <Select label="حالة الشحن" value={shippingF} onChange={setShippingF} options={[["all", "الكل"], ...SHIPPING_STATUSES.map((s) => [s, SHIPPING_STATUS_LABEL[s]] as [string, string])]} />
+          <Select label="شركة الشحن" value={carrierF} onChange={setCarrierF} options={[["all", "الكل"], ...SHIPPING_CARRIERS.map((c) => [c, c] as [string, string])]} />
+          <Select label="طريقة الدفع" value={paymentMethodF} onChange={setPaymentMethodF} options={[["all", "الكل"], ["card", "بطاقة"], ["cod", "عند الاستلام"], ["bank_transfer", "تحويل بنكي"], ["apple_pay", "Apple Pay"]]} />
+          <Select label="مصدر الطلب" value={sourceF} onChange={setSourceF} options={[["all", "الكل"], ["web", "ويب"], ["mobile", "موبايل"], ["admin", "أدمن"], ["whatsapp", "واتساب"]]} />
+          <label className="block text-xs">
+            <span className="mb-1 block text-muted-foreground">المدينة</span>
+            <input value={cityF} onChange={(e) => setCityF(e.target.value)} placeholder="مثال: الرياض"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="block text-xs">
+              <span className="mb-1 block text-muted-foreground">من</span>
+              <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
+                className="w-full rounded-md border border-border bg-background px-2 py-2 text-xs" />
+            </label>
+            <label className="block text-xs">
+              <span className="mb-1 block text-muted-foreground">إلى</span>
+              <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
+                className="w-full rounded-md border border-border bg-background px-2 py-2 text-xs" />
+            </label>
           </div>
+        </div>
+      )}
+
+      {/* Bulk actions bar */}
+      {selected.size > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
+          <span className="text-xs font-medium text-primary">{selected.size} محدد</span>
+          <select value={bulkAction} onChange={(e) => setBulkAction(e.target.value)}
+            className="rounded-md border border-border bg-background px-2 py-1 text-xs">
+            <option value="">— اختر إجراء —</option>
+            <option value="export">تصدير المحدد (CSV)</option>
+            <option value="print_invoices">طباعة فواتير</option>
+            <option value="print_awb">طباعة بوالص الشحن</option>
+            <option value="mark_reviewed">تأشير "تمت المراجعة"</option>
+            <optgroup label="تغيير الحالة">
+              {ORDER_STATUSES.map((s) => (
+                <option key={s} value={`status:${s}`}>إلى: {ORDER_STATUS_LABEL[s]}</option>
+              ))}
+            </optgroup>
+          </select>
+          <button onClick={runBulk} disabled={!bulkAction}
+            className="rounded-md bg-primary px-3 py-1 text-xs text-primary-foreground disabled:opacity-50">
+            تنفيذ
+          </button>
+          <button onClick={() => setSelected(new Set())} className="rounded-md border border-border px-2 py-1 text-xs">
+            إلغاء التحديد
+          </button>
+        </div>
+      )}
+
+      {/* Table */}
+      <div className="overflow-x-auto rounded-xl border border-border bg-card">
+        {loading ? (
+          <p className="p-8 text-center text-sm text-muted-foreground">جاري التحميل...</p>
+        ) : orders.length === 0 ? (
+          <p className="p-8 text-center text-sm text-muted-foreground">لا توجد طلبات تطابق الفلاتر</p>
+        ) : (
+          <table className="w-full text-sm">
+            <thead className="border-b border-border bg-muted/30 text-right text-[11px] text-muted-foreground">
+              <tr>
+                <th className="p-2.5 w-8">
+                  <input type="checkbox" checked={selected.size === orders.length} onChange={toggleAll} />
+                </th>
+                <th className="p-2.5">رقم الطلب</th>
+                <th className="p-2.5">التاريخ</th>
+                <th className="p-2.5">العميل</th>
+                <th className="p-2.5">المدينة</th>
+                <th className="p-2.5">الإجمالي</th>
+                <th className="p-2.5">الدفع</th>
+                <th className="p-2.5">الطلب</th>
+                <th className="p-2.5">الشحن</th>
+                <th className="p-2.5">شركة/تتبع</th>
+                <th className="p-2.5">المصدر</th>
+                <th className="p-2.5"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((o) => {
+                const isOverdue = o.status === "pending" && Date.now() - new Date(o.created_at).getTime() > 3 * 86400000;
+                const wa = o.customer_phone?.replace(/\D/g, "");
+                return (
+                  <tr key={o.id} className={`border-b border-border/50 last:border-0 align-top ${selected.has(o.id) ? "bg-primary/5" : "hover:bg-muted/30"}`}>
+                    <td className="p-2.5">
+                      <input type="checkbox" checked={selected.has(o.id)} onChange={() => toggleOne(o.id)} />
+                    </td>
+                    <td className="p-2.5">
+                      <Link to="/admin/orders/$id" params={{ id: o.id }} className="font-mono text-xs font-medium text-primary hover:underline">
+                        {o.order_number}
+                      </Link>
+                      {isOverdue && <div className="mt-0.5 flex items-center gap-1 text-[10px] text-red-600"><AlertTriangle className="h-3 w-3" /> متأخر</div>}
+                    </td>
+                    <td className="p-2.5 text-[11px] text-muted-foreground whitespace-nowrap">
+                      {new Date(o.created_at).toLocaleDateString("ar", { day: "numeric", month: "short" })}
+                      <div className="text-[10px]">{new Date(o.created_at).toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit" })}</div>
+                    </td>
+                    <td className="p-2.5">
+                      <div className="text-xs font-medium text-foreground">{o.customer_name}</div>
+                      <div className="text-[11px] text-muted-foreground">{o.customer_phone}</div>
+                    </td>
+                    <td className="p-2.5 text-[11px]">{o.shipping_address?.city ?? "—"}</td>
+                    <td className="p-2.5 text-xs font-semibold whitespace-nowrap">{Number(o.total).toLocaleString("ar-SA")} {o.currency}</td>
+                    <td className="p-2.5"><Pill label={PAYMENT_STATUS_LABEL[o.payment_status] ?? o.payment_status} color={PAYMENT_STATUS_COLOR[o.payment_status] ?? "bg-gray-100"} /></td>
+                    <td className="p-2.5"><Pill label={ORDER_STATUS_LABEL[o.status] ?? o.status} color={ORDER_STATUS_COLOR[o.status] ?? "bg-gray-100"} /></td>
+                    <td className="p-2.5"><Pill label={SHIPPING_STATUS_LABEL[o.shipping_status] ?? o.shipping_status} color={SHIPPING_STATUS_COLOR[o.shipping_status] ?? "bg-gray-100"} /></td>
+                    <td className="p-2.5 text-[11px]">
+                      {o.shipping_carrier && <div className="font-medium">{o.shipping_carrier}</div>}
+                      {o.tracking_number && (
+                        <div className="font-mono text-[10px] text-muted-foreground">{o.tracking_number}</div>
+                      )}
+                      {!o.shipping_carrier && !o.tracking_number && <span className="text-muted-foreground">—</span>}
+                    </td>
+                    <td className="p-2.5 text-[11px] text-muted-foreground">{ORDER_SOURCE_LABEL[o.source] ?? o.source}</td>
+                    <td className="p-2.5">
+                      <div className="flex items-center gap-0.5">
+                        <Link to="/admin/orders/$id" params={{ id: o.id }} title="عرض"
+                          className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+                          <Eye className="h-3.5 w-3.5" />
+                        </Link>
+                        <button onClick={() => navigator.clipboard.writeText(o.order_number)} title="نسخ الرقم"
+                          className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+                          <Copy className="h-3.5 w-3.5" />
+                        </button>
+                        <a href={`/admin/orders/${o.id}/invoice`} target="_blank" rel="noreferrer" title="طباعة الفاتورة"
+                          className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+                          <Printer className="h-3.5 w-3.5" />
+                        </a>
+                        {wa && (
+                          <a href={`https://wa.me/${wa}?text=${encodeURIComponent(`مرحباً، بخصوص طلبك ${o.order_number}`)}`}
+                            target="_blank" rel="noreferrer" title="واتساب"
+                            className="rounded p-1.5 text-green-600 hover:bg-green-50">
+                            <MessageCircle className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+                        {o.customer_email && (
+                          <a href={`mailto:${o.customer_email}?subject=${encodeURIComponent("طلبك " + o.order_number)}`}
+                            title="إيميل" className="rounded p-1.5 text-muted-foreground hover:bg-muted">
+                            <Mail className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+                        {o.shipping_address?.lat && o.shipping_address?.lng && (
+                          <a href={`https://www.google.com/maps?q=${o.shipping_address.lat},${o.shipping_address.lng}`}
+                            target="_blank" rel="noreferrer" title="موقع العميل"
+                            className="rounded p-1.5 text-blue-600 hover:bg-blue-50">
+                            <MapPin className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* Pagination */}
+      {pageCount > 1 && (
+        <div className="mt-4 flex items-center justify-center gap-2">
+          <button disabled={page === 0} onClick={() => setPage((p) => p - 1)}
+            className="rounded-md border border-border px-3 py-1.5 text-xs disabled:opacity-40">السابق</button>
+          <span className="text-xs text-muted-foreground">صفحة {page + 1} / {pageCount}</span>
+          <button disabled={page + 1 >= pageCount} onClick={() => setPage((p) => p + 1)}
+            className="rounded-md border border-border px-3 py-1.5 text-xs disabled:opacity-40">التالي</button>
         </div>
       )}
     </AdminShell>
   );
 }
 
-function Field({ label, value }: { label: string; value: string }) {
+function Select({
+  label, value, onChange, options,
+}: {
+  label: string; value: string; onChange: (v: string) => void; options: [string, string][];
+}) {
   return (
-    <div>
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div>{value}</div>
-    </div>
-  );
-}
-function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
-  return (
-    <div className={`flex justify-between ${bold ? "font-semibold" : ""}`}>
-      <span>{label}</span>
-      <span>{value}</span>
-    </div>
+    <label className="block text-xs">
+      <span className="mb-1 block text-muted-foreground">{label}</span>
+      <select value={value} onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-md border border-border bg-background px-2 py-2 text-sm">
+        {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+      </select>
+    </label>
   );
 }
