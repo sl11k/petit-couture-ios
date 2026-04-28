@@ -45,6 +45,7 @@ import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAbandonedRouteImport } from './routes/admin.abandoned'
 import { Route as AdminProductsIdRouteImport } from './routes/admin.products.$id'
 import { Route as AdminOrdersIdRouteImport } from './routes/admin.orders.$id'
+import { Route as AdminCustomersIdRouteImport } from './routes/admin.customers.$id'
 
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
@@ -227,6 +228,11 @@ const AdminOrdersIdRoute = AdminOrdersIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AdminOrdersRoute,
 } as any)
+const AdminCustomersIdRoute = AdminCustomersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminCustomersRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -244,7 +250,7 @@ export interface FileRoutesByFullPath {
   '/admin/content': typeof AdminContentRoute
   '/admin/coupons': typeof AdminCouponsRoute
   '/admin/create-order': typeof AdminCreateOrderRoute
-  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/help': typeof AdminHelpRoute
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/inventory': typeof AdminInventoryRoute
@@ -263,6 +269,7 @@ export interface FileRoutesByFullPath {
   '/debug/analytics': typeof DebugAnalyticsRoute
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/wishlist/share': typeof WishlistShareRoute
+  '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
 }
@@ -282,7 +289,7 @@ export interface FileRoutesByTo {
   '/admin/content': typeof AdminContentRoute
   '/admin/coupons': typeof AdminCouponsRoute
   '/admin/create-order': typeof AdminCreateOrderRoute
-  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/help': typeof AdminHelpRoute
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/inventory': typeof AdminInventoryRoute
@@ -301,6 +308,7 @@ export interface FileRoutesByTo {
   '/debug/analytics': typeof DebugAnalyticsRoute
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/wishlist/share': typeof WishlistShareRoute
+  '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
 }
@@ -321,7 +329,7 @@ export interface FileRoutesById {
   '/admin/content': typeof AdminContentRoute
   '/admin/coupons': typeof AdminCouponsRoute
   '/admin/create-order': typeof AdminCreateOrderRoute
-  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/help': typeof AdminHelpRoute
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/inventory': typeof AdminInventoryRoute
@@ -340,6 +348,7 @@ export interface FileRoutesById {
   '/debug/analytics': typeof DebugAnalyticsRoute
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/wishlist/share': typeof WishlistShareRoute
+  '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
 }
@@ -380,6 +389,7 @@ export interface FileRouteTypes {
     | '/debug/analytics'
     | '/order-confirmation/$orderNumber'
     | '/wishlist/share'
+    | '/admin/customers/$id'
     | '/admin/orders/$id'
     | '/admin/products/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -418,6 +428,7 @@ export interface FileRouteTypes {
     | '/debug/analytics'
     | '/order-confirmation/$orderNumber'
     | '/wishlist/share'
+    | '/admin/customers/$id'
     | '/admin/orders/$id'
     | '/admin/products/$id'
   id:
@@ -456,6 +467,7 @@ export interface FileRouteTypes {
     | '/debug/analytics'
     | '/order-confirmation/$orderNumber'
     | '/wishlist/share'
+    | '/admin/customers/$id'
     | '/admin/orders/$id'
     | '/admin/products/$id'
   fileRoutesById: FileRoutesById
@@ -727,8 +739,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOrdersIdRouteImport
       parentRoute: typeof AdminOrdersRoute
     }
+    '/admin/customers/$id': {
+      id: '/admin/customers/$id'
+      path: '/$id'
+      fullPath: '/admin/customers/$id'
+      preLoaderRoute: typeof AdminCustomersIdRouteImport
+      parentRoute: typeof AdminCustomersRoute
+    }
   }
 }
+
+interface AdminCustomersRouteChildren {
+  AdminCustomersIdRoute: typeof AdminCustomersIdRoute
+}
+
+const AdminCustomersRouteChildren: AdminCustomersRouteChildren = {
+  AdminCustomersIdRoute: AdminCustomersIdRoute,
+}
+
+const AdminCustomersRouteWithChildren = AdminCustomersRoute._addFileChildren(
+  AdminCustomersRouteChildren,
+)
 
 interface AdminOrdersRouteChildren {
   AdminOrdersIdRoute: typeof AdminOrdersIdRoute
@@ -763,7 +794,7 @@ interface AdminRouteChildren {
   AdminContentRoute: typeof AdminContentRoute
   AdminCouponsRoute: typeof AdminCouponsRoute
   AdminCreateOrderRoute: typeof AdminCreateOrderRoute
-  AdminCustomersRoute: typeof AdminCustomersRoute
+  AdminCustomersRoute: typeof AdminCustomersRouteWithChildren
   AdminHelpRoute: typeof AdminHelpRoute
   AdminIntegrationsRoute: typeof AdminIntegrationsRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
@@ -789,7 +820,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminContentRoute: AdminContentRoute,
   AdminCouponsRoute: AdminCouponsRoute,
   AdminCreateOrderRoute: AdminCreateOrderRoute,
-  AdminCustomersRoute: AdminCustomersRoute,
+  AdminCustomersRoute: AdminCustomersRouteWithChildren,
   AdminHelpRoute: AdminHelpRoute,
   AdminIntegrationsRoute: AdminIntegrationsRoute,
   AdminInventoryRoute: AdminInventoryRoute,
