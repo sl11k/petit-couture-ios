@@ -48,7 +48,7 @@ function OrderDetail() {
   useEffect(() => { void load(); }, [id]);
 
   async function patch(updates: Record<string, any>, eventName?: string) {
-    const { error } = await supabase.from("orders").update(updates).eq("id", id);
+    const { error } = await supabase.from("orders").update(updates as any).eq("id", id);
     if (error) return alert(error.message);
     if (eventName) await logOrderEvent(id, eventName, updates);
     await load();
