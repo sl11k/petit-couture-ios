@@ -507,18 +507,29 @@ export type Database = {
       orders: {
         Row: {
           assigned_to: string | null
+          auto_cancel_after_hours: number | null
+          bank_transfer_proof_url: string | null
+          bank_transfer_reference: string | null
+          bank_transfer_reviewed_at: string | null
           created_at: string
           created_by_admin: boolean
           currency: string
           customer_email: string
           customer_name: string
           customer_phone: string
+          expires_at: string | null
           id: string
           idempotency_key: string | null
           internal_notes: Json
           invoice_number: string | null
+          last_payment_attempt_at: string | null
+          last_stage: string | null
           notes: string | null
           order_number: string
+          payment_attempts: number
+          payment_failure_reason: string | null
+          payment_link: string | null
+          payment_link_sent_at: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_status: string
           shipping_address: Json
@@ -529,6 +540,8 @@ export type Database = {
           shipping_status: string
           source: string
           status: Database["public"]["Enums"]["order_status"]
+          stock_released_at: string | null
+          stock_reserved: boolean
           subtotal: number
           tax: number
           total: number
@@ -539,18 +552,29 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          auto_cancel_after_hours?: number | null
+          bank_transfer_proof_url?: string | null
+          bank_transfer_reference?: string | null
+          bank_transfer_reviewed_at?: string | null
           created_at?: string
           created_by_admin?: boolean
           currency?: string
           customer_email: string
           customer_name: string
           customer_phone: string
+          expires_at?: string | null
           id?: string
           idempotency_key?: string | null
           internal_notes?: Json
           invoice_number?: string | null
+          last_payment_attempt_at?: string | null
+          last_stage?: string | null
           notes?: string | null
           order_number?: string
+          payment_attempts?: number
+          payment_failure_reason?: string | null
+          payment_link?: string | null
+          payment_link_sent_at?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_status?: string
           shipping_address?: Json
@@ -561,6 +585,8 @@ export type Database = {
           shipping_status?: string
           source?: string
           status?: Database["public"]["Enums"]["order_status"]
+          stock_released_at?: string | null
+          stock_reserved?: boolean
           subtotal?: number
           tax?: number
           total?: number
@@ -571,18 +597,29 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          auto_cancel_after_hours?: number | null
+          bank_transfer_proof_url?: string | null
+          bank_transfer_reference?: string | null
+          bank_transfer_reviewed_at?: string | null
           created_at?: string
           created_by_admin?: boolean
           currency?: string
           customer_email?: string
           customer_name?: string
           customer_phone?: string
+          expires_at?: string | null
           id?: string
           idempotency_key?: string | null
           internal_notes?: Json
           invoice_number?: string | null
+          last_payment_attempt_at?: string | null
+          last_stage?: string | null
           notes?: string | null
           order_number?: string
+          payment_attempts?: number
+          payment_failure_reason?: string | null
+          payment_link?: string | null
+          payment_link_sent_at?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_status?: string
           shipping_address?: Json
@@ -593,6 +630,8 @@ export type Database = {
           shipping_status?: string
           source?: string
           status?: Database["public"]["Enums"]["order_status"]
+          stock_released_at?: string | null
+          stock_reserved?: boolean
           subtotal?: number
           tax?: number
           total?: number
@@ -1058,6 +1097,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      auto_cancel_expired_orders: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1066,6 +1106,10 @@ export type Database = {
         Returns: boolean
       }
       refresh_product_sales_counts: { Args: never; Returns: undefined }
+      release_expired_order_stock: {
+        Args: { _order_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "staff" | "customer" | "manager" | "viewer"
