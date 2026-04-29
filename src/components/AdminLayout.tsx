@@ -285,6 +285,7 @@ export function AdminShell({ children }: { children?: ReactNode }) {
                   <li key={item.to}>
                     <Link
                       to={item.to}
+                      aria-current={active ? "page" : undefined}
                       className={`group flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors duration-150 ${
                         active
                           ? "bg-primary text-primary-foreground shadow-sm"
@@ -382,7 +383,9 @@ export function AdminShell({ children }: { children?: ReactNode }) {
           )}
         </header>
 
-        <main className="flex-1 overflow-x-auto p-4 lg:p-6">{children ?? <Outlet />}</main>
+        <main key={location.pathname} className="flex-1 overflow-x-auto p-4 lg:p-6 animate-in fade-in duration-200">
+          {children ?? <Outlet />}
+        </main>
       </div>
     </div>
   );
