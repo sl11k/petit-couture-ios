@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Activity, Gauge, AlertTriangle, Smartphone, Monitor } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PERF_BUDGETS } from "@/lib/perf";
+import { AdminShell } from "@/components/AdminLayout";
 
 export const Route = createFileRoute("/admin/performance")({
   component: PerfPage,
@@ -56,6 +57,7 @@ function PerfPage() {
   const longTasks = rows.filter((r) => r.metric === "LongTask");
 
   return (
+    <AdminShell>
     <div className="p-6 space-y-6" dir="rtl">
       <header className="flex items-center justify-between flex-wrap gap-3">
         <div>
@@ -121,5 +123,6 @@ function PerfPage() {
         </>
       )}
     </div>
+    </AdminShell>
   );
 }

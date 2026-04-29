@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/state/AuthContext";
 import { sendMessage } from "@/lib/messaging";
+import { AdminShell } from "@/components/AdminLayout";
 import {
   MessageSquare, Send, Phone, Search, Settings as SettingsIcon, DollarSign,
   Plus, Trash2, Power, PowerOff, RefreshCw, Archive, CheckCircle, XCircle,
@@ -18,6 +19,7 @@ type Tab = "inbox" | "templates" | "providers" | "costs";
 function MessagesPage() {
   const [tab, setTab] = useState<Tab>("inbox");
   return (
+    <AdminShell>
     <div className="space-y-4">
       <div>
         <h1 className="text-xl font-semibold text-foreground">الرسائل · WhatsApp & SMS</h1>
@@ -51,6 +53,7 @@ function MessagesPage() {
       {tab === "providers" && <ProvidersTab />}
       {tab === "costs" && <CostsTab />}
     </div>
+    </AdminShell>
   );
 }
 

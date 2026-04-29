@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/state/AuthContext";
+import { AdminShell } from "@/components/AdminLayout";
 import {
   MessageSquare, Send, Search, Filter, RefreshCw, Lock,
   CheckCircle, Archive, AlertCircle, User as UserIcon, Tag,
@@ -18,6 +19,7 @@ function SupportPage() {
   const [tab, setTab] = useState<Tab>("tickets");
 
   return (
+    <AdminShell>
     <div className="space-y-4">
       <div>
         <h1 className="text-xl font-semibold">خدمة العملاء</h1>
@@ -45,6 +47,7 @@ function SupportPage() {
       {tab === "canned" && <CannedTab />}
       {tab === "faq" && <FaqTab />}
     </div>
+    </AdminShell>
   );
 }
 
