@@ -941,6 +941,66 @@ export type Database = {
         }
         Relationships: []
       }
+      error_logs: {
+        Row: {
+          category: string
+          code: string
+          context: Json
+          created_at: string
+          id: string
+          ip_address: string | null
+          message_admin: string
+          message_customer: string | null
+          order_id: string | null
+          resolved: boolean
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          suggested_action: string | null
+          url: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category?: string
+          code: string
+          context?: Json
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          message_admin: string
+          message_customer?: string | null
+          order_id?: string | null
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          suggested_action?: string | null
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          code?: string
+          context?: Json
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          message_admin?: string
+          message_customer?: string | null
+          order_id?: string | null
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          suggested_action?: string | null
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       failed_login_attempts: {
         Row: {
           created_at: string
@@ -1007,6 +1067,36 @@ export type Database = {
           question_en?: string | null
           sort_order?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      idempotency_keys: {
+        Row: {
+          created_at: string
+          expires_at: string
+          key: string
+          result: Json | null
+          scope: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          key: string
+          result?: Json | null
+          scope: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          key?: string
+          result?: Json | null
+          scope?: string
+          status?: string
+          user_id?: string | null
         }
         Relationships: []
       }
