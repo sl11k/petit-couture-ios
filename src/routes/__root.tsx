@@ -94,6 +94,7 @@ function RootComponent() {
               <Outlet />
               <WishlistBanner />
               <WhatsAppButton />
+              <CookieBanner />
               <Toaster />
             </AddressProvider>
           </BagProvider>
