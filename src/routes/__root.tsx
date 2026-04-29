@@ -46,26 +46,14 @@ function NotFoundComponent() {
 }
 
 function SkipLink() {
-  // Reads from i18n if available, otherwise falls back to Arabic.
-  const { t } = useLanguageSafe();
   return (
     <a
       href="#main-content"
       className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:start-3 focus:z-[100] focus:rounded-full focus:bg-foreground focus:text-background focus:px-5 focus:h-11 focus:inline-flex focus:items-center focus:tracking-soft focus:text-sm focus:shadow-elegant focus:outline-none focus:ring-2 focus:ring-gold/60"
     >
-      {t.common.skipToContent}
+      تخطّي إلى المحتوى / Skip to content
     </a>
   );
-}
-
-function useLanguageSafe() {
-  // Inline tiny wrapper to avoid throwing if mounted outside provider in edge cases.
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-    return useLanguage();
-  } catch {
-    return { t: { common: { skipToContent: "تخطّي إلى المحتوى" } } } as ReturnType<typeof useLanguage>;
-  }
 }
 
 export const Route = createRootRoute({
