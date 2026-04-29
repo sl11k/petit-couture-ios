@@ -337,10 +337,10 @@ function ProductEditorPage() {
         </div>
         <div className="flex items-center gap-2">
           {!isNew && form.slug && (
-            <Link to="/product/$slug" params={{ slug: form.slug }} target="_blank"
+            <a href={`/product/${form.slug}`} target="_blank" rel="noreferrer"
               className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-sm hover:bg-accent">
               <Eye className="h-4 w-4" /> معاينة
-            </Link>
+            </a>
           )}
           {!isNew && canManage && (
             <button onClick={deleteProduct} className="inline-flex items-center gap-1.5 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive hover:bg-destructive/20">
