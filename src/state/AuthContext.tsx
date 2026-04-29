@@ -42,22 +42,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      // Log failed attempt (best-effort, never blocks)
-      try {
-        const ua = typeof navigator !== "undefined" ? navigator.userAgent : null;
-        await supabase.from("failed_login_attempts").insert({
-          email, user_agent: ua, reason: error.message, metadata: { code: (error as any).code ?? null },
-        });
-      } catch { /* ignore */ }
-      throw error;
-    }
-    // Log successful login
+    // Check lockout before attempting
     try {
+      const { checkLockout, registerFailedLogin, recordSession } = await import("@/lib/security");
+      const lock = await checkLockout(email);
+      if (lock.locked) {
+        const until = lock.locked_until ? new Date(lock.locked_until).toLocaleString("ar") : "";
+        throw new Error(`الحساب مقفل مؤقتًا بسبب محاولات متكررة. حتى: ${until}`);
+      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        try {
+          const ua = typeof navigator !== "undefined" ? navigator.userAgent : null;
+          await supabase.from("failed_login_attempts").insert({
+            email, user_agent: ua, reason: error.message, metadata: { code: (error as any).code ?? null },
+          });
+          await registerFailedLogin(email);
+        } catch { /* ignore */ }
+        throw error;
+      }
+      // Success: log + record session
       const { logAudit } = await import("@/lib/audit");
       await logAudit({ action: "auth.login", entity: "user", metadata: { email } });
-    } catch { /* ignore */ }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) await recordSession(user.id);
+    } catch (e) {
+      throw e;
+    }
   }, []);
 
   const signUp = useCallback(async (email: string, password: string) => {
