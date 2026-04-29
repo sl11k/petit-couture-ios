@@ -147,80 +147,144 @@ export function HomeScreen() {
         <main className="pb-[120px]">
           {/* Banner slider (dynamic) */}
           <section className="px-5 pt-5">
-            <div className="relative overflow-hidden rounded-[28px] bg-pastel-peach">
-              {currentBanner ? (
-                <a href={currentBanner.cta_url ?? "#"} className="block">
-                  <img
-                    key={currentBanner.id}
-                    src={currentBanner.image_url}
-                    alt={ar ? (currentBanner.title_ar ?? "") : (currentBanner.title_en ?? "")}
-                    className="w-full h-[440px] object-cover animate-in fade-in duration-500"
-                    width={1280}
-                    height={1280}
-                    loading="eager"
-                    decoding="sync"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/45 via-transparent to-transparent pointer-events-none" />
-                  <div className="absolute inset-0 flex flex-col items-center justify-end pb-7 px-6 text-center">
-                    {(ar ? currentBanner.eyebrow_ar : currentBanner.eyebrow_en) && (
-                      <span className="text-[10.5px] tracking-luxury text-foreground/75">
-                        {ar ? currentBanner.eyebrow_ar : currentBanner.eyebrow_en}
-                      </span>
-                    )}
-                    {(ar ? currentBanner.title_ar : currentBanner.title_en) && (
-                      <h1 className="mt-2 font-serif text-[56px] leading-[0.95] text-foreground">
-                        {ar ? currentBanner.title_ar : currentBanner.title_en}
-                      </h1>
-                    )}
-                    {(ar ? currentBanner.subtitle_ar : currentBanner.subtitle_en) && (
-                      <p className="mt-1 font-serif italic text-[24px] text-foreground/85">
-                        {ar ? currentBanner.subtitle_ar : currentBanner.subtitle_en}
-                      </p>
-                    )}
-                    {(ar ? currentBanner.cta_label_ar : currentBanner.cta_label_en) && (
-                      <span className="mt-5 inline-flex items-center justify-center h-[52px] px-10 rounded-full bg-background text-foreground text-[14px] font-medium tracking-soft shadow-soft">
-                        {ar ? currentBanner.cta_label_ar : currentBanner.cta_label_en}
-                      </span>
-                    )}
-                  </div>
-                </a>
-              ) : (
-                // Fallback hero (no banners configured yet)
-                <div>
-                  <img src={hero} alt="Le Petit Paradis" className="w-full h-[440px] object-cover" loading="eager" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/45 via-transparent to-transparent" />
-                  <div className="absolute inset-0 flex flex-col items-center justify-end pb-7 px-6 text-center">
-                    <h1 className="mt-2 font-serif text-[56px] leading-[0.95] text-foreground">Le Petit Paradis</h1>
-                    <p className="mt-1 font-serif italic text-[22px] text-foreground/85">{ar ? "أناقة الأطفال" : "Children's elegance"}</p>
-                  </div>
+            {displayMode === "slider" && banners.length > 0 ? (
+              /* ---- Swipeable horizontal slider ---- */
+              <div className="relative">
+                <div
+                  className="flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar -mx-1 px-1"
+                  style={{ scrollbarWidth: "none" }}
+                  onScroll={(e) => {
+                    const el = e.currentTarget;
+                    const w = el.clientWidth;
+                    setBannerIdx(Math.round(el.scrollLeft / w));
+                  }}
+                >
+                  {banners.map((bn) => (
+                    <a
+                      key={bn.id}
+                      href={bn.cta_url ?? "#"}
+                      className="relative shrink-0 w-full snap-center overflow-hidden rounded-[28px] bg-pastel-peach"
+                    >
+                      <img
+                        src={bn.image_url}
+                        alt={ar ? (bn.title_ar ?? "") : (bn.title_en ?? "")}
+                        className="w-full h-[440px] object-cover"
+                        width={1280}
+                        height={1280}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/45 via-transparent to-transparent pointer-events-none" />
+                      <div className="absolute inset-0 flex flex-col items-center justify-end pb-7 px-6 text-center">
+                        {(ar ? bn.eyebrow_ar : bn.eyebrow_en) && (
+                          <span className="text-[10.5px] tracking-luxury text-foreground/75">
+                            {ar ? bn.eyebrow_ar : bn.eyebrow_en}
+                          </span>
+                        )}
+                        {(ar ? bn.title_ar : bn.title_en) && (
+                          <h1 className="mt-2 font-serif text-[56px] leading-[0.95] text-foreground">
+                            {ar ? bn.title_ar : bn.title_en}
+                          </h1>
+                        )}
+                        {(ar ? bn.subtitle_ar : bn.subtitle_en) && (
+                          <p className="mt-1 font-serif italic text-[24px] text-foreground/85">
+                            {ar ? bn.subtitle_ar : bn.subtitle_en}
+                          </p>
+                        )}
+                        {(ar ? bn.cta_label_ar : bn.cta_label_en) && (
+                          <span className="mt-5 inline-flex items-center justify-center h-[52px] px-10 rounded-full bg-background text-foreground text-[14px] font-medium tracking-soft shadow-soft">
+                            {ar ? bn.cta_label_ar : bn.cta_label_en}
+                          </span>
+                        )}
+                      </div>
+                    </a>
+                  ))}
                 </div>
-              )}
-
-              {/* Banner controls */}
-              {banners.length > 1 && (
-                <>
-                  <button
-                    aria-label="Previous"
-                    onClick={() => setBannerIdx((i) => (i - 1 + banners.length) % banners.length)}
-                    className="absolute top-1/2 -translate-y-1/2 start-2 h-9 w-9 rounded-full bg-background/80 backdrop-blur grid place-items-center text-foreground"
-                  >
-                    {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-                  </button>
-                  <button
-                    aria-label="Next"
-                    onClick={() => setBannerIdx((i) => (i + 1) % banners.length)}
-                    className="absolute top-1/2 -translate-y-1/2 end-2 h-9 w-9 rounded-full bg-background/80 backdrop-blur grid place-items-center text-foreground"
-                  >
-                    {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                  </button>
-                  <div className="absolute bottom-3 inset-x-0 flex justify-center gap-1.5">
+                {banners.length > 1 && (
+                  <div className="mt-3 flex justify-center gap-1.5">
                     {banners.map((_, i) => (
                       <span key={i} className={`h-1.5 rounded-full transition-all ${i === bannerIdx ? "w-6 bg-foreground" : "w-1.5 bg-foreground/40"}`} />
                     ))}
                   </div>
-                </>
-              )}
-            </div>
+                )}
+              </div>
+            ) : (
+              /* ---- Auto-rotate (stacked) mode ---- */
+              <div className="relative overflow-hidden rounded-[28px] bg-pastel-peach">
+                {currentBanner ? (
+                  <a href={currentBanner.cta_url ?? "#"} className="block">
+                    <img
+                      key={currentBanner.id}
+                      src={currentBanner.image_url}
+                      alt={ar ? (currentBanner.title_ar ?? "") : (currentBanner.title_en ?? "")}
+                      className="w-full h-[440px] object-cover animate-in fade-in duration-500"
+                      width={1280}
+                      height={1280}
+                      loading="eager"
+                      decoding="sync"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/45 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 flex flex-col items-center justify-end pb-7 px-6 text-center">
+                      {(ar ? currentBanner.eyebrow_ar : currentBanner.eyebrow_en) && (
+                        <span className="text-[10.5px] tracking-luxury text-foreground/75">
+                          {ar ? currentBanner.eyebrow_ar : currentBanner.eyebrow_en}
+                        </span>
+                      )}
+                      {(ar ? currentBanner.title_ar : currentBanner.title_en) && (
+                        <h1 className="mt-2 font-serif text-[56px] leading-[0.95] text-foreground">
+                          {ar ? currentBanner.title_ar : currentBanner.title_en}
+                        </h1>
+                      )}
+                      {(ar ? currentBanner.subtitle_ar : currentBanner.subtitle_en) && (
+                        <p className="mt-1 font-serif italic text-[24px] text-foreground/85">
+                          {ar ? currentBanner.subtitle_ar : currentBanner.subtitle_en}
+                        </p>
+                      )}
+                      {(ar ? currentBanner.cta_label_ar : currentBanner.cta_label_en) && (
+                        <span className="mt-5 inline-flex items-center justify-center h-[52px] px-10 rounded-full bg-background text-foreground text-[14px] font-medium tracking-soft shadow-soft">
+                          {ar ? currentBanner.cta_label_ar : currentBanner.cta_label_en}
+                        </span>
+                      )}
+                    </div>
+                  </a>
+                ) : (
+                  // Fallback hero (no banners configured yet)
+                  <div>
+                    <img src={hero} alt="Le Petit Paradis" className="w-full h-[440px] object-cover" loading="eager" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/45 via-transparent to-transparent" />
+                    <div className="absolute inset-0 flex flex-col items-center justify-end pb-7 px-6 text-center">
+                      <h1 className="mt-2 font-serif text-[56px] leading-[0.95] text-foreground">Le Petit Paradis</h1>
+                      <p className="mt-1 font-serif italic text-[22px] text-foreground/85">{ar ? "أناقة الأطفال" : "Children's elegance"}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Banner controls */}
+                {banners.length > 1 && (
+                  <>
+                    <button
+                      aria-label="Previous"
+                      onClick={() => setBannerIdx((i) => (i - 1 + banners.length) % banners.length)}
+                      className="absolute top-1/2 -translate-y-1/2 start-2 h-9 w-9 rounded-full bg-background/80 backdrop-blur grid place-items-center text-foreground"
+                    >
+                      {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                    </button>
+                    <button
+                      aria-label="Next"
+                      onClick={() => setBannerIdx((i) => (i + 1) % banners.length)}
+                      className="absolute top-1/2 -translate-y-1/2 end-2 h-9 w-9 rounded-full bg-background/80 backdrop-blur grid place-items-center text-foreground"
+                    >
+                      {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </button>
+                    <div className="absolute bottom-3 inset-x-0 flex justify-center gap-1.5">
+                      {banners.map((_, i) => (
+                        <span key={i} className={`h-1.5 rounded-full transition-all ${i === bannerIdx ? "w-6 bg-foreground" : "w-1.5 bg-foreground/40"}`} />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </section>
 
           {/* Featured categories (dynamic) */}
