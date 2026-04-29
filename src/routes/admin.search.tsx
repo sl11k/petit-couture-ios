@@ -4,6 +4,7 @@ import { Search as SearchIcon, AlertCircle, TrendingUp, Plus, Trash2 } from "luc
 import { fetchSearchReport } from "@/lib/search";
 import { supabase } from "@/integrations/supabase/client";
 import { logAudit } from "@/lib/audit";
+import { AdminShell } from "@/components/AdminLayout";
 
 export const Route = createFileRoute("/admin/search")({
   component: AdminSearchPage,
