@@ -350,10 +350,6 @@ export function HomeScreen() {
         </main>
       </div>
 
-      {/* Site footer */}
-      <div className="w-full">
-        <Footer />
-      </div>
     </div>
   );
 }
