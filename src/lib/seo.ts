@@ -208,18 +208,61 @@ export function breadcrumbJsonLd(items: Array<{ name: string; path: string }>) {
   };
 }
 
+export type CollectionItem = {
+  name: string;
+  url: string; // path or absolute
+  image?: string;
+  price?: number;
+  currency?: string;
+  brand?: string;
+  sku?: string;
+  availability?: "in_stock" | "out_of_stock" | "preorder" | "discontinued";
+};
+
 export function collectionJsonLd(opts: {
   name: string;
   description: string;
   url: string;
-  numProducts: number;
+  items: CollectionItem[];
 }) {
+  const itemListElement = opts.items.slice(0, 30).map((it, i) => {
+    const itemUrl = it.url.startsWith("http") ? it.url : canonical(it.url);
+    const product: Record<string, unknown> = {
+      "@type": "Product",
+      name: it.name,
+      url: itemUrl,
+    };
+    if (it.image) product.image = it.image;
+    if (it.brand) product.brand = { "@type": "Brand", name: it.brand };
+    if (it.sku) product.sku = it.sku;
+    if (typeof it.price === "number") {
+      product.offers = {
+        "@type": "Offer",
+        url: itemUrl,
+        priceCurrency: it.currency ?? "SAR",
+        price: it.price.toFixed(2),
+        availability:
+          AVAILABILITY_MAP[it.availability ?? "in_stock"] ?? AVAILABILITY_MAP.in_stock,
+      };
+    }
+    return {
+      "@type": "ListItem",
+      position: i + 1,
+      url: itemUrl,
+      item: product,
+    };
+  });
+
   return {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name: opts.name,
     description: opts.description,
     url: opts.url,
-    mainEntity: { "@type": "ItemList", numberOfItems: opts.numProducts },
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: opts.items.length,
+      itemListElement,
+    },
   };
 }
