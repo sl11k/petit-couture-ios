@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Activity, Gauge, AlertTriangle, Smartphone, Monitor } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PERF_BUDGETS } from "@/lib/perf";
+import { AdminShell } from "@/components/AdminLayout";
 
 export const Route = createFileRoute("/admin/performance")({
   component: PerfPage,
