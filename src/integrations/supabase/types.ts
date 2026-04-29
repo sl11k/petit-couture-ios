@@ -4580,6 +4580,7 @@ export type Database = {
         Row: {
           announcement_rotate_seconds: number
           banner_autoplay_seconds: number
+          banner_display_mode: string
           footer_about_ar: string | null
           footer_about_en: string | null
           footer_address_ar: string | null
@@ -4595,6 +4596,7 @@ export type Database = {
         Insert: {
           announcement_rotate_seconds?: number
           banner_autoplay_seconds?: number
+          banner_display_mode?: string
           footer_about_ar?: string | null
           footer_about_en?: string | null
           footer_address_ar?: string | null
@@ -4610,6 +4612,7 @@ export type Database = {
         Update: {
           announcement_rotate_seconds?: number
           banner_autoplay_seconds?: number
+          banner_display_mode?: string
           footer_about_ar?: string | null
           footer_about_en?: string | null
           footer_address_ar?: string | null
