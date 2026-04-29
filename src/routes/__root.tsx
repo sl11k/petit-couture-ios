@@ -67,6 +67,8 @@ export const Route = createRootRoute({
 });
 
 function RootShell({ children }: { children: React.ReactNode }) {
+  // Default to Arabic for SSR. Client-side LanguageProvider rehydrates html lang/dir
+  // from localStorage on mount, so language switches persist without a flash.
   return (
     <html lang="ar" dir="rtl">
       <head>
