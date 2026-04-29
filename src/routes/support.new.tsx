@@ -10,9 +10,9 @@ export const Route = createFileRoute("/support/new")({
   component: NewTicketPage,
   head: () =>
     buildMeta({
-      title: "فتح تذكرة دعم — Maisonnét",
+      title: "فتح تذكرة دعم — Le Petit Paradis",
       description:
-        "افتح تذكرة دعم لاستفسارك أو مشكلتك وسيتواصل معك فريق Maisonnét سريعاً.",
+        "افتح تذكرة دعم لاستفسارك أو مشكلتك وسيتواصل معك فريق Le Petit Paradis سريعاً.",
       path: "/support/new",
       noindex: true,
     }),

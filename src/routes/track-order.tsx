@@ -9,9 +9,9 @@ export const Route = createFileRoute("/track-order")({
   component: TrackPage,
   head: () =>
     buildMeta({
-      title: "تتبع الطلب — Maisonnét",
+      title: "تتبع الطلب — Le Petit Paradis",
       description:
-        "تتبع حالة طلبك من Maisonnét دون الحاجة لتسجيل الدخول — أدخل رقم الطلب والبريد الإلكتروني.",
+        "تتبع حالة طلبك من Le Petit Paradis دون الحاجة لتسجيل الدخول — أدخل رقم الطلب والبريد الإلكتروني.",
       path: "/track-order",
       noindex: true,
     }),

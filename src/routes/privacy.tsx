@@ -7,9 +7,9 @@ export const Route = createFileRoute("/privacy")({
   component: PrivacyPolicy,
   head: () =>
     buildMeta({
-      title: "سياسة الخصوصية — Maisonnét",
+      title: "سياسة الخصوصية — Le Petit Paradis",
       description:
-        "كيف نحمي بياناتك الشخصية في Maisonnét: ما نجمعه، كيف نستخدمه، وحقوقك في الوصول والتعديل والحذف.",
+        "كيف نحمي بياناتك الشخصية في Le Petit Paradis: ما نجمعه، كيف نستخدمه، وحقوقك في الوصول والتعديل والحذف.",
       path: "/privacy",
     }),
 });

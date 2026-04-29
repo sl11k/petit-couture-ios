@@ -13,7 +13,7 @@ import {
 export const Route = createFileRoute("/debug/analytics")({
   head: () => ({
     meta: [
-      { title: "Analytics debug — Maisonnét" },
+      { title: "Analytics debug — Le Petit Paradis" },
       { name: "robots", content: "noindex" },
     ],
   }),

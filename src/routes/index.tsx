@@ -9,9 +9,9 @@ import {
 export const Route = createFileRoute("/")({
   head: () =>
     buildMeta({
-      title: "Maisonnét — أزياء الأطفال الفاخرة",
+      title: "Le Petit Paradis — أزياء الأطفال الفاخرة",
       description:
-        "بوتيك Maisonnét: أزياء أطفال فاخرة مختارة بعناية — فساتين، أحذية، وهدايا للرضّع والبنات والأولاد. توصيل سريع وإرجاع مجاني.",
+        "بوتيك Le Petit Paradis: أزياء أطفال فاخرة مختارة بعناية — فساتين، أحذية، وهدايا للرضّع والبنات والأولاد. توصيل سريع وإرجاع مجاني.",
       path: "/",
       type: "website",
       jsonLd: [organizationJsonLd(), websiteJsonLd()],

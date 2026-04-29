@@ -9,9 +9,9 @@ import { Upload, X, ArrowLeft } from "lucide-react";
 export const Route = createFileRoute("/account/returns/new")({
   head: () =>
     buildMeta({
-      title: "طلب استرجاع — Maisonnét",
+      title: "طلب استرجاع — Le Petit Paradis",
       description:
-        "اطلب استرجاع منتج من طلبك بسهولة عبر نموذج Maisonnét.",
+        "اطلب استرجاع منتج من طلبك بسهولة عبر نموذج Le Petit Paradis.",
       path: "/account/returns/new",
       noindex: true,
     }),

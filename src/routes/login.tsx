@@ -7,9 +7,9 @@ import { useLanguage } from "@/i18n/LanguageContext";
 export const Route = createFileRoute("/login")({
   head: () =>
     buildMeta({
-      title: "تسجيل الدخول — Maisonnét",
+      title: "تسجيل الدخول — Le Petit Paradis",
       description:
-        "سجّل الدخول إلى حسابك في Maisonnét لمتابعة طلباتك وقائمة رغباتك.",
+        "سجّل الدخول إلى حسابك في Le Petit Paradis لمتابعة طلباتك وقائمة رغباتك.",
       path: "/login",
       noindex: true,
     }),

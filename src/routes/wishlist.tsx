@@ -44,9 +44,9 @@ function buildShareUrl(ids: string[]): string {
 export const Route = createFileRoute("/wishlist")({
   head: () =>
     buildMeta({
-      title: "قائمة الرغبات — Maisonnét",
+      title: "قائمة الرغبات — Le Petit Paradis",
       description:
-        "قطعك المحفوظة من Maisonnét — راجعها، أزل ما لا تحتاجه، وأكمل تسوقك بسهولة.",
+        "قطعك المحفوظة من Le Petit Paradis — راجعها، أزل ما لا تحتاجه، وأكمل تسوقك بسهولة.",
       path: "/wishlist",
       noindex: true,
     }),
@@ -118,8 +118,8 @@ function WishlistPage() {
         url: buildShareUrl([id]),
         title: name,
         message: isRTL
-          ? `أحببتُ هذه القطعة من ميزون: ${name}`
-          : `I'm loving this piece from Maisonnét: ${name}`,
+          ? `أحببتُ هذه القطعة من لو بوتي باراديس: ${name}`
+          : `I'm loving this piece from Le Petit Paradis: ${name}`,
       });
     },
     [isRTL],

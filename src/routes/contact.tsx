@@ -10,9 +10,9 @@ export const Route = createFileRoute("/contact")({
   component: ContactPage,
   head: () =>
     buildMeta({
-      title: "تواصل معنا — Maisonnét",
+      title: "تواصل معنا — Le Petit Paradis",
       description:
-        "تواصل مع خدمة عملاء Maisonnét عبر واتساب أو البريد الإلكتروني أو نموذج الاتصال — نحن هنا لخدمتك.",
+        "تواصل مع خدمة عملاء Le Petit Paradis عبر واتساب أو البريد الإلكتروني أو نموذج الاتصال — نحن هنا لخدمتك.",
       path: "/contact",
     }),
 });

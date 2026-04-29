@@ -22,7 +22,7 @@ describe("breadcrumbJsonLd", () => {
   });
 
   it("wraps Latin/mixed names with LRM + isolates", () => {
-    const data = breadcrumbJsonLd([{ name: "Maisonnét 2026", path: "/about" }]);
+    const data = breadcrumbJsonLd([{ name: "Le Petit Paradis 2026", path: "/about" }]);
     const name = data.itemListElement[0].name as string;
     expect(name.startsWith(LRM)).toBe(true);
     expect(name.includes(FSI) && name.includes(PDI)).toBe(true);

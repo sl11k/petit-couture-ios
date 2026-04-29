@@ -46,7 +46,7 @@ export const Route = createFileRoute("/order-confirmation/$orderNumber")({
   },
   head: ({ params }) => ({
     meta: [
-      { title: `Order ${params.orderNumber} — Maisonnét` },
+      { title: `Order ${params.orderNumber} — Le Petit Paradis` },
       { name: "robots", content: "noindex" },
     ],
   }),

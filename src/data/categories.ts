@@ -77,7 +77,7 @@ export const productsByCategory: Record<string, Product> = {
   "best-sellers": {
     slug: "best-sellers",
     name: "Rosalie Tulle Dress",
-    brand: "Maisonnét Atelier",
+    brand: "Le Petit Paradis Atelier",
     category: "Best Sellers",
     sku: "MN-RSL-2024-001",
     price: 1250,

@@ -7,7 +7,7 @@
  */
 
 export const SITE = {
-  name: "Maisonnét",
+  name: "Le Petit Paradis",
   url: "https://golden-boutique-ios.lovable.app",
   defaultImage:
     "https://golden-boutique-ios.lovable.app/og-default.jpg",

@@ -43,9 +43,9 @@ export const Route = createFileRoute("/search")({
   component: SearchPage,
   head: () =>
     buildMeta({
-      title: "بحث — Maisonnét",
+      title: "بحث — Le Petit Paradis",
       description:
-        "ابحث في أحدث تشكيلات أزياء الأطفال الفاخرة من Maisonnét — فساتين، أحذية، وهدايا مختارة بعناية.",
+        "ابحث في أحدث تشكيلات أزياء الأطفال الفاخرة من Le Petit Paradis — فساتين، أحذية، وهدايا مختارة بعناية.",
       path: "/search",
       noindex: true,
     }),

@@ -76,7 +76,7 @@ const CAMPAIGNS: Campaign[] = [
     slug: "summer-sale",
     title: "تخفيضات الصيف — حتى 50% خصم",
     description:
-      "اكتشف تشكيلة الصيف من Maisonnét بخصومات تصل إلى 50%. سباحة، فساتين خفيفة، وأكثر — توصيل مجاني لطلبات +200 ر.س.",
+      "اكتشف تشكيلة الصيف من Le Petit Paradis بخصومات تصل إلى 50%. سباحة، فساتين خفيفة، وأكثر — توصيل مجاني لطلبات +200 ر.س.",
     hero: "/og-default.jpg",
     ctaLabel: "تسوق العرض",
     ctaHref: "/category/swimwear",
@@ -86,7 +86,7 @@ const CAMPAIGNS: Campaign[] = [
     slug: "eid-gifts",
     title: "هدايا العيد للأطفال — مجموعة فاخرة",
     description:
-      "اختيارات Maisonnét لهدايا العيد: مجموعات أنيقة، أحذية، ولفائف هدايا مجانية. اطلب الآن قبل العيد.",
+      "اختيارات Le Petit Paradis لهدايا العيد: مجموعات أنيقة، أحذية، ولفائف هدايا مجانية. اطلب الآن قبل العيد.",
     hero: "/og-default.jpg",
     ctaLabel: "اكتشف الهدايا",
     ctaHref: "/category/gifts",
@@ -96,7 +96,7 @@ const CAMPAIGNS: Campaign[] = [
     slug: "back-to-school",
     title: "العودة للمدارس — تشكيلة 2026",
     description:
-      "حقائب، أحذية، وملابس تليق بأطفالك في عامهم الدراسي. خصومات حصرية وتوصيل سريع من Maisonnét.",
+      "حقائب، أحذية، وملابس تليق بأطفالك في عامهم الدراسي. خصومات حصرية وتوصيل سريع من Le Petit Paradis.",
     hero: "/og-default.jpg",
     ctaLabel: "تسوق الآن",
     ctaHref: "/category/bags",
@@ -114,14 +114,14 @@ export const Route = createFileRoute("/landing/$slug")({
     const c = loaderData?.campaign;
     if (!c) {
       return buildMeta({
-        title: "Campaign — Maisonnét",
-        description: "حملة Maisonnét",
+        title: "Campaign — Le Petit Paradis",
+        description: "حملة Le Petit Paradis",
         path: `/landing/${params.slug}`,
         noindex: true,
       });
     }
     return buildMeta({
-      title: `${c.title} | Maisonnét`,
+      title: `${c.title} | Le Petit Paradis`,
       description: c.description,
       image: c.hero,
       path: `/landing/${c.slug}`,

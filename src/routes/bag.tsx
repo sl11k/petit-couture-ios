@@ -26,7 +26,7 @@ import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
 export const Route = createFileRoute("/bag")({
   head: () =>
     buildMeta({
-      title: "حقيبتك — Maisonnét",
+      title: "حقيبتك — Le Petit Paradis",
       description:
         "راجع القطع التي اخترتها وأكمل عملية الشراء عبر دفع آمن.",
       path: "/bag",
@@ -135,7 +135,7 @@ function BagPage() {
     const ids = bag.items.map((i) => `product:${i.slug}`).join(",");
     setSharePayload({
       url: `${origin}/wishlist/share?ids=${encodeURIComponent(ids)}`,
-      title: ar ? "سلتي من ميزون" : "My Maisonnét bag",
+      title: ar ? "سلتي من لو بوتي باراديس" : "My Le Petit Paradis bag",
       message: ar ? "ألقِ نظرة على القطع التي اخترتها" : "Check out the pieces I picked",
     });
   };

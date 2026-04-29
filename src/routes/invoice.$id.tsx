@@ -9,8 +9,8 @@ import { Link } from "@tanstack/react-router";
 export const Route = createFileRoute("/invoice/$id")({
   head: () =>
     buildMeta({
-      title: "الفاتورة — Maisonnét",
-      description: "عرض فاتورة طلبك من Maisonnét.",
+      title: "الفاتورة — Le Petit Paradis",
+      description: "عرض فاتورة طلبك من Le Petit Paradis.",
       path: "/invoice",
       noindex: true,
     }),
