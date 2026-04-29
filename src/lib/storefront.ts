@@ -45,8 +45,11 @@ export type AnnouncementMessage = {
   is_active: boolean;
 };
 
+export type BannerDisplayMode = "rotate" | "slider";
+
 export type StorefrontSettings = {
   banner_autoplay_seconds: number;
+  banner_display_mode: BannerDisplayMode;
   announcement_rotate_seconds: number;
   footer_about_ar: string | null;
   footer_about_en: string | null;
