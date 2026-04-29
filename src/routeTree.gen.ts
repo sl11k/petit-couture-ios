@@ -31,6 +31,7 @@ import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminSupportRouteImport } from './routes/admin.support'
 import { Route as AdminStorefrontRouteImport } from './routes/admin.storefront'
+import { Route as AdminStatesRouteImport } from './routes/admin.states'
 import { Route as AdminSiteAnalyticsRouteImport } from './routes/admin.site-analytics'
 import { Route as AdminShippingRouteImport } from './routes/admin.shipping'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
@@ -179,6 +180,11 @@ const AdminSupportRoute = AdminSupportRouteImport.update({
 const AdminStorefrontRoute = AdminStorefrontRouteImport.update({
   id: '/storefront',
   path: '/storefront',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminStatesRoute = AdminStatesRouteImport.update({
+  id: '/states',
+  path: '/states',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSiteAnalyticsRoute = AdminSiteAnalyticsRouteImport.update({
@@ -419,6 +425,7 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/shipping': typeof AdminShippingRoute
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
+  '/admin/states': typeof AdminStatesRoute
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/users': typeof AdminUsersRoute
@@ -481,6 +488,7 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/shipping': typeof AdminShippingRoute
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
+  '/admin/states': typeof AdminStatesRoute
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/users': typeof AdminUsersRoute
@@ -544,6 +552,7 @@ export interface FileRoutesById {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/shipping': typeof AdminShippingRoute
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
+  '/admin/states': typeof AdminStatesRoute
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/users': typeof AdminUsersRoute
@@ -608,6 +617,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/shipping'
     | '/admin/site-analytics'
+    | '/admin/states'
     | '/admin/storefront'
     | '/admin/support'
     | '/admin/users'
@@ -670,6 +680,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/shipping'
     | '/admin/site-analytics'
+    | '/admin/states'
     | '/admin/storefront'
     | '/admin/support'
     | '/admin/users'
@@ -732,6 +743,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/shipping'
     | '/admin/site-analytics'
+    | '/admin/states'
     | '/admin/storefront'
     | '/admin/support'
     | '/admin/users'
@@ -926,6 +938,13 @@ declare module '@tanstack/react-router' {
       path: '/storefront'
       fullPath: '/admin/storefront'
       preLoaderRoute: typeof AdminStorefrontRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/states': {
+      id: '/admin/states'
+      path: '/states'
+      fullPath: '/admin/states'
+      preLoaderRoute: typeof AdminStatesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/site-analytics': {
@@ -1278,6 +1297,7 @@ interface AdminRouteChildren {
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminShippingRoute: typeof AdminShippingRoute
   AdminSiteAnalyticsRoute: typeof AdminSiteAnalyticsRoute
+  AdminStatesRoute: typeof AdminStatesRoute
   AdminStorefrontRoute: typeof AdminStorefrontRoute
   AdminSupportRoute: typeof AdminSupportRoute
   AdminUsersRoute: typeof AdminUsersRoute
@@ -1315,6 +1335,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSettingsRoute: AdminSettingsRoute,
   AdminShippingRoute: AdminShippingRoute,
   AdminSiteAnalyticsRoute: AdminSiteAnalyticsRoute,
+  AdminStatesRoute: AdminStatesRoute,
   AdminStorefrontRoute: AdminStorefrontRoute,
   AdminSupportRoute: AdminSupportRoute,
   AdminUsersRoute: AdminUsersRoute,

@@ -116,6 +116,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/admin/search", label: "تقارير البحث", icon: ScrollText },
       { to: "/admin/performance", label: "مراقبة الأداء", icon: ScrollText },
       { to: "/admin/errors", label: "سجل الأخطاء", icon: AlertCircle },
+      { to: "/admin/states", label: "دليل حالات الشاشات", icon: Layout },
       { to: "/admin/settings", label: "الإعدادات", icon: Settings },
       { to: "/admin/help", label: "الدعم الفني", icon: LifeBuoy, badge: "soon" },
     ],
