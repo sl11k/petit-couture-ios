@@ -127,7 +127,7 @@ function SearchPage() {
 
   function setParam<K extends keyof typeof sp>(key: K, value: any) {
     navigate({
-      search: (prev) => {
+      search: (prev: any) => {
         const next = { ...prev, [key]: value };
         if (value === "" || value === undefined || value === false || value === null) {
           delete (next as any)[key];
