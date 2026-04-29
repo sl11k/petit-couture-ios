@@ -43,7 +43,6 @@ type NavItem = {
   labelEn: string;
   icon: typeof LayoutDashboard;
   exact?: boolean;
-  badge?: "soon";
 };
 
 type NavGroup = {
@@ -92,14 +91,14 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/admin/customers", labelAr: "العملاء", labelEn: "Customers", icon: Users },
       { to: "/admin/coupons", labelAr: "الكوبونات", labelEn: "Coupons", icon: Ticket },
       { to: "/admin/invoices", labelAr: "الفواتير والضرائب", labelEn: "Invoices & tax", icon: FileText },
-      { to: "/admin/campaigns", labelAr: "العروض والحملات", labelEn: "Campaigns", icon: Megaphone, badge: "soon" },
+      { to: "/admin/campaigns", labelAr: "العروض والحملات", labelEn: "Campaigns", icon: Megaphone },
     ],
   },
   {
     labelAr: "المحتوى",
     labelEn: "Content",
     items: [
-      { to: "/admin/content", labelAr: "المحتوى", labelEn: "Content", icon: FileText, badge: "soon" },
+      { to: "/admin/content", labelAr: "المحتوى", labelEn: "Content", icon: FileText },
       { to: "/admin/storefront", labelAr: "إدارة الواجهة", labelEn: "Storefront" , icon: Layout },
     ],
   },
@@ -119,7 +118,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/admin/users", labelAr: "المستخدمون والصلاحيات", labelEn: "Users & roles", icon: Shield },
       { to: "/admin/security", labelAr: "مركز الأمان", labelEn: "Security center", icon: Shield },
       { to: "/admin/privacy", labelAr: "إدارة الخصوصية", labelEn: "Privacy management", icon: Shield },
-      { to: "/admin/integrations", labelAr: "التكاملات", labelEn: "Integrations", icon: Plug, badge: "soon" },
+      { to: "/admin/integrations", labelAr: "التكاملات", labelEn: "Integrations", icon: Plug },
       { to: "/admin/webhooks", labelAr: "Webhooks وAPI", labelEn: "Webhooks & API", icon: Plug },
       { to: "/admin/audit", labelAr: "سجل العمليات", labelEn: "Audit log", icon: ScrollText },
       { to: "/admin/audit-logins", labelAr: "محاولات الدخول الفاشلة", labelEn: "Failed login attempts", icon: ScrollText },
@@ -129,7 +128,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/admin/errors", labelAr: "سجل الأخطاء", labelEn: "Error log", icon: AlertCircle },
       { to: "/admin/states", labelAr: "دليل حالات الشاشات", labelEn: "Screen states", icon: Layout },
       { to: "/admin/settings", labelAr: "الإعدادات", labelEn: "Settings", icon: Settings },
-      { to: "/admin/help", labelAr: "الدعم الفني", labelEn: "Technical support", icon: LifeBuoy, badge: "soon" },
+      { to: "/admin/help", labelAr: "الدعم الفني", labelEn: "Technical support", icon: LifeBuoy },
     ],
   },
 ];
@@ -160,6 +159,37 @@ export function AdminShell({ children }: { children?: ReactNode }) {
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
+
+  // Find current page label (used by SEO + topbar title).
+  const currentPage = useMemo(
+    () =>
+      flatNav().find((i) =>
+        i.exact ? location.pathname === i.to : location.pathname === i.to || location.pathname.startsWith(i.to + "/"),
+      ),
+    [location.pathname],
+  );
+
+  // Dynamic <title> + noindex meta for the entire admin surface (SEO).
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const pageLabel = currentPage ? (ar ? currentPage.labelAr : currentPage.labelEn) : (ar ? "لوحة الإدارة" : "Admin");
+    const prevTitle = document.title;
+    document.title = `${pageLabel} · Le Petit Paradis ${ar ? "إدارة" : "Admin"}`;
+
+    let robots = document.querySelector<HTMLMetaElement>('meta[name="robots"][data-admin]');
+    if (!robots) {
+      robots = document.createElement("meta");
+      robots.name = "robots";
+      robots.setAttribute("data-admin", "true");
+      document.head.appendChild(robots);
+    }
+    robots.content = "noindex, nofollow";
+
+    return () => {
+      document.title = prevTitle;
+      robots?.remove();
+    };
+  }, [currentPage, ar]);
 
   const toggleDark = () => {
     const next = !dark;
@@ -242,7 +272,7 @@ export function AdminShell({ children }: { children?: ReactNode }) {
         )}
         {filteredGroups.map((group) => (
           <div key={group.labelEn} className="mb-4">
-            <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+            <div className="sticky top-0 z-10 -mx-2 mb-1 bg-card/95 px-5 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 backdrop-blur">
               {groupLabel(group)}
             </div>
             <ul className="space-y-0.5">
@@ -255,13 +285,14 @@ export function AdminShell({ children }: { children?: ReactNode }) {
                   <li key={item.to}>
                     <Link
                       to={item.to}
-                      className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition ${
+                      aria-current={active ? "page" : undefined}
+                      className={`group flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors duration-150 ${
                         active
-                          ? "bg-primary text-primary-foreground"
+                          ? "bg-primary text-primary-foreground shadow-sm"
                           : "text-foreground hover:bg-muted"
                       }`}
                     >
-                      <Icon className="h-4 w-4 shrink-0" />
+                      <Icon className={`h-4 w-4 shrink-0 transition-transform ${active ? "" : "group-hover:scale-110"}`} />
                       <span className="flex-1 truncate">{itemLabel(item)}</span>
                     </Link>
                   </li>
@@ -301,11 +332,6 @@ export function AdminShell({ children }: { children?: ReactNode }) {
         </button>
       </div>
     </aside>
-  );
-
-  // Find current page label
-  const currentPage = flatNav().find((i) =>
-    i.exact ? location.pathname === i.to : location.pathname === i.to || location.pathname.startsWith(i.to + "/"),
   );
 
   return (
@@ -357,7 +383,9 @@ export function AdminShell({ children }: { children?: ReactNode }) {
           )}
         </header>
 
-        <main className="flex-1 overflow-x-auto p-4 lg:p-6">{children ?? <Outlet />}</main>
+        <main key={location.pathname} className="flex-1 overflow-x-auto p-4 lg:p-6 animate-in fade-in duration-200">
+          {children ?? <Outlet />}
+        </main>
       </div>
     </div>
   );

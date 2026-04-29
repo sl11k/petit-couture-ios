@@ -40,7 +40,11 @@ function StorefrontAdmin() {
           </p>
         </header>
 
-        <nav className="flex flex-wrap gap-2 border-b border-border pb-2">
+        <nav
+          className="sticky top-14 z-20 -mx-4 flex flex-wrap gap-2 border-b border-border bg-background/95 px-4 py-2 backdrop-blur lg:-mx-6 lg:px-6"
+          role="tablist"
+          aria-label={ar ? "أقسام إدارة الواجهة" : "Storefront sections"}
+        >
           {([
             ["banners", ar ? "البانرات" : "Banners"],
             ["categories", ar ? "كاتيجوريز مميزة" : "Featured Categories"],
@@ -50,19 +54,23 @@ function StorefrontAdmin() {
           ] as [Tab, string][]).map(([k, label]) => (
             <button
               key={k}
+              role="tab"
+              aria-selected={tab === k}
               onClick={() => setTab(k)}
-              className={`px-3 py-1.5 rounded-md text-sm transition ${tab === k ? "bg-primary text-primary-foreground" : "bg-muted text-foreground hover:bg-muted/70"}`}
+              className={`px-3 py-1.5 rounded-md text-sm transition-colors duration-150 ${tab === k ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted text-foreground hover:bg-muted/70"}`}
             >
               {label}
             </button>
           ))}
         </nav>
 
-        {tab === "banners" && <BannersPanel ar={ar} />}
-        {tab === "categories" && <FeaturedCategoriesPanel ar={ar} />}
-        {tab === "popular" && <PopularPicksPanel ar={ar} />}
-        {tab === "announcements" && <AnnouncementsPanel ar={ar} />}
-        {tab === "footer" && <FooterPanel ar={ar} />}
+        <div key={tab} className="animate-in fade-in duration-200">
+          {tab === "banners" && <BannersPanel ar={ar} />}
+          {tab === "categories" && <FeaturedCategoriesPanel ar={ar} />}
+          {tab === "popular" && <PopularPicksPanel ar={ar} />}
+          {tab === "announcements" && <AnnouncementsPanel ar={ar} />}
+          {tab === "footer" && <FooterPanel ar={ar} />}
+        </div>
       </div>
     </AdminShell>
   );

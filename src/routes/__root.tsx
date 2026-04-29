@@ -105,16 +105,19 @@ function RootComponent() {
     flushErrorBuffer().catch(() => { /* noop */ });
   }, []);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  // Footer rendered globally except for: home (already has its own), admin, auth, checkout flows, and machine routes.
+  const isAdmin = pathname.startsWith("/admin");
+  const isAuth = pathname.startsWith("/login");
+  const isMachine =
+    pathname.startsWith("/sitemap") || pathname.startsWith("/robots") || pathname.startsWith("/debug");
+
+  // Footer rendered on public content pages only (not home, admin, auth, checkout, machine routes).
   const hideFooter =
-    pathname === "/" ||
-    pathname.startsWith("/admin") ||
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/checkout") ||
-    pathname.startsWith("/invoice") ||
-    pathname.startsWith("/debug") ||
-    pathname.startsWith("/sitemap") ||
-    pathname.startsWith("/robots");
+    pathname === "/" || isAdmin || isAuth || pathname.startsWith("/checkout") || pathname.startsWith("/invoice") || isMachine;
+
+  // Storefront chrome (top bar, mobile nav, floating widgets) is for the store experience only.
+  // Admin and auth use their own self-contained layouts.
+  const showStoreChrome = !isAdmin && !isAuth && !isMachine;
+
   return (
     <GlobalErrorBoundary>
       <LanguageProvider>
@@ -123,16 +126,20 @@ function RootComponent() {
             <BagProvider>
               <AddressProvider>
                 <SkipLink />
-                <DesktopHeader />
+                {showStoreChrome && <DesktopHeader />}
                 <AnalyticsTracker />
                 <div id="main-content" tabIndex={-1}>
                   <Outlet />
                 </div>
                 {!hideFooter && <Footer />}
-                <WishlistBanner />
-                <WhatsAppButton />
-                <MobileBottomNav />
-                <CookieBanner />
+                {showStoreChrome && (
+                  <>
+                    <WishlistBanner />
+                    <WhatsAppButton />
+                    <MobileBottomNav />
+                    <CookieBanner />
+                  </>
+                )}
                 <OfflineBanner />
                 <Toaster />
               </AddressProvider>
