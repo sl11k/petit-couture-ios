@@ -7,7 +7,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useImpression } from "@/hooks/useImpression";
 import { BrandLogo } from "@/components/Logo";
-import { Footer } from "@/components/Footer";
+
 import {
   fetchAnnouncements,
   fetchBanners,
