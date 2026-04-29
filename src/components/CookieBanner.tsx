@@ -2,9 +2,12 @@ import { useEffect, useState } from "react";
 import { Cookie, X } from "lucide-react";
 import { getStoredCookieConsent, saveCookieConsent, type CookieConsent } from "@/lib/privacy";
 import { useAuth } from "@/state/AuthContext";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export function CookieBanner() {
   const { user } = useAuth();
+  const { lang } = useLanguage();
+  const ar = lang === "ar";
   const [show, setShow] = useState(false);
   const [expand, setExpand] = useState(false);
   const [c, setC] = useState<CookieConsent>({ necessary: true, analytics: false, marketing: false, preferences: false });
@@ -20,33 +23,54 @@ export function CookieBanner() {
 
   if (!show) return null;
 
+  const T = {
+    title: ar ? "نستخدم ملفات تعريف الارتباط (Cookies)" : "We use cookies",
+    body: ar
+      ? "نستخدم الكوكيز الضرورية لتشغيل الموقع، وكوكيز اختيارية لتحليل الأداء وتحسين تجربتك. يمكنك القبول الكامل أو الاكتفاء بالضرورية فقط، أو التخصيص."
+      : "We use necessary cookies to run the site and optional cookies to analyze performance and improve your experience. You can accept all, keep only the necessary ones, or customize.",
+    seePolicy: ar ? "راجع" : "See",
+    privacy: ar ? "سياسة الخصوصية" : "Privacy Policy",
+    close: ar ? "إغلاق" : "Close",
+    necessary: ar ? "ضرورية (لا يمكن إيقافها)" : "Necessary (always on)",
+    necessaryDesc: ar ? "جلسة الدخول، السلة، الأمان" : "Login session, cart, security",
+    analytics: ar ? "تحليلية" : "Analytics",
+    analyticsDesc: ar ? "قياس الأداء والاستخدام لتحسين الموقع" : "Measure performance and usage to improve the site",
+    marketing: ar ? "تسويقية" : "Marketing",
+    marketingDesc: ar ? "عرض إعلانات وعروض ذات صلة" : "Show relevant ads and offers",
+    prefs: ar ? "تفضيلات" : "Preferences",
+    prefsDesc: ar ? "حفظ اللغة والإعدادات" : "Save language and settings",
+    acceptAll: ar ? "قبول الكل" : "Accept all",
+    onlyNecessary: ar ? "الضرورية فقط" : "Necessary only",
+    save: ar ? "حفظ تخصيصي" : "Save my choices",
+    customize: ar ? "تخصيص" : "Customize",
+  };
+
   return (
     <div className="fixed inset-x-0 bottom-0 z-[60] mx-auto w-full max-w-3xl p-3 sm:p-4">
       <div className="rounded-2xl border border-border bg-card/95 p-4 shadow-2xl backdrop-blur">
         <div className="mb-3 flex items-start gap-3">
           <div className="rounded-lg bg-primary/10 p-2"><Cookie className="h-5 w-5 text-primary" /></div>
           <div className="flex-1 text-xs sm:text-sm">
-            <h3 className="mb-1 font-semibold">نستخدم ملفات تعريف الارتباط (Cookies)</h3>
+            <h3 className="mb-1 font-semibold">{T.title}</h3>
             <p className="text-muted-foreground">
-              نستخدم الكوكيز الضرورية لتشغيل الموقع، وكوكيز اختيارية لتحليل الأداء وتحسين تجربتك.
-              يمكنك القبول الكامل أو الاكتفاء بالضرورية فقط، أو التخصيص.
-              راجع <a href="/privacy" className="text-primary underline">سياسة الخصوصية</a>.
+              {T.body}{" "}
+              {T.seePolicy} <a href="/privacy" className="text-primary underline">{T.privacy}</a>.
             </p>
           </div>
           <button onClick={() => accept({ necessary: true, analytics: false, marketing: false, preferences: false })}
-            className="rounded p-1 text-muted-foreground hover:bg-muted" aria-label="إغلاق">
+            className="rounded p-1 text-muted-foreground hover:bg-muted" aria-label={T.close}>
             <X className="h-4 w-4" />
           </button>
         </div>
 
         {expand && (
           <div className="mb-3 space-y-2 rounded-lg border border-border bg-background/50 p-3">
-            <Toggle label="ضرورية (لا يمكن إيقافها)" desc="جلسة الدخول، السلة، الأمان" v={true} disabled />
-            <Toggle label="تحليلية" desc="قياس الأداء والاستخدام لتحسين الموقع"
+            <Toggle label={T.necessary} desc={T.necessaryDesc} v={true} disabled />
+            <Toggle label={T.analytics} desc={T.analyticsDesc}
               v={c.analytics} on={(v) => setC({ ...c, analytics: v })} />
-            <Toggle label="تسويقية" desc="عرض إعلانات وعروض ذات صلة"
+            <Toggle label={T.marketing} desc={T.marketingDesc}
               v={c.marketing} on={(v) => setC({ ...c, marketing: v })} />
-            <Toggle label="تفضيلات" desc="حفظ اللغة والإعدادات"
+            <Toggle label={T.prefs} desc={T.prefsDesc}
               v={c.preferences} on={(v) => setC({ ...c, preferences: v })} />
           </div>
         )}
@@ -54,19 +78,19 @@ export function CookieBanner() {
         <div className="flex flex-wrap gap-2">
           <button onClick={() => accept({ necessary: true, analytics: true, marketing: true, preferences: true })}
             className="flex-1 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:opacity-90 sm:flex-none">
-            قبول الكل
+            {T.acceptAll}
           </button>
           <button onClick={() => accept({ necessary: true, analytics: false, marketing: false, preferences: false })}
             className="flex-1 rounded-lg border border-border px-3 py-2 text-xs font-medium hover:bg-muted sm:flex-none">
-            الضرورية فقط
+            {T.onlyNecessary}
           </button>
           {expand ? (
             <button onClick={() => accept(c)} className="flex-1 rounded-lg border border-primary px-3 py-2 text-xs font-medium text-primary hover:bg-primary/5 sm:flex-none">
-              حفظ تخصيصي
+              {T.save}
             </button>
           ) : (
             <button onClick={() => setExpand(true)} className="flex-1 rounded-lg border border-border px-3 py-2 text-xs hover:bg-muted sm:flex-none">
-              تخصيص
+              {T.customize}
             </button>
           )}
         </div>
