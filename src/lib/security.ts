@@ -87,7 +87,8 @@ export async function verifyTotp(secret: string, token: string, window = 1): Pro
   const key = base32Decode(secret);
   const step = Math.floor(Date.now() / 1000 / 30);
   const subtle = crypto.subtle;
-  const cryptoKey = await subtle.importKey("raw", key, { name: "HMAC", hash: "SHA-1" }, false, ["sign"]);
+  const keyBuf = key.buffer.slice(key.byteOffset, key.byteOffset + key.byteLength) as ArrayBuffer;
+  const cryptoKey = await subtle.importKey("raw", keyBuf, { name: "HMAC", hash: "SHA-1" }, false, ["sign"]);
   for (let off = -window; off <= window; off++) {
     const counter = step + off;
     const buf = new ArrayBuffer(8);
