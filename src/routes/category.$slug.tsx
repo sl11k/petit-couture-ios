@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useRouter, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import {
   ChevronLeft,
   ChevronRight,
@@ -122,6 +123,23 @@ function ProductDetails() {
   const wished = wishlist.has(wishId);
   const setWished = () => wishlist.toggle(wishId, "product_detail");
 
+  // Swipeable gallery: keep activeImg in sync with horizontal scroll position.
+  const galleryRef = useRef<HTMLDivElement>(null);
+  const onGalleryScroll = () => {
+    const el = galleryRef.current;
+    if (!el) return;
+    const slideW = el.clientWidth || 1;
+    const idx = Math.round(Math.abs(el.scrollLeft) / slideW);
+    if (idx !== activeImg) setActiveImg(idx);
+  };
+  const goToImage = (i: number) => {
+    const el = galleryRef.current;
+    setActiveImg(i);
+    if (!el) return;
+    const left = el.clientWidth * i * (ar ? -1 : 1);
+    el.scrollTo({ left, behavior: "smooth" });
+  };
+
   useEffect(() => {
     const seenKey = `maisonnet:impression:product:${slug}`;
     if (typeof sessionStorage === "undefined") return;
@@ -137,6 +155,25 @@ function ProductDetails() {
     });
   }, [slug, wishId]);
 
+  // ESC closes any open overlay; lock body scroll while open.
+  useEffect(() => {
+    const open = zoomOpen || openSizeChart;
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (zoomOpen) setZoomOpen(false);
+        if (openSizeChart) setOpenSizeChart(false);
+      }
+    };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [zoomOpen, openSizeChart]);
+
   const upsellsTotal = useMemo(
     () => product.upsells.filter((u) => selectedUpsells.includes(u.id)).reduce((s, u) => s + u.price, 0),
     [product.upsells, selectedUpsells]
@@ -150,6 +187,10 @@ function ProductDetails() {
 
   const addToBag = () => {
     if (isOOS || isComingSoon) return;
+    if (!size) {
+      toast.error(ar ? "اختر المقاس أولاً" : "Please select a size");
+      return;
+    }
     bag.add({
       slug,
       name: product.name,
@@ -160,11 +201,20 @@ function ProductDetails() {
       size,
       color,
     });
-    navigate({ to: "/bag" });
+    toast.success(ar ? "تمت الإضافة إلى السلة" : "Added to bag", {
+      action: {
+        label: ar ? "عرض السلة" : "View bag",
+        onClick: () => navigate({ to: "/bag" }),
+      },
+    });
   };
 
   const buyNow = () => {
     if (isOOS || isComingSoon) return;
+    if (!size) {
+      toast.error(ar ? "اختر المقاس أولاً" : "Please select a size");
+      return;
+    }
     bag.add({
       slug,
       name: product.name,
@@ -294,27 +344,87 @@ function ProductDetails() {
         </header>
 
         <main className="pb-[160px]">
-          {/* Gallery */}
+          {/* Gallery — swipeable, snap-aligned, RTL-aware */}
           <section className="px-5">
-            <div className="relative overflow-hidden rounded-[28px] bg-pastel-peach aspect-[4/5]">
-              <img src={product.images[activeImg]} alt={product.name} className="w-full h-full object-cover" width={1024} height={1280} loading="eager" fetchPriority="high" decoding="sync" />
+            <div
+              className="relative overflow-hidden rounded-[28px] bg-pastel-peach aspect-[4/5]"
+              role="region"
+              aria-roledescription="carousel"
+              aria-label={product.name}
+            >
+              <div
+                ref={galleryRef}
+                onScroll={onGalleryScroll}
+                className="flex h-full w-full overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth"
+                dir={ar ? "rtl" : "ltr"}
+              >
+                {product.images.map((src, i) => (
+                  <div
+                    key={src}
+                    className="snap-center shrink-0 w-full h-full"
+                    role="group"
+                    aria-roledescription="slide"
+                    aria-label={`${i + 1} / ${product.images.length}`}
+                  >
+                    <img
+                      src={src}
+                      alt={`${product.name} — ${i + 1}`}
+                      className="w-full h-full object-cover"
+                      width={1024}
+                      height={1280}
+                      loading={i === 0 ? "eager" : i === 1 ? "eager" : "lazy"}
+                      fetchPriority={i === 0 ? "high" : "auto"}
+                      decoding={i === 0 ? "sync" : "async"}
+                    />
+                  </div>
+                ))}
+              </div>
+
               {discountPct > 0 && (
-                <span className={`absolute top-4 ${ar ? "right-4" : "left-4"} bg-foreground text-background text-[11px] font-semibold px-2.5 py-1 rounded-full`}>
+                <span className="absolute top-4 start-4 bg-foreground text-background text-[11px] font-semibold px-2.5 py-1 rounded-full pointer-events-none">
                   -{discountPct}%
                 </span>
               )}
-              <button aria-label={ar ? "تكبير" : "Zoom"} onClick={() => setZoomOpen(true)} className={`absolute bottom-4 ${ar ? "right-4" : "left-4"} h-10 w-10 rounded-full bg-background/90 backdrop-blur grid place-items-center text-foreground/80 active:scale-95 transition`}>
+              <button
+                aria-label={ar ? "تكبير" : "Zoom"}
+                onClick={() => setZoomOpen(true)}
+                className="absolute bottom-4 start-4 h-10 w-10 rounded-full bg-background/90 backdrop-blur grid place-items-center text-foreground/80 active:scale-95 transition"
+              >
                 <ZoomIn className="h-[16px] w-[16px]" strokeWidth={1.6} />
               </button>
-              <button aria-label={ar ? "أضف إلى المفضلة" : "Add to wishlist"} onClick={setWished} className={`absolute top-4 h-11 w-11 rounded-full bg-background/90 backdrop-blur grid place-items-center border border-gold-soft text-gold-deep active:scale-95 transition ${ar ? "left-4" : "right-4"}`}>
+              <button
+                aria-label={ar ? (wished ? "إزالة من المفضلة" : "أضف إلى المفضلة") : (wished ? "Remove from wishlist" : "Add to wishlist")}
+                aria-pressed={wished}
+                onClick={setWished}
+                className="absolute top-4 end-4 h-11 w-11 rounded-full bg-background/90 backdrop-blur grid place-items-center border border-gold-soft text-gold-deep active:scale-95 transition"
+              >
                 <Heart className="h-[18px] w-[18px]" strokeWidth={1.5} fill={wished ? "currentColor" : "none"} />
               </button>
+
+              {/* Dots */}
+              {product.images.length > 1 && (
+                <div className="absolute bottom-4 inset-x-0 flex justify-center gap-1.5 pointer-events-none">
+                  {product.images.map((_, i) => (
+                    <span
+                      key={i}
+                      className={`h-1.5 rounded-full transition-all ${i === activeImg ? "w-5 bg-foreground" : "w-1.5 bg-foreground/30"}`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Thumbnails */}
-            <div className="mt-4 flex gap-3 overflow-x-auto scrollbar-none">
+            <div className="mt-4 flex gap-3 overflow-x-auto scrollbar-none" role="tablist" aria-label={ar ? "صور المنتج" : "Product images"}>
               {product.images.map((src, i) => (
-                <button key={src} onClick={() => setActiveImg(i)} className={`h-[68px] w-[56px] shrink-0 overflow-hidden rounded-[14px] border transition ${i === activeImg ? "border-gold ring-1 ring-gold/40" : "border-border opacity-80"}`}>
+                <button
+                  key={src}
+                  role="tab"
+                  aria-selected={i === activeImg}
+                  aria-label={`${ar ? "صورة" : "Image"} ${i + 1}`}
+                  onClick={() => goToImage(i)}
+                  className={`h-[68px] w-[56px] shrink-0 overflow-hidden rounded-[14px] border transition active:scale-95 ${i === activeImg ? "border-gold ring-1 ring-gold/40" : "border-border opacity-80"}`}
+                >
                   <img src={src} alt="" loading="lazy" decoding="async" width={200} height={250} className="w-full h-full object-cover" />
                 </button>
               ))}
@@ -370,14 +480,25 @@ function ProductDetails() {
           {/* Color */}
           <section className="px-5 mt-7">
             <div className="flex items-center justify-between">
-              <span className="text-[12px] tracking-luxury text-muted-foreground">{t.color}</span>
-              <span className="text-[13px] text-foreground/80">{color}</span>
+              <span id="pdp-color-label" className="text-[12px] tracking-luxury text-muted-foreground">{t.color}</span>
+              <span className="text-[13px] text-foreground/80" aria-live="polite">{color}</span>
             </div>
-            <div className="mt-3 flex gap-3">
+            <div
+              role="radiogroup"
+              aria-labelledby="pdp-color-label"
+              className="mt-3 flex gap-3"
+            >
               {product.colors.map((c) => {
                 const active = c.name === color;
                 return (
-                  <button key={c.name} onClick={() => setColor(c.name)} aria-label={c.name} className={`h-10 w-10 rounded-full grid place-items-center transition active:scale-95 ${active ? "ring-1 ring-gold ring-offset-2 ring-offset-background" : ""}`}>
+                  <button
+                    key={c.name}
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => setColor(c.name)}
+                    aria-label={c.name}
+                    className={`h-11 w-11 rounded-full grid place-items-center transition active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${active ? "ring-1 ring-gold ring-offset-2 ring-offset-background" : ""}`}
+                  >
                     <span className="h-8 w-8 rounded-full border border-border" style={{ backgroundColor: c.hex }} />
                   </button>
                 );
@@ -388,16 +509,26 @@ function ProductDetails() {
           {/* Size */}
           <section className="px-5 mt-7">
             <div className="flex items-center justify-between">
-              <span className="text-[12px] tracking-luxury text-muted-foreground">{t.size}</span>
+              <span id="pdp-size-label" className="text-[12px] tracking-luxury text-muted-foreground">{t.size}</span>
               <button onClick={() => setOpenSizeChart(true)} className="text-[12px] text-gold-deep tracking-soft underline-offset-4 hover:underline inline-flex items-center gap-1">
                 <Ruler className="h-3 w-3" /> {t.sizeGuide}
               </button>
             </div>
-            <div className="mt-3 grid grid-cols-6 gap-2">
+            <div
+              role="radiogroup"
+              aria-labelledby="pdp-size-label"
+              className="mt-3 grid grid-cols-6 gap-2"
+            >
               {product.sizes.map((s) => {
                 const active = s === size;
                 return (
-                  <button key={s} onClick={() => setSize(s)} className={`h-12 rounded-full text-[13px] tracking-soft border transition active:scale-[0.97] ${active ? "bg-gold-soft border-gold text-gold-deep font-medium" : "bg-background border-border text-muted-foreground"}`}>
+                  <button
+                    key={s}
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => setSize(s)}
+                    className={`h-12 rounded-full text-[13px] tracking-soft border transition active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${active ? "bg-gold-soft border-gold text-gold-deep font-medium" : "bg-background border-border text-muted-foreground hover:border-foreground/40"}`}
+                  >
                     {s}
                   </button>
                 );
@@ -462,7 +593,7 @@ function ProductDetails() {
 
           {/* Tabs: Description / Specs / Care / Shipping */}
           <section className="px-5 mt-8">
-            <div className="flex gap-1 border-b border-border overflow-x-auto scrollbar-none">
+            <div role="tablist" aria-label={ar ? "تفاصيل المنتج" : "Product details"} className="flex gap-1 border-b border-border overflow-x-auto scrollbar-none">
               {([
                 ["description", t.description],
                 ["specs", t.specs],
@@ -471,15 +602,24 @@ function ProductDetails() {
               ] as const).map(([key, label]) => (
                 <button
                   key={key}
+                  role="tab"
+                  aria-selected={tab === key}
+                  id={`pdp-tab-${key}`}
+                  aria-controls={`pdp-tabpanel-${key}`}
                   onClick={() => setTab(key)}
-                  className={`px-3 py-2.5 text-[12.5px] whitespace-nowrap border-b-2 -mb-px transition ${tab === key ? "border-gold text-foreground font-medium" : "border-transparent text-muted-foreground"}`}
+                  className={`px-3 py-2.5 text-[12.5px] whitespace-nowrap border-b-2 -mb-px transition focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${tab === key ? "border-gold text-foreground font-medium" : "border-transparent text-muted-foreground"}`}
                 >
                   {label}
                 </button>
               ))}
             </div>
 
-            <div className="mt-4">
+            <div
+              className="mt-4"
+              role="tabpanel"
+              id={`pdp-tabpanel-${tab}`}
+              aria-labelledby={`pdp-tab-${tab}`}
+            >
               {tab === "description" && (
                 <div>
                   <p className="text-[13px] text-foreground/70 italic">{product.shortDescription}</p>
@@ -723,7 +863,7 @@ function ProductDetails() {
       {/* Zoom modal */}
       {zoomOpen && (
         <div className="fixed inset-0 z-50 bg-black/90 grid place-items-center" onClick={() => setZoomOpen(false)}>
-          <button aria-label={t.close} className="absolute top-5 right-5 h-10 w-10 rounded-full bg-white/10 grid place-items-center text-white">
+          <button aria-label={t.close} onClick={() => setZoomOpen(false)} className="absolute top-5 end-5 h-11 w-11 rounded-full bg-white/10 grid place-items-center text-white">
             <X className="h-5 w-5" />
           </button>
           <img src={product.images[activeImg]} alt={product.name} width={1280} height={1600} loading="eager" decoding="sync" className="max-w-full max-h-full object-contain" />
