@@ -171,7 +171,7 @@ function SearchPage() {
       label: `${sp.pmin ?? 0} – ${sp.pmax ?? "∞"} ${isRTL ? "ر.س" : "SAR"}`,
       onRemove: () => {
         navigate({
-          search: (prev) => {
+          search: (prev: any) => {
             const n = { ...prev };
             delete (n as any).pmin;
             delete (n as any).pmax;
