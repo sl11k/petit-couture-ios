@@ -461,14 +461,25 @@ function ProductDetails() {
           {/* Color */}
           <section className="px-5 mt-7">
             <div className="flex items-center justify-between">
-              <span className="text-[12px] tracking-luxury text-muted-foreground">{t.color}</span>
-              <span className="text-[13px] text-foreground/80">{color}</span>
+              <span id="pdp-color-label" className="text-[12px] tracking-luxury text-muted-foreground">{t.color}</span>
+              <span className="text-[13px] text-foreground/80" aria-live="polite">{color}</span>
             </div>
-            <div className="mt-3 flex gap-3">
+            <div
+              role="radiogroup"
+              aria-labelledby="pdp-color-label"
+              className="mt-3 flex gap-3"
+            >
               {product.colors.map((c) => {
                 const active = c.name === color;
                 return (
-                  <button key={c.name} onClick={() => setColor(c.name)} aria-label={c.name} className={`h-10 w-10 rounded-full grid place-items-center transition active:scale-95 ${active ? "ring-1 ring-gold ring-offset-2 ring-offset-background" : ""}`}>
+                  <button
+                    key={c.name}
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => setColor(c.name)}
+                    aria-label={c.name}
+                    className={`h-11 w-11 rounded-full grid place-items-center transition active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${active ? "ring-1 ring-gold ring-offset-2 ring-offset-background" : ""}`}
+                  >
                     <span className="h-8 w-8 rounded-full border border-border" style={{ backgroundColor: c.hex }} />
                   </button>
                 );
@@ -479,16 +490,26 @@ function ProductDetails() {
           {/* Size */}
           <section className="px-5 mt-7">
             <div className="flex items-center justify-between">
-              <span className="text-[12px] tracking-luxury text-muted-foreground">{t.size}</span>
+              <span id="pdp-size-label" className="text-[12px] tracking-luxury text-muted-foreground">{t.size}</span>
               <button onClick={() => setOpenSizeChart(true)} className="text-[12px] text-gold-deep tracking-soft underline-offset-4 hover:underline inline-flex items-center gap-1">
                 <Ruler className="h-3 w-3" /> {t.sizeGuide}
               </button>
             </div>
-            <div className="mt-3 grid grid-cols-6 gap-2">
+            <div
+              role="radiogroup"
+              aria-labelledby="pdp-size-label"
+              className="mt-3 grid grid-cols-6 gap-2"
+            >
               {product.sizes.map((s) => {
                 const active = s === size;
                 return (
-                  <button key={s} onClick={() => setSize(s)} className={`h-12 rounded-full text-[13px] tracking-soft border transition active:scale-[0.97] ${active ? "bg-gold-soft border-gold text-gold-deep font-medium" : "bg-background border-border text-muted-foreground"}`}>
+                  <button
+                    key={s}
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => setSize(s)}
+                    className={`h-12 rounded-full text-[13px] tracking-soft border transition active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${active ? "bg-gold-soft border-gold text-gold-deep font-medium" : "bg-background border-border text-muted-foreground hover:border-foreground/40"}`}
+                  >
                     {s}
                   </button>
                 );
