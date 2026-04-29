@@ -120,6 +120,10 @@ function LandingPage() {
         <LazyImage
           src={campaign.hero}
           alt={campaign.title}
+          eager
+          width={1600}
+          height={2000}
+          aspect="4/5"
           className="w-full aspect-[4/5] sm:aspect-[16/9] object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-6 text-white">
@@ -149,6 +153,9 @@ function LandingPage() {
               <LazyImage
                 src={c.img}
                 alt={c.name}
+                width={400}
+                height={400}
+                aspect="1/1"
                 className="aspect-square w-full object-cover rounded-lg"
               />
               <p className="mt-2 text-sm text-center group-hover:text-primary">
