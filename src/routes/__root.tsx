@@ -12,6 +12,8 @@ import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { CookieBanner } from "@/components/CookieBanner";
 import { useEffect } from "react";
 import { startWebVitals } from "@/lib/perf";
+import { GlobalErrorBoundary, OfflineBanner } from "@/components/ErrorDisplay";
+import { flushErrorBuffer } from "@/lib/errors";
 
 import appCss from "../styles.css?url";
 
@@ -82,24 +84,30 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
-  useEffect(() => { startWebVitals(); }, []);
+  useEffect(() => {
+    startWebVitals();
+    flushErrorBuffer().catch(() => { /* noop */ });
+  }, []);
   return (
-    <LanguageProvider>
-      <AuthProvider>
-        <WishlistProvider>
-          <BagProvider>
-            <AddressProvider>
-              <DesktopHeader />
-              <AnalyticsTracker />
-              <Outlet />
-              <WishlistBanner />
-              <WhatsAppButton />
-              <CookieBanner />
-              <Toaster />
-            </AddressProvider>
-          </BagProvider>
-        </WishlistProvider>
-      </AuthProvider>
-    </LanguageProvider>
+    <GlobalErrorBoundary>
+      <LanguageProvider>
+        <AuthProvider>
+          <WishlistProvider>
+            <BagProvider>
+              <AddressProvider>
+                <DesktopHeader />
+                <AnalyticsTracker />
+                <Outlet />
+                <WishlistBanner />
+                <WhatsAppButton />
+                <CookieBanner />
+                <OfflineBanner />
+                <Toaster />
+              </AddressProvider>
+            </BagProvider>
+          </WishlistProvider>
+        </AuthProvider>
+      </LanguageProvider>
+    </GlobalErrorBoundary>
   );
 }
