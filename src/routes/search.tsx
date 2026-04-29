@@ -400,8 +400,14 @@ function SearchPage() {
                     ? "كل المنتجات"
                     : "All products"}
               </h1>
-              <p className="text-xs text-muted-foreground mt-1.5 tracking-soft">
-                {fmtNum(total)} {isRTL ? "نتيجة" : total === 1 ? "result" : "results"}
+              <p
+                className="text-xs text-muted-foreground mt-1.5 tracking-soft"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                {loading
+                  ? isRTL ? "جارٍ تحميل النتائج…" : "Loading results…"
+                  : `${fmtNum(total)} ${isRTL ? "نتيجة" : total === 1 ? "result" : "results"}`}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -461,7 +467,12 @@ function SearchPage() {
 
           {/* Results */}
           {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
+            <div
+              className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5"
+              role="status"
+              aria-busy="true"
+              aria-label={isRTL ? "جارٍ تحميل النتائج" : "Loading results"}
+            >
               {Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
