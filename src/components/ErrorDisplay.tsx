@@ -62,6 +62,7 @@ export function ErrorDisplay({ code, onRetry, onDismiss, context }: ErrorDisplay
 
 /** Floating offline banner — appears when navigator.onLine = false. */
 export function OfflineBanner() {
+  const { lang } = useLanguage();
   const [offline, setOffline] = useState(false);
   useEffect(() => {
     const update = () => setOffline(typeof navigator !== "undefined" && !navigator.onLine);
@@ -77,7 +78,11 @@ export function OfflineBanner() {
   return (
     <div className="fixed bottom-4 inset-x-4 z-[100] mx-auto max-w-md rounded-lg border border-amber-500/50 bg-amber-500/10 backdrop-blur p-3 text-sm flex items-center gap-2 shadow-lg">
       <WifiOff className="h-4 w-4 text-amber-600" />
-      <span>انقطع الاتصال — بياناتك محفوظة وسنكمل تلقائيًا عند عودة الإنترنت.</span>
+      <span>
+        {lang === "ar"
+          ? "انقطع الاتصال — بياناتك محفوظة وسنكمل تلقائيًا عند عودة الإنترنت."
+          : "You're offline — your data is saved and we'll continue automatically when the connection returns."}
+      </span>
     </div>
   );
 }
