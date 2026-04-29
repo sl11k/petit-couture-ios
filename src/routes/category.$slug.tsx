@@ -308,27 +308,87 @@ function ProductDetails() {
         </header>
 
         <main className="pb-[160px]">
-          {/* Gallery */}
+          {/* Gallery — swipeable, snap-aligned, RTL-aware */}
           <section className="px-5">
-            <div className="relative overflow-hidden rounded-[28px] bg-pastel-peach aspect-[4/5]">
-              <img src={product.images[activeImg]} alt={product.name} className="w-full h-full object-cover" width={1024} height={1280} loading="eager" fetchPriority="high" decoding="sync" />
+            <div
+              className="relative overflow-hidden rounded-[28px] bg-pastel-peach aspect-[4/5]"
+              role="region"
+              aria-roledescription="carousel"
+              aria-label={product.name}
+            >
+              <div
+                ref={galleryRef}
+                onScroll={onGalleryScroll}
+                className="flex h-full w-full overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth"
+                dir={ar ? "rtl" : "ltr"}
+              >
+                {product.images.map((src, i) => (
+                  <div
+                    key={src}
+                    className="snap-center shrink-0 w-full h-full"
+                    role="group"
+                    aria-roledescription="slide"
+                    aria-label={`${i + 1} / ${product.images.length}`}
+                  >
+                    <img
+                      src={src}
+                      alt={`${product.name} — ${i + 1}`}
+                      className="w-full h-full object-cover"
+                      width={1024}
+                      height={1280}
+                      loading={i === 0 ? "eager" : i === 1 ? "eager" : "lazy"}
+                      fetchPriority={i === 0 ? "high" : "auto"}
+                      decoding={i === 0 ? "sync" : "async"}
+                    />
+                  </div>
+                ))}
+              </div>
+
               {discountPct > 0 && (
-                <span className={`absolute top-4 ${ar ? "right-4" : "left-4"} bg-foreground text-background text-[11px] font-semibold px-2.5 py-1 rounded-full`}>
+                <span className="absolute top-4 start-4 bg-foreground text-background text-[11px] font-semibold px-2.5 py-1 rounded-full pointer-events-none">
                   -{discountPct}%
                 </span>
               )}
-              <button aria-label={ar ? "تكبير" : "Zoom"} onClick={() => setZoomOpen(true)} className={`absolute bottom-4 ${ar ? "right-4" : "left-4"} h-10 w-10 rounded-full bg-background/90 backdrop-blur grid place-items-center text-foreground/80 active:scale-95 transition`}>
+              <button
+                aria-label={ar ? "تكبير" : "Zoom"}
+                onClick={() => setZoomOpen(true)}
+                className="absolute bottom-4 start-4 h-10 w-10 rounded-full bg-background/90 backdrop-blur grid place-items-center text-foreground/80 active:scale-95 transition"
+              >
                 <ZoomIn className="h-[16px] w-[16px]" strokeWidth={1.6} />
               </button>
-              <button aria-label={ar ? "أضف إلى المفضلة" : "Add to wishlist"} onClick={setWished} className={`absolute top-4 h-11 w-11 rounded-full bg-background/90 backdrop-blur grid place-items-center border border-gold-soft text-gold-deep active:scale-95 transition ${ar ? "left-4" : "right-4"}`}>
+              <button
+                aria-label={ar ? (wished ? "إزالة من المفضلة" : "أضف إلى المفضلة") : (wished ? "Remove from wishlist" : "Add to wishlist")}
+                aria-pressed={wished}
+                onClick={setWished}
+                className="absolute top-4 end-4 h-11 w-11 rounded-full bg-background/90 backdrop-blur grid place-items-center border border-gold-soft text-gold-deep active:scale-95 transition"
+              >
                 <Heart className="h-[18px] w-[18px]" strokeWidth={1.5} fill={wished ? "currentColor" : "none"} />
               </button>
+
+              {/* Dots */}
+              {product.images.length > 1 && (
+                <div className="absolute bottom-4 inset-x-0 flex justify-center gap-1.5 pointer-events-none">
+                  {product.images.map((_, i) => (
+                    <span
+                      key={i}
+                      className={`h-1.5 rounded-full transition-all ${i === activeImg ? "w-5 bg-foreground" : "w-1.5 bg-foreground/30"}`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Thumbnails */}
-            <div className="mt-4 flex gap-3 overflow-x-auto scrollbar-none">
+            <div className="mt-4 flex gap-3 overflow-x-auto scrollbar-none" role="tablist" aria-label={ar ? "صور المنتج" : "Product images"}>
               {product.images.map((src, i) => (
-                <button key={src} onClick={() => setActiveImg(i)} className={`h-[68px] w-[56px] shrink-0 overflow-hidden rounded-[14px] border transition ${i === activeImg ? "border-gold ring-1 ring-gold/40" : "border-border opacity-80"}`}>
+                <button
+                  key={src}
+                  role="tab"
+                  aria-selected={i === activeImg}
+                  aria-label={`${ar ? "صورة" : "Image"} ${i + 1}`}
+                  onClick={() => goToImage(i)}
+                  className={`h-[68px] w-[56px] shrink-0 overflow-hidden rounded-[14px] border transition active:scale-95 ${i === activeImg ? "border-gold ring-1 ring-gold/40" : "border-border opacity-80"}`}
+                >
                   <img src={src} alt="" loading="lazy" decoding="async" width={200} height={250} className="w-full h-full object-cover" />
                 </button>
               ))}
