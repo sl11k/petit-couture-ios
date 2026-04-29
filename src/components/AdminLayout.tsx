@@ -333,11 +333,6 @@ export function AdminShell({ children }: { children?: ReactNode }) {
     </aside>
   );
 
-  // Find current page label
-  const currentPage = flatNav().find((i) =>
-    i.exact ? location.pathname === i.to : location.pathname === i.to || location.pathname.startsWith(i.to + "/"),
-  );
-
   return (
     <div className="flex min-h-screen bg-muted/20" dir={isRTL ? "rtl" : "ltr"}>
       {/* Desktop sidebar */}
