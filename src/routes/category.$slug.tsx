@@ -123,6 +123,23 @@ function ProductDetails() {
   const wished = wishlist.has(wishId);
   const setWished = () => wishlist.toggle(wishId, "product_detail");
 
+  // Swipeable gallery: keep activeImg in sync with horizontal scroll position.
+  const galleryRef = useRef<HTMLDivElement>(null);
+  const onGalleryScroll = () => {
+    const el = galleryRef.current;
+    if (!el) return;
+    const slideW = el.clientWidth || 1;
+    const idx = Math.round(Math.abs(el.scrollLeft) / slideW);
+    if (idx !== activeImg) setActiveImg(idx);
+  };
+  const goToImage = (i: number) => {
+    const el = galleryRef.current;
+    setActiveImg(i);
+    if (!el) return;
+    const left = el.clientWidth * i * (ar ? -1 : 1);
+    el.scrollTo({ left, behavior: "smooth" });
+  };
+
   useEffect(() => {
     const seenKey = `maisonnet:impression:product:${slug}`;
     if (typeof sessionStorage === "undefined") return;
