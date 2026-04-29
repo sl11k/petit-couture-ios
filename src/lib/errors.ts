@@ -5,6 +5,10 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 
+// Untyped client to bypass strict type generation lag for new tables.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sb = supabase as any;
+
 export type ErrorSeverity = "info" | "warning" | "error" | "critical";
 export type ErrorCategory =
   | "payment"
@@ -200,7 +204,7 @@ export async function logError(code: ErrorCode, opts: LogErrorOptions = {}) {
       bufferOffline(payload);
       return;
     }
-    await supabase.from("error_logs").insert(payload);
+    await sb.from("error_logs").insert(payload);
   } catch (e) {
     bufferOffline(payload);
   }
@@ -226,7 +230,7 @@ export async function flushErrorBuffer() {
   try {
     const arr = JSON.parse(raw) as Record<string, unknown>[];
     if (!arr.length) return;
-    await supabase.from("error_logs").insert(arr as never);
+    await sb.from("error_logs").insert(arr);
     localStorage.removeItem(BUFFER_KEY);
   } catch { /* keep buffered for next time */ }
 }
@@ -250,7 +254,7 @@ export async function withIdempotency<T>(
   fn: () => Promise<T>,
 ): Promise<{ result: T; replayed: boolean }> {
   // Try to insert; if already exists, return stored result
-  const { data: existing } = await supabase
+  const { data: existing } = await sb
     .from("idempotency_keys")
     .select("status, result")
     .eq("key", key)
@@ -264,23 +268,23 @@ export async function withIdempotency<T>(
     return { result: existing.result as T, replayed: true };
   }
 
-  await supabase.from("idempotency_keys").upsert({
+  await sb.from("idempotency_keys").upsert({
     key,
     scope,
     status: "pending",
-  } as never);
+  });
 
   try {
     const result = await fn();
-    await supabase
+    await sb
       .from("idempotency_keys")
-      .update({ status: "success", result: result as never } as never)
+      .update({ status: "success", result })
       .eq("key", key);
     return { result, replayed: false };
   } catch (e) {
-    await supabase
+    await sb
       .from("idempotency_keys")
-      .update({ status: "failed" } as never)
+      .update({ status: "failed" })
       .eq("key", key);
     throw e;
   }
