@@ -595,7 +595,12 @@ function ProductDetails() {
               ))}
             </div>
 
-            <div className="mt-4">
+            <div
+              className="mt-4"
+              role="tabpanel"
+              id={`pdp-tabpanel-${tab}`}
+              aria-labelledby={`pdp-tab-${tab}`}
+            >
               {tab === "description" && (
                 <div>
                   <p className="text-[13px] text-foreground/70 italic">{product.shortDescription}</p>
