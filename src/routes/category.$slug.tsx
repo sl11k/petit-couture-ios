@@ -57,6 +57,7 @@ export const Route = createFileRoute("/category/$slug")({
     const jsonLd: Array<Record<string, unknown>> = [
       breadcrumbJsonLd([
         { name: "الرئيسية", path: "/" },
+        { name: "الأقسام", path: "/category" },
         { name: cat.name, path },
       ]),
     ];
