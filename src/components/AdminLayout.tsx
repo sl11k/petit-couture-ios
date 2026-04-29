@@ -43,7 +43,6 @@ type NavItem = {
   labelEn: string;
   icon: typeof LayoutDashboard;
   exact?: boolean;
-  badge?: "soon";
 };
 
 type NavGroup = {
@@ -92,14 +91,14 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/admin/customers", labelAr: "العملاء", labelEn: "Customers", icon: Users },
       { to: "/admin/coupons", labelAr: "الكوبونات", labelEn: "Coupons", icon: Ticket },
       { to: "/admin/invoices", labelAr: "الفواتير والضرائب", labelEn: "Invoices & tax", icon: FileText },
-      { to: "/admin/campaigns", labelAr: "العروض والحملات", labelEn: "Campaigns", icon: Megaphone, badge: "soon" },
+      { to: "/admin/campaigns", labelAr: "العروض والحملات", labelEn: "Campaigns", icon: Megaphone },
     ],
   },
   {
     labelAr: "المحتوى",
     labelEn: "Content",
     items: [
-      { to: "/admin/content", labelAr: "المحتوى", labelEn: "Content", icon: FileText, badge: "soon" },
+      { to: "/admin/content", labelAr: "المحتوى", labelEn: "Content", icon: FileText },
       { to: "/admin/storefront", labelAr: "إدارة الواجهة", labelEn: "Storefront" , icon: Layout },
     ],
   },
@@ -119,7 +118,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/admin/users", labelAr: "المستخدمون والصلاحيات", labelEn: "Users & roles", icon: Shield },
       { to: "/admin/security", labelAr: "مركز الأمان", labelEn: "Security center", icon: Shield },
       { to: "/admin/privacy", labelAr: "إدارة الخصوصية", labelEn: "Privacy management", icon: Shield },
-      { to: "/admin/integrations", labelAr: "التكاملات", labelEn: "Integrations", icon: Plug, badge: "soon" },
+      { to: "/admin/integrations", labelAr: "التكاملات", labelEn: "Integrations", icon: Plug },
       { to: "/admin/webhooks", labelAr: "Webhooks وAPI", labelEn: "Webhooks & API", icon: Plug },
       { to: "/admin/audit", labelAr: "سجل العمليات", labelEn: "Audit log", icon: ScrollText },
       { to: "/admin/audit-logins", labelAr: "محاولات الدخول الفاشلة", labelEn: "Failed login attempts", icon: ScrollText },
@@ -129,7 +128,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/admin/errors", labelAr: "سجل الأخطاء", labelEn: "Error log", icon: AlertCircle },
       { to: "/admin/states", labelAr: "دليل حالات الشاشات", labelEn: "Screen states", icon: Layout },
       { to: "/admin/settings", labelAr: "الإعدادات", labelEn: "Settings", icon: Settings },
-      { to: "/admin/help", labelAr: "الدعم الفني", labelEn: "Technical support", icon: LifeBuoy, badge: "soon" },
+      { to: "/admin/help", labelAr: "الدعم الفني", labelEn: "Technical support", icon: LifeBuoy },
     ],
   },
 ];
