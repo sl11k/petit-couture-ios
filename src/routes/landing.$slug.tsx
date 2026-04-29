@@ -156,7 +156,7 @@ export const Route = createFileRoute("/landing/$slug")({
 function LandingPage() {
   const { campaign } = Route.useLoaderData();
   const featured = campaign.featuredCategorySlugs
-    .map((s) => categories.find((c) => c.slug === s))
+    .map((s: string) => categories.find((c) => c.slug === s))
     .filter(Boolean) as typeof categories;
 
   useEffect(() => {
