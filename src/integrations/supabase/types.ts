@@ -131,6 +131,72 @@ export type Database = {
         }
         Relationships: []
       }
+      account_lockouts: {
+        Row: {
+          created_at: string
+          email: string
+          failed_count: number
+          id: string
+          locked_until: string
+          reason: string | null
+          released_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          failed_count?: number
+          id?: string
+          locked_until: string
+          reason?: string | null
+          released_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          failed_count?: number
+          id?: string
+          locked_until?: string
+          reason?: string | null
+          released_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      active_sessions: {
+        Row: {
+          created_at: string
+          device_label: string | null
+          id: string
+          ip_address: string | null
+          last_seen_at: string
+          revoked_at: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_label?: string | null
+          id?: string
+          ip_address?: string | null
+          last_seen_at?: string
+          revoked_at?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_label?: string | null
+          id?: string
+          ip_address?: string | null
+          last_seen_at?: string
+          revoked_at?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_notifications: {
         Row: {
           body: string | null
@@ -251,6 +317,36 @@ export type Database = {
           new_data?: Json | null
           old_data?: Json | null
           user_agent?: string | null
+        }
+        Relationships: []
+      }
+      backup_log: {
+        Row: {
+          created_at: string
+          id: string
+          location: string | null
+          notes: string | null
+          size_bytes: number | null
+          status: string
+          triggered_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          size_bytes?: number | null
+          status: string
+          triggered_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          size_bytes?: number | null
+          status?: string
+          triggered_by?: string | null
         }
         Relationships: []
       }
@@ -1771,6 +1867,27 @@ export type Database = {
         }
         Relationships: []
       }
+      password_history: {
+        Row: {
+          created_at: string
+          id: string
+          password_hash: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          password_hash: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          password_hash?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       payment_method_configs: {
         Row: {
           config: Json
@@ -2995,6 +3112,93 @@ export type Database = {
         }
         Relationships: []
       }
+      security_settings: {
+        Row: {
+          api_rate_limit_per_minute: number
+          backup_enabled: boolean
+          backup_frequency: string
+          backup_retention_days: number
+          enable_csrf_protection: boolean
+          enable_xss_protection: boolean
+          force_https: boolean
+          id: boolean
+          last_backup_at: string | null
+          lockout_duration_minutes: number
+          lockout_max_attempts: number
+          lockout_window_minutes: number
+          password_history_count: number
+          password_max_age_days: number
+          password_min_length: number
+          password_require_lowercase: boolean
+          password_require_number: boolean
+          password_require_symbol: boolean
+          password_require_uppercase: boolean
+          require_2fa_for_admins: boolean
+          require_2fa_for_managers: boolean
+          session_absolute_timeout_hours: number
+          session_idle_timeout_minutes: number
+          session_single_device: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          api_rate_limit_per_minute?: number
+          backup_enabled?: boolean
+          backup_frequency?: string
+          backup_retention_days?: number
+          enable_csrf_protection?: boolean
+          enable_xss_protection?: boolean
+          force_https?: boolean
+          id?: boolean
+          last_backup_at?: string | null
+          lockout_duration_minutes?: number
+          lockout_max_attempts?: number
+          lockout_window_minutes?: number
+          password_history_count?: number
+          password_max_age_days?: number
+          password_min_length?: number
+          password_require_lowercase?: boolean
+          password_require_number?: boolean
+          password_require_symbol?: boolean
+          password_require_uppercase?: boolean
+          require_2fa_for_admins?: boolean
+          require_2fa_for_managers?: boolean
+          session_absolute_timeout_hours?: number
+          session_idle_timeout_minutes?: number
+          session_single_device?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          api_rate_limit_per_minute?: number
+          backup_enabled?: boolean
+          backup_frequency?: string
+          backup_retention_days?: number
+          enable_csrf_protection?: boolean
+          enable_xss_protection?: boolean
+          force_https?: boolean
+          id?: boolean
+          last_backup_at?: string | null
+          lockout_duration_minutes?: number
+          lockout_max_attempts?: number
+          lockout_window_minutes?: number
+          password_history_count?: number
+          password_max_age_days?: number
+          password_min_length?: number
+          password_require_lowercase?: boolean
+          password_require_number?: boolean
+          password_require_symbol?: boolean
+          password_require_uppercase?: boolean
+          require_2fa_for_admins?: boolean
+          require_2fa_for_managers?: boolean
+          session_absolute_timeout_hours?: number
+          session_idle_timeout_minutes?: number
+          session_single_device?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       shipment_tracking_events: {
         Row: {
           created_at: string
@@ -4056,6 +4260,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_2fa: {
+        Row: {
+          backup_codes_hash: string[] | null
+          created_at: string
+          enabled: boolean
+          enrolled_at: string | null
+          last_used_at: string | null
+          recovery_email: string | null
+          secret_encrypted: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          backup_codes_hash?: string[] | null
+          created_at?: string
+          enabled?: boolean
+          enrolled_at?: string | null
+          last_used_at?: string | null
+          recovery_email?: string | null
+          secret_encrypted?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          backup_codes_hash?: string[] | null
+          created_at?: string
+          enabled?: boolean
+          enrolled_at?: string | null
+          last_used_at?: string | null
+          recovery_email?: string | null
+          secret_encrypted?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -4143,6 +4383,14 @@ export type Database = {
     }
     Functions: {
       auto_cancel_expired_orders: { Args: never; Returns: number }
+      check_account_lockout: {
+        Args: { _email: string }
+        Returns: {
+          locked: boolean
+          locked_until: string
+          remaining_attempts: number
+        }[]
+      }
       has_permission: {
         Args: { _permission: string; _user_id: string }
         Returns: boolean
@@ -4173,6 +4421,7 @@ export type Database = {
       }
       next_invoice_number: { Args: { _prefix?: string }; Returns: string }
       refresh_product_sales_counts: { Args: never; Returns: undefined }
+      register_failed_login: { Args: { _email: string }; Returns: undefined }
       release_expired_order_stock: {
         Args: { _order_id: string }
         Returns: undefined
