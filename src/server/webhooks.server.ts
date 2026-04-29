@@ -80,7 +80,7 @@ export function hashApiKey(key: string): string {
  * Fetch endpoints subscribed to an event and create delivery records.
  * Then attempt immediate delivery (fire-and-forget).
  */
-export async function emitEvent(eventType: WebhookEvent, payload: Record<string, unknown>) {
+export async function emitEvent(eventType: WebhookEvent, payload: Record<string, any>) {
   const { data: endpoints } = await supabaseAdmin
     .from("webhook_endpoints")
     .select("id, url, secret, events, enabled")
@@ -94,10 +94,10 @@ export async function emitEvent(eventType: WebhookEvent, payload: Record<string,
     endpoint_id: ep.id,
     event_type: eventType,
     event_id: eventId,
-    payload: { event: eventType, id: eventId, created_at: new Date().toISOString(), data: payload },
+    payload: { event: eventType, id: eventId, created_at: new Date().toISOString(), data: payload } as any,
     attempt: 1,
     max_attempts: MAX_ATTEMPTS,
-    status: "pending" as const,
+    status: "pending",
   }));
 
   const { data: deliveries } = await supabaseAdmin
