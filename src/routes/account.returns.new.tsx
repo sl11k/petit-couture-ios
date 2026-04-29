@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { buildMeta } from "@/lib/seo";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +7,14 @@ import { isOrderEligibleForReturn } from "@/lib/returns";
 import { Upload, X, ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/account/returns/new")({
+  head: () =>
+    buildMeta({
+      title: "طلب استرجاع — Maisonnét",
+      description:
+        "اطلب استرجاع منتج من طلبك بسهولة عبر نموذج Maisonnét.",
+      path: "/account/returns/new",
+      noindex: true,
+    }),
   component: NewReturnRequest,
   validateSearch: (s: Record<string, unknown>) => ({ order: typeof s.order === "string" ? s.order : "" }),
 });

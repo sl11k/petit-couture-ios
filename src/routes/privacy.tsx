@@ -1,14 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Shield } from "lucide-react";
+import { buildMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/privacy")({
   component: PrivacyPolicy,
-  head: () => ({
-    meta: [
-      { title: "سياسة الخصوصية" },
-      { name: "description", content: "سياسة الخصوصية وحماية البيانات الخاصة بالعملاء" },
-    ],
-  }),
+  head: () =>
+    buildMeta({
+      title: "سياسة الخصوصية — Maisonnét",
+      description:
+        "كيف نحمي بياناتك الشخصية في Maisonnét: ما نجمعه، كيف نستخدمه، وحقوقك في الوصول والتعديل والحذف.",
+      path: "/privacy",
+    }),
 });
 
 function PrivacyPolicy() {

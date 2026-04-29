@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { buildMeta } from "@/lib/seo";
 import { ChevronLeft, ChevronRight, Heart, LogOut, Mail, Lock } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { z } from "zod";
@@ -7,22 +8,14 @@ import { useAuth } from "@/state/AuthContext";
 import { useWishlist } from "@/state/WishlistContext";
 
 export const Route = createFileRoute("/account")({
-  head: () => ({
-    meta: [
-      { title: "Account — Maisonnét" },
-      {
-        name: "description",
-        content:
-          "Sign in to sync your Maisonnét wishlist across every device you shop on.",
-      },
-      { property: "og:title", content: "Account — Maisonnét" },
-      {
-        property: "og:description",
-        content:
-          "Sign in to sync your Maisonnét wishlist across every device you shop on.",
-      },
-    ],
-  }),
+  head: () =>
+    buildMeta({
+      title: "حسابي — Maisonnét",
+      description:
+        "سجّل الدخول لمزامنة قائمة رغباتك وطلباتك عبر كل أجهزتك مع Maisonnét.",
+      path: "/account",
+      noindex: true,
+    }),
   component: AccountPage,
 });
 

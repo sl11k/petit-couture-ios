@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { buildMeta } from "@/lib/seo";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/state/AuthContext";
 import {
@@ -9,6 +10,14 @@ import { db } from "@/lib/db";
 import { Shield, Download, Trash2, AlertTriangle, CheckCircle2, Mail, MessageSquare, Bell, Phone } from "lucide-react";
 
 export const Route = createFileRoute("/account/privacy")({
+  head: () =>
+    buildMeta({
+      title: "خصوصية الحساب — Maisonnét",
+      description:
+        "إدارة موافقاتك، تصدير بياناتك، أو طلب حذف حسابك من Maisonnét.",
+      path: "/account/privacy",
+      noindex: true,
+    }),
   component: AccountPrivacy,
   beforeLoad: ({ context }: any) => {
     if (typeof window !== "undefined") {

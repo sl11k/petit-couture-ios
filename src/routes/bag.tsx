@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { buildMeta } from "@/lib/seo";
 import { useMemo, useState } from "react";
 import {
   AlertTriangle,
@@ -23,14 +24,14 @@ import { getProductForCategory, categories, productsByCategory } from "@/data/ca
 import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
 
 export const Route = createFileRoute("/bag")({
-  head: () => ({
-    meta: [
-      { title: "Your Bag — Maisonnét" },
-      { name: "description", content: "Review your saved pieces and proceed to a secure checkout." },
-      { property: "og:title", content: "Your Bag — Maisonnét" },
-      { property: "og:description", content: "Review your saved pieces and proceed to a secure checkout." },
-    ],
-  }),
+  head: () =>
+    buildMeta({
+      title: "حقيبتك — Maisonnét",
+      description:
+        "راجع القطع التي اخترتها وأكمل عملية الشراء عبر دفع آمن.",
+      path: "/bag",
+      noindex: true,
+    }),
   component: BagPage,
 });
 

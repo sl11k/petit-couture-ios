@@ -13,6 +13,7 @@ export const SITE = {
     "https://golden-boutique-ios.lovable.app/og-default.jpg",
   locale: "ar_SA",
   twitter: "@maisonnet",
+  themeColor: "#F8F5EF",
 };
 
 /** slugify يدعم العربية + اللاتينية، يولّد روابط نظيفة */
@@ -64,11 +65,13 @@ export function buildMeta(opts: MetaOptions) {
     { title },
     { name: "description", content: description },
     { name: "robots", content: robots },
+    { name: "theme-color", content: SITE.themeColor },
     { property: "og:title", content: title },
     { property: "og:description", content: description },
     { property: "og:type", content: opts.type ?? "website" },
     { property: "og:url", content: url },
     { property: "og:image", content: image },
+    { property: "og:image:alt", content: title },
     { property: "og:site_name", content: SITE.name },
     { property: "og:locale", content: opts.locale ?? SITE.locale },
     { name: "twitter:card", content: "summary_large_image" },
@@ -76,6 +79,7 @@ export function buildMeta(opts: MetaOptions) {
     { name: "twitter:title", content: title },
     { name: "twitter:description", content: description },
     { name: "twitter:image", content: image },
+    { name: "twitter:image:alt", content: title },
   ];
 
   const links: Array<Record<string, string>> = [{ rel: "canonical", href: url }];

@@ -1,9 +1,17 @@
 import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { buildMeta } from "@/lib/seo";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/db";
 import { CheckCircle2, XCircle } from "lucide-react";
 
 export const Route = createFileRoute("/unsubscribe")({
+  head: () =>
+    buildMeta({
+      title: "إلغاء الاشتراك — Maisonnét",
+      description: "إلغاء اشتراكك من رسائل Maisonnét الترويجية.",
+      path: "/unsubscribe",
+      noindex: true,
+    }),
   component: Unsubscribe,
   validateSearch: (s: Record<string, unknown>) => ({ token: typeof s.token === "string" ? s.token : "" }),
 });

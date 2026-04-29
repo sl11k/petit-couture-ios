@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { buildMeta } from "@/lib/seo";
 import { ChevronLeft, ChevronRight, Heart, Share2, Sparkles, Trash2, UserCircle2, Undo2, ArrowUpDown, Check } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -41,20 +42,14 @@ function buildShareUrl(ids: string[]): string {
 }
 
 export const Route = createFileRoute("/wishlist")({
-  head: () => ({
-    meta: [
-      { title: "Wishlist — Maisonnét" },
-      {
-        name: "description",
-        content: "Your saved Maisonnét pieces — review, remove, and shop your wishlist.",
-      },
-      { property: "og:title", content: "Wishlist — Maisonnét" },
-      {
-        property: "og:description",
-        content: "Your saved Maisonnét pieces — review, remove, and shop your wishlist.",
-      },
-    ],
-  }),
+  head: () =>
+    buildMeta({
+      title: "قائمة الرغبات — Maisonnét",
+      description:
+        "قطعك المحفوظة من Maisonnét — راجعها، أزل ما لا تحتاجه، وأكمل تسوقك بسهولة.",
+      path: "/wishlist",
+      noindex: true,
+    }),
   component: WishlistPage,
 });
 

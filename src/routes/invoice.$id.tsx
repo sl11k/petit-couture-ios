@@ -1,4 +1,5 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
+import { buildMeta } from "@/lib/seo";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatMoney, markInvoiceEmailed } from "@/lib/invoices";
@@ -6,6 +7,13 @@ import { Printer, Download, Mail, ArrowLeft } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/invoice/$id")({
+  head: () =>
+    buildMeta({
+      title: "الفاتورة — Maisonnét",
+      description: "عرض فاتورة طلبك من Maisonnét.",
+      path: "/invoice",
+      noindex: true,
+    }),
   component: InvoiceView,
 });
 

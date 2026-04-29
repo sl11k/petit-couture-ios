@@ -1,8 +1,17 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { buildMeta } from "@/lib/seo";
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/state/AuthContext";
 
 export const Route = createFileRoute("/login")({
+  head: () =>
+    buildMeta({
+      title: "تسجيل الدخول — Maisonnét",
+      description:
+        "سجّل الدخول إلى حسابك في Maisonnét لمتابعة طلباتك وقائمة رغباتك.",
+      path: "/login",
+      noindex: true,
+    }),
   component: LoginPage,
 });
 
