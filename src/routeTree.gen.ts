@@ -31,6 +31,7 @@ import { Route as LandingSlugRouteImport } from './routes/landing.$slug'
 import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
 import { Route as DebugAnalyticsRouteImport } from './routes/debug.analytics'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as AdminWebhooksRouteImport } from './routes/admin.webhooks'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminSupportRouteImport } from './routes/admin.support'
 import { Route as AdminStorefrontRouteImport } from './routes/admin.storefront'
@@ -67,6 +68,10 @@ import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAbandonedRouteImport } from './routes/admin.abandoned'
 import { Route as AccountPrivacyRouteImport } from './routes/account.privacy'
+import { Route as ApiV1ProductsRouteImport } from './routes/api.v1.products'
+import { Route as ApiV1OrdersRouteImport } from './routes/api.v1.orders'
+import { Route as ApiV1InventoryRouteImport } from './routes/api.v1.inventory'
+import { Route as ApiPublicWebhooksRetryRouteImport } from './routes/api.public.webhooks-retry'
 import { Route as ApiPublicShippingWebhookRouteImport } from './routes/api.public.shipping-webhook'
 import { Route as ApiPublicPaymentWebhookRouteImport } from './routes/api.public.payment-webhook'
 import { Route as AdminProductsIdRouteImport } from './routes/admin.products.$id'
@@ -184,6 +189,11 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
   id: '/category/$slug',
   path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminWebhooksRoute = AdminWebhooksRouteImport.update({
+  id: '/webhooks',
+  path: '/webhooks',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
@@ -365,6 +375,26 @@ const AccountPrivacyRoute = AccountPrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => AccountRoute,
 } as any)
+const ApiV1ProductsRoute = ApiV1ProductsRouteImport.update({
+  id: '/api/v1/products',
+  path: '/api/v1/products',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1OrdersRoute = ApiV1OrdersRouteImport.update({
+  id: '/api/v1/orders',
+  path: '/api/v1/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1InventoryRoute = ApiV1InventoryRouteImport.update({
+  id: '/api/v1/inventory',
+  path: '/api/v1/inventory',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicWebhooksRetryRoute = ApiPublicWebhooksRetryRouteImport.update({
+  id: '/api/public/webhooks-retry',
+  path: '/api/public/webhooks-retry',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicShippingWebhookRoute =
   ApiPublicShippingWebhookRouteImport.update({
     id: '/api/public/shipping-webhook',
@@ -449,6 +479,7 @@ export interface FileRoutesByFullPath {
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/webhooks': typeof AdminWebhooksRoute
   '/category/$slug': typeof CategorySlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
   '/invoice/$id': typeof InvoiceIdRoute
@@ -462,6 +493,10 @@ export interface FileRoutesByFullPath {
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
+  '/api/public/webhooks-retry': typeof ApiPublicWebhooksRetryRoute
+  '/api/v1/inventory': typeof ApiV1InventoryRoute
+  '/api/v1/orders': typeof ApiV1OrdersRoute
+  '/api/v1/products': typeof ApiV1ProductsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -515,6 +550,7 @@ export interface FileRoutesByTo {
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/webhooks': typeof AdminWebhooksRoute
   '/category/$slug': typeof CategorySlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
   '/invoice/$id': typeof InvoiceIdRoute
@@ -528,6 +564,10 @@ export interface FileRoutesByTo {
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
+  '/api/public/webhooks-retry': typeof ApiPublicWebhooksRetryRoute
+  '/api/v1/inventory': typeof ApiV1InventoryRoute
+  '/api/v1/orders': typeof ApiV1OrdersRoute
+  '/api/v1/products': typeof ApiV1ProductsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -582,6 +622,7 @@ export interface FileRoutesById {
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/webhooks': typeof AdminWebhooksRoute
   '/category/$slug': typeof CategorySlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
   '/invoice/$id': typeof InvoiceIdRoute
@@ -595,6 +636,10 @@ export interface FileRoutesById {
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
+  '/api/public/webhooks-retry': typeof ApiPublicWebhooksRetryRoute
+  '/api/v1/inventory': typeof ApiV1InventoryRoute
+  '/api/v1/orders': typeof ApiV1OrdersRoute
+  '/api/v1/products': typeof ApiV1ProductsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -650,6 +695,7 @@ export interface FileRouteTypes {
     | '/admin/storefront'
     | '/admin/support'
     | '/admin/users'
+    | '/admin/webhooks'
     | '/category/$slug'
     | '/debug/analytics'
     | '/invoice/$id'
@@ -663,6 +709,10 @@ export interface FileRouteTypes {
     | '/admin/products/$id'
     | '/api/public/payment-webhook'
     | '/api/public/shipping-webhook'
+    | '/api/public/webhooks-retry'
+    | '/api/v1/inventory'
+    | '/api/v1/orders'
+    | '/api/v1/products'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -716,6 +766,7 @@ export interface FileRouteTypes {
     | '/admin/storefront'
     | '/admin/support'
     | '/admin/users'
+    | '/admin/webhooks'
     | '/category/$slug'
     | '/debug/analytics'
     | '/invoice/$id'
@@ -729,6 +780,10 @@ export interface FileRouteTypes {
     | '/admin/products/$id'
     | '/api/public/payment-webhook'
     | '/api/public/shipping-webhook'
+    | '/api/public/webhooks-retry'
+    | '/api/v1/inventory'
+    | '/api/v1/orders'
+    | '/api/v1/products'
   id:
     | '__root__'
     | '/'
@@ -782,6 +837,7 @@ export interface FileRouteTypes {
     | '/admin/storefront'
     | '/admin/support'
     | '/admin/users'
+    | '/admin/webhooks'
     | '/category/$slug'
     | '/debug/analytics'
     | '/invoice/$id'
@@ -795,6 +851,10 @@ export interface FileRouteTypes {
     | '/admin/products/$id'
     | '/api/public/payment-webhook'
     | '/api/public/shipping-webhook'
+    | '/api/public/webhooks-retry'
+    | '/api/v1/inventory'
+    | '/api/v1/orders'
+    | '/api/v1/products'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -821,6 +881,10 @@ export interface RootRouteChildren {
   SupportNewRoute: typeof SupportNewRoute
   ApiPublicPaymentWebhookRoute: typeof ApiPublicPaymentWebhookRoute
   ApiPublicShippingWebhookRoute: typeof ApiPublicShippingWebhookRoute
+  ApiPublicWebhooksRetryRoute: typeof ApiPublicWebhooksRetryRoute
+  ApiV1InventoryRoute: typeof ApiV1InventoryRoute
+  ApiV1OrdersRoute: typeof ApiV1OrdersRoute
+  ApiV1ProductsRoute: typeof ApiV1ProductsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -978,6 +1042,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/category/$slug'
       preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/webhooks': {
+      id: '/admin/webhooks'
+      path: '/webhooks'
+      fullPath: '/admin/webhooks'
+      preLoaderRoute: typeof AdminWebhooksRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/users': {
       id: '/admin/users'
@@ -1231,6 +1302,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountPrivacyRouteImport
       parentRoute: typeof AccountRoute
     }
+    '/api/v1/products': {
+      id: '/api/v1/products'
+      path: '/api/v1/products'
+      fullPath: '/api/v1/products'
+      preLoaderRoute: typeof ApiV1ProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/orders': {
+      id: '/api/v1/orders'
+      path: '/api/v1/orders'
+      fullPath: '/api/v1/orders'
+      preLoaderRoute: typeof ApiV1OrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/inventory': {
+      id: '/api/v1/inventory'
+      path: '/api/v1/inventory'
+      fullPath: '/api/v1/inventory'
+      preLoaderRoute: typeof ApiV1InventoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/webhooks-retry': {
+      id: '/api/public/webhooks-retry'
+      path: '/api/public/webhooks-retry'
+      fullPath: '/api/public/webhooks-retry'
+      preLoaderRoute: typeof ApiPublicWebhooksRetryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/shipping-webhook': {
       id: '/api/public/shipping-webhook'
       path: '/api/public/shipping-webhook'
@@ -1361,6 +1460,7 @@ interface AdminRouteChildren {
   AdminStorefrontRoute: typeof AdminStorefrontRoute
   AdminSupportRoute: typeof AdminSupportRoute
   AdminUsersRoute: typeof AdminUsersRoute
+  AdminWebhooksRoute: typeof AdminWebhooksRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -1399,6 +1499,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminStorefrontRoute: AdminStorefrontRoute,
   AdminSupportRoute: AdminSupportRoute,
   AdminUsersRoute: AdminUsersRoute,
+  AdminWebhooksRoute: AdminWebhooksRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
@@ -1439,6 +1540,10 @@ const rootRouteChildren: RootRouteChildren = {
   SupportNewRoute: SupportNewRoute,
   ApiPublicPaymentWebhookRoute: ApiPublicPaymentWebhookRoute,
   ApiPublicShippingWebhookRoute: ApiPublicShippingWebhookRoute,
+  ApiPublicWebhooksRetryRoute: ApiPublicWebhooksRetryRoute,
+  ApiV1InventoryRoute: ApiV1InventoryRoute,
+  ApiV1OrdersRoute: ApiV1OrdersRoute,
+  ApiV1ProductsRoute: ApiV1ProductsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
