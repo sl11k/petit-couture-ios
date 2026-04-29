@@ -160,6 +160,37 @@ export function AdminShell({ children }: { children?: ReactNode }) {
     setMobileOpen(false);
   }, [location.pathname]);
 
+  // Find current page label (used by SEO + topbar title).
+  const currentPage = useMemo(
+    () =>
+      flatNav().find((i) =>
+        i.exact ? location.pathname === i.to : location.pathname === i.to || location.pathname.startsWith(i.to + "/"),
+      ),
+    [location.pathname],
+  );
+
+  // Dynamic <title> + noindex meta for the entire admin surface (SEO).
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const pageLabel = currentPage ? (ar ? currentPage.labelAr : currentPage.labelEn) : (ar ? "لوحة الإدارة" : "Admin");
+    const prevTitle = document.title;
+    document.title = `${pageLabel} · Le Petit Paradis ${ar ? "إدارة" : "Admin"}`;
+
+    let robots = document.querySelector<HTMLMetaElement>('meta[name="robots"][data-admin]');
+    if (!robots) {
+      robots = document.createElement("meta");
+      robots.name = "robots";
+      robots.setAttribute("data-admin", "true");
+      document.head.appendChild(robots);
+    }
+    robots.content = "noindex, nofollow";
+
+    return () => {
+      document.title = prevTitle;
+      robots?.remove();
+    };
+  }, [currentPage, ar]);
+
   const toggleDark = () => {
     const next = !dark;
     setDark(next);
