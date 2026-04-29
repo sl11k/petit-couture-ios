@@ -106,6 +106,8 @@ export const Route = createFileRoute("/landing/$slug")({
           description: c.description,
           url: canonical(path),
           items,
+          image: c.hero,
+          inLanguage: "ar-SA",
         }),
       ],
     });
