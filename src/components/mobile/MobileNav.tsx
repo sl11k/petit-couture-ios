@@ -37,7 +37,7 @@ export function MobileHeader({
   const bag = useBag();
   const { isRTL } = useLanguage();
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
-  const bagCount = bag.items?.reduce?.((n, i) => n + (i.quantity ?? 1), 0) ?? 0;
+  const bagCount = bag.items?.reduce?.((n, i) => n + (i.qty ?? 1), 0) ?? 0;
 
   return (
     <header
@@ -121,16 +121,23 @@ export function MobileBottomNav() {
 
   if (HIDE_ON.some((p) => path.startsWith(p))) return null;
 
-  const bagCount = bag.items?.reduce?.((n, i) => n + (i.quantity ?? 1), 0) ?? 0;
+  const bagCount = bag.items?.reduce?.((n, i) => n + (i.qty ?? 1), 0) ?? 0;
   const wlCount = wishlist.items?.length ?? 0;
 
-  const items = [
+  type Item = {
+    to: string;
+    icon: typeof Home;
+    label: string;
+    exact?: boolean;
+    count?: number;
+  };
+  const items: Item[] = [
     { to: "/", icon: Home, label: "الرئيسية", exact: true },
     { to: "/search", icon: Search, label: "البحث" },
     { to: "/wishlist", icon: Heart, label: "المفضلة", count: wlCount },
     { to: "/bag", icon: ShoppingBag, label: "السلة", count: bagCount },
     { to: "/account", icon: User, label: "حسابي" },
-  ] as const;
+  ];
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? path === to : path === to || path.startsWith(to + "/");
