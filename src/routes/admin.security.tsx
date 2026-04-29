@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { AdminShell } from "@/components/AdminLayout";
 import { db } from "@/lib/db";
 import { useAuth } from "@/state/AuthContext";
