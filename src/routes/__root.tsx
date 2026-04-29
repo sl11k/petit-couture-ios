@@ -66,6 +66,7 @@ export const Route = createRootRoute({
       { name: "description", content: "بوتيك Le Petit Paradis: أزياء أطفال فاخرة مختارة بعناية — فساتين، أحذية، وهدايا للرضّع والبنات والأولاد. توصيل سريع وإرجاع مجاني." },
       { name: "author", content: "Le Petit Paradis" },
       { property: "og:site_name", content: "Le Petit Paradis" },
+      { rel: "icon", href: "/favicon.ico" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
