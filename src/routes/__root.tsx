@@ -7,6 +7,7 @@ import { AddressProvider } from "@/state/AddressContext";
 import { Toaster } from "@/components/ui/sonner";
 import { WishlistBanner } from "@/components/WishlistBanner";
 import { DesktopHeader } from "@/components/DesktopHeader";
+import { MobileBottomNav } from "@/components/mobile/MobileNav";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { CookieBanner } from "@/components/CookieBanner";
@@ -100,6 +101,7 @@ function RootComponent() {
                 <Outlet />
                 <WishlistBanner />
                 <WhatsAppButton />
+                <MobileBottomNav />
                 <CookieBanner />
                 <OfflineBanner />
                 <Toaster />
