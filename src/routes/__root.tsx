@@ -19,26 +19,53 @@ import { flushErrorBuffer } from "@/lib/errors";
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
+  // Note: i18n context isn't available at the route-not-found boundary,
+  // so we render bilingually with Arabic primary (site default) and English fallback.
   return (
-    <div className="flex min-h-screen items-center justify-center bg-cream px-4" dir="rtl">
-      <div className="max-w-md text-center">
+    <div className="flex min-h-screen items-center justify-center bg-cream px-4">
+      <div className="max-w-md text-center" dir="auto">
         <p className="text-[10.5px] tracking-[0.22em] text-gold-deep mb-3">MAISONNÉT</p>
         <h1 className="font-serif text-[88px] leading-none text-foreground">404</h1>
-        <h2 className="mt-4 font-serif text-2xl text-foreground">الصفحة غير موجودة</h2>
+        <h2 className="mt-4 font-serif text-2xl text-foreground">الصفحة غير موجودة · Page not found</h2>
         <p className="mt-2 text-sm text-muted-foreground tracking-soft">
           الصفحة التي تبحث عنها غير متوفرة أو تم نقلها.
+          <br />
+          The page you are looking for is unavailable or has been moved.
         </p>
         <div className="mt-8">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-full bg-foreground px-8 h-12 text-xs tracking-[0.18em] font-medium text-background hover:opacity-90 transition shadow-soft"
           >
-            العودة للرئيسية
+            العودة للرئيسية / Back to home
           </Link>
         </div>
       </div>
     </div>
   );
+}
+
+function SkipLink() {
+  // Reads from i18n if available, otherwise falls back to Arabic.
+  const { t } = useLanguageSafe();
+  return (
+    <a
+      href="#main-content"
+      className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:start-3 focus:z-[100] focus:rounded-full focus:bg-foreground focus:text-background focus:px-5 focus:h-11 focus:inline-flex focus:items-center focus:tracking-soft focus:text-sm focus:shadow-elegant focus:outline-none focus:ring-2 focus:ring-gold/60"
+    >
+      {t.common.skipToContent}
+    </a>
+  );
+}
+
+function useLanguageSafe() {
+  // Inline tiny wrapper to avoid throwing if mounted outside provider in edge cases.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+    return useLanguage();
+  } catch {
+    return { t: { common: { skipToContent: "تخطّي إلى المحتوى" } } } as ReturnType<typeof useLanguage>;
+  }
 }
 
 export const Route = createRootRoute({
