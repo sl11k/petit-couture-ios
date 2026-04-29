@@ -1,14 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import {
-  Heart,
-  MessageCircle,
-  Menu,
-  Home as HomeIcon,
-  User,
-  Search,
-  ShoppingBag,
-} from "lucide-react";
+import { Heart } from "lucide-react";
 import hero from "@/assets/hero-campaign.jpg";
 import { categories, getProductForCategory } from "@/data/categories";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -19,7 +11,6 @@ import { useBag } from "@/state/BagContext";
 
 
 type AgeKey = "baby" | "girl" | "boy";
-type NavKey = "menu" | "home" | "account" | "search" | "bag";
 
 /** Wishlist impression target — fires once per (source, id) per session. */
 function ImpressionCell({
@@ -46,7 +37,6 @@ export function HomeScreen() {
   const wishlist = useWishlist();
   const bag = useBag();
   const [age, setAge] = useState<AgeKey>("girl");
-  const [nav, setNav] = useState<NavKey>("home");
   const [annIdx, setAnnIdx] = useState(0);
 
   useEffect(() => {
@@ -336,84 +326,6 @@ export function HomeScreen() {
           </section>
         </main>
 
-        {/* Floating chat (RTL-aware position) */}
-        <button
-          aria-label={isRTL ? "خدمة العملاء" : "Customer support"}
-          className={[
-            "fixed lg:absolute bottom-[108px] h-[60px] w-[60px] rounded-full bg-gold text-background grid place-items-center shadow-gold active:scale-95 transition z-40",
-            isRTL ? "left-5" : "right-5",
-          ].join(" ")}
-        >
-          <MessageCircle className="h-[22px] w-[22px]" strokeWidth={1.6} />
-        </button>
-
-        {/* Bottom nav */}
-        <nav className="fixed lg:absolute bottom-0 inset-x-0 max-w-[440px] mx-auto bg-background/95 backdrop-blur-md border-t border-border z-40">
-          <div className="px-3 pt-2 pb-6">
-            <div className="grid grid-cols-5">
-              {(
-                [
-                  { k: "menu", Icon: Menu, to: null },
-                  { k: "home", Icon: HomeIcon, to: "/" as const },
-                  { k: "account", Icon: User, to: "/account" as const },
-                  { k: "search", Icon: Search, to: "/search" as any },
-                  { k: "bag", Icon: ShoppingBag, to: "/bag" as const },
-                ] as { k: NavKey; Icon: typeof Menu; to: "/" | "/bag" | "/account" | null }[]
-              ).map(({ k, Icon, to }) => {
-                const active = nav === k;
-                const badge = k === "bag" && bag.count > 0 ? bag.count : null;
-                const inner = (
-                  <>
-                    {active && (
-                      <span className="absolute inset-x-3 inset-y-1 rounded-full bg-cream-warm" />
-                    )}
-                    <div className="relative">
-                      <Icon
-                        className={[
-                          "h-[20px] w-[20px]",
-                          active ? "text-gold-deep" : "text-gold",
-                        ].join(" ")}
-                        strokeWidth={active ? 1.8 : 1.5}
-                      />
-                      {badge !== null && (
-                        <span className="absolute -top-1.5 -end-2 min-w-[16px] h-[16px] px-1 rounded-full bg-gold text-background text-[9.5px] font-medium grid place-items-center">
-                          {badge}
-                        </span>
-                      )}
-                    </div>
-                    <span
-                      className={[
-                        "relative text-[11px] tracking-soft",
-                        active ? "text-gold-deep font-medium" : "text-gold-deep/80",
-                      ].join(" ")}
-                    >
-                      {t.nav[k]}
-                    </span>
-                  </>
-                );
-
-                const className =
-                  "relative h-[58px] flex flex-col items-center justify-center gap-1 active:scale-95 transition";
-
-                return to ? (
-                  <Link
-                    key={k}
-                    to={to}
-                    onClick={() => setNav(k)}
-                    className={className}
-                  >
-                    {inner}
-                  </Link>
-                ) : (
-                  <button key={k} onClick={() => setNav(k)} className={className}>
-                    {inner}
-                  </button>
-                );
-              })}
-            </div>
-            
-          </div>
-        </nav>
       </div>
     </div>
   );
