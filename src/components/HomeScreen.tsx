@@ -61,13 +61,15 @@ export function HomeScreen() {
     fetchStorefrontSettings().then(setSettings).catch(() => {});
   }, []);
 
-  // Banner auto-rotate
+  const displayMode = settings?.banner_display_mode ?? "rotate";
+
+  // Banner auto-rotate (only in 'rotate' mode)
   useEffect(() => {
-    if (banners.length <= 1) return;
+    if (banners.length <= 1 || displayMode !== "rotate") return;
     const sec = settings?.banner_autoplay_seconds ?? 5;
     const id = setInterval(() => setBannerIdx((i) => (i + 1) % banners.length), sec * 1000);
     return () => clearInterval(id);
-  }, [banners.length, settings?.banner_autoplay_seconds]);
+  }, [banners.length, settings?.banner_autoplay_seconds, displayMode]);
 
   // Announcement rotate (DB-driven first, fallback to dictionary)
   const annMessages = announcements.length > 0
