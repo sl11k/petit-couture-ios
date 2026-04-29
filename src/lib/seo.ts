@@ -80,7 +80,6 @@ function safeTruncate(text: string, max: number): string {
 
 export function buildMeta(opts: MetaOptions) {
   const url = canonical(opts.path);
-  const image = opts.image || SITE.defaultImage;
   const rawTitle = safeTruncate(opts.title, 60);
   const rawDescription = safeTruncate(opts.description, 160);
   const title = withDirIsolate(rawTitle);
@@ -91,6 +90,7 @@ export function buildMeta(opts: MetaOptions) {
 
   const robots =
     opts.robots ?? (opts.noindex ? "noindex, nofollow" : "index, follow, max-image-preview:large");
+  const isNoindex = opts.noindex || /noindex/i.test(robots);
 
   const meta: Array<Record<string, string>> = [
     { title },
@@ -99,42 +99,62 @@ export function buildMeta(opts: MetaOptions) {
     { name: "theme-color", content: SITE.themeColor },
     { name: "language", content: lang },
     { httpEquiv: "content-language", content: contentLanguage },
-    { property: "og:title", content: title },
-    { property: "og:description", content: description },
-    { property: "og:type", content: opts.type ?? "website" },
-    { property: "og:url", content: url },
-    { property: "og:image", content: image },
-    { property: "og:image:alt", content: rawTitle },
-    { property: "og:site_name", content: SITE.name },
-    { property: "og:locale", content: locale },
-    { name: "twitter:card", content: "summary_large_image" },
-    { name: "twitter:site", content: SITE.twitter },
-    { name: "twitter:title", content: title },
-    { name: "twitter:description", content: description },
-    { name: "twitter:image", content: image },
-    { name: "twitter:image:alt", content: rawTitle },
   ];
 
-  // og:locale:alternate من alternateLocales (لو وُجد)
-  if (opts.alternateLocales) {
-    for (const alt of opts.alternateLocales) {
-      const altLocale = alt.hreflang.replace("-", "_");
-      meta.push({ property: "og:locale:alternate", content: altLocale });
+  // OG / Twitter / image metadata — تخطّاها للصفحات noindex (لا قيمة لها للمشاركة/الفهرسة)
+  if (!isNoindex) {
+    const image = opts.image || SITE.defaultImage;
+    meta.push(
+      { property: "og:title", content: title },
+      { property: "og:description", content: description },
+      { property: "og:type", content: opts.type ?? "website" },
+      { property: "og:url", content: url },
+      { property: "og:image", content: image },
+      { property: "og:image:alt", content: rawTitle },
+      { property: "og:site_name", content: SITE.name },
+      { property: "og:locale", content: locale },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:site", content: SITE.twitter },
+      { name: "twitter:title", content: title },
+      { name: "twitter:description", content: description },
+      { name: "twitter:image", content: image },
+      { name: "twitter:image:alt", content: rawTitle },
+    );
+
+    if (opts.alternateLocales) {
+      for (const alt of opts.alternateLocales) {
+        const altLocale = alt.hreflang.replace("-", "_");
+        meta.push({ property: "og:locale:alternate", content: altLocale });
+      }
     }
   }
 
-  const links: Array<Record<string, string>> = [{ rel: "canonical", href: url }];
-
-  if (opts.alternateLocales) {
-    for (const alt of opts.alternateLocales) {
-      links.push({ rel: "alternate", hrefLang: alt.hreflang, href: canonical(alt.path) });
+  // canonical / hreflang — للصفحات القابلة للفهرسة فقط
+  const links: Array<Record<string, string>> = [];
+  if (!isNoindex) {
+    links.push({ rel: "canonical", href: url });
+    if (opts.alternateLocales) {
+      for (const alt of opts.alternateLocales) {
+        links.push({ rel: "alternate", hrefLang: alt.hreflang, href: canonical(alt.path) });
+      }
     }
   }
 
-  const scripts = (opts.jsonLd ?? []).map((data) => ({
-    type: "application/ld+json",
-    children: JSON.stringify(data),
-  }));
+  // JSON-LD — لا تُولَّد على صفحات noindex حتى لو مُرّرت بالخطأ
+  // (مكرّرات structured data على صفحات ديناميكية كالبحث/السلة/الحساب لا فائدة منها)
+  const scripts =
+    isNoindex || !opts.jsonLd?.length
+      ? []
+      : opts.jsonLd.map((data) => ({
+          type: "application/ld+json",
+          children: JSON.stringify(data),
+        }));
+
+  if (import.meta.env?.DEV && isNoindex && opts.jsonLd?.length) {
+    console.warn(
+      `[seo] Skipped ${opts.jsonLd.length} JSON-LD block(s) on noindex page: ${opts.path}`,
+    );
+  }
 
   return { meta, links, scripts };
 }
