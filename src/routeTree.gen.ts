@@ -31,6 +31,7 @@ import { Route as LandingSlugRouteImport } from './routes/landing.$slug'
 import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
 import { Route as DebugAnalyticsRouteImport } from './routes/debug.analytics'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as AdminWebhooksRouteImport } from './routes/admin.webhooks'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminSupportRouteImport } from './routes/admin.support'
 import { Route as AdminStorefrontRouteImport } from './routes/admin.storefront'
@@ -188,6 +189,11 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
   id: '/category/$slug',
   path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminWebhooksRoute = AdminWebhooksRouteImport.update({
+  id: '/webhooks',
+  path: '/webhooks',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
@@ -473,6 +479,7 @@ export interface FileRoutesByFullPath {
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/webhooks': typeof AdminWebhooksRoute
   '/category/$slug': typeof CategorySlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
   '/invoice/$id': typeof InvoiceIdRoute
@@ -543,6 +550,7 @@ export interface FileRoutesByTo {
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/webhooks': typeof AdminWebhooksRoute
   '/category/$slug': typeof CategorySlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
   '/invoice/$id': typeof InvoiceIdRoute
@@ -614,6 +622,7 @@ export interface FileRoutesById {
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/webhooks': typeof AdminWebhooksRoute
   '/category/$slug': typeof CategorySlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
   '/invoice/$id': typeof InvoiceIdRoute
@@ -686,6 +695,7 @@ export interface FileRouteTypes {
     | '/admin/storefront'
     | '/admin/support'
     | '/admin/users'
+    | '/admin/webhooks'
     | '/category/$slug'
     | '/debug/analytics'
     | '/invoice/$id'
@@ -756,6 +766,7 @@ export interface FileRouteTypes {
     | '/admin/storefront'
     | '/admin/support'
     | '/admin/users'
+    | '/admin/webhooks'
     | '/category/$slug'
     | '/debug/analytics'
     | '/invoice/$id'
@@ -826,6 +837,7 @@ export interface FileRouteTypes {
     | '/admin/storefront'
     | '/admin/support'
     | '/admin/users'
+    | '/admin/webhooks'
     | '/category/$slug'
     | '/debug/analytics'
     | '/invoice/$id'
@@ -1030,6 +1042,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/category/$slug'
       preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/webhooks': {
+      id: '/admin/webhooks'
+      path: '/webhooks'
+      fullPath: '/admin/webhooks'
+      preLoaderRoute: typeof AdminWebhooksRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/users': {
       id: '/admin/users'
@@ -1441,6 +1460,7 @@ interface AdminRouteChildren {
   AdminStorefrontRoute: typeof AdminStorefrontRoute
   AdminSupportRoute: typeof AdminSupportRoute
   AdminUsersRoute: typeof AdminUsersRoute
+  AdminWebhooksRoute: typeof AdminWebhooksRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -1479,6 +1499,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminStorefrontRoute: AdminStorefrontRoute,
   AdminSupportRoute: AdminSupportRoute,
   AdminUsersRoute: AdminUsersRoute,
+  AdminWebhooksRoute: AdminWebhooksRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
