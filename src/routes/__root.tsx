@@ -1,4 +1,4 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouterState } from "@tanstack/react-router";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { AuthProvider } from "@/state/AuthContext";
 import { WishlistProvider } from "@/state/WishlistContext";
@@ -11,6 +11,7 @@ import { MobileBottomNav } from "@/components/mobile/MobileNav";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { CookieBanner } from "@/components/CookieBanner";
+import { Footer } from "@/components/Footer";
 import { useEffect } from "react";
 import { startWebVitals } from "@/lib/perf";
 import { GlobalErrorBoundary, OfflineBanner } from "@/components/ErrorDisplay";
@@ -24,7 +25,7 @@ function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-cream px-4">
       <div className="max-w-md text-center" dir="auto">
-        <p className="text-[10.5px] tracking-[0.22em] text-gold-deep mb-3">MAISONNÉT</p>
+        <p className="text-[10.5px] tracking-[0.22em] text-gold-deep mb-3">LE PETIT PARADIS</p>
         <h1 className="font-serif text-[88px] leading-none text-foreground">404</h1>
         <h2 className="mt-4 font-serif text-2xl text-foreground">الصفحة غير موجودة · Page not found</h2>
         <p className="mt-2 text-sm text-muted-foreground tracking-soft">
@@ -103,6 +104,17 @@ function RootComponent() {
     startWebVitals();
     flushErrorBuffer().catch(() => { /* noop */ });
   }, []);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // Footer rendered globally except for: home (already has its own), admin, auth, checkout flows, and machine routes.
+  const hideFooter =
+    pathname === "/" ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/checkout") ||
+    pathname.startsWith("/invoice") ||
+    pathname.startsWith("/debug") ||
+    pathname.startsWith("/sitemap") ||
+    pathname.startsWith("/robots");
   return (
     <GlobalErrorBoundary>
       <LanguageProvider>
@@ -116,6 +128,7 @@ function RootComponent() {
                 <div id="main-content" tabIndex={-1}>
                   <Outlet />
                 </div>
+                {!hideFooter && <Footer />}
                 <WishlistBanner />
                 <WhatsAppButton />
                 <MobileBottomNav />

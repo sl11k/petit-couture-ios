@@ -263,11 +263,6 @@ export function AdminShell({ children }: { children?: ReactNode }) {
                     >
                       <Icon className="h-4 w-4 shrink-0" />
                       <span className="flex-1 truncate">{itemLabel(item)}</span>
-                      {item.badge === "soon" && (
-                        <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] text-muted-foreground">
-                          {ar ? "قريباً" : "Soon"}
-                        </span>
-                      )}
                     </Link>
                   </li>
                 );

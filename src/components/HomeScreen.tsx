@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import hero from "@/assets/hero-campaign.jpg";
-import { categories, getProductForCategory } from "@/data/categories";
+import { categories } from "@/data/categories";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useImpression } from "@/hooks/useImpression";
@@ -357,6 +357,3 @@ export function HomeScreen() {
     </div>
   );
 }
-
-// Avoid unused-import warning (data/categories used as fallback)
-void getProductForCategory;
