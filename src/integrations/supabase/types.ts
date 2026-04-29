@@ -311,6 +311,36 @@ export type Database = {
         }
         Relationships: []
       }
+      announcement_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          message_ar: string
+          message_en: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message_ar: string
+          message_en: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message_ar?: string
+          message_en?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       api_keys: {
         Row: {
           created_at: string
@@ -1154,6 +1184,42 @@ export type Database = {
           is_enabled?: boolean
           question_ar?: string
           question_en?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      featured_categories: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          label_ar: string
+          label_en: string
+          link_url: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          label_ar: string
+          label_en: string
+          link_url: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          label_ar?: string
+          label_en?: string
+          link_url?: string
           sort_order?: number
           updated_at?: string
         }
@@ -2531,6 +2597,42 @@ export type Database = {
           session_id?: string | null
           user_id?: string | null
           value?: number
+        }
+        Relationships: []
+      }
+      popular_picks: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          is_active: boolean
+          label_ar: string
+          label_en: string
+          link_url: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          is_active?: boolean
+          label_ar: string
+          label_en: string
+          link_url: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          label_ar?: string
+          label_en?: string
+          link_url?: string
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -4417,6 +4519,108 @@ export type Database = {
           max_attempts?: number
           phone?: string
           purpose?: string
+        }
+        Relationships: []
+      }
+      storefront_banners: {
+        Row: {
+          created_at: string
+          cta_label_ar: string | null
+          cta_label_en: string | null
+          cta_url: string | null
+          eyebrow_ar: string | null
+          eyebrow_en: string | null
+          id: string
+          image_url: string
+          is_active: boolean
+          sort_order: number
+          subtitle_ar: string | null
+          subtitle_en: string | null
+          title_ar: string | null
+          title_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          cta_label_ar?: string | null
+          cta_label_en?: string | null
+          cta_url?: string | null
+          eyebrow_ar?: string | null
+          eyebrow_en?: string | null
+          id?: string
+          image_url: string
+          is_active?: boolean
+          sort_order?: number
+          subtitle_ar?: string | null
+          subtitle_en?: string | null
+          title_ar?: string | null
+          title_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          cta_label_ar?: string | null
+          cta_label_en?: string | null
+          cta_url?: string | null
+          eyebrow_ar?: string | null
+          eyebrow_en?: string | null
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          sort_order?: number
+          subtitle_ar?: string | null
+          subtitle_en?: string | null
+          title_ar?: string | null
+          title_en?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      storefront_settings: {
+        Row: {
+          announcement_rotate_seconds: number
+          banner_autoplay_seconds: number
+          footer_about_ar: string | null
+          footer_about_en: string | null
+          footer_address_ar: string | null
+          footer_address_en: string | null
+          footer_email: string | null
+          footer_instagram: string | null
+          footer_phone: string | null
+          footer_tiktok: string | null
+          footer_whatsapp: string | null
+          id: boolean
+          updated_at: string
+        }
+        Insert: {
+          announcement_rotate_seconds?: number
+          banner_autoplay_seconds?: number
+          footer_about_ar?: string | null
+          footer_about_en?: string | null
+          footer_address_ar?: string | null
+          footer_address_en?: string | null
+          footer_email?: string | null
+          footer_instagram?: string | null
+          footer_phone?: string | null
+          footer_tiktok?: string | null
+          footer_whatsapp?: string | null
+          id?: boolean
+          updated_at?: string
+        }
+        Update: {
+          announcement_rotate_seconds?: number
+          banner_autoplay_seconds?: number
+          footer_about_ar?: string | null
+          footer_about_en?: string | null
+          footer_address_ar?: string | null
+          footer_address_en?: string | null
+          footer_email?: string | null
+          footer_instagram?: string | null
+          footer_phone?: string | null
+          footer_tiktok?: string | null
+          footer_whatsapp?: string | null
+          id?: boolean
+          updated_at?: string
         }
         Relationships: []
       }
