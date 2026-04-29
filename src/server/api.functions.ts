@@ -61,8 +61,8 @@ export const listOrders = createServerFn({ method: "GET" })
       })
       .order("created_at", { ascending: false })
       .range(from, to);
-    if (data.status) q = q.eq("status", data.status);
-    if (data.paymentStatus) q = q.eq("payment_status", data.paymentStatus);
+    if (data.status) q = q.eq("status", data.status as any);
+    if (data.paymentStatus) q = q.eq("payment_status", data.paymentStatus as any);
     const { data: rows, count, error } = await q;
     if (error) return { items: [], total: 0, error: error.message };
     return { items: rows ?? [], total: count ?? 0, error: null };

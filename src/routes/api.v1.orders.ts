@@ -16,7 +16,7 @@ export const Route = createFileRoute("/api/v1/orders")({
           )
           .order("created_at", { ascending: false })
           .range(from, to);
-        if (status) q = q.eq("status", status);
+        if (status) q = q.eq("status", status as any);
         const { data, count, error } = await q;
         if (error) return jsonError(500, "db_error", error.message);
         return jsonOk({ items: data ?? [], page, page_size: pageSize, total: count ?? 0 });
