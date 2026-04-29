@@ -19,6 +19,7 @@ function SupportPage() {
   const [tab, setTab] = useState<Tab>("tickets");
 
   return (
+    <AdminShell>
     <div className="space-y-4">
       <div>
         <h1 className="text-xl font-semibold">خدمة العملاء</h1>
