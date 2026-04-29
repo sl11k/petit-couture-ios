@@ -108,6 +108,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: "/admin/users", label: "المستخدمون والصلاحيات", icon: Shield },
       { to: "/admin/security", label: "مركز الأمان", icon: Shield },
+      { to: "/admin/privacy", label: "إدارة الخصوصية", icon: Shield },
       { to: "/admin/integrations", label: "التكاملات", icon: Plug, badge: "soon" },
       { to: "/admin/audit", label: "سجل العمليات", icon: ScrollText },
       { to: "/admin/audit-logins", label: "محاولات الدخول الفاشلة", icon: ScrollText },

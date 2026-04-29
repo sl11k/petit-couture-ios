@@ -131,6 +131,42 @@ export type Database = {
         }
         Relationships: []
       }
+      account_deletion_requests: {
+        Row: {
+          cancelled_at: string | null
+          completed_at: string | null
+          id: string
+          processed_by: string | null
+          reason: string | null
+          requested_at: string
+          scheduled_for: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          completed_at?: string | null
+          id?: string
+          processed_by?: string | null
+          reason?: string | null
+          requested_at?: string
+          scheduled_for?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          completed_at?: string | null
+          id?: string
+          processed_by?: string | null
+          reason?: string | null
+          requested_at?: string
+          scheduled_for?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       account_lockouts: {
         Row: {
           created_at: string
@@ -602,6 +638,48 @@ export type Database = {
           },
         ]
       }
+      cookie_consents: {
+        Row: {
+          analytics: boolean
+          consent_version: string | null
+          created_at: string
+          id: string
+          ip_address: string | null
+          marketing: boolean
+          necessary: boolean
+          preferences: boolean
+          user_agent: string | null
+          user_id: string | null
+          visitor_id: string | null
+        }
+        Insert: {
+          analytics?: boolean
+          consent_version?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          marketing?: boolean
+          necessary?: boolean
+          preferences?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+          visitor_id?: string | null
+        }
+        Update: {
+          analytics?: boolean
+          consent_version?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          marketing?: boolean
+          necessary?: boolean
+          preferences?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+          visitor_id?: string | null
+        }
+        Relationships: []
+      }
       coupon_redemptions: {
         Row: {
           coupon_id: string
@@ -776,6 +854,90 @@ export type Database = {
           id?: string
           metadata?: Json
           subject?: string | null
+        }
+        Relationships: []
+      }
+      customer_consents: {
+        Row: {
+          consent_version: string | null
+          created_at: string
+          data_processing: boolean
+          ip_address: string | null
+          marketing_email: boolean
+          marketing_push: boolean
+          marketing_sms: boolean
+          marketing_whatsapp: boolean
+          source: string | null
+          third_party_sharing: boolean
+          transactional_email: boolean
+          transactional_sms: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          consent_version?: string | null
+          created_at?: string
+          data_processing?: boolean
+          ip_address?: string | null
+          marketing_email?: boolean
+          marketing_push?: boolean
+          marketing_sms?: boolean
+          marketing_whatsapp?: boolean
+          source?: string | null
+          third_party_sharing?: boolean
+          transactional_email?: boolean
+          transactional_sms?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          consent_version?: string | null
+          created_at?: string
+          data_processing?: boolean
+          ip_address?: string | null
+          marketing_email?: boolean
+          marketing_push?: boolean
+          marketing_sms?: boolean
+          marketing_whatsapp?: boolean
+          source?: string | null
+          third_party_sharing?: boolean
+          transactional_email?: boolean
+          transactional_sms?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      data_export_requests: {
+        Row: {
+          completed_at: string | null
+          download_url: string | null
+          expires_at: string | null
+          id: string
+          notes: string | null
+          requested_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          download_url?: string | null
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          requested_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          download_url?: string | null
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          requested_at?: string
+          status?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -4260,6 +4422,33 @@ export type Database = {
         }
         Relationships: []
       }
+      unsubscribe_tokens: {
+        Row: {
+          channel: string
+          created_at: string
+          email: string | null
+          token: string
+          used_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          email?: string | null
+          token: string
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          email?: string | null
+          token?: string
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_2fa: {
         Row: {
           backup_codes_hash: string[] | null
@@ -4391,6 +4580,17 @@ export type Database = {
           remaining_attempts: number
         }[]
       }
+      get_profile_safe: {
+        Args: { _user_id: string }
+        Returns: {
+          created_at: string
+          email: string
+          full_name: string
+          masked: boolean
+          phone: string
+          user_id: string
+        }[]
+      }
       has_permission: {
         Args: { _permission: string; _user_id: string }
         Returns: boolean
@@ -4419,6 +4619,8 @@ export type Database = {
         }
         Returns: string
       }
+      mask_email: { Args: { _email: string }; Returns: string }
+      mask_phone: { Args: { _phone: string }; Returns: string }
       next_invoice_number: { Args: { _prefix?: string }; Returns: string }
       refresh_product_sales_counts: { Args: never; Returns: undefined }
       register_failed_login: { Args: { _email: string }; Returns: undefined }

@@ -10,8 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WishlistRouteImport } from './routes/wishlist'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TrackOrderRouteImport } from './routes/track-order'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -37,6 +39,7 @@ import { Route as AdminSearchRouteImport } from './routes/admin.search'
 import { Route as AdminReturnsRouteImport } from './routes/admin.returns'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
+import { Route as AdminPrivacyRouteImport } from './routes/admin.privacy'
 import { Route as AdminPerformanceRouteImport } from './routes/admin.performance'
 import { Route as AdminPaymentsRouteImport } from './routes/admin.payments'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
@@ -58,6 +61,7 @@ import { Route as AdminAuditLoginsRouteImport } from './routes/admin.audit-login
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAbandonedRouteImport } from './routes/admin.abandoned'
+import { Route as AccountPrivacyRouteImport } from './routes/account.privacy'
 import { Route as ApiPublicShippingWebhookRouteImport } from './routes/api.public.shipping-webhook'
 import { Route as ApiPublicPaymentWebhookRouteImport } from './routes/api.public.payment-webhook'
 import { Route as AdminProductsIdRouteImport } from './routes/admin.products.$id'
@@ -70,6 +74,11 @@ const WishlistRoute = WishlistRouteImport.update({
   path: '/wishlist',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TrackOrderRoute = TrackOrderRouteImport.update({
   id: '/track-order',
   path: '/track-order',
@@ -78,6 +87,11 @@ const TrackOrderRoute = TrackOrderRouteImport.update({
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -206,6 +220,11 @@ const AdminProductsRoute = AdminProductsRouteImport.update({
   path: '/products',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPrivacyRoute = AdminPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPerformanceRoute = AdminPerformanceRouteImport.update({
   id: '/performance',
   path: '/performance',
@@ -311,6 +330,11 @@ const AdminAbandonedRoute = AdminAbandonedRouteImport.update({
   path: '/abandoned',
   getParentRoute: () => AdminRoute,
 } as any)
+const AccountPrivacyRoute = AccountPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => AccountRoute,
+} as any)
 const ApiPublicShippingWebhookRoute =
   ApiPublicShippingWebhookRouteImport.update({
     id: '/api/public/shipping-webhook',
@@ -352,9 +376,12 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
   '/track-order': typeof TrackOrderRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRouteWithChildren
+  '/account/privacy': typeof AccountPrivacyRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
@@ -376,6 +403,7 @@ export interface FileRoutesByFullPath {
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/privacy': typeof AdminPrivacyRoute
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
@@ -409,9 +437,12 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
   '/track-order': typeof TrackOrderRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRouteWithChildren
+  '/account/privacy': typeof AccountPrivacyRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
@@ -433,6 +464,7 @@ export interface FileRoutesByTo {
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/privacy': typeof AdminPrivacyRoute
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
@@ -467,9 +499,12 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
   '/track-order': typeof TrackOrderRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRouteWithChildren
+  '/account/privacy': typeof AccountPrivacyRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
@@ -491,6 +526,7 @@ export interface FileRoutesById {
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/privacy': typeof AdminPrivacyRoute
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
@@ -526,9 +562,12 @@ export interface FileRouteTypes {
     | '/contact'
     | '/help'
     | '/login'
+    | '/privacy'
     | '/search'
     | '/track-order'
+    | '/unsubscribe'
     | '/wishlist'
+    | '/account/privacy'
     | '/admin/abandoned'
     | '/admin/analytics'
     | '/admin/audit'
@@ -550,6 +589,7 @@ export interface FileRouteTypes {
     | '/admin/orders'
     | '/admin/payments'
     | '/admin/performance'
+    | '/admin/privacy'
     | '/admin/products'
     | '/admin/reports'
     | '/admin/returns'
@@ -583,9 +623,12 @@ export interface FileRouteTypes {
     | '/contact'
     | '/help'
     | '/login'
+    | '/privacy'
     | '/search'
     | '/track-order'
+    | '/unsubscribe'
     | '/wishlist'
+    | '/account/privacy'
     | '/admin/abandoned'
     | '/admin/analytics'
     | '/admin/audit'
@@ -607,6 +650,7 @@ export interface FileRouteTypes {
     | '/admin/orders'
     | '/admin/payments'
     | '/admin/performance'
+    | '/admin/privacy'
     | '/admin/products'
     | '/admin/reports'
     | '/admin/returns'
@@ -640,9 +684,12 @@ export interface FileRouteTypes {
     | '/contact'
     | '/help'
     | '/login'
+    | '/privacy'
     | '/search'
     | '/track-order'
+    | '/unsubscribe'
     | '/wishlist'
+    | '/account/privacy'
     | '/admin/abandoned'
     | '/admin/analytics'
     | '/admin/audit'
@@ -664,6 +711,7 @@ export interface FileRouteTypes {
     | '/admin/orders'
     | '/admin/payments'
     | '/admin/performance'
+    | '/admin/privacy'
     | '/admin/products'
     | '/admin/reports'
     | '/admin/returns'
@@ -698,8 +746,10 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   HelpRoute: typeof HelpRoute
   LoginRoute: typeof LoginRoute
+  PrivacyRoute: typeof PrivacyRoute
   SearchRoute: typeof SearchRoute
   TrackOrderRoute: typeof TrackOrderRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   WishlistRoute: typeof WishlistRouteWithChildren
   CategorySlugRoute: typeof CategorySlugRoute
   DebugAnalyticsRoute: typeof DebugAnalyticsRoute
@@ -719,6 +769,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WishlistRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/track-order': {
       id: '/track-order'
       path: '/track-order'
@@ -731,6 +788,13 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -908,6 +972,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProductsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/privacy': {
+      id: '/admin/privacy'
+      path: '/privacy'
+      fullPath: '/admin/privacy'
+      preLoaderRoute: typeof AdminPrivacyRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/performance': {
       id: '/admin/performance'
       path: '/performance'
@@ -1055,6 +1126,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAbandonedRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/account/privacy': {
+      id: '/account/privacy'
+      path: '/privacy'
+      fullPath: '/account/privacy'
+      preLoaderRoute: typeof AccountPrivacyRouteImport
+      parentRoute: typeof AccountRoute
+    }
     '/api/public/shipping-webhook': {
       id: '/api/public/shipping-webhook'
       path: '/api/public/shipping-webhook'
@@ -1101,10 +1179,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AccountRouteChildren {
+  AccountPrivacyRoute: typeof AccountPrivacyRoute
   AccountReturnsNewRoute: typeof AccountReturnsNewRoute
 }
 
 const AccountRouteChildren: AccountRouteChildren = {
+  AccountPrivacyRoute: AccountPrivacyRoute,
   AccountReturnsNewRoute: AccountReturnsNewRoute,
 }
 
@@ -1169,6 +1249,7 @@ interface AdminRouteChildren {
   AdminOrdersRoute: typeof AdminOrdersRouteWithChildren
   AdminPaymentsRoute: typeof AdminPaymentsRoute
   AdminPerformanceRoute: typeof AdminPerformanceRoute
+  AdminPrivacyRoute: typeof AdminPrivacyRoute
   AdminProductsRoute: typeof AdminProductsRouteWithChildren
   AdminReportsRoute: typeof AdminReportsRoute
   AdminReturnsRoute: typeof AdminReturnsRoute
@@ -1204,6 +1285,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminOrdersRoute: AdminOrdersRouteWithChildren,
   AdminPaymentsRoute: AdminPaymentsRoute,
   AdminPerformanceRoute: AdminPerformanceRoute,
+  AdminPrivacyRoute: AdminPrivacyRoute,
   AdminProductsRoute: AdminProductsRouteWithChildren,
   AdminReportsRoute: AdminReportsRoute,
   AdminReturnsRoute: AdminReturnsRoute,
@@ -1240,8 +1322,10 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   HelpRoute: HelpRoute,
   LoginRoute: LoginRoute,
+  PrivacyRoute: PrivacyRoute,
   SearchRoute: SearchRoute,
   TrackOrderRoute: TrackOrderRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   WishlistRoute: WishlistRouteWithChildren,
   CategorySlugRoute: CategorySlugRoute,
   DebugAnalyticsRoute: DebugAnalyticsRoute,

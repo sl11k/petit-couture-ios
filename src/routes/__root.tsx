@@ -9,6 +9,7 @@ import { WishlistBanner } from "@/components/WishlistBanner";
 import { DesktopHeader } from "@/components/DesktopHeader";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
+import { CookieBanner } from "@/components/CookieBanner";
 import { useEffect } from "react";
 import { startWebVitals } from "@/lib/perf";
 
@@ -93,6 +94,7 @@ function RootComponent() {
               <Outlet />
               <WishlistBanner />
               <WhatsAppButton />
+              <CookieBanner />
               <Toaster />
             </AddressProvider>
           </BagProvider>
