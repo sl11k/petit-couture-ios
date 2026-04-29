@@ -155,6 +155,25 @@ function ProductDetails() {
     });
   }, [slug, wishId]);
 
+  // ESC closes any open overlay; lock body scroll while open.
+  useEffect(() => {
+    const open = zoomOpen || openSizeChart;
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (zoomOpen) setZoomOpen(false);
+        if (openSizeChart) setOpenSizeChart(false);
+      }
+    };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [zoomOpen, openSizeChart]);
+
   const upsellsTotal = useMemo(
     () => product.upsells.filter((u) => selectedUpsells.includes(u.id)).reduce((s, u) => s + u.price, 0),
     [product.upsells, selectedUpsells]
