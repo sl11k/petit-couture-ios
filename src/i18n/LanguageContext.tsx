@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 
 export type Lang = "en" | "ar";
 
+const STORAGE_KEY = "maisonnet:lang:v1";
+
 type Dict = {
   dir: "ltr" | "rtl";
   brandTagline: string;
@@ -151,6 +153,116 @@ type Dict = {
       notesTooLong: string;
     };
   };
+  common: {
+    back: string;
+    backToStore: string;
+    loading: string;
+    save: string;
+    cancel: string;
+    delete: string;
+    edit: string;
+    confirm: string;
+    yes: string;
+    no: string;
+    close: string;
+    next: string;
+    previous: string;
+    submit: string;
+    search: string;
+    retry: string;
+    error: string;
+    success: string;
+    notFound: string;
+    notFoundTitle: string;
+    notFoundBody: string;
+    backToHome: string;
+    offline: string;
+    comingSoon: string;
+    features: string;
+    page: string;
+    of: string;
+    skipToContent: string;
+  };
+  legal: {
+    privacyTitle: string;
+    privacySubtitle: string;
+    lastUpdated: string;
+    unsubscribeTitle: string;
+    unsubscribeProcessing: string;
+    unsubscribeDone: string;
+    unsubscribeAlready: string;
+    unsubscribeInvalid: string;
+    unsubscribeInvalidBody: string;
+    managePrefs: string;
+  };
+  admin: {
+    dashboard: string;
+    products: string;
+    orders: string;
+    customers: string;
+    inventory: string;
+    categories: string;
+    coupons: string;
+    campaigns: string;
+    content: string;
+    reports: string;
+    analytics: string;
+    settings: string;
+    users: string;
+    notifications: string;
+    integrations: string;
+    payments: string;
+    shipping: string;
+    returns: string;
+    invoices: string;
+    audit: string;
+    security: string;
+    support: string;
+    help: string;
+    messages: string;
+    abandoned: string;
+    incomplete: string;
+    performance: string;
+    storefront: string;
+    webhooks: string;
+    privacy: string;
+    states: string;
+    errors: string;
+    create: string;
+    add: string;
+    update: string;
+    delete: string;
+    export: string;
+    import: string;
+    filter: string;
+    search: string;
+    actions: string;
+    status: string;
+    name: string;
+    price: string;
+    stock: string;
+    sku: string;
+    date: string;
+    total: string;
+    customer: string;
+    order: string;
+    refresh: string;
+    backToAdmin: string;
+  };
+  cookies: {
+    title: string;
+    body: string;
+    accept: string;
+    reject: string;
+    customize: string;
+  };
+  errors: {
+    boundaryTitle: string;
+    boundaryBody: string;
+    tryAgain: string;
+    reload: string;
+  };
+  langSwitch: { ar: string; en: string };
 };
 
 const dictionaries: Record<Lang, Dict> = {
@@ -323,6 +435,116 @@ const dictionaries: Record<Lang, Dict> = {
         notesTooLong: "Notes must be under 240 characters",
       },
     },
+    common: {
+      back: "Back",
+      backToStore: "← Back to store",
+      loading: "Loading…",
+      save: "Save",
+      cancel: "Cancel",
+      delete: "Delete",
+      edit: "Edit",
+      confirm: "Confirm",
+      yes: "Yes",
+      no: "No",
+      close: "Close",
+      next: "Next",
+      previous: "Previous",
+      submit: "Submit",
+      search: "Search",
+      retry: "Retry",
+      error: "Error",
+      success: "Success",
+      notFound: "Not found",
+      notFoundTitle: "Page not found",
+      notFoundBody: "The page you are looking for is unavailable or has been moved.",
+      backToHome: "Back to home",
+      offline: "You are offline",
+      comingSoon: "Coming soon",
+      features: "Features",
+      page: "Page",
+      of: "of",
+      skipToContent: "Skip to content",
+    },
+    legal: {
+      privacyTitle: "Privacy Policy",
+      privacySubtitle: "How we handle your data",
+      lastUpdated: "Last updated",
+      unsubscribeTitle: "Unsubscribe",
+      unsubscribeProcessing: "Processing…",
+      unsubscribeDone: "You have been unsubscribed",
+      unsubscribeAlready: "Already unsubscribed",
+      unsubscribeInvalid: "Invalid link",
+      unsubscribeInvalidBody: "The link may be expired or incorrect.",
+      managePrefs: "Manage all preferences",
+    },
+    admin: {
+      dashboard: "Dashboard",
+      products: "Products",
+      orders: "Orders",
+      customers: "Customers",
+      inventory: "Inventory",
+      categories: "Categories",
+      coupons: "Coupons",
+      campaigns: "Campaigns",
+      content: "Content",
+      reports: "Reports",
+      analytics: "Analytics",
+      settings: "Settings",
+      users: "Users",
+      notifications: "Notifications",
+      integrations: "Integrations",
+      payments: "Payments",
+      shipping: "Shipping",
+      returns: "Returns",
+      invoices: "Invoices",
+      audit: "Audit log",
+      security: "Security",
+      support: "Support",
+      help: "Help",
+      messages: "Messages",
+      abandoned: "Abandoned carts",
+      incomplete: "Incomplete orders",
+      performance: "Performance",
+      storefront: "Storefront",
+      webhooks: "Webhooks",
+      privacy: "Privacy",
+      states: "States",
+      errors: "Errors",
+      create: "Create",
+      add: "Add",
+      update: "Update",
+      delete: "Delete",
+      export: "Export",
+      import: "Import",
+      filter: "Filter",
+      search: "Search",
+      actions: "Actions",
+      status: "Status",
+      name: "Name",
+      price: "Price",
+      stock: "Stock",
+      sku: "SKU",
+      date: "Date",
+      total: "Total",
+      customer: "Customer",
+      order: "Order",
+      refresh: "Refresh",
+      backToAdmin: "← Back to admin",
+    },
+    cookies: {
+      title: "We value your privacy",
+      body: "We use cookies to improve your experience. You can accept all or customize preferences.",
+      accept: "Accept all",
+      reject: "Reject",
+      customize: "Customize",
+    },
+    errors: {
+      boundaryTitle: "Something went wrong",
+      boundaryBody: "An unexpected error occurred. Please try again.",
+      tryAgain: "Try again",
+      reload: "Reload page",
+    },
+    langSwitch: { ar: "العربية", en: "English" },
   },
   ar: {
     dir: "rtl",
@@ -493,6 +715,116 @@ const dictionaries: Record<Lang, Dict> = {
         notesTooLong: "الملاحظات يجب أن تكون أقل من ٢٤٠ حرفًا",
       },
     },
+    common: {
+      back: "رجوع",
+      backToStore: "← العودة للمتجر",
+      loading: "جارٍ التحميل…",
+      save: "حفظ",
+      cancel: "إلغاء",
+      delete: "حذف",
+      edit: "تعديل",
+      confirm: "تأكيد",
+      yes: "نعم",
+      no: "لا",
+      close: "إغلاق",
+      next: "التالي",
+      previous: "السابق",
+      submit: "إرسال",
+      search: "بحث",
+      retry: "إعادة المحاولة",
+      error: "خطأ",
+      success: "تم",
+      notFound: "غير موجود",
+      notFoundTitle: "الصفحة غير موجودة",
+      notFoundBody: "الصفحة التي تبحث عنها غير متوفرة أو تم نقلها.",
+      backToHome: "العودة للرئيسية",
+      offline: "أنت غير متصل بالإنترنت",
+      comingSoon: "قريبًا",
+      features: "الميزات",
+      page: "صفحة",
+      of: "من",
+      skipToContent: "تخطّي إلى المحتوى",
+    },
+    legal: {
+      privacyTitle: "سياسة الخصوصية",
+      privacySubtitle: "كيف نتعامل مع بياناتك",
+      lastUpdated: "آخر تحديث",
+      unsubscribeTitle: "إلغاء الاشتراك",
+      unsubscribeProcessing: "جاري المعالجة…",
+      unsubscribeDone: "تم إلغاء الاشتراك",
+      unsubscribeAlready: "تم الإلغاء سابقًا",
+      unsubscribeInvalid: "رابط غير صالح",
+      unsubscribeInvalidBody: "قد يكون الرابط منتهي الصلاحية أو غير صحيح.",
+      managePrefs: "إدارة كل التفضيلات",
+    },
+    admin: {
+      dashboard: "لوحة التحكم",
+      products: "المنتجات",
+      orders: "الطلبات",
+      customers: "العملاء",
+      inventory: "المخزون",
+      categories: "الفئات",
+      coupons: "الكوبونات",
+      campaigns: "الحملات",
+      content: "المحتوى",
+      reports: "التقارير",
+      analytics: "التحليلات",
+      settings: "الإعدادات",
+      users: "المستخدمون",
+      notifications: "الإشعارات",
+      integrations: "التكاملات",
+      payments: "المدفوعات",
+      shipping: "الشحن",
+      returns: "المرتجعات",
+      invoices: "الفواتير",
+      audit: "سجل التدقيق",
+      security: "الأمان",
+      support: "الدعم",
+      help: "المساعدة",
+      messages: "الرسائل",
+      abandoned: "السلال المهجورة",
+      incomplete: "الطلبات الناقصة",
+      performance: "الأداء",
+      storefront: "الواجهة",
+      webhooks: "Webhooks",
+      privacy: "الخصوصية",
+      states: "الحالات",
+      errors: "الأخطاء",
+      create: "إنشاء",
+      add: "إضافة",
+      update: "تحديث",
+      delete: "حذف",
+      export: "تصدير",
+      import: "استيراد",
+      filter: "تصفية",
+      search: "بحث",
+      actions: "الإجراءات",
+      status: "الحالة",
+      name: "الاسم",
+      price: "السعر",
+      stock: "المخزون",
+      sku: "الرمز",
+      date: "التاريخ",
+      total: "الإجمالي",
+      customer: "العميل",
+      order: "الطلب",
+      refresh: "تحديث",
+      backToAdmin: "← العودة للوحة الإدارة",
+    },
+    cookies: {
+      title: "نهتم بخصوصيتك",
+      body: "نستخدم ملفات تعريف الارتباط لتحسين تجربتك. يمكنك القبول الكامل أو تخصيص التفضيلات.",
+      accept: "قبول الكل",
+      reject: "رفض",
+      customize: "تخصيص",
+    },
+    errors: {
+      boundaryTitle: "حدث خطأ ما",
+      boundaryBody: "حدث خطأ غير متوقّع. يُرجى المحاولة مرة أخرى.",
+      tryAgain: "إعادة المحاولة",
+      reload: "إعادة تحميل الصفحة",
+    },
+    langSwitch: { ar: "العربية", en: "English" },
   },
 };
 
@@ -506,23 +838,50 @@ type Ctx = {
 
 const LanguageContext = createContext<Ctx | null>(null);
 
+function readInitialLang(): Lang {
+  if (typeof window === "undefined") return "ar";
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored === "ar" || stored === "en") return stored;
+  } catch {
+    /* noop */
+  }
+  return "ar";
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Lang>("en");
+  const [lang, setLangState] = useState<Lang>("ar");
   const t = dictionaries[lang];
+
+  // Hydrate from storage on mount
+  useEffect(() => {
+    const initial = readInitialLang();
+    if (initial !== lang) setLangState(initial);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (typeof document !== "undefined") {
       document.documentElement.lang = lang;
       document.documentElement.dir = t.dir;
     }
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem(STORAGE_KEY, lang);
+      } catch {
+        /* noop */
+      }
+    }
   }, [lang, t.dir]);
+
+  const setLang = (l: Lang) => setLangState(l);
 
   return (
     <LanguageContext.Provider
       value={{
         lang,
         setLang,
-        toggle: () => setLang((l) => (l === "en" ? "ar" : "en")),
+        toggle: () => setLangState((l) => (l === "en" ? "ar" : "en")),
         t,
         isRTL: t.dir === "rtl",
       }}
