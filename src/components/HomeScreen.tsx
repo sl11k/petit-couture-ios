@@ -126,6 +126,9 @@ export function HomeScreen() {
                 className="w-full h-[440px] object-cover"
                 width={1280}
                 height={1280}
+                loading="eager"
+                fetchPriority="high"
+                decoding="sync"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background/45 via-transparent to-transparent" />
 

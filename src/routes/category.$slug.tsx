@@ -297,7 +297,7 @@ function ProductDetails() {
           {/* Gallery */}
           <section className="px-5">
             <div className="relative overflow-hidden rounded-[28px] bg-pastel-peach aspect-[4/5]">
-              <img src={product.images[activeImg]} alt={product.name} className="w-full h-full object-cover" width={1024} height={1280} />
+              <img src={product.images[activeImg]} alt={product.name} className="w-full h-full object-cover" width={1024} height={1280} loading="eager" fetchPriority="high" decoding="sync" />
               {discountPct > 0 && (
                 <span className={`absolute top-4 ${ar ? "right-4" : "left-4"} bg-foreground text-background text-[11px] font-semibold px-2.5 py-1 rounded-full`}>
                   -{discountPct}%
@@ -315,7 +315,7 @@ function ProductDetails() {
             <div className="mt-4 flex gap-3 overflow-x-auto scrollbar-none">
               {product.images.map((src, i) => (
                 <button key={src} onClick={() => setActiveImg(i)} className={`h-[68px] w-[56px] shrink-0 overflow-hidden rounded-[14px] border transition ${i === activeImg ? "border-gold ring-1 ring-gold/40" : "border-border opacity-80"}`}>
-                  <img src={src} alt="" loading="lazy" className="w-full h-full object-cover" />
+                  <img src={src} alt="" loading="lazy" decoding="async" width={200} height={250} className="w-full h-full object-cover" />
                 </button>
               ))}
               {product.videoUrl && (
@@ -448,7 +448,7 @@ function ProductDetails() {
                         onChange={(e) => setSelectedUpsells((prev) => e.target.checked ? [...prev, u.id] : prev.filter((id) => id !== u.id))}
                         className="h-4 w-4 accent-foreground"
                       />
-                      <img src={u.image} alt={u.name} className="h-14 w-14 rounded-[10px] object-cover" />
+                      <img src={u.image} alt={u.name} width={56} height={56} loading="lazy" decoding="async" className="h-14 w-14 rounded-[10px] object-cover" />
                       <div className="flex-1">
                         <p className="text-[13.5px] text-foreground/90">{u.name}</p>
                         <p className="text-[12px] text-muted-foreground">{fmt(u.price)} {product.currency}</p>
@@ -671,7 +671,7 @@ function ProductDetails() {
               {related.map((p) => (
                 <Link key={p.slug} to="/category/$slug" params={{ slug: p.slug }} className="shrink-0 w-[140px]">
                   <div className="aspect-[4/5] rounded-[16px] overflow-hidden bg-pastel-peach">
-                    <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
+                    <img src={p.images[0]} alt={p.name} width={400} height={500} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   </div>
                   <p className="mt-2 text-[12px] text-foreground/85 line-clamp-1">{p.category}</p>
                   <p className="text-[12px] text-muted-foreground">{fmt(p.price)} {p.currency}</p>
@@ -726,7 +726,7 @@ function ProductDetails() {
           <button aria-label={t.close} className="absolute top-5 right-5 h-10 w-10 rounded-full bg-white/10 grid place-items-center text-white">
             <X className="h-5 w-5" />
           </button>
-          <img src={product.images[activeImg]} alt={product.name} className="max-w-full max-h-full object-contain" />
+          <img src={product.images[activeImg]} alt={product.name} width={1280} height={1600} loading="eager" decoding="sync" className="max-w-full max-h-full object-contain" />
         </div>
       )}
 
