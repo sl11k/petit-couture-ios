@@ -94,10 +94,28 @@ export async function fetchAnnouncements(activeOnly = true): Promise<Announcemen
   return (data ?? []) as AnnouncementMessage[];
 }
 
-export async function fetchStorefrontSettings(): Promise<StorefrontSettings | null> {
-  const { data, error } = await supabase.from("storefront_settings").select("*").eq("id", true).maybeSingle();
-  if (error) throw error;
-  return (data as StorefrontSettings | null) ?? null;
+let _settingsCache: StorefrontSettings | null | undefined;
+let _settingsPromise: Promise<StorefrontSettings | null> | null = null;
+
+export async function fetchStorefrontSettings(force = false): Promise<StorefrontSettings | null> {
+  if (!force && _settingsCache !== undefined) return _settingsCache;
+  if (!force && _settingsPromise) return _settingsPromise;
+  _settingsPromise = (async () => {
+    const { data, error } = await supabase.from("storefront_settings").select("*").eq("id", true).maybeSingle();
+    if (error) throw error;
+    const value = (data as StorefrontSettings | null) ?? null;
+    _settingsCache = value;
+    return value;
+  })();
+  try {
+    return await _settingsPromise;
+  } finally {
+    _settingsPromise = null;
+  }
+}
+
+export function clearStorefrontSettingsCache() {
+  _settingsCache = undefined;
 }
 
 /** Upload an image to the `storefront` bucket and return its public URL. */
