@@ -574,7 +574,7 @@ function ProductDetails() {
 
           {/* Tabs: Description / Specs / Care / Shipping */}
           <section className="px-5 mt-8">
-            <div className="flex gap-1 border-b border-border overflow-x-auto scrollbar-none">
+            <div role="tablist" aria-label={ar ? "تفاصيل المنتج" : "Product details"} className="flex gap-1 border-b border-border overflow-x-auto scrollbar-none">
               {([
                 ["description", t.description],
                 ["specs", t.specs],
@@ -583,8 +583,12 @@ function ProductDetails() {
               ] as const).map(([key, label]) => (
                 <button
                   key={key}
+                  role="tab"
+                  aria-selected={tab === key}
+                  id={`pdp-tab-${key}`}
+                  aria-controls={`pdp-tabpanel-${key}`}
                   onClick={() => setTab(key)}
-                  className={`px-3 py-2.5 text-[12.5px] whitespace-nowrap border-b-2 -mb-px transition ${tab === key ? "border-gold text-foreground font-medium" : "border-transparent text-muted-foreground"}`}
+                  className={`px-3 py-2.5 text-[12.5px] whitespace-nowrap border-b-2 -mb-px transition focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${tab === key ? "border-gold text-foreground font-medium" : "border-transparent text-muted-foreground"}`}
                 >
                   {label}
                 </button>
