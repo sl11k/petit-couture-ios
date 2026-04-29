@@ -261,6 +261,17 @@ export type CollectionItem = {
   availability?: "in_stock" | "out_of_stock" | "preorder" | "discontinued";
 };
 
+/** الحد الأقصى لعناصر ItemList — يوازن بين شمولية البيانات وحدود Google. */
+export const COLLECTION_ITEM_LIMIT = 30;
+
+/**
+ * يبني CollectionPage + ItemList مع:
+ * - إزالة العناصر المكرّرة (نفس url أو نفس name).
+ * - ضمان أسماء فريدة (لاحقة #2, #3 عند التكرار النصي).
+ * - ترتيب اختياري: "as-is" (الافتراضي) | "price-asc" | "price-desc" | "name".
+ * - حد أقصى صريح (افتراضي 30، أقصى 100).
+ * - itemListOrder (Ascending/Descending/Unordered) يُضاف للـ schema.
+ */
 export function collectionJsonLd(opts: {
   name: string;
   description: string;
@@ -269,13 +280,58 @@ export function collectionJsonLd(opts: {
   image?: string;
   inLanguage?: string;
   isPartOf?: string;
+  sort?: "as-is" | "price-asc" | "price-desc" | "name";
+  limit?: number;
 }) {
-  const itemListElement = opts.items.slice(0, 30).map((it, i) => {
-    const itemUrl = it.url.startsWith("http") ? it.url : canonical(it.url);
+  const limit = Math.min(Math.max(opts.limit ?? COLLECTION_ITEM_LIMIT, 1), 100);
+
+  // 1) Normalize + dedupe by canonical URL (fallback to name)
+  const seenUrl = new Set<string>();
+  const seenName = new Set<string>();
+  const normalized = opts.items
+    .filter((it) => it && it.name && it.url)
+    .map((it) => {
+      const itemUrl = it.url.startsWith("http") ? it.url : canonical(it.url);
+      return { ...it, _url: itemUrl, _name: it.name.trim() };
+    })
+    .filter((it) => {
+      const keyUrl = it._url.toLowerCase();
+      if (seenUrl.has(keyUrl)) return false;
+      seenUrl.add(keyUrl);
+      return true;
+    });
+
+  // 2) Sort
+  const sorted = [...normalized];
+  switch (opts.sort) {
+    case "price-asc":
+      sorted.sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
+      break;
+    case "price-desc":
+      sorted.sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity));
+      break;
+    case "name":
+      sorted.sort((a, b) => a._name.localeCompare(b._name, "ar"));
+      break;
+  }
+
+  // 3) Cap to limit
+  const capped = sorted.slice(0, limit);
+
+  // 4) Ensure unique display names (append " #N" for duplicates)
+  const itemListElement = capped.map((it, i) => {
+    let uniqueName = it._name;
+    if (seenName.has(uniqueName.toLowerCase())) {
+      let n = 2;
+      while (seenName.has(`${it._name} #${n}`.toLowerCase())) n++;
+      uniqueName = `${it._name} #${n}`;
+    }
+    seenName.add(uniqueName.toLowerCase());
+
     const product: Record<string, unknown> = {
       "@type": "Product",
-      name: it.name,
-      url: itemUrl,
+      name: uniqueName,
+      url: it._url,
     };
     if (it.image) product.image = it.image;
     if (it.brand) product.brand = { "@type": "Brand", name: it.brand };
@@ -283,7 +339,7 @@ export function collectionJsonLd(opts: {
     if (typeof it.price === "number") {
       product.offers = {
         "@type": "Offer",
-        url: itemUrl,
+        url: it._url,
         priceCurrency: it.currency ?? "SAR",
         price: it.price.toFixed(2),
         availability:
@@ -293,14 +349,15 @@ export function collectionJsonLd(opts: {
     return {
       "@type": "ListItem",
       position: i + 1,
-      url: itemUrl,
+      name: uniqueName,
+      url: it._url,
       item: product,
     };
   });
 
-  // Aggregate offer (low/high) across listed products
-  const prices = opts.items.map((i) => i.price).filter((p): p is number => typeof p === "number");
-  const currency = opts.items.find((i) => i.currency)?.currency ?? "SAR";
+  // 5) Aggregate offer
+  const prices = capped.map((i) => i.price).filter((p): p is number => typeof p === "number");
+  const currency = capped.find((i) => i.currency)?.currency ?? "SAR";
   const aggregateOffer = prices.length
     ? {
         "@type": "AggregateOffer",
@@ -310,6 +367,13 @@ export function collectionJsonLd(opts: {
         offerCount: prices.length,
       }
     : undefined;
+
+  const itemListOrder =
+    opts.sort === "price-asc" || opts.sort === "name"
+      ? "https://schema.org/ItemListOrderAscending"
+      : opts.sort === "price-desc"
+        ? "https://schema.org/ItemListOrderDescending"
+        : "https://schema.org/ItemListUnordered";
 
   const data: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -321,7 +385,9 @@ export function collectionJsonLd(opts: {
     isPartOf: { "@type": "WebSite", name: SITE.name, url: opts.isPartOf ?? SITE.url },
     mainEntity: {
       "@type": "ItemList",
-      numberOfItems: opts.items.length,
+      name: opts.name,
+      numberOfItems: itemListElement.length,
+      itemListOrder,
       itemListElement,
     },
   };
