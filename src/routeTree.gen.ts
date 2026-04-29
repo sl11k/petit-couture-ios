@@ -50,6 +50,7 @@ import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
 import { Route as AdminIntegrationsRouteImport } from './routes/admin.integrations'
 import { Route as AdminIncompleteRouteImport } from './routes/admin.incomplete'
 import { Route as AdminHelpRouteImport } from './routes/admin.help'
+import { Route as AdminErrorsRouteImport } from './routes/admin.errors'
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
 import { Route as AdminCreateOrderRouteImport } from './routes/admin.create-order'
 import { Route as AdminCouponsRouteImport } from './routes/admin.coupons'
@@ -275,6 +276,11 @@ const AdminHelpRoute = AdminHelpRouteImport.update({
   path: '/help',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminErrorsRoute = AdminErrorsRouteImport.update({
+  id: '/errors',
+  path: '/errors',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCustomersRoute = AdminCustomersRouteImport.update({
   id: '/customers',
   path: '/customers',
@@ -393,6 +399,7 @@ export interface FileRoutesByFullPath {
   '/admin/coupons': typeof AdminCouponsRoute
   '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
+  '/admin/errors': typeof AdminErrorsRoute
   '/admin/help': typeof AdminHelpRoute
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRoute
@@ -454,6 +461,7 @@ export interface FileRoutesByTo {
   '/admin/coupons': typeof AdminCouponsRoute
   '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
+  '/admin/errors': typeof AdminErrorsRoute
   '/admin/help': typeof AdminHelpRoute
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRoute
@@ -516,6 +524,7 @@ export interface FileRoutesById {
   '/admin/coupons': typeof AdminCouponsRoute
   '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
+  '/admin/errors': typeof AdminErrorsRoute
   '/admin/help': typeof AdminHelpRoute
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRoute
@@ -579,6 +588,7 @@ export interface FileRouteTypes {
     | '/admin/coupons'
     | '/admin/create-order'
     | '/admin/customers'
+    | '/admin/errors'
     | '/admin/help'
     | '/admin/incomplete'
     | '/admin/integrations'
@@ -640,6 +650,7 @@ export interface FileRouteTypes {
     | '/admin/coupons'
     | '/admin/create-order'
     | '/admin/customers'
+    | '/admin/errors'
     | '/admin/help'
     | '/admin/incomplete'
     | '/admin/integrations'
@@ -701,6 +712,7 @@ export interface FileRouteTypes {
     | '/admin/coupons'
     | '/admin/create-order'
     | '/admin/customers'
+    | '/admin/errors'
     | '/admin/help'
     | '/admin/incomplete'
     | '/admin/integrations'
@@ -1049,6 +1061,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminHelpRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/errors': {
+      id: '/admin/errors'
+      path: '/errors'
+      fullPath: '/admin/errors'
+      preLoaderRoute: typeof AdminErrorsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/customers': {
       id: '/admin/customers'
       path: '/customers'
@@ -1239,6 +1258,7 @@ interface AdminRouteChildren {
   AdminCouponsRoute: typeof AdminCouponsRoute
   AdminCreateOrderRoute: typeof AdminCreateOrderRoute
   AdminCustomersRoute: typeof AdminCustomersRouteWithChildren
+  AdminErrorsRoute: typeof AdminErrorsRoute
   AdminHelpRoute: typeof AdminHelpRoute
   AdminIncompleteRoute: typeof AdminIncompleteRoute
   AdminIntegrationsRoute: typeof AdminIntegrationsRoute
@@ -1275,6 +1295,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCouponsRoute: AdminCouponsRoute,
   AdminCreateOrderRoute: AdminCreateOrderRoute,
   AdminCustomersRoute: AdminCustomersRouteWithChildren,
+  AdminErrorsRoute: AdminErrorsRoute,
   AdminHelpRoute: AdminHelpRoute,
   AdminIncompleteRoute: AdminIncompleteRoute,
   AdminIntegrationsRoute: AdminIntegrationsRoute,
