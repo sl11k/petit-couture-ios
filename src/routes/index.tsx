@@ -1,17 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { HomeScreen } from "@/components/HomeScreen";
+import {
+  buildMeta,
+  organizationJsonLd,
+  websiteJsonLd,
+} from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Maisonnét — Luxury Children's Fashion Boutique" },
-      {
-        name: "description",
-        content:
-          "Maisonnét — a curated luxury boutique of designer children's fashion. Elegant dresses, shoes, and gifts for baby, girl, and boy.",
-      },
-    ],
-  }),
+  head: () =>
+    buildMeta({
+      title: "Maisonnét — أزياء الأطفال الفاخرة",
+      description:
+        "بوتيك Maisonnét: أزياء أطفال فاخرة مختارة بعناية — فساتين، أحذية، وهدايا للرضّع والبنات والأولاد. توصيل سريع وإرجاع مجاني.",
+      path: "/",
+      type: "website",
+      jsonLd: [organizationJsonLd(), websiteJsonLd()],
+      alternateLocales: [
+        { hreflang: "ar-SA", path: "/" },
+        { hreflang: "en", path: "/" },
+        { hreflang: "x-default", path: "/" },
+      ],
+    }),
   component: Index,
 });
 

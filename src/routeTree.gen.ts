@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TrackOrderRouteImport } from './routes/track-order'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HelpRouteImport } from './routes/help'
@@ -25,6 +27,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as WishlistShareRouteImport } from './routes/wishlist.share'
 import { Route as SupportNewRouteImport } from './routes/support.new'
 import { Route as OrderConfirmationOrderNumberRouteImport } from './routes/order-confirmation.$orderNumber'
+import { Route as LandingSlugRouteImport } from './routes/landing.$slug'
 import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
 import { Route as DebugAnalyticsRouteImport } from './routes/debug.analytics'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
@@ -86,9 +89,19 @@ const TrackOrderRoute = TrackOrderRouteImport.update({
   path: '/track-order',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -152,6 +165,11 @@ const OrderConfirmationOrderNumberRoute =
     path: '/order-confirmation/$orderNumber',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LandingSlugRoute = LandingSlugRouteImport.update({
+  id: '/landing/$slug',
+  path: '/landing/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InvoiceIdRoute = InvoiceIdRouteImport.update({
   id: '/invoice/$id',
   path: '/invoice/$id',
@@ -389,7 +407,9 @@ export interface FileRoutesByFullPath {
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/search': typeof SearchRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track-order': typeof TrackOrderRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRouteWithChildren
@@ -432,6 +452,7 @@ export interface FileRoutesByFullPath {
   '/category/$slug': typeof CategorySlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
   '/invoice/$id': typeof InvoiceIdRoute
+  '/landing/$slug': typeof LandingSlugRoute
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/support/new': typeof SupportNewRoute
   '/wishlist/share': typeof WishlistShareRoute
@@ -452,7 +473,9 @@ export interface FileRoutesByTo {
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/search': typeof SearchRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track-order': typeof TrackOrderRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRouteWithChildren
@@ -495,6 +518,7 @@ export interface FileRoutesByTo {
   '/category/$slug': typeof CategorySlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
   '/invoice/$id': typeof InvoiceIdRoute
+  '/landing/$slug': typeof LandingSlugRoute
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/support/new': typeof SupportNewRoute
   '/wishlist/share': typeof WishlistShareRoute
@@ -516,7 +540,9 @@ export interface FileRoutesById {
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/search': typeof SearchRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track-order': typeof TrackOrderRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRouteWithChildren
@@ -559,6 +585,7 @@ export interface FileRoutesById {
   '/category/$slug': typeof CategorySlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
   '/invoice/$id': typeof InvoiceIdRoute
+  '/landing/$slug': typeof LandingSlugRoute
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/support/new': typeof SupportNewRoute
   '/wishlist/share': typeof WishlistShareRoute
@@ -581,7 +608,9 @@ export interface FileRouteTypes {
     | '/help'
     | '/login'
     | '/privacy'
+    | '/robots.txt'
     | '/search'
+    | '/sitemap.xml'
     | '/track-order'
     | '/unsubscribe'
     | '/wishlist'
@@ -624,6 +653,7 @@ export interface FileRouteTypes {
     | '/category/$slug'
     | '/debug/analytics'
     | '/invoice/$id'
+    | '/landing/$slug'
     | '/order-confirmation/$orderNumber'
     | '/support/new'
     | '/wishlist/share'
@@ -644,7 +674,9 @@ export interface FileRouteTypes {
     | '/help'
     | '/login'
     | '/privacy'
+    | '/robots.txt'
     | '/search'
+    | '/sitemap.xml'
     | '/track-order'
     | '/unsubscribe'
     | '/wishlist'
@@ -687,6 +719,7 @@ export interface FileRouteTypes {
     | '/category/$slug'
     | '/debug/analytics'
     | '/invoice/$id'
+    | '/landing/$slug'
     | '/order-confirmation/$orderNumber'
     | '/support/new'
     | '/wishlist/share'
@@ -707,7 +740,9 @@ export interface FileRouteTypes {
     | '/help'
     | '/login'
     | '/privacy'
+    | '/robots.txt'
     | '/search'
+    | '/sitemap.xml'
     | '/track-order'
     | '/unsubscribe'
     | '/wishlist'
@@ -750,6 +785,7 @@ export interface FileRouteTypes {
     | '/category/$slug'
     | '/debug/analytics'
     | '/invoice/$id'
+    | '/landing/$slug'
     | '/order-confirmation/$orderNumber'
     | '/support/new'
     | '/wishlist/share'
@@ -771,13 +807,16 @@ export interface RootRouteChildren {
   HelpRoute: typeof HelpRoute
   LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
   SearchRoute: typeof SearchRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TrackOrderRoute: typeof TrackOrderRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   WishlistRoute: typeof WishlistRouteWithChildren
   CategorySlugRoute: typeof CategorySlugRoute
   DebugAnalyticsRoute: typeof DebugAnalyticsRoute
   InvoiceIdRoute: typeof InvoiceIdRoute
+  LandingSlugRoute: typeof LandingSlugRoute
   OrderConfirmationOrderNumberRoute: typeof OrderConfirmationOrderNumberRoute
   SupportNewRoute: typeof SupportNewRoute
   ApiPublicPaymentWebhookRoute: typeof ApiPublicPaymentWebhookRoute
@@ -807,11 +846,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrackOrderRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/search': {
       id: '/search'
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -896,6 +949,13 @@ declare module '@tanstack/react-router' {
       path: '/order-confirmation/$orderNumber'
       fullPath: '/order-confirmation/$orderNumber'
       preLoaderRoute: typeof OrderConfirmationOrderNumberRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/landing/$slug': {
+      id: '/landing/$slug'
+      path: '/landing/$slug'
+      fullPath: '/landing/$slug'
+      preLoaderRoute: typeof LandingSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invoice/$id': {
@@ -1365,13 +1425,16 @@ const rootRouteChildren: RootRouteChildren = {
   HelpRoute: HelpRoute,
   LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
   SearchRoute: SearchRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TrackOrderRoute: TrackOrderRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   WishlistRoute: WishlistRouteWithChildren,
   CategorySlugRoute: CategorySlugRoute,
   DebugAnalyticsRoute: DebugAnalyticsRoute,
   InvoiceIdRoute: InvoiceIdRoute,
+  LandingSlugRoute: LandingSlugRoute,
   OrderConfirmationOrderNumberRoute: OrderConfirmationOrderNumberRoute,
   SupportNewRoute: SupportNewRoute,
   ApiPublicPaymentWebhookRoute: ApiPublicPaymentWebhookRoute,

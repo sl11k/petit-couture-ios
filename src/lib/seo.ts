@@ -1,0 +1,221 @@
+/**
+ * SEO helpers — موحّد للمتجر بأكمله.
+ * - clean URLs (slugify)
+ * - meta builders (title/description/OG/Twitter)
+ * - canonical URL
+ * - JSON-LD: Organization, Website, Product, Review, BreadcrumbList
+ */
+
+export const SITE = {
+  name: "Maisonnét",
+  url: "https://golden-boutique-ios.lovable.app",
+  defaultImage:
+    "https://golden-boutique-ios.lovable.app/og-default.jpg",
+  locale: "ar_SA",
+  twitter: "@maisonnet",
+};
+
+/** slugify يدعم العربية + اللاتينية، يولّد روابط نظيفة */
+export function slugify(input: string): string {
+  return input
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export function canonical(path: string): string {
+  if (!path.startsWith("/")) path = "/" + path;
+  const clean = path === "/" ? "/" : path.replace(/\/+$/, "");
+  return `${SITE.url}${clean}`;
+}
+
+export type MetaOptions = {
+  title: string;
+  description: string;
+  image?: string;
+  path: string;
+  type?: "website" | "article" | "product";
+  noindex?: boolean;
+  robots?: string;
+  jsonLd?: Array<Record<string, unknown>>;
+  locale?: string;
+  alternateLocales?: Array<{ hreflang: string; path: string }>;
+};
+
+export function buildMeta(opts: MetaOptions) {
+  const url = canonical(opts.path);
+  const image = opts.image || SITE.defaultImage;
+  const title = opts.title.length > 60 ? opts.title.slice(0, 57) + "…" : opts.title;
+  const description =
+    opts.description.length > 160
+      ? opts.description.slice(0, 157) + "…"
+      : opts.description;
+
+  const robots =
+    opts.robots ?? (opts.noindex ? "noindex, nofollow" : "index, follow, max-image-preview:large");
+
+  const meta: Array<Record<string, string>> = [
+    { title },
+    { name: "description", content: description },
+    { name: "robots", content: robots },
+    { property: "og:title", content: title },
+    { property: "og:description", content: description },
+    { property: "og:type", content: opts.type ?? "website" },
+    { property: "og:url", content: url },
+    { property: "og:image", content: image },
+    { property: "og:site_name", content: SITE.name },
+    { property: "og:locale", content: opts.locale ?? SITE.locale },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:site", content: SITE.twitter },
+    { name: "twitter:title", content: title },
+    { name: "twitter:description", content: description },
+    { name: "twitter:image", content: image },
+  ];
+
+  const links: Array<Record<string, string>> = [{ rel: "canonical", href: url }];
+
+  if (opts.alternateLocales) {
+    for (const alt of opts.alternateLocales) {
+      links.push({ rel: "alternate", hrefLang: alt.hreflang, href: canonical(alt.path) });
+    }
+  }
+
+  const scripts = (opts.jsonLd ?? []).map((data) => ({
+    type: "application/ld+json",
+    children: JSON.stringify(data),
+  }));
+
+  return { meta, links, scripts };
+}
+
+// ----------------------- JSON-LD builders -----------------------
+
+export function organizationJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SITE.name,
+    url: SITE.url,
+    logo: `${SITE.url}/logo.png`,
+    sameAs: [
+      "https://instagram.com/maisonnet",
+      "https://twitter.com/maisonnet",
+      "https://facebook.com/maisonnet",
+    ],
+    contactPoint: [
+      {
+        "@type": "ContactPoint",
+        contactType: "customer support",
+        availableLanguage: ["Arabic", "English"],
+      },
+    ],
+  };
+}
+
+export function websiteJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE.name,
+    url: SITE.url,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${SITE.url}/search?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+}
+
+export type ProductSeoInput = {
+  name: string;
+  description: string;
+  image: string | string[];
+  sku: string;
+  brand: string;
+  price: number;
+  currency: string;
+  availability?: "in_stock" | "out_of_stock" | "discontinued" | "preorder";
+  url: string;
+  rating?: { value: number; count: number };
+  reviews?: Array<{ author: string; rating: number; body: string; date?: string }>;
+};
+
+const AVAILABILITY_MAP: Record<string, string> = {
+  in_stock: "https://schema.org/InStock",
+  out_of_stock: "https://schema.org/OutOfStock",
+  preorder: "https://schema.org/PreOrder",
+  discontinued: "https://schema.org/Discontinued",
+};
+
+export function productJsonLd(p: ProductSeoInput) {
+  const data: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: p.name,
+    description: p.description,
+    image: p.image,
+    sku: p.sku,
+    brand: { "@type": "Brand", name: p.brand },
+    offers: {
+      "@type": "Offer",
+      url: p.url,
+      priceCurrency: p.currency,
+      price: p.price.toFixed(2),
+      availability:
+        AVAILABILITY_MAP[p.availability ?? "in_stock"] ?? AVAILABILITY_MAP.in_stock,
+      priceValidUntil: new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10),
+    },
+  };
+  if (p.rating && p.rating.count > 0) {
+    data.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: p.rating.value.toFixed(1),
+      reviewCount: p.rating.count,
+    };
+  }
+  if (p.reviews?.length) {
+    data.review = p.reviews.map((r) => ({
+      "@type": "Review",
+      author: { "@type": "Person", name: r.author },
+      reviewRating: { "@type": "Rating", ratingValue: r.rating, bestRating: 5 },
+      reviewBody: r.body,
+      datePublished: r.date,
+    }));
+  }
+  return data;
+}
+
+export function breadcrumbJsonLd(items: Array<{ name: string; path: string }>) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((it, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: it.name,
+      item: canonical(it.path),
+    })),
+  };
+}
+
+export function collectionJsonLd(opts: {
+  name: string;
+  description: string;
+  url: string;
+  numProducts: number;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: opts.name,
+    description: opts.description,
+    url: opts.url,
+    mainEntity: { "@type": "ItemList", numberOfItems: opts.numProducts },
+  };
+}

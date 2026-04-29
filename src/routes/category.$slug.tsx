@@ -31,21 +31,64 @@ import { useBag } from "@/state/BagContext";
 import { trackEvent } from "@/lib/analytics";
 import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
 
+import { buildMeta, productJsonLd, breadcrumbJsonLd, canonical } from "@/lib/seo";
+
 export const Route = createFileRoute("/category/$slug")({
   head: ({ params }) => {
     const cat = categories.find((c) => c.slug === params.slug);
-    const title = cat ? `${cat.name} — Maisonnét` : "Maisonnét";
-    const description = cat
-      ? `Discover our ${cat.name.toLowerCase()} edit — luxury children's fashion curated by Maisonnét.`
-      : "Luxury children's fashion boutique.";
-    return {
-      meta: [
-        { title },
-        { name: "description", content: description },
-        { property: "og:title", content: title },
-        { property: "og:description", content: description },
-      ],
-    };
+    const product = productsByCategory[params.slug];
+    const path = `/category/${params.slug}`;
+    if (!cat) {
+      return buildMeta({
+        title: "غير موجود — Maisonnét",
+        description: "هذه الصفحة غير متوفرة.",
+        path,
+        noindex: true,
+        robots: "noindex, follow",
+      });
+    }
+    const title = `${cat.name} — Maisonnét`;
+    const description = product
+      ? `${product.name} من ${product.brand}. ${cat.name} — أزياء أطفال فاخرة من Maisonnét.`
+      : `تشكيلة ${cat.name} الفاخرة من Maisonnét للأطفال.`;
+    const image = product?.images?.[0] ?? cat.img;
+    const inStock = product && (product as any).inStock !== false;
+    const jsonLd: Array<Record<string, unknown>> = [
+      breadcrumbJsonLd([
+        { name: "الرئيسية", path: "/" },
+        { name: cat.name, path },
+      ]),
+    ];
+    if (product) {
+      jsonLd.push(
+        productJsonLd({
+          name: product.name,
+          description,
+          image: product.images ?? [image],
+          sku: product.sku,
+          brand: product.brand,
+          price: product.price,
+          currency: (product as any).currency ?? "SAR",
+          availability: inStock ? "in_stock" : "out_of_stock",
+          url: canonical(path),
+          rating: (product as any).rating
+            ? {
+                value: (product as any).rating,
+                count: (product as any).reviewsCount ?? 0,
+              }
+            : undefined,
+        }),
+      );
+    }
+    return buildMeta({
+      title,
+      description,
+      path,
+      image: typeof image === "string" ? image : undefined,
+      type: product ? "product" : "website",
+      robots: inStock ? undefined : "noindex, follow",
+      jsonLd,
+    });
   },
   component: ProductDetails,
 });
