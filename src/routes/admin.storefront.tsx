@@ -360,6 +360,7 @@ function FooterPanel({ ar }: { ar: boolean }) {
   const save = async () => {
     const { error } = await supabase.from("storefront_settings").update({
       banner_autoplay_seconds: s.banner_autoplay_seconds,
+      banner_display_mode: s.banner_display_mode,
       announcement_rotate_seconds: s.announcement_rotate_seconds,
       footer_about_ar: s.footer_about_ar, footer_about_en: s.footer_about_en,
       footer_phone: s.footer_phone, footer_email: s.footer_email,
@@ -372,11 +373,29 @@ function FooterPanel({ ar }: { ar: boolean }) {
   return (
     <section className="space-y-4">
       <div className="rounded border border-border bg-card p-4 space-y-3">
-        <h2 className="text-sm font-semibold">{ar ? "إعدادات السلايدر" : "Slider timing"}</h2>
-        <div className="grid grid-cols-2 gap-3 text-xs">
+        <h2 className="text-sm font-semibold">{ar ? "إعدادات البانرات" : "Banner settings"}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <label className="flex flex-col gap-1">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {ar ? "وضع العرض" : "Display mode"}
+            </span>
+            <select
+              value={s.banner_display_mode ?? "rotate"}
+              onChange={(e) => setS({ ...s, banner_display_mode: e.target.value as "rotate" | "slider" })}
+              className="rounded border border-border bg-background px-2 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="rotate">{ar ? "تلقائي (خلف بعض)" : "Auto-rotate (stacked)"}</option>
+              <option value="slider">{ar ? "منزلق قابل للتمرير" : "Swipeable slider"}</option>
+            </select>
+          </label>
           <Input label={ar ? "ثواني تبديل البانر" : "Banner autoplay seconds"} type="number" value={String(s.banner_autoplay_seconds)} onChange={(v) => setS({ ...s, banner_autoplay_seconds: parseInt(v) || 5 })} />
           <Input label={ar ? "ثواني تبديل الإعلان" : "Announcement rotate seconds"} type="number" value={String(s.announcement_rotate_seconds)} onChange={(v) => setS({ ...s, announcement_rotate_seconds: parseInt(v) || 4 })} />
         </div>
+        <p className="text-[11px] text-muted-foreground">
+          {ar
+            ? "وضع \"تلقائي\": يتبدّل البانر تلقائياً مع أزرار للتنقل. وضع \"منزلق\": يسحب المستخدم بإصبعه بين البانرات بدون تبديل تلقائي."
+            : "Auto-rotate: banners change automatically with nav arrows. Slider: user swipes between banners, no auto-change."}
+        </p>
       </div>
 
       <div className="rounded border border-border bg-card p-4 space-y-3">
