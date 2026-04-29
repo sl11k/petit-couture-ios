@@ -11,6 +11,7 @@ import {
   fetchFeaturedCategories,
   fetchPopularPicks,
   fetchStorefrontSettings,
+  clearStorefrontSettingsCache,
   uploadStorefrontImage,
   type AnnouncementMessage,
   type Banner,
