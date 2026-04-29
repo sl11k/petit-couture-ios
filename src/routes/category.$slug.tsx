@@ -142,6 +142,37 @@ function ProductDetails() {
     el.scrollTo({ left, behavior: "smooth" });
   };
 
+  // Dev-only: validate JSON-LD blocks emitted by head() for this PDP.
+  useEffect(() => {
+    const cat = categories.find((c) => c.slug === slug);
+    if (!cat) return;
+    const path = `/category/${slug}`;
+    const inStock = (product as any).inStock !== false;
+    const image = product.images?.[0] ?? cat.img;
+    const blocks: Array<Record<string, unknown>> = [
+      breadcrumbJsonLd([
+        { name: "الرئيسية", path: "/" },
+        { name: "الأقسام", path: "/category" },
+        { name: cat.name, path },
+      ]),
+      productJsonLd({
+        name: product.name,
+        description: product.shortDescription ?? product.description ?? product.name,
+        image: product.images ?? [image],
+        sku: product.sku,
+        brand: product.brand,
+        price: product.price,
+        currency: (product as any).currency ?? "SAR",
+        availability: inStock ? "in_stock" : "out_of_stock",
+        url: canonical(path),
+        rating: (product as any).rating
+          ? { value: (product as any).rating, count: (product as any).reviewsCount ?? 0 }
+          : undefined,
+      }),
+    ];
+    devValidateJsonLd(`pdp:${slug}`, blocks);
+  }, [slug, product]);
+
   useEffect(() => {
     const seenKey = `maisonnet:impression:product:${slug}`;
     if (typeof sessionStorage === "undefined") return;
