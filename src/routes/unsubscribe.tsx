@@ -1,4 +1,5 @@
 import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { buildMeta } from "@/lib/seo";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/db";
 import { CheckCircle2, XCircle } from "lucide-react";

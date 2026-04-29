@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { buildMeta } from "@/lib/seo";
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/state/AuthContext";
 

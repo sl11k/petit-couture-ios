@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { buildMeta } from "@/lib/seo";
 import { ChevronLeft, ChevronRight, Heart, LogOut, Mail, Lock } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { z } from "zod";
