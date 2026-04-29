@@ -99,6 +99,7 @@ export const Route = createFileRoute("/landing/$slug")({
       jsonLd: [
         breadcrumbJsonLd([
           { name: "الرئيسية", path: "/" },
+          { name: "الحملات", path: "/landing" },
           { name: c.title, path },
         ]),
         collectionJsonLd({
