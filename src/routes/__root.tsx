@@ -109,12 +109,7 @@ function RootComponent() {
           <WishlistProvider>
             <BagProvider>
               <AddressProvider>
-                <a
-                  href="#main-content"
-                  className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:start-3 focus:z-[100] focus:rounded-full focus:bg-foreground focus:text-background focus:px-5 focus:h-11 focus:inline-flex focus:items-center focus:tracking-soft focus:text-sm focus:shadow-elegant focus:outline-none focus:ring-2 focus:ring-gold/60"
-                >
-                  تخطّي إلى المحتوى
-                </a>
+                <SkipLink />
                 <DesktopHeader />
                 <AnalyticsTracker />
                 <div id="main-content" tabIndex={-1}>
