@@ -49,14 +49,45 @@ export type MetaOptions = {
   alternateLocales?: Array<{ hreflang: string; path: string }>;
 };
 
+/** يحدّد ما إذا كان النص يحوي حرفًا عربيًا (RTL) */
+function isRTLText(s: string): boolean {
+  return /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]/.test(s);
+}
+
+/**
+ * يضمن عرض العنوان/الوصف باتجاه صحيح حتى لو خُلط بأرقام أو كلمات لاتينية.
+ * يضيف RLM (U+200F) في البداية للنص العربي، وLRM (U+200E) للنص اللاتيني،
+ * مع First Strong Isolate (U+2068) + Pop Directional Isolate (U+2069)
+ * لعزل المحتوى المختلط في معاينات Twitter/Facebook والمتصفحات.
+ */
+function withDirIsolate(text: string): string {
+  if (!text) return text;
+  const FSI = "\u2068";
+  const PDI = "\u2069";
+  const mark = isRTLText(text) ? "\u200F" : "\u200E";
+  // إذا كان مغلّفًا مسبقًا لا نضاعف
+  if (text.startsWith(FSI) || text.startsWith("\u200F") || text.startsWith("\u200E")) {
+    return text;
+  }
+  return `${mark}${FSI}${text}${PDI}`;
+}
+
+/** قص آمن مع الحفاظ على محارف الاتجاه عند الحدود */
+function safeTruncate(text: string, max: number): string {
+  if (text.length <= max) return text;
+  return text.slice(0, max - 1).trimEnd() + "…";
+}
+
 export function buildMeta(opts: MetaOptions) {
   const url = canonical(opts.path);
   const image = opts.image || SITE.defaultImage;
-  const title = opts.title.length > 60 ? opts.title.slice(0, 57) + "…" : opts.title;
-  const description =
-    opts.description.length > 160
-      ? opts.description.slice(0, 157) + "…"
-      : opts.description;
+  const rawTitle = safeTruncate(opts.title, 60);
+  const rawDescription = safeTruncate(opts.description, 160);
+  const title = withDirIsolate(rawTitle);
+  const description = withDirIsolate(rawDescription);
+  const locale = opts.locale ?? SITE.locale;
+  const lang = locale.split("_")[0] || "ar";
+  const contentLanguage = locale.replace("_", "-");
 
   const robots =
     opts.robots ?? (opts.noindex ? "noindex, nofollow" : "index, follow, max-image-preview:large");
@@ -66,21 +97,31 @@ export function buildMeta(opts: MetaOptions) {
     { name: "description", content: description },
     { name: "robots", content: robots },
     { name: "theme-color", content: SITE.themeColor },
+    { name: "language", content: lang },
+    { httpEquiv: "content-language", content: contentLanguage },
     { property: "og:title", content: title },
     { property: "og:description", content: description },
     { property: "og:type", content: opts.type ?? "website" },
     { property: "og:url", content: url },
     { property: "og:image", content: image },
-    { property: "og:image:alt", content: title },
+    { property: "og:image:alt", content: rawTitle },
     { property: "og:site_name", content: SITE.name },
-    { property: "og:locale", content: opts.locale ?? SITE.locale },
+    { property: "og:locale", content: locale },
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:site", content: SITE.twitter },
     { name: "twitter:title", content: title },
     { name: "twitter:description", content: description },
     { name: "twitter:image", content: image },
-    { name: "twitter:image:alt", content: title },
+    { name: "twitter:image:alt", content: rawTitle },
   ];
+
+  // og:locale:alternate من alternateLocales (لو وُجد)
+  if (opts.alternateLocales) {
+    for (const alt of opts.alternateLocales) {
+      const altLocale = alt.hreflang.replace("-", "_");
+      meta.push({ property: "og:locale:alternate", content: altLocale });
+    }
+  }
 
   const links: Array<Record<string, string>> = [{ rel: "canonical", href: url }];
 
@@ -97,6 +138,7 @@ export function buildMeta(opts: MetaOptions) {
 
   return { meta, links, scripts };
 }
+
 
 // ----------------------- JSON-LD builders -----------------------
 
