@@ -45,9 +45,10 @@ function readInitial(): string[] {
 }
 
 export function WishlistProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<string[]>(() => readInitial());
+  // Always start empty so SSR HTML matches the first client render.
+  // Hydrate from localStorage after mount to avoid hydration mismatches.
+  const [items, setItems] = useState<string[]>([]);
 
-  // Hydrate after mount in case SSR rendered with empty state
   useEffect(() => {
     const stored = readInitial();
     if (stored.length) setItems(stored);

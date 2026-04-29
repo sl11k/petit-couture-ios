@@ -1,4 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Heart, Search, ShoppingBag, User } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
@@ -16,6 +17,11 @@ export function DesktopHeader() {
   const wishlist = useWishlist();
   const bag = useBag();
   const location = useLocation();
+  // Counts come from localStorage and are client-only — defer to avoid SSR hydration mismatch.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const wishCount = mounted ? wishlist.count : 0;
+  const bagCount = mounted ? bag.count : 0;
 
   // Featured nav: a curated subset of categories to keep the bar elegant.
   const featured = categories.slice(0, 7);
@@ -91,11 +97,11 @@ export function DesktopHeader() {
             <Heart
               className="h-[18px] w-[18px]"
               strokeWidth={1.5}
-              fill={wishlist.count > 0 ? "currentColor" : "none"}
+              fill={wishCount > 0 ? "currentColor" : "none"}
             />
-            {wishlist.count > 0 && (
+            {wishCount > 0 && (
               <span className="absolute -top-0.5 -end-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-gold text-background text-[9.5px] font-medium grid place-items-center">
-                {wishlist.count > 99 ? "99+" : wishlist.count}
+                {wishCount > 99 ? "99+" : wishCount}
               </span>
             )}
           </Link>
@@ -110,9 +116,9 @@ export function DesktopHeader() {
             ].join(" ")}
           >
             <ShoppingBag className="h-[18px] w-[18px]" strokeWidth={1.5} />
-            {bag.count > 0 && (
+            {bagCount > 0 && (
               <span className="absolute -top-0.5 -end-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-gold text-background text-[9.5px] font-medium grid place-items-center">
-                {bag.count > 99 ? "99+" : bag.count}
+                {bagCount > 99 ? "99+" : bagCount}
               </span>
             )}
           </Link>

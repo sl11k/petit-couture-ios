@@ -56,7 +56,9 @@ function readInitial(): BagItem[] {
 }
 
 export function BagProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<BagItem[]>(() => readInitial());
+  // Always start empty so SSR HTML matches the first client render.
+  // Hydrate from localStorage after mount to avoid hydration mismatches.
+  const [items, setItems] = useState<BagItem[]>([]);
 
   useEffect(() => {
     const stored = readInitial();
