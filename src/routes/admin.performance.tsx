@@ -123,5 +123,6 @@ function PerfPage() {
         </>
       )}
     </div>
+    </AdminShell>
   );
 }
