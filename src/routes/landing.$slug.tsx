@@ -1,8 +1,59 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { buildMeta, breadcrumbJsonLd, collectionJsonLd, canonical } from "@/lib/seo";
+import { devValidateJsonLd } from "@/lib/seoValidate";
 import { Button } from "@/components/ui/button";
 import { LazyImage } from "@/components/LazyImage";
-import { categories, productsByCategory } from "@/data/categories";
+import { categories, productsByCategory, type Product } from "@/data/categories";
+
+type LandingItem = {
+  name: string; url: string; image: string; price: number;
+  currency: string; brand: string; sku: string;
+  availability: "in_stock" | "out_of_stock";
+};
+
+function buildLandingItems(slugs: string[]): LandingItem[] {
+  return slugs
+    .map((s) => {
+      const cat = categories.find((cc) => cc.slug === s);
+      const p: Product | undefined = productsByCategory[s];
+      if (!cat || !p) return null;
+      return {
+        name: p.name,
+        url: `/category/${s}`,
+        image: p.images?.[0] ?? cat.img,
+        price: p.price,
+        currency: (p as any).currency ?? "SAR",
+        brand: p.brand,
+        sku: p.sku,
+        availability:
+          (p as any).inStock === false ? ("out_of_stock" as const) : ("in_stock" as const),
+      };
+    })
+    .filter(Boolean) as LandingItem[];
+}
+
+function buildLandingJsonLd(c: {
+  slug: string; title: string; description: string; hero: string; featuredCategorySlugs: string[];
+}) {
+  const path = `/landing/${c.slug}`;
+  const items = buildLandingItems(c.featuredCategorySlugs);
+  return [
+    breadcrumbJsonLd([
+      { name: "الرئيسية", path: "/" },
+      { name: "الحملات", path: "/landing" },
+      { name: c.title, path },
+    ]),
+    collectionJsonLd({
+      name: c.title,
+      description: c.description,
+      url: canonical(path),
+      items,
+      image: c.hero,
+      inLanguage: "ar-SA",
+    }),
+  ];
+}
 
 /**
  * صفحات هبوط للحملات: /landing/$slug
@@ -69,48 +120,13 @@ export const Route = createFileRoute("/landing/$slug")({
         noindex: true,
       });
     }
-    const path = `/landing/${c.slug}`;
-    const items = c.featuredCategorySlugs
-      .map((s) => {
-        const cat = categories.find((cc) => cc.slug === s);
-        const p = productsByCategory[s];
-        if (!cat || !p) return null;
-        return {
-          name: p.name,
-          url: `/category/${s}`,
-          image: p.images?.[0] ?? cat.img,
-          price: p.price,
-          currency: (p as any).currency ?? "SAR",
-          brand: p.brand,
-          sku: p.sku,
-          availability:
-            (p as any).inStock === false ? "out_of_stock" as const : "in_stock" as const,
-        };
-      })
-      .filter(Boolean) as Array<{
-        name: string; url: string; image: string; price: number; currency: string; brand: string; sku: string; availability: "in_stock" | "out_of_stock";
-      }>;
     return buildMeta({
       title: `${c.title} | Maisonnét`,
       description: c.description,
       image: c.hero,
-      path,
+      path: `/landing/${c.slug}`,
       type: "website",
-      jsonLd: [
-        breadcrumbJsonLd([
-          { name: "الرئيسية", path: "/" },
-          { name: "الحملات", path: "/landing" },
-          { name: c.title, path },
-        ]),
-        collectionJsonLd({
-          name: c.title,
-          description: c.description,
-          url: canonical(path),
-          items,
-          image: c.hero,
-          inLanguage: "ar-SA",
-        }),
-      ],
+      jsonLd: buildLandingJsonLd(c),
     });
   },
   notFoundComponent: () => (
@@ -142,6 +158,10 @@ function LandingPage() {
   const featured = campaign.featuredCategorySlugs
     .map((s) => categories.find((c) => c.slug === s))
     .filter(Boolean) as typeof categories;
+
+  useEffect(() => {
+    devValidateJsonLd(`landing:${campaign.slug}`, buildLandingJsonLd(campaign));
+  }, [campaign]);
 
   return (
     <main className="lg:hidden lg:min-h-0 min-h-[100vh]">
