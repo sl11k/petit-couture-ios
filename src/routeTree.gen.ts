@@ -78,6 +78,7 @@ import { Route as AdminProductsIdRouteImport } from './routes/admin.products.$id
 import { Route as AdminOrdersIdRouteImport } from './routes/admin.orders.$id'
 import { Route as AdminCustomersIdRouteImport } from './routes/admin.customers.$id'
 import { Route as AccountReturnsNewRouteImport } from './routes/account.returns.new'
+import { Route as AdminOrdersIdInvoiceRouteImport } from './routes/admin.orders.$id.invoice'
 
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
@@ -426,6 +427,11 @@ const AccountReturnsNewRoute = AccountReturnsNewRouteImport.update({
   path: '/returns/new',
   getParentRoute: () => AccountRoute,
 } as any)
+const AdminOrdersIdInvoiceRoute = AdminOrdersIdInvoiceRouteImport.update({
+  id: '/invoice',
+  path: '/invoice',
+  getParentRoute: () => AdminOrdersIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -489,7 +495,7 @@ export interface FileRoutesByFullPath {
   '/wishlist/share': typeof WishlistShareRoute
   '/account/returns/new': typeof AccountReturnsNewRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
-  '/admin/orders/$id': typeof AdminOrdersIdRoute
+  '/admin/orders/$id': typeof AdminOrdersIdRouteWithChildren
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
@@ -497,6 +503,7 @@ export interface FileRoutesByFullPath {
   '/api/v1/inventory': typeof ApiV1InventoryRoute
   '/api/v1/orders': typeof ApiV1OrdersRoute
   '/api/v1/products': typeof ApiV1ProductsRoute
+  '/admin/orders/$id/invoice': typeof AdminOrdersIdInvoiceRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -560,7 +567,7 @@ export interface FileRoutesByTo {
   '/wishlist/share': typeof WishlistShareRoute
   '/account/returns/new': typeof AccountReturnsNewRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
-  '/admin/orders/$id': typeof AdminOrdersIdRoute
+  '/admin/orders/$id': typeof AdminOrdersIdRouteWithChildren
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
@@ -568,6 +575,7 @@ export interface FileRoutesByTo {
   '/api/v1/inventory': typeof ApiV1InventoryRoute
   '/api/v1/orders': typeof ApiV1OrdersRoute
   '/api/v1/products': typeof ApiV1ProductsRoute
+  '/admin/orders/$id/invoice': typeof AdminOrdersIdInvoiceRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -632,7 +640,7 @@ export interface FileRoutesById {
   '/wishlist/share': typeof WishlistShareRoute
   '/account/returns/new': typeof AccountReturnsNewRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
-  '/admin/orders/$id': typeof AdminOrdersIdRoute
+  '/admin/orders/$id': typeof AdminOrdersIdRouteWithChildren
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
@@ -640,6 +648,7 @@ export interface FileRoutesById {
   '/api/v1/inventory': typeof ApiV1InventoryRoute
   '/api/v1/orders': typeof ApiV1OrdersRoute
   '/api/v1/products': typeof ApiV1ProductsRoute
+  '/admin/orders/$id/invoice': typeof AdminOrdersIdInvoiceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -713,6 +722,7 @@ export interface FileRouteTypes {
     | '/api/v1/inventory'
     | '/api/v1/orders'
     | '/api/v1/products'
+    | '/admin/orders/$id/invoice'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -784,6 +794,7 @@ export interface FileRouteTypes {
     | '/api/v1/inventory'
     | '/api/v1/orders'
     | '/api/v1/products'
+    | '/admin/orders/$id/invoice'
   id:
     | '__root__'
     | '/'
@@ -855,6 +866,7 @@ export interface FileRouteTypes {
     | '/api/v1/inventory'
     | '/api/v1/orders'
     | '/api/v1/products'
+    | '/admin/orders/$id/invoice'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1372,6 +1384,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountReturnsNewRouteImport
       parentRoute: typeof AccountRoute
     }
+    '/admin/orders/$id/invoice': {
+      id: '/admin/orders/$id/invoice'
+      path: '/invoice'
+      fullPath: '/admin/orders/$id/invoice'
+      preLoaderRoute: typeof AdminOrdersIdInvoiceRouteImport
+      parentRoute: typeof AdminOrdersIdRoute
+    }
   }
 }
 
@@ -1400,12 +1419,24 @@ const AdminCustomersRouteWithChildren = AdminCustomersRoute._addFileChildren(
   AdminCustomersRouteChildren,
 )
 
+interface AdminOrdersIdRouteChildren {
+  AdminOrdersIdInvoiceRoute: typeof AdminOrdersIdInvoiceRoute
+}
+
+const AdminOrdersIdRouteChildren: AdminOrdersIdRouteChildren = {
+  AdminOrdersIdInvoiceRoute: AdminOrdersIdInvoiceRoute,
+}
+
+const AdminOrdersIdRouteWithChildren = AdminOrdersIdRoute._addFileChildren(
+  AdminOrdersIdRouteChildren,
+)
+
 interface AdminOrdersRouteChildren {
-  AdminOrdersIdRoute: typeof AdminOrdersIdRoute
+  AdminOrdersIdRoute: typeof AdminOrdersIdRouteWithChildren
 }
 
 const AdminOrdersRouteChildren: AdminOrdersRouteChildren = {
-  AdminOrdersIdRoute: AdminOrdersIdRoute,
+  AdminOrdersIdRoute: AdminOrdersIdRouteWithChildren,
 }
 
 const AdminOrdersRouteWithChildren = AdminOrdersRoute._addFileChildren(
