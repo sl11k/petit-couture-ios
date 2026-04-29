@@ -1,8 +1,8 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { buildMeta, breadcrumbJsonLd } from "@/lib/seo";
+import { buildMeta, breadcrumbJsonLd, collectionJsonLd, canonical } from "@/lib/seo";
 import { Button } from "@/components/ui/button";
 import { LazyImage } from "@/components/LazyImage";
-import { categories } from "@/data/categories";
+import { categories, productsByCategory } from "@/data/categories";
 
 /**
  * صفحات هبوط للحملات: /landing/$slug
