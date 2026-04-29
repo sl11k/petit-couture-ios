@@ -151,6 +151,10 @@ function ProductDetails() {
 
   const addToBag = () => {
     if (isOOS || isComingSoon) return;
+    if (!size) {
+      toast.error(ar ? "اختر المقاس أولاً" : "Please select a size");
+      return;
+    }
     bag.add({
       slug,
       name: product.name,
@@ -161,11 +165,20 @@ function ProductDetails() {
       size,
       color,
     });
-    navigate({ to: "/bag" });
+    toast.success(ar ? "تمت الإضافة إلى السلة" : "Added to bag", {
+      action: {
+        label: ar ? "عرض السلة" : "View bag",
+        onClick: () => navigate({ to: "/bag" }),
+      },
+    });
   };
 
   const buyNow = () => {
     if (isOOS || isComingSoon) return;
+    if (!size) {
+      toast.error(ar ? "اختر المقاس أولاً" : "Please select a size");
+      return;
+    }
     bag.add({
       slug,
       name: product.name,
