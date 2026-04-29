@@ -16,6 +16,8 @@ interface ErrorDisplayProps {
 }
 
 export function ErrorDisplay({ code, onRetry, onDismiss, context }: ErrorDisplayProps) {
+  const { lang } = useLanguage();
+  const ar = lang === "ar";
   const def = ERRORS[code];
   if (!def.customer) return null;
   const tone =
@@ -31,7 +33,7 @@ export function ErrorDisplay({ code, onRetry, onDismiss, context }: ErrorDisplay
         <div className="flex-1 space-y-2 text-sm">
           <p className="font-medium">{def.customer}</p>
           {context?.itemName ? (
-            <p className="text-muted-foreground text-xs">المنتج: {String(context.itemName)}</p>
+            <p className="text-muted-foreground text-xs">{ar ? "المنتج" : "Item"}: {String(context.itemName)}</p>
           ) : null}
           <div className="flex flex-wrap gap-2 pt-1">
             {onRetry && (
@@ -39,7 +41,7 @@ export function ErrorDisplay({ code, onRetry, onDismiss, context }: ErrorDisplay
                 onClick={onRetry}
                 className="inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-xs hover:opacity-90"
               >
-                <RefreshCw className="h-3.5 w-3.5" /> إعادة المحاولة
+                <RefreshCw className="h-3.5 w-3.5" /> {ar ? "إعادة المحاولة" : "Try again"}
               </button>
             )}
             {onDismiss && (
@@ -47,11 +49,11 @@ export function ErrorDisplay({ code, onRetry, onDismiss, context }: ErrorDisplay
                 onClick={onDismiss}
                 className="inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs hover:bg-muted"
               >
-                <X className="h-3.5 w-3.5" /> إغلاق
+                <X className="h-3.5 w-3.5" /> {ar ? "إغلاق" : "Close"}
               </button>
             )}
           </div>
-          <p className="text-[11px] text-muted-foreground pt-1">رمز الخطأ: {def.code}</p>
+          <p className="text-[11px] text-muted-foreground pt-1">{ar ? "رمز الخطأ" : "Error code"}: {def.code}</p>
         </div>
       </div>
     </div>
