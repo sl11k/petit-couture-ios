@@ -40,15 +40,14 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/search")({
   validateSearch: zodValidator(searchSchema),
   component: SearchPage,
-  head: () => ({
-    meta: [
-      { title: "بحث — Maisonnét" },
-      { name: "description", content: "ابحث في أحدث تشكيلات أزياء الأطفال الفاخرة من Maisonnét — فساتين، أحذية، وهدايا مختارة بعناية." },
-      { name: "robots", content: "noindex, follow" },
-      { property: "og:title", content: "بحث — Maisonnét" },
-      { property: "og:description", content: "ابحث في تشكيلات Maisonnét الفاخرة." },
-    ],
-  }),
+  head: () =>
+    buildMeta({
+      title: "بحث — Maisonnét",
+      description:
+        "ابحث في أحدث تشكيلات أزياء الأطفال الفاخرة من Maisonnét — فساتين، أحذية، وهدايا مختارة بعناية.",
+      path: "/search",
+      noindex: true,
+    }),
 });
 
 const SORT_OPTIONS: { key: SortKey; label_ar: string; label_en: string }[] = [

@@ -6,6 +6,13 @@ import { Printer, Download, Mail, ArrowLeft } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/invoice/$id")({
+  head: () =>
+    buildMeta({
+      title: "الفاتورة — Maisonnét",
+      description: "عرض فاتورة طلبك من Maisonnét.",
+      path: "/invoice",
+      noindex: true,
+    }),
   component: InvoiceView,
 });
 

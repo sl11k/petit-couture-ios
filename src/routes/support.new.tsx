@@ -7,12 +7,14 @@ import { CheckCircle2, MessageSquare } from "lucide-react";
 
 export const Route = createFileRoute("/support/new")({
   component: NewTicketPage,
-  head: () => ({
-    meta: [
-      { title: "فتح تذكرة دعم · Maisonnet" },
-      { name: "description", content: "افتح تذكرة دعم لاستفسارك أو مشكلتك وسنتواصل معك سريعاً." },
-    ],
-  }),
+  head: () =>
+    buildMeta({
+      title: "فتح تذكرة دعم — Maisonnét",
+      description:
+        "افتح تذكرة دعم لاستفسارك أو مشكلتك وسيتواصل معك فريق Maisonnét سريعاً.",
+      path: "/support/new",
+      noindex: true,
+    }),
 });
 
 const CATEGORIES = [

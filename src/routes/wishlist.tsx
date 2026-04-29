@@ -41,20 +41,14 @@ function buildShareUrl(ids: string[]): string {
 }
 
 export const Route = createFileRoute("/wishlist")({
-  head: () => ({
-    meta: [
-      { title: "Wishlist — Maisonnét" },
-      {
-        name: "description",
-        content: "Your saved Maisonnét pieces — review, remove, and shop your wishlist.",
-      },
-      { property: "og:title", content: "Wishlist — Maisonnét" },
-      {
-        property: "og:description",
-        content: "Your saved Maisonnét pieces — review, remove, and shop your wishlist.",
-      },
-    ],
-  }),
+  head: () =>
+    buildMeta({
+      title: "قائمة الرغبات — Maisonnét",
+      description:
+        "قطعك المحفوظة من Maisonnét — راجعها، أزل ما لا تحتاجه، وأكمل تسوقك بسهولة.",
+      path: "/wishlist",
+      noindex: true,
+    }),
   component: WishlistPage,
 });
 

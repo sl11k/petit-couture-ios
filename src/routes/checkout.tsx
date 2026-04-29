@@ -34,21 +34,14 @@ const LocationPicker = lazy(
 );
 
 export const Route = createFileRoute("/checkout")({
-  head: () => ({
-    meta: [
-      { title: "Checkout — Maisonnét" },
-      {
-        name: "description",
-        content:
-          "Complete your purchase: contact details, delivery location, and secure payment.",
-      },
-      { property: "og:title", content: "Checkout — Maisonnét" },
-      {
-        property: "og:description",
-        content: "4-step secure checkout with map-based delivery location.",
-      },
-    ],
-  }),
+  head: () =>
+    buildMeta({
+      title: "إتمام الطلب — Maisonnét",
+      description:
+        "أكمل طلبك بأمان: بيانات التواصل، موقع التوصيل، ودفع آمن في خطوات قليلة.",
+      path: "/checkout",
+      noindex: true,
+    }),
   component: CheckoutPage,
 });
 
