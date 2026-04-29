@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate, Outlet } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAuth } from "@/state/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useLanguage } from "@/i18n/LanguageContext";
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -38,88 +39,97 @@ import {
 
 type NavItem = {
   to: string;
-  label: string;
+  labelAr: string;
+  labelEn: string;
   icon: typeof LayoutDashboard;
   exact?: boolean;
   badge?: "soon";
 };
 
 type NavGroup = {
-  label: string;
+  labelAr: string;
+  labelEn: string;
   items: NavItem[];
 };
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    label: "نظرة عامة",
+    labelAr: "نظرة عامة",
+    labelEn: "Overview",
     items: [
-      { to: "/admin", label: "الرئيسية", icon: LayoutDashboard, exact: true },
-      { to: "/admin/reports", label: "التقارير الشاملة", icon: BarChart3 },
-      { to: "/admin/site-analytics", label: "تحليلات الموقع", icon: BarChart3 },
-      { to: "/admin/analytics", label: "التحليلات", icon: BarChart3 },
+      { to: "/admin", labelAr: "الرئيسية", labelEn: "Home", icon: LayoutDashboard, exact: true },
+      { to: "/admin/reports", labelAr: "التقارير الشاملة", labelEn: "Reports", icon: BarChart3 },
+      { to: "/admin/site-analytics", labelAr: "تحليلات الموقع", labelEn: "Site analytics", icon: BarChart3 },
+      { to: "/admin/analytics", labelAr: "التحليلات", labelEn: "Analytics", icon: BarChart3 },
     ],
   },
   {
-    label: "المبيعات",
+    labelAr: "المبيعات",
+    labelEn: "Sales",
     items: [
-      { to: "/admin/orders", label: "الطلبات", icon: ShoppingBag },
-      { to: "/admin/abandoned", label: "السلات المتروكة", icon: ShoppingCart },
-      { to: "/admin/incomplete", label: "الطلبات غير المكتملة", icon: AlertCircle },
-      { to: "/admin/create-order", label: "إنشاء طلب", icon: Plus },
-      { to: "/admin/payments", label: "المدفوعات", icon: CreditCard },
-      { to: "/admin/shipping", label: "الشحن", icon: Truck },
-      { to: "/admin/returns", label: "المرتجعات", icon: Undo2 },
+      { to: "/admin/orders", labelAr: "الطلبات", labelEn: "Orders", icon: ShoppingBag },
+      { to: "/admin/abandoned", labelAr: "السلات المتروكة", labelEn: "Abandoned carts", icon: ShoppingCart },
+      { to: "/admin/incomplete", labelAr: "الطلبات غير المكتملة", labelEn: "Incomplete orders", icon: AlertCircle },
+      { to: "/admin/create-order", labelAr: "إنشاء طلب", labelEn: "Create order", icon: Plus },
+      { to: "/admin/payments", labelAr: "المدفوعات", labelEn: "Payments", icon: CreditCard },
+      { to: "/admin/shipping", labelAr: "الشحن", labelEn: "Shipping", icon: Truck },
+      { to: "/admin/returns", labelAr: "المرتجعات", labelEn: "Returns", icon: Undo2 },
     ],
   },
   {
-    label: "الكتالوج",
+    labelAr: "الكتالوج",
+    labelEn: "Catalog",
     items: [
-      { to: "/admin/products", label: "المنتجات", icon: Package },
-      { to: "/admin/categories", label: "الأقسام", icon: FolderTree },
-      { to: "/admin/inventory", label: "المخزون", icon: Boxes },
+      { to: "/admin/products", labelAr: "المنتجات", labelEn: "Products", icon: Package },
+      { to: "/admin/categories", labelAr: "الأقسام", labelEn: "Categories", icon: FolderTree },
+      { to: "/admin/inventory", labelAr: "المخزون", labelEn: "Inventory", icon: Boxes },
     ],
   },
   {
-    label: "العملاء والتسويق",
+    labelAr: "العملاء والتسويق",
+    labelEn: "Customers & Marketing",
     items: [
-      { to: "/admin/customers", label: "العملاء", icon: Users },
-      { to: "/admin/coupons", label: "الكوبونات", icon: Ticket },
-      { to: "/admin/invoices", label: "الفواتير والضرائب", icon: FileText },
-      { to: "/admin/campaigns", label: "العروض والحملات", icon: Megaphone, badge: "soon" },
+      { to: "/admin/customers", labelAr: "العملاء", labelEn: "Customers", icon: Users },
+      { to: "/admin/coupons", labelAr: "الكوبونات", labelEn: "Coupons", icon: Ticket },
+      { to: "/admin/invoices", labelAr: "الفواتير والضرائب", labelEn: "Invoices & tax", icon: FileText },
+      { to: "/admin/campaigns", labelAr: "العروض والحملات", labelEn: "Campaigns", icon: Megaphone, badge: "soon" },
     ],
   },
   {
-    label: "المحتوى",
+    labelAr: "المحتوى",
+    labelEn: "Content",
     items: [
-      { to: "/admin/content", label: "المحتوى", icon: FileText, badge: "soon" },
-      { to: "/admin/storefront", label: "واجهات الموقع", icon: Layout, badge: "soon" },
+      { to: "/admin/content", labelAr: "المحتوى", labelEn: "Content", icon: FileText, badge: "soon" },
+      { to: "/admin/storefront", labelAr: "واجهات الموقع", labelEn: "Storefront", icon: Layout, badge: "soon" },
     ],
   },
   {
-    label: "الاتصالات",
+    labelAr: "الاتصالات",
+    labelEn: "Communications",
     items: [
-      { to: "/admin/notifications", label: "الإشعارات", icon: Bell },
-      { to: "/admin/messages", label: "الرسائل", icon: MessageSquare },
-      { to: "/admin/support", label: "خدمة العملاء", icon: HeadphonesIcon },
+      { to: "/admin/notifications", labelAr: "الإشعارات", labelEn: "Notifications", icon: Bell },
+      { to: "/admin/messages", labelAr: "الرسائل", labelEn: "Messages", icon: MessageSquare },
+      { to: "/admin/support", labelAr: "خدمة العملاء", labelEn: "Customer support", icon: HeadphonesIcon },
     ],
   },
   {
-    label: "النظام",
+    labelAr: "النظام",
+    labelEn: "System",
     items: [
-      { to: "/admin/users", label: "المستخدمون والصلاحيات", icon: Shield },
-      { to: "/admin/security", label: "مركز الأمان", icon: Shield },
-      { to: "/admin/privacy", label: "إدارة الخصوصية", icon: Shield },
-      { to: "/admin/integrations", label: "التكاملات", icon: Plug, badge: "soon" },
-      { to: "/admin/webhooks", label: "Webhooks وAPI", icon: Plug },
-      { to: "/admin/audit", label: "سجل العمليات", icon: ScrollText },
-      { to: "/admin/audit-logins", label: "محاولات الدخول الفاشلة", icon: ScrollText },
-      { to: "/admin/conversion", label: "تحسين التحويل", icon: ScrollText },
-      { to: "/admin/search", label: "تقارير البحث", icon: ScrollText },
-      { to: "/admin/performance", label: "مراقبة الأداء", icon: ScrollText },
-      { to: "/admin/errors", label: "سجل الأخطاء", icon: AlertCircle },
-      { to: "/admin/states", label: "دليل حالات الشاشات", icon: Layout },
-      { to: "/admin/settings", label: "الإعدادات", icon: Settings },
-      { to: "/admin/help", label: "الدعم الفني", icon: LifeBuoy, badge: "soon" },
+      { to: "/admin/users", labelAr: "المستخدمون والصلاحيات", labelEn: "Users & roles", icon: Shield },
+      { to: "/admin/security", labelAr: "مركز الأمان", labelEn: "Security center", icon: Shield },
+      { to: "/admin/privacy", labelAr: "إدارة الخصوصية", labelEn: "Privacy management", icon: Shield },
+      { to: "/admin/integrations", labelAr: "التكاملات", labelEn: "Integrations", icon: Plug, badge: "soon" },
+      { to: "/admin/webhooks", labelAr: "Webhooks وAPI", labelEn: "Webhooks & API", icon: Plug },
+      { to: "/admin/audit", labelAr: "سجل العمليات", labelEn: "Audit log", icon: ScrollText },
+      { to: "/admin/audit-logins", labelAr: "محاولات الدخول الفاشلة", labelEn: "Failed login attempts", icon: ScrollText },
+      { to: "/admin/conversion", labelAr: "تحسين التحويل", labelEn: "Conversion", icon: ScrollText },
+      { to: "/admin/search", labelAr: "تقارير البحث", labelEn: "Search reports", icon: ScrollText },
+      { to: "/admin/performance", labelAr: "مراقبة الأداء", labelEn: "Performance", icon: ScrollText },
+      { to: "/admin/errors", labelAr: "سجل الأخطاء", labelEn: "Error log", icon: AlertCircle },
+      { to: "/admin/states", labelAr: "دليل حالات الشاشات", labelEn: "Screen states", icon: Layout },
+      { to: "/admin/settings", labelAr: "الإعدادات", labelEn: "Settings", icon: Settings },
+      { to: "/admin/help", labelAr: "الدعم الفني", labelEn: "Technical support", icon: LifeBuoy, badge: "soon" },
     ],
   },
 ];
@@ -131,6 +141,8 @@ function flatNav() {
 export function AdminShell({ children }: { children?: ReactNode }) {
   const { user, ready, signOut } = useAuth();
   const { canAccessAdmin, loading, isAdmin, isManager, isStaff, isViewer } = useUserRole();
+  const { lang, isRTL } = useLanguage();
+  const ar = lang === "ar";
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -157,21 +169,27 @@ export function AdminShell({ children }: { children?: ReactNode }) {
     }
   };
 
+  const itemLabel = (i: NavItem) => (ar ? i.labelAr : i.labelEn);
+  const groupLabel = (g: NavGroup) => (ar ? g.labelAr : g.labelEn);
+
   const filteredGroups = useMemo(() => {
     if (!search.trim()) return NAV_GROUPS;
     const q = search.trim().toLowerCase();
     return NAV_GROUPS.map((g) => ({
       ...g,
-      items: g.items.filter((i) => i.label.toLowerCase().includes(q)),
+      items: g.items.filter((i) => itemLabel(i).toLowerCase().includes(q)),
     })).filter((g) => g.items.length > 0);
-  }, [search]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, ar]);
 
-  const roleBadge = isAdmin ? "مسؤول" : isManager ? "مدير" : isStaff ? "موظف" : isViewer ? "مشاهد" : "";
+  const roleBadge = ar
+    ? (isAdmin ? "مسؤول" : isManager ? "مدير" : isStaff ? "موظف" : isViewer ? "مشاهد" : "")
+    : (isAdmin ? "Admin" : isManager ? "Manager" : isStaff ? "Staff" : isViewer ? "Viewer" : "");
 
   if (!ready || loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground">
-        جاري التحميل...
+        {ar ? "جاري التحميل..." : "Loading..."}
       </div>
     );
   }
@@ -180,21 +198,21 @@ export function AdminShell({ children }: { children?: ReactNode }) {
   if (!canAccessAdmin) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-center">
-        <h1 className="text-2xl font-semibold text-foreground">غير مصرح</h1>
-        <p className="mt-2 text-sm text-muted-foreground">هذه الصفحة لفريق الإدارة فقط.</p>
-        <p className="mt-1 text-xs text-muted-foreground">حسابك: {user.email}</p>
+        <h1 className="text-2xl font-semibold text-foreground">{ar ? "غير مصرح" : "Unauthorized"}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{ar ? "هذه الصفحة لفريق الإدارة فقط." : "This page is for the admin team only."}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{ar ? "حسابك" : "Your account"}: {user.email}</p>
         <Link to="/" className="mt-6 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">
-          العودة للمتجر
+          {ar ? "العودة للمتجر" : "Back to store"}
         </Link>
       </div>
     );
   }
 
   const Sidebar = (
-    <aside className="flex h-full w-72 shrink-0 flex-col border-r border-border bg-card">
+    <aside className={`flex h-full w-72 shrink-0 flex-col ${isRTL ? "border-l" : "border-r"} border-border bg-card`}>
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div>
-          <h2 className="text-sm font-semibold text-foreground">Maisonnet · لوحة الإدارة</h2>
+          <h2 className="text-sm font-semibold text-foreground">Maisonnet · {ar ? "لوحة الإدارة" : "Admin"}</h2>
           <p className="mt-0.5 truncate text-[11px] text-muted-foreground" title={user.email ?? ""}>
             {user.email}
           </p>
@@ -208,24 +226,24 @@ export function AdminShell({ children }: { children?: ReactNode }) {
 
       <div className="border-b border-border px-3 py-2">
         <div className="relative">
-          <Search className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Search className={`pointer-events-none absolute ${isRTL ? "right-2" : "left-2"} top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground`} />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="ابحث في القوائم..."
-            className="w-full rounded-md border border-border bg-background py-1.5 pr-7 pl-2 text-xs text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-1 focus:ring-primary"
+            placeholder={ar ? "ابحث في القوائم..." : "Search menus..."}
+            className={`w-full rounded-md border border-border bg-background py-1.5 ${isRTL ? "pr-7 pl-2" : "pl-7 pr-2"} text-xs text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-1 focus:ring-primary`}
           />
         </div>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-3">
         {filteredGroups.length === 0 && (
-          <p className="px-3 py-4 text-xs text-muted-foreground">لا توجد نتائج</p>
+          <p className="px-3 py-4 text-xs text-muted-foreground">{ar ? "لا توجد نتائج" : "No results"}</p>
         )}
         {filteredGroups.map((group) => (
-          <div key={group.label} className="mb-4">
+          <div key={group.labelEn} className="mb-4">
             <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-              {group.label}
+              {groupLabel(group)}
             </div>
             <ul className="space-y-0.5">
               {group.items.map((item) => {
@@ -244,10 +262,10 @@ export function AdminShell({ children }: { children?: ReactNode }) {
                       }`}
                     >
                       <Icon className="h-4 w-4 shrink-0" />
-                      <span className="flex-1 truncate">{item.label}</span>
+                      <span className="flex-1 truncate">{itemLabel(item)}</span>
                       {item.badge === "soon" && (
                         <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] text-muted-foreground">
-                          قريباً
+                          {ar ? "قريباً" : "Soon"}
                         </span>
                       )}
                     </Link>
@@ -264,16 +282,16 @@ export function AdminShell({ children }: { children?: ReactNode }) {
           <button
             onClick={toggleDark}
             className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted"
-            title="الوضع الداكن"
+            title={ar ? "الوضع الداكن" : "Dark mode"}
           >
             {dark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
-            {dark ? "فاتح" : "داكن"}
+            {dark ? (ar ? "فاتح" : "Light") : (ar ? "داكن" : "Dark")}
           </button>
           <Link
             to="/"
             className="flex flex-1 items-center justify-center rounded-md border border-border px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted"
           >
-            المتجر
+            {ar ? "المتجر" : "Store"}
           </Link>
         </div>
         <button
@@ -284,7 +302,7 @@ export function AdminShell({ children }: { children?: ReactNode }) {
           className="flex w-full items-center justify-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted"
         >
           <LogOut className="h-3.5 w-3.5" />
-          تسجيل الخروج
+          {ar ? "تسجيل الخروج" : "Sign out"}
         </button>
       </div>
     </aside>
@@ -296,7 +314,7 @@ export function AdminShell({ children }: { children?: ReactNode }) {
   );
 
   return (
-    <div className="flex min-h-screen bg-muted/20" dir="rtl">
+    <div className="flex min-h-screen bg-muted/20" dir={isRTL ? "rtl" : "ltr"}>
       {/* Desktop sidebar */}
       <div className="hidden lg:flex lg:sticky lg:top-0 lg:h-screen">{Sidebar}</div>
 
@@ -308,7 +326,7 @@ export function AdminShell({ children }: { children?: ReactNode }) {
             onClick={() => setMobileOpen(false)}
             aria-hidden
           />
-          <div className="absolute right-0 top-0 h-full">{Sidebar}</div>
+          <div className={`absolute ${isRTL ? "right-0" : "left-0"} top-0 h-full`}>{Sidebar}</div>
         </div>
       )}
 
@@ -318,26 +336,26 @@ export function AdminShell({ children }: { children?: ReactNode }) {
           <button
             onClick={() => setMobileOpen(true)}
             className="rounded-md border border-border p-1.5 text-foreground lg:hidden"
-            aria-label="فتح القائمة"
+            aria-label={ar ? "فتح القائمة" : "Open menu"}
           >
             <Menu className="h-4 w-4" />
           </button>
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-sm font-semibold text-foreground">
-              {currentPage?.label ?? "لوحة الإدارة"}
+              {currentPage ? itemLabel(currentPage) : (ar ? "لوحة الإدارة" : "Admin dashboard")}
             </h1>
           </div>
           <Link
             to="/admin/create-order"
             className="hidden items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 sm:flex"
           >
-            <Plus className="h-3.5 w-3.5" /> طلب جديد
+            <Plus className="h-3.5 w-3.5" /> {ar ? "طلب جديد" : "New order"}
           </Link>
           {mobileOpen && (
             <button
               onClick={() => setMobileOpen(false)}
               className="rounded-md border border-border p-1.5 text-foreground lg:hidden"
-              aria-label="إغلاق"
+              aria-label={ar ? "إغلاق" : "Close"}
             >
               <X className="h-4 w-4" />
             </button>
