@@ -79,6 +79,7 @@ import { Route as AdminOrdersIdRouteImport } from './routes/admin.orders.$id'
 import { Route as AdminCustomersIdRouteImport } from './routes/admin.customers.$id'
 import { Route as AccountReturnsNewRouteImport } from './routes/account.returns.new'
 import { Route as AdminOrdersIdInvoiceRouteImport } from './routes/admin.orders.$id.invoice'
+import { Route as AdminOrdersIdAwbRouteImport } from './routes/admin.orders.$id.awb'
 
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
@@ -432,6 +433,11 @@ const AdminOrdersIdInvoiceRoute = AdminOrdersIdInvoiceRouteImport.update({
   path: '/invoice',
   getParentRoute: () => AdminOrdersIdRoute,
 } as any)
+const AdminOrdersIdAwbRoute = AdminOrdersIdAwbRouteImport.update({
+  id: '/awb',
+  path: '/awb',
+  getParentRoute: () => AdminOrdersIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -503,6 +509,7 @@ export interface FileRoutesByFullPath {
   '/api/v1/inventory': typeof ApiV1InventoryRoute
   '/api/v1/orders': typeof ApiV1OrdersRoute
   '/api/v1/products': typeof ApiV1ProductsRoute
+  '/admin/orders/$id/awb': typeof AdminOrdersIdAwbRoute
   '/admin/orders/$id/invoice': typeof AdminOrdersIdInvoiceRoute
 }
 export interface FileRoutesByTo {
@@ -575,6 +582,7 @@ export interface FileRoutesByTo {
   '/api/v1/inventory': typeof ApiV1InventoryRoute
   '/api/v1/orders': typeof ApiV1OrdersRoute
   '/api/v1/products': typeof ApiV1ProductsRoute
+  '/admin/orders/$id/awb': typeof AdminOrdersIdAwbRoute
   '/admin/orders/$id/invoice': typeof AdminOrdersIdInvoiceRoute
 }
 export interface FileRoutesById {
@@ -648,6 +656,7 @@ export interface FileRoutesById {
   '/api/v1/inventory': typeof ApiV1InventoryRoute
   '/api/v1/orders': typeof ApiV1OrdersRoute
   '/api/v1/products': typeof ApiV1ProductsRoute
+  '/admin/orders/$id/awb': typeof AdminOrdersIdAwbRoute
   '/admin/orders/$id/invoice': typeof AdminOrdersIdInvoiceRoute
 }
 export interface FileRouteTypes {
@@ -722,6 +731,7 @@ export interface FileRouteTypes {
     | '/api/v1/inventory'
     | '/api/v1/orders'
     | '/api/v1/products'
+    | '/admin/orders/$id/awb'
     | '/admin/orders/$id/invoice'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -794,6 +804,7 @@ export interface FileRouteTypes {
     | '/api/v1/inventory'
     | '/api/v1/orders'
     | '/api/v1/products'
+    | '/admin/orders/$id/awb'
     | '/admin/orders/$id/invoice'
   id:
     | '__root__'
@@ -866,6 +877,7 @@ export interface FileRouteTypes {
     | '/api/v1/inventory'
     | '/api/v1/orders'
     | '/api/v1/products'
+    | '/admin/orders/$id/awb'
     | '/admin/orders/$id/invoice'
   fileRoutesById: FileRoutesById
 }
@@ -1391,6 +1403,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOrdersIdInvoiceRouteImport
       parentRoute: typeof AdminOrdersIdRoute
     }
+    '/admin/orders/$id/awb': {
+      id: '/admin/orders/$id/awb'
+      path: '/awb'
+      fullPath: '/admin/orders/$id/awb'
+      preLoaderRoute: typeof AdminOrdersIdAwbRouteImport
+      parentRoute: typeof AdminOrdersIdRoute
+    }
   }
 }
 
@@ -1420,10 +1439,12 @@ const AdminCustomersRouteWithChildren = AdminCustomersRoute._addFileChildren(
 )
 
 interface AdminOrdersIdRouteChildren {
+  AdminOrdersIdAwbRoute: typeof AdminOrdersIdAwbRoute
   AdminOrdersIdInvoiceRoute: typeof AdminOrdersIdInvoiceRoute
 }
 
 const AdminOrdersIdRouteChildren: AdminOrdersIdRouteChildren = {
+  AdminOrdersIdAwbRoute: AdminOrdersIdAwbRoute,
   AdminOrdersIdInvoiceRoute: AdminOrdersIdInvoiceRoute,
 }
 

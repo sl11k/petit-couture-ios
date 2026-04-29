@@ -21,7 +21,7 @@ function AwbPrint() {
     (async () => {
       try {
         setLoading(true);
-        const [oRes, iRes, sRes, stRes] = await Promise.all([
+        const [oRes, iRes, stRes, snap] = await Promise.all([
           supabase.from("orders").select("*").eq("id", id).maybeSingle(),
           supabase.from("order_items").select("*").eq("order_id", id),
           supabase.from("shipments").select("*").eq("order_id", id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
@@ -31,7 +31,7 @@ function AwbPrint() {
         setOrder(oRes.data);
         setItems(iRes.data ?? []);
         setShipment(stRes.data ?? null);
-        setStore(sRes);
+        setStore(snap);
       } catch (e: any) {
         setError(e.message ?? "فشل تحميل بوليصة الشحن");
       } finally {
