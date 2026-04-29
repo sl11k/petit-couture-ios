@@ -844,7 +844,7 @@ function ProductDetails() {
       {/* Zoom modal */}
       {zoomOpen && (
         <div className="fixed inset-0 z-50 bg-black/90 grid place-items-center" onClick={() => setZoomOpen(false)}>
-          <button aria-label={t.close} className="absolute top-5 right-5 h-10 w-10 rounded-full bg-white/10 grid place-items-center text-white">
+          <button aria-label={t.close} onClick={() => setZoomOpen(false)} className="absolute top-5 end-5 h-11 w-11 rounded-full bg-white/10 grid place-items-center text-white">
             <X className="h-5 w-5" />
           </button>
           <img src={product.images[activeImg]} alt={product.name} width={1280} height={1600} loading="eager" decoding="sync" className="max-w-full max-h-full object-contain" />
