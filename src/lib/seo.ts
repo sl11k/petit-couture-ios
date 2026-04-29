@@ -237,16 +237,29 @@ export function productJsonLd(p: ProductSeoInput) {
   return data;
 }
 
-export function breadcrumbJsonLd(items: Array<{ name: string; path: string }>) {
+/**
+ * BreadcrumbList موحّد لكل الصفحات.
+ * - يدعم مسارات نسبية (يُحوَّلها canonical) أو مطلقة.
+ * - يطبّق withDirIsolate على الأسماء لضمان عرض RTL/LTR صحيح.
+ * - inLanguage افتراضيًا ar-SA لمطابقة بقية الموقع.
+ */
+export function breadcrumbJsonLd(
+  items: Array<{ name: string; path: string }>,
+  opts?: { inLanguage?: string }
+) {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    itemListElement: items.map((it, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
-      name: it.name,
-      item: canonical(it.path),
-    })),
+    inLanguage: opts?.inLanguage ?? "ar-SA",
+    itemListElement: items.map((it, i) => {
+      const url = it.path.startsWith("http") ? it.path : canonical(it.path);
+      return {
+        "@type": "ListItem",
+        position: i + 1,
+        name: withDirIsolate(it.name),
+        item: url,
+      };
+    }),
   };
 }
 
