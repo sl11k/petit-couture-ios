@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WishlistRouteImport } from './routes/wishlist'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TrackOrderRouteImport } from './routes/track-order'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -59,6 +60,7 @@ import { Route as AdminAuditLoginsRouteImport } from './routes/admin.audit-login
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAbandonedRouteImport } from './routes/admin.abandoned'
+import { Route as AccountPrivacyRouteImport } from './routes/account.privacy'
 import { Route as ApiPublicShippingWebhookRouteImport } from './routes/api.public.shipping-webhook'
 import { Route as ApiPublicPaymentWebhookRouteImport } from './routes/api.public.payment-webhook'
 import { Route as AdminProductsIdRouteImport } from './routes/admin.products.$id'
@@ -69,6 +71,11 @@ import { Route as AccountReturnsNewRouteImport } from './routes/account.returns.
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
   path: '/wishlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrackOrderRoute = TrackOrderRouteImport.update({
@@ -317,6 +324,11 @@ const AdminAbandonedRoute = AdminAbandonedRouteImport.update({
   path: '/abandoned',
   getParentRoute: () => AdminRoute,
 } as any)
+const AccountPrivacyRoute = AccountPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => AccountRoute,
+} as any)
 const ApiPublicShippingWebhookRoute =
   ApiPublicShippingWebhookRouteImport.update({
     id: '/api/public/shipping-webhook',
@@ -361,7 +373,9 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
   '/track-order': typeof TrackOrderRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRouteWithChildren
+  '/account/privacy': typeof AccountPrivacyRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
@@ -419,7 +433,9 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
   '/track-order': typeof TrackOrderRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRouteWithChildren
+  '/account/privacy': typeof AccountPrivacyRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
@@ -478,7 +494,9 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
   '/track-order': typeof TrackOrderRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRouteWithChildren
+  '/account/privacy': typeof AccountPrivacyRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
@@ -538,7 +556,9 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/search'
     | '/track-order'
+    | '/unsubscribe'
     | '/wishlist'
+    | '/account/privacy'
     | '/admin/abandoned'
     | '/admin/analytics'
     | '/admin/audit'
@@ -596,7 +616,9 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/search'
     | '/track-order'
+    | '/unsubscribe'
     | '/wishlist'
+    | '/account/privacy'
     | '/admin/abandoned'
     | '/admin/analytics'
     | '/admin/audit'
@@ -654,7 +676,9 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/search'
     | '/track-order'
+    | '/unsubscribe'
     | '/wishlist'
+    | '/account/privacy'
     | '/admin/abandoned'
     | '/admin/analytics'
     | '/admin/audit'
@@ -713,6 +737,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   SearchRoute: typeof SearchRoute
   TrackOrderRoute: typeof TrackOrderRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   WishlistRoute: typeof WishlistRouteWithChildren
   CategorySlugRoute: typeof CategorySlugRoute
   DebugAnalyticsRoute: typeof DebugAnalyticsRoute
@@ -730,6 +755,13 @@ declare module '@tanstack/react-router' {
       path: '/wishlist'
       fullPath: '/wishlist'
       preLoaderRoute: typeof WishlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/track-order': {
@@ -1075,6 +1107,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAbandonedRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/account/privacy': {
+      id: '/account/privacy'
+      path: '/privacy'
+      fullPath: '/account/privacy'
+      preLoaderRoute: typeof AccountPrivacyRouteImport
+      parentRoute: typeof AccountRoute
+    }
     '/api/public/shipping-webhook': {
       id: '/api/public/shipping-webhook'
       path: '/api/public/shipping-webhook'
@@ -1121,10 +1160,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AccountRouteChildren {
+  AccountPrivacyRoute: typeof AccountPrivacyRoute
   AccountReturnsNewRoute: typeof AccountReturnsNewRoute
 }
 
 const AccountRouteChildren: AccountRouteChildren = {
+  AccountPrivacyRoute: AccountPrivacyRoute,
   AccountReturnsNewRoute: AccountReturnsNewRoute,
 }
 
@@ -1263,6 +1304,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   SearchRoute: SearchRoute,
   TrackOrderRoute: TrackOrderRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   WishlistRoute: WishlistRouteWithChildren,
   CategorySlugRoute: CategorySlugRoute,
   DebugAnalyticsRoute: DebugAnalyticsRoute,
