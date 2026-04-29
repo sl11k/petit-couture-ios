@@ -120,48 +120,13 @@ export const Route = createFileRoute("/landing/$slug")({
         noindex: true,
       });
     }
-    const path = `/landing/${c.slug}`;
-    const items = c.featuredCategorySlugs
-      .map((s) => {
-        const cat = categories.find((cc) => cc.slug === s);
-        const p = productsByCategory[s];
-        if (!cat || !p) return null;
-        return {
-          name: p.name,
-          url: `/category/${s}`,
-          image: p.images?.[0] ?? cat.img,
-          price: p.price,
-          currency: (p as any).currency ?? "SAR",
-          brand: p.brand,
-          sku: p.sku,
-          availability:
-            (p as any).inStock === false ? "out_of_stock" as const : "in_stock" as const,
-        };
-      })
-      .filter(Boolean) as Array<{
-        name: string; url: string; image: string; price: number; currency: string; brand: string; sku: string; availability: "in_stock" | "out_of_stock";
-      }>;
     return buildMeta({
       title: `${c.title} | Maisonnét`,
       description: c.description,
       image: c.hero,
-      path,
+      path: `/landing/${c.slug}`,
       type: "website",
-      jsonLd: [
-        breadcrumbJsonLd([
-          { name: "الرئيسية", path: "/" },
-          { name: "الحملات", path: "/landing" },
-          { name: c.title, path },
-        ]),
-        collectionJsonLd({
-          name: c.title,
-          description: c.description,
-          url: canonical(path),
-          items,
-          image: c.hero,
-          inLanguage: "ar-SA",
-        }),
-      ],
+      jsonLd: buildLandingJsonLd(c),
     });
   },
   notFoundComponent: () => (
