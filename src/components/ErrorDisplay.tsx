@@ -6,6 +6,7 @@ import { Component, type ReactNode } from "react";
 import { AlertTriangle, RefreshCw, WifiOff, X } from "lucide-react";
 import { ERRORS, type ErrorCode, logError } from "@/lib/errors";
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface ErrorDisplayProps {
   code: ErrorCode;
