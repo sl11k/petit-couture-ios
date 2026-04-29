@@ -47,6 +47,7 @@ function SupportPage() {
       {tab === "canned" && <CannedTab />}
       {tab === "faq" && <FaqTab />}
     </div>
+    </AdminShell>
   );
 }
 
