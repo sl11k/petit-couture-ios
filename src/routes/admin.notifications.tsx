@@ -338,7 +338,7 @@ function PreviewDialog({ template, onClose }: any) {
       tracking_number: "TRK123", tracking_url: "https://example.com/track",
       payment_link: "https://example.com/pay", product_name: "حذاء أطفال",
       product_link: "https://example.com/p", cart_total: "320",
-      recovery_link: "https://example.com/cart", site_name: "Maisonnet", stock: "3", reason: "—",
+      recovery_link: "https://example.com/cart", site_name: "Le Petit Paradis", stock: "3", reason: "—",
     };
     const initial: Record<string, string> = {};
     (template.variables as string[] || []).forEach((v) => { initial[v] = sampleMap[v] || `{${v}}`; });

@@ -10,9 +10,9 @@ import { useWishlist } from "@/state/WishlistContext";
 export const Route = createFileRoute("/account")({
   head: () =>
     buildMeta({
-      title: "حسابي — Maisonnét",
+      title: "حسابي — Le Petit Paradis",
       description:
-        "سجّل الدخول لمزامنة قائمة رغباتك وطلباتك عبر كل أجهزتك مع Maisonnét.",
+        "سجّل الدخول لمزامنة قائمة رغباتك وطلباتك عبر كل أجهزتك مع Le Petit Paradis.",
       path: "/account",
       noindex: true,
     }),

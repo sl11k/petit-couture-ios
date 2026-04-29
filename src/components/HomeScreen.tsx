@@ -1,18 +1,26 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Heart } from "lucide-react";
+import { Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import hero from "@/assets/hero-campaign.jpg";
 import { categories, getProductForCategory } from "@/data/categories";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useImpression } from "@/hooks/useImpression";
-import { useBag } from "@/state/BagContext";
+import { BrandLogo } from "@/components/Logo";
+import { Footer } from "@/components/Footer";
+import {
+  fetchAnnouncements,
+  fetchBanners,
+  fetchFeaturedCategories,
+  fetchPopularPicks,
+  fetchStorefrontSettings,
+  type AnnouncementMessage,
+  type Banner,
+  type FeaturedCategory,
+  type PopularPick,
+  type StorefrontSettings,
+} from "@/lib/storefront";
 
-
-
-type AgeKey = "baby" | "girl" | "boy";
-
-/** Wishlist impression target — fires once per (source, id) per session. */
 function ImpressionCell({
   itemId,
   source,
@@ -34,26 +42,67 @@ function ImpressionCell({
 
 export function HomeScreen() {
   const { t, lang, toggle, isRTL } = useLanguage();
+  const ar = lang === "ar";
   const wishlist = useWishlist();
-  const bag = useBag();
-  const [age, setAge] = useState<AgeKey>("girl");
+
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [featuredCats, setFeaturedCats] = useState<FeaturedCategory[]>([]);
+  const [popular, setPopular] = useState<PopularPick[]>([]);
+  const [announcements, setAnnouncements] = useState<AnnouncementMessage[]>([]);
+  const [settings, setSettings] = useState<StorefrontSettings | null>(null);
+  const [bannerIdx, setBannerIdx] = useState(0);
   const [annIdx, setAnnIdx] = useState(0);
 
   useEffect(() => {
-    const id = setInterval(
-      () => setAnnIdx((i) => (i + 1) % t.announcements.length),
-      4000,
-    );
-    return () => clearInterval(id);
-  }, [t.announcements.length]);
+    fetchBanners().then(setBanners).catch(() => {});
+    fetchFeaturedCategories().then(setFeaturedCats).catch(() => {});
+    fetchPopularPicks().then(setPopular).catch(() => {});
+    fetchAnnouncements().then(setAnnouncements).catch(() => {});
+    fetchStorefrontSettings().then(setSettings).catch(() => {});
+  }, []);
 
-  // Reset announcement index when language changes
+  // Banner auto-rotate
   useEffect(() => {
-    setAnnIdx(0);
-  }, [lang]);
+    if (banners.length <= 1) return;
+    const sec = settings?.banner_autoplay_seconds ?? 5;
+    const id = setInterval(() => setBannerIdx((i) => (i + 1) % banners.length), sec * 1000);
+    return () => clearInterval(id);
+  }, [banners.length, settings?.banner_autoplay_seconds]);
+
+  // Announcement rotate (DB-driven first, fallback to dictionary)
+  const annMessages = announcements.length > 0
+    ? announcements.map((a) => (ar ? a.message_ar : a.message_en))
+    : t.announcements;
+  useEffect(() => {
+    if (annMessages.length <= 1) return;
+    const sec = settings?.announcement_rotate_seconds ?? 4;
+    const id = setInterval(() => setAnnIdx((i) => (i + 1) % annMessages.length), sec * 1000);
+    return () => clearInterval(id);
+  }, [annMessages.length, settings?.announcement_rotate_seconds]);
+
+  useEffect(() => { setAnnIdx(0); }, [lang, announcements.length]);
+
+  // Render category cards: dynamic if popular_picks exist, else fallback to seed data
+  const popularCards = popular.length > 0
+    ? popular.map((p) => ({
+        key: p.id,
+        href: p.link_url,
+        img: p.image_url,
+        label: ar ? p.label_ar : p.label_en,
+        wishId: `popular:${p.id}`,
+      }))
+    : categories.map((c) => ({
+        key: c.slug,
+        href: `/category/${c.slug}`,
+        img: c.img,
+        label: t.categories[c.slug] ?? c.name,
+        wishId: `category:${c.slug}`,
+      }));
+
+  const currentBanner = banners[bannerIdx];
 
   return (
-    <div className="min-h-screen w-full bg-cream flex justify-center">
+    <div className="min-h-screen w-full bg-cream flex flex-col items-center">
       <div className="relative w-full max-w-[440px] bg-background min-h-screen overflow-hidden shadow-soft">
         {/* Header */}
         <header className="px-6 pt-2 pb-4 flex items-center justify-between">
@@ -65,271 +114,183 @@ export function HomeScreen() {
             {lang === "en" ? "ع AR" : "EN"}
           </button>
 
-          {/* Brand mark */}
-          <div className="flex flex-col items-center select-none">
-            <span className="font-serif text-[26px] leading-none text-foreground tracking-[0.04em]">
-              Mais<span className="text-gold">on</span>nét
-            </span>
-            <span className="mt-1 text-[9px] tracking-luxury text-muted-foreground">
-              {t.brandTagline}
-            </span>
-          </div>
+          <Link to="/" aria-label="Le Petit Paradis" className="flex flex-col items-center select-none">
+            <BrandLogo height={34} />
+          </Link>
 
           <Link
             to="/wishlist"
-            aria-label={
-              wishlist.count > 0
-                ? isRTL
-                  ? `المفضلة، ${wishlist.count} عنصر`
-                  : `Wishlist, ${wishlist.count} item${wishlist.count === 1 ? "" : "s"}`
-                : isRTL
-                  ? "المفضلة"
-                  : "Wishlist"
-            }
+            aria-label={isRTL ? "المفضلة" : "Wishlist"}
             className="relative h-10 w-10 -me-2 grid place-items-center rounded-full border border-gold-soft text-gold-deep active:scale-95 transition"
           >
-            <Heart
-              className="h-[18px] w-[18px]"
-              strokeWidth={1.5}
-              fill={wishlist.count > 0 ? "currentColor" : "none"}
-            />
+            <Heart className="h-[18px] w-[18px]" strokeWidth={1.5} fill={wishlist.count > 0 ? "currentColor" : "none"} />
             {wishlist.count > 0 && (
-              <span
-                key={wishlist.count}
-                aria-hidden="true"
-                className="absolute -top-1 -end-1 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-background text-[10px] font-medium grid place-items-center shadow-soft animate-in zoom-in-50 fade-in duration-200"
-              >
+              <span aria-hidden="true" className="absolute -top-1 -end-1 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-background text-[10px] font-medium grid place-items-center shadow-soft">
                 {wishlist.count > 99 ? "99+" : wishlist.count}
               </span>
             )}
           </Link>
         </header>
 
-        {/* Announcement bar */}
+        {/* Announcement bar (rotating) */}
         <div className="relative bg-cream-warm">
           <div className="h-[52px] flex items-center justify-center px-6 text-[13.5px] text-foreground/80 tracking-soft">
             <span key={`${lang}-${annIdx}`} className="animate-in fade-in duration-500 text-center">
-              {t.announcements[annIdx]}
+              {annMessages[annIdx] ?? ""}
             </span>
           </div>
           <div className="h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
         </div>
 
-        {/* Scrollable content */}
         <main className="pb-[120px]">
-          {/* Hero */}
+          {/* Banner slider (dynamic) */}
           <section className="px-5 pt-5">
             <div className="relative overflow-hidden rounded-[28px] bg-pastel-peach">
-              <img
-                src={hero}
-                alt={isRTL ? "حملة الربيع" : "Spring campaign — luxury kids editorial"}
-                className="w-full h-[440px] object-cover"
-                width={1280}
-                height={1280}
-                loading="eager"
-                fetchPriority="high"
-                decoding="sync"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/45 via-transparent to-transparent" />
+              {currentBanner ? (
+                <a href={currentBanner.cta_url ?? "#"} className="block">
+                  <img
+                    key={currentBanner.id}
+                    src={currentBanner.image_url}
+                    alt={ar ? (currentBanner.title_ar ?? "") : (currentBanner.title_en ?? "")}
+                    className="w-full h-[440px] object-cover animate-in fade-in duration-500"
+                    width={1280}
+                    height={1280}
+                    loading="eager"
+                    decoding="sync"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/45 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-end pb-7 px-6 text-center">
+                    {(ar ? currentBanner.eyebrow_ar : currentBanner.eyebrow_en) && (
+                      <span className="text-[10.5px] tracking-luxury text-foreground/75">
+                        {ar ? currentBanner.eyebrow_ar : currentBanner.eyebrow_en}
+                      </span>
+                    )}
+                    {(ar ? currentBanner.title_ar : currentBanner.title_en) && (
+                      <h1 className="mt-2 font-serif text-[56px] leading-[0.95] text-foreground">
+                        {ar ? currentBanner.title_ar : currentBanner.title_en}
+                      </h1>
+                    )}
+                    {(ar ? currentBanner.subtitle_ar : currentBanner.subtitle_en) && (
+                      <p className="mt-1 font-serif italic text-[24px] text-foreground/85">
+                        {ar ? currentBanner.subtitle_ar : currentBanner.subtitle_en}
+                      </p>
+                    )}
+                    {(ar ? currentBanner.cta_label_ar : currentBanner.cta_label_en) && (
+                      <span className="mt-5 inline-flex items-center justify-center h-[52px] px-10 rounded-full bg-background text-foreground text-[14px] font-medium tracking-soft shadow-soft">
+                        {ar ? currentBanner.cta_label_ar : currentBanner.cta_label_en}
+                      </span>
+                    )}
+                  </div>
+                </a>
+              ) : (
+                // Fallback hero (no banners configured yet)
+                <div>
+                  <img src={hero} alt="Le Petit Paradis" className="w-full h-[440px] object-cover" loading="eager" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/45 via-transparent to-transparent" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-end pb-7 px-6 text-center">
+                    <h1 className="mt-2 font-serif text-[56px] leading-[0.95] text-foreground">Le Petit Paradis</h1>
+                    <p className="mt-1 font-serif italic text-[22px] text-foreground/85">{ar ? "أناقة الأطفال" : "Children's elegance"}</p>
+                  </div>
+                </div>
+              )}
 
-              <div className="absolute inset-0 flex flex-col items-center justify-end pb-7 px-6 text-center">
-                <span className="text-[10.5px] tracking-luxury text-foreground/75">
-                  {t.hero.eyebrow}
-                </span>
-                <h1 className="mt-2 font-serif text-[64px] leading-[0.95] text-foreground">
-                  {t.hero.title}
-                </h1>
-                <p className="mt-1 font-serif italic text-[26px] text-foreground/85">
-                  {t.hero.subtitle}
-                </p>
-                <p className="mt-2 text-[10.5px] text-foreground/60 tracking-soft max-w-[260px]">
-                  {t.hero.legal}
-                </p>
-                <button className="mt-5 h-[52px] px-10 rounded-full bg-background text-foreground text-[14px] font-medium tracking-soft shadow-soft active:scale-[0.97] transition">
-                  {t.hero.cta}
-                </button>
-              </div>
-            </div>
-          </section>
-
-          {/* Age chips */}
-          <section className="px-5 mt-7">
-            <div className="grid grid-cols-3 gap-3">
-              {(["baby", "girl", "boy"] as AgeKey[]).map((k) => {
-                const active = age === k;
-                return (
+              {/* Banner controls */}
+              {banners.length > 1 && (
+                <>
                   <button
-                    key={k}
-                    onClick={() => setAge(k)}
-                    className={[
-                      "h-[54px] rounded-full text-[15px] tracking-soft transition active:scale-[0.97] border",
-                      active
-                        ? "bg-gold-soft border-gold text-gold-deep font-medium"
-                        : "bg-background border-border text-muted-foreground",
-                    ].join(" ")}
+                    aria-label="Previous"
+                    onClick={() => setBannerIdx((i) => (i - 1 + banners.length) % banners.length)}
+                    className="absolute top-1/2 -translate-y-1/2 start-2 h-9 w-9 rounded-full bg-background/80 backdrop-blur grid place-items-center text-foreground"
                   >
-                    {t.ages[k]}
+                    {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
                   </button>
-                );
-              })}
+                  <button
+                    aria-label="Next"
+                    onClick={() => setBannerIdx((i) => (i + 1) % banners.length)}
+                    className="absolute top-1/2 -translate-y-1/2 end-2 h-9 w-9 rounded-full bg-background/80 backdrop-blur grid place-items-center text-foreground"
+                  >
+                    {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  </button>
+                  <div className="absolute bottom-3 inset-x-0 flex justify-center gap-1.5">
+                    {banners.map((_, i) => (
+                      <span key={i} className={`h-1.5 rounded-full transition-all ${i === bannerIdx ? "w-6 bg-foreground" : "w-1.5 bg-foreground/40"}`} />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </section>
 
-          {/* Wishlist insights panel */}
-          {(() => {
-            if (wishlist.count === 0) return null;
-            const priced = wishlist.items
-              .map((id) => {
-                if (!id.startsWith("product:") && !id.startsWith("category:")) return null;
-                const slug = id.split(":")[1];
-                const cat = categories.find((c) => c.slug === slug);
-                if (!cat) return null;
-                return getProductForCategory(slug);
-              })
-              .filter((p): p is NonNullable<typeof p> => p !== null);
-            const total = priced.reduce((sum, p) => sum + p.price, 0);
-            const currency = priced[0]?.currency ?? "SAR";
-            const avg = priced.length ? Math.round(total / priced.length) : 0;
-            const fmt = (n: number) =>
-              n.toLocaleString(lang === "ar" ? "ar-EG" : "en-US");
-            const labels = {
-              eyebrow: isRTL ? "نظرة عامة" : "WISHLIST INSIGHTS",
-              title: isRTL ? "قائمة رغباتك" : "Your wishlist",
-              items: isRTL ? "عناصر" : "Items",
-              total: isRTL ? "القيمة" : "Total value",
-              avg: isRTL ? "المتوسط" : "Avg. price",
-              cta: isRTL ? "عرض" : "VIEW",
-            };
-            return (
-              <section className="px-5 mt-8">
-                <Link
-                  to="/wishlist"
-                  className="block rounded-[24px] border border-gold-soft bg-cream-warm/60 p-5 active:scale-[0.99] transition shadow-soft"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] tracking-luxury text-gold-deep">
-                      {labels.eyebrow}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-foreground text-background text-[10px] tracking-luxury">
-                      <Heart className="h-[11px] w-[11px]" strokeWidth={1.8} fill="currentColor" />
-                      {labels.cta}
-                    </span>
-                  </div>
-                  <h3 className="mt-2 font-serif text-[22px] leading-tight text-foreground">
-                    {labels.title}
-                  </h3>
-                  <div className="mt-4 grid grid-cols-3 gap-2">
-                    <div className={isRTL ? "text-right" : "text-left"}>
-                      <p className="font-serif text-[24px] leading-none text-foreground tabular-nums">
-                        {fmt(wishlist.count)}
-                      </p>
-                      <p className="mt-1.5 text-[10px] tracking-luxury text-muted-foreground">
-                        {labels.items}
-                      </p>
-                    </div>
-                    <div className={isRTL ? "text-right" : "text-left"}>
-                      <p className="font-serif text-[24px] leading-none text-foreground tabular-nums">
-                        {priced.length ? fmt(total) : "—"}
-                      </p>
-                      <p className="mt-1.5 text-[10px] tracking-luxury text-muted-foreground">
-                        {labels.total}
-                        {priced.length ? ` · ${currency}` : ""}
-                      </p>
-                    </div>
-                    <div className={isRTL ? "text-right" : "text-left"}>
-                      <p className="font-serif text-[24px] leading-none text-foreground tabular-nums">
-                        {priced.length ? fmt(avg) : "—"}
-                      </p>
-                      <p className="mt-1.5 text-[10px] tracking-luxury text-muted-foreground">
-                        {labels.avg}
-                        {priced.length ? ` · ${currency}` : ""}
-                      </p>
-                    </div>
-                  </div>
-                </Link>
-              </section>
-            );
-          })()}
+          {/* Featured categories (dynamic) */}
+          {featuredCats.length > 0 && (
+            <section className="px-5 mt-7">
+              <div className={`grid gap-3`} style={{ gridTemplateColumns: `repeat(${Math.min(featuredCats.length, 3)}, minmax(0, 1fr))` }}>
+                {featuredCats.map((fc) => (
+                  <a
+                    key={fc.id}
+                    href={fc.link_url}
+                    className="h-[54px] rounded-full bg-gold-soft border border-gold text-gold-deep font-medium text-[15px] grid place-items-center active:scale-[0.97] transition"
+                  >
+                    {ar ? fc.label_ar : fc.label_en}
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Most Popular */}
           <section className="mt-12 px-5">
             <div className="text-center">
-              <span className="text-[10.5px] tracking-luxury text-gold-deep">
-                {t.curatedEdit}
-              </span>
-              <h2 className="font-serif text-[34px] leading-tight text-foreground mt-1.5">
-                {t.mostPopular}
-              </h2>
+              <span className="text-[10.5px] tracking-luxury text-gold-deep">{t.curatedEdit}</span>
+              <h2 className="font-serif text-[34px] leading-tight text-foreground mt-1.5">{t.mostPopular}</h2>
             </div>
 
             <div className="grid grid-cols-2 gap-x-4 gap-y-8 mt-7">
-              {categories.map((c) => {
-                const wishId = `category:${c.slug}`;
-                const liked = wishlist.has(wishId);
+              {popularCards.map((c) => {
+                const liked = wishlist.has(c.wishId);
                 return (
-                  <ImpressionCell key={c.slug} itemId={wishId} source="category_card">
-                    <Link
-                      to="/category/$slug"
-                      params={{ slug: c.slug }}
-                      className="group flex flex-col items-center text-left active:scale-[0.99] transition"
-                    >
+                  <ImpressionCell key={c.key} itemId={c.wishId} source="category_card">
+                    <a href={c.href} className="group flex flex-col items-center text-left active:scale-[0.99] transition">
                       <div className="relative w-full overflow-hidden rounded-[22px] bg-cream-warm aspect-[1.35/1]">
                         <img
                           src={c.img}
-                          alt={t.categories[c.slug] ?? c.name}
+                          alt={c.label}
                           loading="lazy"
-                          width={768}
-                          height={576}
-                          className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04] group-active:opacity-90"
+                          className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04]"
                         />
                         <button
                           type="button"
-                          aria-label={
-                            isRTL
-                              ? liked
-                                ? "إزالة من المفضلة"
-                                : "أضف إلى المفضلة"
-                              : liked
-                                ? "Remove from wishlist"
-                                : "Add to wishlist"
-                          }
+                          aria-label={isRTL ? (liked ? "إزالة من المفضلة" : "أضف للمفضلة") : (liked ? "Remove" : "Save")}
                           aria-pressed={liked}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            wishlist.toggle(wishId, "category_card");
-                          }}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); wishlist.toggle(c.wishId, "category_card"); }}
                           className="absolute top-2.5 end-2.5 h-9 w-9 rounded-full bg-background/85 backdrop-blur grid place-items-center text-gold-deep border border-gold-soft active:scale-90 transition"
                         >
-                          <Heart
-                            className="h-[15px] w-[15px]"
-                            strokeWidth={1.6}
-                            fill={liked ? "currentColor" : "none"}
-                          />
+                          <Heart className="h-[15px] w-[15px]" strokeWidth={1.6} fill={liked ? "currentColor" : "none"} />
                         </button>
                       </div>
-                      <span className="mt-3 text-[15px] text-foreground/85 font-medium tracking-tight text-center">
-                        {t.categories[c.slug] ?? c.name}
-                      </span>
-                    </Link>
+                      <span className="mt-3 text-[15px] text-foreground/85 font-medium tracking-tight text-center">{c.label}</span>
+                    </a>
                   </ImpressionCell>
                 );
               })}
             </div>
 
             <div className="mt-10 flex justify-center">
-              <button className="h-[52px] px-10 rounded-full bg-background border border-border text-gold-deep text-[12px] tracking-luxury font-medium active:scale-[0.97] transition">
+              <Link to="/search" className="h-[52px] px-10 rounded-full bg-background border border-border text-gold-deep text-[12px] tracking-luxury font-medium grid place-items-center active:scale-[0.97] transition">
                 {t.shopAll}
-              </button>
+              </Link>
             </div>
-
-            <p className="mt-10 text-center text-[11px] text-muted-foreground tracking-soft">
-              {t.footer}
-            </p>
           </section>
         </main>
+      </div>
 
+      {/* Site footer */}
+      <div className="w-full">
+        <Footer />
       </div>
     </div>
   );
 }
+
+// Avoid unused-import warning (data/categories used as fallback)
+void getProductForCategory;

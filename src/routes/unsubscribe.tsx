@@ -8,8 +8,8 @@ import { useLanguage } from "@/i18n/LanguageContext";
 export const Route = createFileRoute("/unsubscribe")({
   head: () =>
     buildMeta({
-      title: "إلغاء الاشتراك — Maisonnét",
-      description: "إلغاء اشتراكك من رسائل Maisonnét الترويجية.",
+      title: "إلغاء الاشتراك — Le Petit Paradis",
+      description: "إلغاء اشتراكك من رسائل Le Petit Paradis الترويجية.",
       path: "/unsubscribe",
       noindex: true,
     }),

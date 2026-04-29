@@ -149,7 +149,7 @@ export async function attemptDelivery(deliveryId: string): Promise<void> {
         "X-Webhook-Event": del.event_type,
         "X-Webhook-Delivery": del.id,
         "X-Webhook-Signature": `t=${ts},v1=${signature}`,
-        "User-Agent": "Maisonnet-Webhooks/1.0",
+        "User-Agent": "Le Petit Paradis-Webhooks/1.0",
       },
       body,
       signal: controller.signal,

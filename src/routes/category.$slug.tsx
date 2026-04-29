@@ -42,17 +42,17 @@ export const Route = createFileRoute("/category/$slug")({
     const path = `/category/${params.slug}`;
     if (!cat) {
       return buildMeta({
-        title: "غير موجود — Maisonnét",
+        title: "غير موجود — Le Petit Paradis",
         description: "هذه الصفحة غير متوفرة.",
         path,
         noindex: true,
         robots: "noindex, follow",
       });
     }
-    const title = `${cat.name} — Maisonnét`;
+    const title = `${cat.name} — Le Petit Paradis`;
     const description = product
-      ? `${product.name} من ${product.brand}. ${cat.name} — أزياء أطفال فاخرة من Maisonnét.`
-      : `تشكيلة ${cat.name} الفاخرة من Maisonnét للأطفال.`;
+      ? `${product.name} من ${product.brand}. ${cat.name} — أزياء أطفال فاخرة من Le Petit Paradis.`
+      : `تشكيلة ${cat.name} الفاخرة من Le Petit Paradis للأطفال.`;
     const image = product?.images?.[0] ?? cat.img;
     const inStock = product && (product as any).inStock !== false;
     const jsonLd: Array<Record<string, unknown>> = [
@@ -271,7 +271,7 @@ function ProductDetails() {
     setSharePayload({
       url,
       title: product.name,
-      message: ar ? `أحببتُ هذه القطعة من ميزون: ${product.name}` : `I'm loving this piece from Maisonnét: ${product.name}`,
+      message: ar ? `أحببتُ هذه القطعة من لو بوتي باراديس: ${product.name}` : `I'm loving this piece from Le Petit Paradis: ${product.name}`,
     });
   };
 

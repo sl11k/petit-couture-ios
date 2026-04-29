@@ -19,15 +19,15 @@ export const Route = createFileRoute("/wishlist/share")({
   validateSearch: zodValidator(searchSchema),
   head: () => ({
     meta: [
-      { title: "Shared wishlist — Maisonnét" },
+      { title: "Shared wishlist — Le Petit Paradis" },
       {
         name: "description",
-        content: "Open a shared Maisonnét wishlist and add the saved pieces to yours.",
+        content: "Open a shared Le Petit Paradis wishlist and add the saved pieces to yours.",
       },
-      { property: "og:title", content: "Shared wishlist — Maisonnét" },
+      { property: "og:title", content: "Shared wishlist — Le Petit Paradis" },
       {
         property: "og:description",
-        content: "Open a shared Maisonnét wishlist and add the saved pieces to yours.",
+        content: "Open a shared Le Petit Paradis wishlist and add the saved pieces to yours.",
       },
       { name: "robots", content: "noindex" },
     ],

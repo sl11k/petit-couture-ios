@@ -37,7 +37,7 @@ const LocationPicker = lazy(
 export const Route = createFileRoute("/checkout")({
   head: () =>
     buildMeta({
-      title: "إتمام الطلب — Maisonnét",
+      title: "إتمام الطلب — Le Petit Paradis",
       description:
         "أكمل طلبك بأمان: بيانات التواصل، موقع التوصيل، ودفع آمن في خطوات قليلة.",
       path: "/checkout",

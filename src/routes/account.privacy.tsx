@@ -12,9 +12,9 @@ import { Shield, Download, Trash2, AlertTriangle, CheckCircle2, Mail, MessageSqu
 export const Route = createFileRoute("/account/privacy")({
   head: () =>
     buildMeta({
-      title: "خصوصية الحساب — Maisonnét",
+      title: "خصوصية الحساب — Le Petit Paradis",
       description:
-        "إدارة موافقاتك، تصدير بياناتك، أو طلب حذف حسابك من Maisonnét.",
+        "إدارة موافقاتك، تصدير بياناتك، أو طلب حذف حسابك من Le Petit Paradis.",
       path: "/account/privacy",
       noindex: true,
     }),

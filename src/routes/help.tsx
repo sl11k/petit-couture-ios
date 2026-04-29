@@ -8,9 +8,9 @@ export const Route = createFileRoute("/help")({
   component: HelpPage,
   head: () =>
     buildMeta({
-      title: "الأسئلة الشائعة — Maisonnét",
+      title: "الأسئلة الشائعة — Le Petit Paradis",
       description:
-        "إجابات على الأسئلة الأكثر شيوعاً حول الطلبات، الدفع، الشحن، والإرجاع لدى Maisonnét.",
+        "إجابات على الأسئلة الأكثر شيوعاً حول الطلبات، الدفع، الشحن، والإرجاع لدى Le Petit Paradis.",
       path: "/help",
     }),
 });

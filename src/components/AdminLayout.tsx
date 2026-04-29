@@ -100,7 +100,7 @@ const NAV_GROUPS: NavGroup[] = [
     labelEn: "Content",
     items: [
       { to: "/admin/content", labelAr: "المحتوى", labelEn: "Content", icon: FileText, badge: "soon" },
-      { to: "/admin/storefront", labelAr: "واجهات الموقع", labelEn: "Storefront", icon: Layout, badge: "soon" },
+      { to: "/admin/storefront", labelAr: "إدارة الواجهة", labelEn: "Storefront" , icon: Layout },
     ],
   },
   {
@@ -212,7 +212,7 @@ export function AdminShell({ children }: { children?: ReactNode }) {
     <aside className={`flex h-full w-72 shrink-0 flex-col ${isRTL ? "border-l" : "border-r"} border-border bg-card`}>
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div>
-          <h2 className="text-sm font-semibold text-foreground">Maisonnet · {ar ? "لوحة الإدارة" : "Admin"}</h2>
+          <h2 className="text-sm font-semibold text-foreground">Le Petit Paradis · {ar ? "لوحة الإدارة" : "Admin"}</h2>
           <p className="mt-0.5 truncate text-[11px] text-muted-foreground" title={user.email ?? ""}>
             {user.email}
           </p>
