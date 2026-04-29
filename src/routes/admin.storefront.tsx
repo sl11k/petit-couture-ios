@@ -64,11 +64,13 @@ function StorefrontAdmin() {
           ))}
         </nav>
 
-        {tab === "banners" && <BannersPanel ar={ar} />}
-        {tab === "categories" && <FeaturedCategoriesPanel ar={ar} />}
-        {tab === "popular" && <PopularPicksPanel ar={ar} />}
-        {tab === "announcements" && <AnnouncementsPanel ar={ar} />}
-        {tab === "footer" && <FooterPanel ar={ar} />}
+        <div key={tab} className="animate-in fade-in duration-200">
+          {tab === "banners" && <BannersPanel ar={ar} />}
+          {tab === "categories" && <FeaturedCategoriesPanel ar={ar} />}
+          {tab === "popular" && <PopularPicksPanel ar={ar} />}
+          {tab === "announcements" && <AnnouncementsPanel ar={ar} />}
+          {tab === "footer" && <FooterPanel ar={ar} />}
+        </div>
       </div>
     </AdminShell>
   );
