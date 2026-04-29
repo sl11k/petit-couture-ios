@@ -21,7 +21,7 @@ function InvoicePrint() {
     (async () => {
       try {
         setLoading(true);
-        const [oRes, iRes, sRes] = await Promise.all([
+        const [oRes, iRes, snap] = await Promise.all([
           supabase.from("orders").select("*").eq("id", id).maybeSingle(),
           supabase.from("order_items").select("*").eq("order_id", id),
           loadStoreSnapshot(),
@@ -29,7 +29,7 @@ function InvoicePrint() {
         if (!oRes.data) throw new Error("الطلب غير موجود");
         setOrder(oRes.data);
         setItems(iRes.data ?? []);
-        setStore(sRes);
+        setStore(snap);
 
         // Try existing invoice or generate one
         const { data: existing } = await supabase
