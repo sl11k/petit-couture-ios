@@ -32,6 +32,7 @@ import { Route as AdminStorefrontRouteImport } from './routes/admin.storefront'
 import { Route as AdminSiteAnalyticsRouteImport } from './routes/admin.site-analytics'
 import { Route as AdminShippingRouteImport } from './routes/admin.shipping'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminSecurityRouteImport } from './routes/admin.security'
 import { Route as AdminSearchRouteImport } from './routes/admin.search'
 import { Route as AdminReturnsRouteImport } from './routes/admin.returns'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
@@ -178,6 +179,11 @@ const AdminShippingRoute = AdminShippingRouteImport.update({
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSecurityRoute = AdminSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSearchRoute = AdminSearchRouteImport.update({
@@ -374,6 +380,7 @@ export interface FileRoutesByFullPath {
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
   '/admin/search': typeof AdminSearchRoute
+  '/admin/security': typeof AdminSecurityRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/shipping': typeof AdminShippingRoute
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
@@ -430,6 +437,7 @@ export interface FileRoutesByTo {
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
   '/admin/search': typeof AdminSearchRoute
+  '/admin/security': typeof AdminSecurityRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/shipping': typeof AdminShippingRoute
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
@@ -487,6 +495,7 @@ export interface FileRoutesById {
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
   '/admin/search': typeof AdminSearchRoute
+  '/admin/security': typeof AdminSecurityRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/shipping': typeof AdminShippingRoute
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
@@ -545,6 +554,7 @@ export interface FileRouteTypes {
     | '/admin/reports'
     | '/admin/returns'
     | '/admin/search'
+    | '/admin/security'
     | '/admin/settings'
     | '/admin/shipping'
     | '/admin/site-analytics'
@@ -601,6 +611,7 @@ export interface FileRouteTypes {
     | '/admin/reports'
     | '/admin/returns'
     | '/admin/search'
+    | '/admin/security'
     | '/admin/settings'
     | '/admin/shipping'
     | '/admin/site-analytics'
@@ -657,6 +668,7 @@ export interface FileRouteTypes {
     | '/admin/reports'
     | '/admin/returns'
     | '/admin/search'
+    | '/admin/security'
     | '/admin/settings'
     | '/admin/shipping'
     | '/admin/site-analytics'
@@ -859,6 +871,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/admin/settings'
       preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/security': {
+      id: '/admin/security'
+      path: '/security'
+      fullPath: '/admin/security'
+      preLoaderRoute: typeof AdminSecurityRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/search': {
@@ -1154,6 +1173,7 @@ interface AdminRouteChildren {
   AdminReportsRoute: typeof AdminReportsRoute
   AdminReturnsRoute: typeof AdminReturnsRoute
   AdminSearchRoute: typeof AdminSearchRoute
+  AdminSecurityRoute: typeof AdminSecurityRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminShippingRoute: typeof AdminShippingRoute
   AdminSiteAnalyticsRoute: typeof AdminSiteAnalyticsRoute
@@ -1188,6 +1208,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminReportsRoute: AdminReportsRoute,
   AdminReturnsRoute: AdminReturnsRoute,
   AdminSearchRoute: AdminSearchRoute,
+  AdminSecurityRoute: AdminSecurityRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminShippingRoute: AdminShippingRoute,
   AdminSiteAnalyticsRoute: AdminSiteAnalyticsRoute,

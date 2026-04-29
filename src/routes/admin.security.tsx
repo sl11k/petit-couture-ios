@@ -203,14 +203,14 @@ function Section({ title, children }: any) {
     </div>
   );
 }
-function Field({ label, children }: any) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return <label className="block text-xs"><span className="mb-1 block text-muted-foreground">{label}</span>{children}</label>;
 }
-function NumInput({ v, on, disabled }: any) {
+function NumInput({ v, on, disabled }: { v: number; on: (v: number) => void; disabled?: boolean }) {
   return <input type="number" value={v ?? 0} onChange={(e) => on(parseInt(e.target.value) || 0)} disabled={disabled}
     className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm disabled:opacity-50" />;
 }
-function Toggle({ label, v, on, disabled }: any) {
+function Toggle({ label, v, on, disabled }: { label: string; v: boolean; on: (v: boolean) => void; disabled?: boolean }) {
   return (
     <label className={`flex items-center justify-between rounded-md border border-border p-2 text-xs ${disabled ? "opacity-60" : "cursor-pointer"}`}>
       <span>{label}</span>
