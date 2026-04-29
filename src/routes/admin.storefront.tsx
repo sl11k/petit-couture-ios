@@ -11,6 +11,7 @@ import {
   fetchFeaturedCategories,
   fetchPopularPicks,
   fetchStorefrontSettings,
+  clearStorefrontSettingsCache,
   uploadStorefrontImage,
   type AnnouncementMessage,
   type Banner,
@@ -375,7 +376,9 @@ function FooterPanel({ ar }: { ar: boolean }) {
       footer_address_ar: s.footer_address_ar, footer_address_en: s.footer_address_en,
       footer_instagram: s.footer_instagram, footer_tiktok: s.footer_tiktok, footer_whatsapp: s.footer_whatsapp,
     }).eq("id", true);
-    if (error) toast.error(error.message); else toast.success(ar ? "تم الحفظ" : "Saved");
+    if (error) { toast.error(error.message); return; }
+    clearStorefrontSettingsCache();
+    toast.success(ar ? "تم الحفظ" : "Saved");
   };
 
   return (

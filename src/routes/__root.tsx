@@ -110,9 +110,10 @@ function RootComponent() {
   const isMachine =
     pathname.startsWith("/sitemap") || pathname.startsWith("/robots") || pathname.startsWith("/debug");
 
-  // Footer rendered on public content pages only (not home, admin, auth, checkout, machine routes).
+  // Footer renders on storefront and admin pages alike, hidden only on focused flows
+  // (auth, checkout, invoice) and machine routes (sitemap/robots/debug).
   const hideFooter =
-    pathname === "/" || isAdmin || isAuth || pathname.startsWith("/checkout") || pathname.startsWith("/invoice") || isMachine;
+    isAuth || pathname.startsWith("/checkout") || pathname.startsWith("/invoice") || isMachine;
 
   // Storefront chrome (top bar, mobile nav, floating widgets) is for the store experience only.
   // Admin and auth use their own self-contained layouts.
