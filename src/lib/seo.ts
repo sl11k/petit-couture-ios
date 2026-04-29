@@ -266,6 +266,9 @@ export function collectionJsonLd(opts: {
   description: string;
   url: string;
   items: CollectionItem[];
+  image?: string;
+  inLanguage?: string;
+  isPartOf?: string;
 }) {
   const itemListElement = opts.items.slice(0, 30).map((it, i) => {
     const itemUrl = it.url.startsWith("http") ? it.url : canonical(it.url);
@@ -295,16 +298,34 @@ export function collectionJsonLd(opts: {
     };
   });
 
-  return {
+  // Aggregate offer (low/high) across listed products
+  const prices = opts.items.map((i) => i.price).filter((p): p is number => typeof p === "number");
+  const currency = opts.items.find((i) => i.currency)?.currency ?? "SAR";
+  const aggregateOffer = prices.length
+    ? {
+        "@type": "AggregateOffer",
+        priceCurrency: currency,
+        lowPrice: Math.min(...prices).toFixed(2),
+        highPrice: Math.max(...prices).toFixed(2),
+        offerCount: prices.length,
+      }
+    : undefined;
+
+  const data: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name: opts.name,
     description: opts.description,
     url: opts.url,
+    inLanguage: opts.inLanguage ?? "ar-SA",
+    isPartOf: { "@type": "WebSite", name: SITE.name, url: opts.isPartOf ?? SITE.url },
     mainEntity: {
       "@type": "ItemList",
       numberOfItems: opts.items.length,
       itemListElement,
     },
   };
+  if (opts.image) data.image = opts.image;
+  if (aggregateOffer) data.offers = aggregateOffer;
+  return data;
 }
