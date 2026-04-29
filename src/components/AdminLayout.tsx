@@ -272,7 +272,7 @@ export function AdminShell({ children }: { children?: ReactNode }) {
         )}
         {filteredGroups.map((group) => (
           <div key={group.labelEn} className="mb-4">
-            <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+            <div className="sticky top-0 z-10 -mx-2 mb-1 bg-card/95 px-5 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 backdrop-blur">
               {groupLabel(group)}
             </div>
             <ul className="space-y-0.5">
@@ -285,13 +285,13 @@ export function AdminShell({ children }: { children?: ReactNode }) {
                   <li key={item.to}>
                     <Link
                       to={item.to}
-                      className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition ${
+                      className={`group flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors duration-150 ${
                         active
-                          ? "bg-primary text-primary-foreground"
+                          ? "bg-primary text-primary-foreground shadow-sm"
                           : "text-foreground hover:bg-muted"
                       }`}
                     >
-                      <Icon className="h-4 w-4 shrink-0" />
+                      <Icon className={`h-4 w-4 shrink-0 transition-transform ${active ? "" : "group-hover:scale-110"}`} />
                       <span className="flex-1 truncate">{itemLabel(item)}</span>
                     </Link>
                   </li>
