@@ -159,6 +159,10 @@ function LandingPage() {
     .map((s) => categories.find((c) => c.slug === s))
     .filter(Boolean) as typeof categories;
 
+  useEffect(() => {
+    devValidateJsonLd(`landing:${campaign.slug}`, buildLandingJsonLd(campaign));
+  }, [campaign]);
+
   return (
     <main className="lg:hidden lg:min-h-0 min-h-[100vh]">
       {/* Hero */}
