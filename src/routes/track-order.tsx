@@ -3,15 +3,18 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Package, Truck, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { buildMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/track-order")({
   component: TrackPage,
-  head: () => ({
-    meta: [
-      { title: "تتبع الطلب · Maisonnet" },
-      { name: "description", content: "تتبع طلبك دون الحاجة لتسجيل الدخول. أدخل رقم الطلب والبريد الإلكتروني." },
-    ],
-  }),
+  head: () =>
+    buildMeta({
+      title: "تتبع الطلب — Maisonnét",
+      description:
+        "تتبع حالة طلبك من Maisonnét دون الحاجة لتسجيل الدخول — أدخل رقم الطلب والبريد الإلكتروني.",
+      path: "/track-order",
+      noindex: true,
+    }),
 });
 
 const schema = z.object({

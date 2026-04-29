@@ -2,15 +2,17 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronDown, Search, MessageCircle } from "lucide-react";
+import { buildMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/help")({
   component: HelpPage,
-  head: () => ({
-    meta: [
-      { title: "الأسئلة الشائعة · Maisonnet" },
-      { name: "description", content: "إجابات على الأسئلة الأكثر شيوعاً حول الطلبات، الدفع، الشحن والإرجاع." },
-    ],
-  }),
+  head: () =>
+    buildMeta({
+      title: "الأسئلة الشائعة — Maisonnét",
+      description:
+        "إجابات على الأسئلة الأكثر شيوعاً حول الطلبات، الدفع، الشحن، والإرجاع لدى Maisonnét.",
+      path: "/help",
+    }),
 });
 
 const CATEGORIES: Record<string, string> = {

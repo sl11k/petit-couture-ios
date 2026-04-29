@@ -4,15 +4,17 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/state/AuthContext";
 import { Mail, Phone, MessageCircle, Send, CheckCircle2, HelpCircle, Package } from "lucide-react";
+import { buildMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/contact")({
   component: ContactPage,
-  head: () => ({
-    meta: [
-      { title: "تواصل معنا · Maisonnet" },
-      { name: "description", content: "تواصل مع خدمة عملاء Maisonnet عبر واتساب أو البريد أو نموذج الاتصال." },
-    ],
-  }),
+  head: () =>
+    buildMeta({
+      title: "تواصل معنا — Maisonnét",
+      description:
+        "تواصل مع خدمة عملاء Maisonnét عبر واتساب أو البريد الإلكتروني أو نموذج الاتصال — نحن هنا لخدمتك.",
+      path: "/contact",
+    }),
 });
 
 const schema = z.object({
