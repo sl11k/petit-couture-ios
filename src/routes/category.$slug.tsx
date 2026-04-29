@@ -33,6 +33,7 @@ import { trackEvent } from "@/lib/analytics";
 import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
 
 import { buildMeta, productJsonLd, breadcrumbJsonLd, canonical } from "@/lib/seo";
+import { devValidateJsonLd } from "@/lib/seoValidate";
 
 export const Route = createFileRoute("/category/$slug")({
   head: ({ params }) => {
