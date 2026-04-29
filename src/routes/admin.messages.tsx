@@ -53,6 +53,7 @@ function MessagesPage() {
       {tab === "providers" && <ProvidersTab />}
       {tab === "costs" && <CostsTab />}
     </div>
+    </AdminShell>
   );
 }
 
