@@ -18,7 +18,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 
-export const Route = createFileRoute("/admin")({
+export const Route = createFileRoute("/admin/")({
   component: AdminHome,
 });
 

@@ -24,6 +24,7 @@ import { Route as BagRouteImport } from './routes/bag'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as WishlistShareRouteImport } from './routes/wishlist.share'
 import { Route as SupportNewRouteImport } from './routes/support.new'
 import { Route as OrderConfirmationOrderNumberRouteImport } from './routes/order-confirmation.$orderNumber'
@@ -155,6 +156,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const WishlistShareRoute = WishlistShareRouteImport.update({
   id: '/share',
@@ -499,6 +505,7 @@ export interface FileRoutesByFullPath {
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/support/new': typeof SupportNewRoute
   '/wishlist/share': typeof WishlistShareRoute
+  '/admin/': typeof AdminIndexRoute
   '/account/returns/new': typeof AccountReturnsNewRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRouteWithChildren
@@ -515,7 +522,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRouteWithChildren
-  '/admin': typeof AdminRouteWithChildren
   '/bag': typeof BagRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
@@ -572,6 +578,7 @@ export interface FileRoutesByTo {
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/support/new': typeof SupportNewRoute
   '/wishlist/share': typeof WishlistShareRoute
+  '/admin': typeof AdminIndexRoute
   '/account/returns/new': typeof AccountReturnsNewRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRouteWithChildren
@@ -646,6 +653,7 @@ export interface FileRoutesById {
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/support/new': typeof SupportNewRoute
   '/wishlist/share': typeof WishlistShareRoute
+  '/admin/': typeof AdminIndexRoute
   '/account/returns/new': typeof AccountReturnsNewRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRouteWithChildren
@@ -721,6 +729,7 @@ export interface FileRouteTypes {
     | '/order-confirmation/$orderNumber'
     | '/support/new'
     | '/wishlist/share'
+    | '/admin/'
     | '/account/returns/new'
     | '/admin/customers/$id'
     | '/admin/orders/$id'
@@ -737,7 +746,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/account'
-    | '/admin'
     | '/bag'
     | '/checkout'
     | '/contact'
@@ -794,6 +802,7 @@ export interface FileRouteTypes {
     | '/order-confirmation/$orderNumber'
     | '/support/new'
     | '/wishlist/share'
+    | '/admin'
     | '/account/returns/new'
     | '/admin/customers/$id'
     | '/admin/orders/$id'
@@ -867,6 +876,7 @@ export interface FileRouteTypes {
     | '/order-confirmation/$orderNumber'
     | '/support/new'
     | '/wishlist/share'
+    | '/admin/'
     | '/account/returns/new'
     | '/admin/customers/$id'
     | '/admin/orders/$id'
@@ -1017,6 +1027,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/wishlist/share': {
       id: '/wishlist/share'
@@ -1513,6 +1530,7 @@ interface AdminRouteChildren {
   AdminSupportRoute: typeof AdminSupportRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminWebhooksRoute: typeof AdminWebhooksRoute
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -1552,6 +1570,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSupportRoute: AdminSupportRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminWebhooksRoute: AdminWebhooksRoute,
+  AdminIndexRoute: AdminIndexRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
