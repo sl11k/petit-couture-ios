@@ -27,6 +27,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as WishlistShareRouteImport } from './routes/wishlist.share'
 import { Route as SupportNewRouteImport } from './routes/support.new'
 import { Route as OrderConfirmationOrderNumberRouteImport } from './routes/order-confirmation.$orderNumber'
+import { Route as LandingSlugRouteImport } from './routes/landing.$slug'
 import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
 import { Route as DebugAnalyticsRouteImport } from './routes/debug.analytics'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
@@ -164,6 +165,11 @@ const OrderConfirmationOrderNumberRoute =
     path: '/order-confirmation/$orderNumber',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LandingSlugRoute = LandingSlugRouteImport.update({
+  id: '/landing/$slug',
+  path: '/landing/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InvoiceIdRoute = InvoiceIdRouteImport.update({
   id: '/invoice/$id',
   path: '/invoice/$id',
@@ -446,6 +452,7 @@ export interface FileRoutesByFullPath {
   '/category/$slug': typeof CategorySlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
   '/invoice/$id': typeof InvoiceIdRoute
+  '/landing/$slug': typeof LandingSlugRoute
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/support/new': typeof SupportNewRoute
   '/wishlist/share': typeof WishlistShareRoute
@@ -511,6 +518,7 @@ export interface FileRoutesByTo {
   '/category/$slug': typeof CategorySlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
   '/invoice/$id': typeof InvoiceIdRoute
+  '/landing/$slug': typeof LandingSlugRoute
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/support/new': typeof SupportNewRoute
   '/wishlist/share': typeof WishlistShareRoute
@@ -577,6 +585,7 @@ export interface FileRoutesById {
   '/category/$slug': typeof CategorySlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
   '/invoice/$id': typeof InvoiceIdRoute
+  '/landing/$slug': typeof LandingSlugRoute
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/support/new': typeof SupportNewRoute
   '/wishlist/share': typeof WishlistShareRoute
@@ -644,6 +653,7 @@ export interface FileRouteTypes {
     | '/category/$slug'
     | '/debug/analytics'
     | '/invoice/$id'
+    | '/landing/$slug'
     | '/order-confirmation/$orderNumber'
     | '/support/new'
     | '/wishlist/share'
@@ -709,6 +719,7 @@ export interface FileRouteTypes {
     | '/category/$slug'
     | '/debug/analytics'
     | '/invoice/$id'
+    | '/landing/$slug'
     | '/order-confirmation/$orderNumber'
     | '/support/new'
     | '/wishlist/share'
@@ -774,6 +785,7 @@ export interface FileRouteTypes {
     | '/category/$slug'
     | '/debug/analytics'
     | '/invoice/$id'
+    | '/landing/$slug'
     | '/order-confirmation/$orderNumber'
     | '/support/new'
     | '/wishlist/share'
@@ -804,6 +816,7 @@ export interface RootRouteChildren {
   CategorySlugRoute: typeof CategorySlugRoute
   DebugAnalyticsRoute: typeof DebugAnalyticsRoute
   InvoiceIdRoute: typeof InvoiceIdRoute
+  LandingSlugRoute: typeof LandingSlugRoute
   OrderConfirmationOrderNumberRoute: typeof OrderConfirmationOrderNumberRoute
   SupportNewRoute: typeof SupportNewRoute
   ApiPublicPaymentWebhookRoute: typeof ApiPublicPaymentWebhookRoute
@@ -936,6 +949,13 @@ declare module '@tanstack/react-router' {
       path: '/order-confirmation/$orderNumber'
       fullPath: '/order-confirmation/$orderNumber'
       preLoaderRoute: typeof OrderConfirmationOrderNumberRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/landing/$slug': {
+      id: '/landing/$slug'
+      path: '/landing/$slug'
+      fullPath: '/landing/$slug'
+      preLoaderRoute: typeof LandingSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invoice/$id': {
@@ -1414,6 +1434,7 @@ const rootRouteChildren: RootRouteChildren = {
   CategorySlugRoute: CategorySlugRoute,
   DebugAnalyticsRoute: DebugAnalyticsRoute,
   InvoiceIdRoute: InvoiceIdRoute,
+  LandingSlugRoute: LandingSlugRoute,
   OrderConfirmationOrderNumberRoute: OrderConfirmationOrderNumberRoute,
   SupportNewRoute: SupportNewRoute,
   ApiPublicPaymentWebhookRoute: ApiPublicPaymentWebhookRoute,
