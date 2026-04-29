@@ -121,6 +121,7 @@ function AdminSearchPage() {
         </div>
       )}
     </div>
+    </AdminShell>
   );
 }
 
