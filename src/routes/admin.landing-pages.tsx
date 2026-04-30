@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, Save, Eye, EyeOff, Search, X, GripVertical, ExternalLink } from "lucide-react";
+import { Plus, Trash2, Save, Eye, EyeOff, Search, X, ExternalLink } from "lucide-react";
 import { AdminShell } from "@/components/AdminLayout";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
