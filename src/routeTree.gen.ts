@@ -31,6 +31,7 @@ import { Route as OrderConfirmationOrderNumberRouteImport } from './routes/order
 import { Route as LandingSlugRouteImport } from './routes/landing.$slug'
 import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
 import { Route as DebugAnalyticsRouteImport } from './routes/debug.analytics'
+import { Route as CollectionSlugRouteImport } from './routes/collection.$slug'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as AdminWebhooksRouteImport } from './routes/admin.webhooks'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
@@ -192,6 +193,11 @@ const InvoiceIdRoute = InvoiceIdRouteImport.update({
 const DebugAnalyticsRoute = DebugAnalyticsRouteImport.update({
   id: '/debug/analytics',
   path: '/debug/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CollectionSlugRoute = CollectionSlugRouteImport.update({
+  id: '/collection/$slug',
+  path: '/collection/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CategorySlugRoute = CategorySlugRouteImport.update({
@@ -506,6 +512,7 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/admin/webhooks': typeof AdminWebhooksRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/collection/$slug': typeof CollectionSlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
   '/invoice/$id': typeof InvoiceIdRoute
   '/landing/$slug': typeof LandingSlugRoute
@@ -580,6 +587,7 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/admin/webhooks': typeof AdminWebhooksRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/collection/$slug': typeof CollectionSlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
   '/invoice/$id': typeof InvoiceIdRoute
   '/landing/$slug': typeof LandingSlugRoute
@@ -656,6 +664,7 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/admin/webhooks': typeof AdminWebhooksRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/collection/$slug': typeof CollectionSlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
   '/invoice/$id': typeof InvoiceIdRoute
   '/landing/$slug': typeof LandingSlugRoute
@@ -733,6 +742,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/webhooks'
     | '/category/$slug'
+    | '/collection/$slug'
     | '/debug/analytics'
     | '/invoice/$id'
     | '/landing/$slug'
@@ -807,6 +817,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/webhooks'
     | '/category/$slug'
+    | '/collection/$slug'
     | '/debug/analytics'
     | '/invoice/$id'
     | '/landing/$slug'
@@ -882,6 +893,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/webhooks'
     | '/category/$slug'
+    | '/collection/$slug'
     | '/debug/analytics'
     | '/invoice/$id'
     | '/landing/$slug'
@@ -920,6 +932,7 @@ export interface RootRouteChildren {
   UnsubscribeRoute: typeof UnsubscribeRoute
   WishlistRoute: typeof WishlistRouteWithChildren
   CategorySlugRoute: typeof CategorySlugRoute
+  CollectionSlugRoute: typeof CollectionSlugRoute
   DebugAnalyticsRoute: typeof DebugAnalyticsRoute
   InvoiceIdRoute: typeof InvoiceIdRoute
   LandingSlugRoute: typeof LandingSlugRoute
@@ -1087,6 +1100,13 @@ declare module '@tanstack/react-router' {
       path: '/debug/analytics'
       fullPath: '/debug/analytics'
       preLoaderRoute: typeof DebugAnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/collection/$slug': {
+      id: '/collection/$slug'
+      path: '/collection/$slug'
+      fullPath: '/collection/$slug'
+      preLoaderRoute: typeof CollectionSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/category/$slug': {
@@ -1625,6 +1645,7 @@ const rootRouteChildren: RootRouteChildren = {
   UnsubscribeRoute: UnsubscribeRoute,
   WishlistRoute: WishlistRouteWithChildren,
   CategorySlugRoute: CategorySlugRoute,
+  CollectionSlugRoute: CollectionSlugRoute,
   DebugAnalyticsRoute: DebugAnalyticsRoute,
   InvoiceIdRoute: InvoiceIdRoute,
   LandingSlugRoute: LandingSlugRoute,

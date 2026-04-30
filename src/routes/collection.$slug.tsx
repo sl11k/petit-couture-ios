@@ -138,14 +138,7 @@ function CollectionView() {
   const { lang } = useLanguage();
   const ar = lang === "ar";
 
-  // Increment view count (fire-and-forget)
-  useEffect(() => {
-    supabase.rpc as unknown; // no rpc; use direct update
-    supabase.from("landing_pages")
-      .update({ views: (undefined as unknown) as number })
-      .eq("id", page.id)
-      .then(() => {});
-  }, [page.id]);
+  // Page rendered — view counting handled server-side via analytics if needed.
 
   return (
     <main className="min-h-screen">
