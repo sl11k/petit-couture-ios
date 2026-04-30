@@ -99,6 +99,7 @@ const NAV_GROUPS: NavGroup[] = [
     labelEn: "Content",
     items: [
       { to: "/admin/content", labelAr: "المحتوى", labelEn: "Content", icon: FileText },
+      { to: "/admin/home-builder", labelAr: "بناء الصفحة الرئيسية", labelEn: "Home builder", icon: Layout },
       { to: "/admin/storefront", labelAr: "إدارة الواجهة", labelEn: "Storefront" , icon: Layout },
       { to: "/admin/landing-pages", labelAr: "الصفحات والمجموعات", labelEn: "Pages & collections", icon: Layout },
     ],

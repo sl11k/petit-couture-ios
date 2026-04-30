@@ -12,12 +12,16 @@ import {
   fetchAnnouncements,
   fetchBanners,
   fetchFeaturedCategories,
+  fetchHomeSections,
   fetchPopularPicks,
   fetchStorefrontSettings,
+  resolveSectionProducts,
   type AnnouncementMessage,
   type Banner,
   type FeaturedCategory,
+  type HomeSection,
   type PopularPick,
+  type ResolvedProduct,
   type StorefrontSettings,
 } from "@/lib/storefront";
 
@@ -52,6 +56,8 @@ export function HomeScreen() {
   const [settings, setSettings] = useState<StorefrontSettings | null>(null);
   const [bannerIdx, setBannerIdx] = useState(0);
   const [annIdx, setAnnIdx] = useState(0);
+  const [sections, setSections] = useState<HomeSection[]>([]);
+  const [sectionProducts, setSectionProducts] = useState<Record<string, ResolvedProduct[]>>({});
 
   useEffect(() => {
     fetchBanners().then(setBanners).catch(() => {});
@@ -59,6 +65,20 @@ export function HomeScreen() {
     fetchPopularPicks().then(setPopular).catch(() => {});
     fetchAnnouncements().then(setAnnouncements).catch(() => {});
     fetchStorefrontSettings().then(setSettings).catch(() => {});
+    fetchHomeSections(true).then(async (secs) => {
+      setSections(secs);
+      const productKinds = new Set(["most_popular", "new_arrivals", "custom_collection"]);
+      const entries = await Promise.all(
+        secs
+          .filter((s) => productKinds.has(s.kind))
+          .map(async (s) => {
+            const limit = Number((s.config as any)?.limit ?? 8);
+            const items = await resolveSectionProducts(s, limit).catch(() => []);
+            return [s.id, items] as const;
+          }),
+      );
+      setSectionProducts(Object.fromEntries(entries));
+    }).catch(() => {});
   }, []);
 
   const displayMode = settings?.banner_display_mode ?? "rotate";
@@ -347,9 +367,60 @@ export function HomeScreen() {
               </Link>
             </div>
           </section>
+
+          {/* Dynamic sections from /admin/home-builder */}
+          {sections
+            .filter((s) => ["most_popular", "new_arrivals", "custom_collection", "rich_text"].includes(s.kind))
+            .map((s) => (
+              <DynamicSection key={s.id} section={s} products={sectionProducts[s.id] ?? []} ar={ar} />
+            ))}
         </main>
       </div>
 
     </div>
+  );
+}
+
+function DynamicSection({ section, products, ar }: { section: HomeSection; products: ResolvedProduct[]; ar: boolean }) {
+  const title = ar ? section.title_ar : section.title_en;
+  const eyebrow = ar ? section.eyebrow_ar : section.eyebrow_en;
+
+  if (section.kind === "rich_text") {
+    const body = String((section.config as any)?.[ar ? "body_ar" : "body_en"] ?? "");
+    if (!body) return null;
+    return (
+      <section className="mt-10 px-5 text-center">
+        {title && <h2 className="font-serif text-[26px] text-foreground mb-3">{title}</h2>}
+        <p className="text-[14px] text-foreground/75 leading-relaxed whitespace-pre-line">{body}</p>
+      </section>
+    );
+  }
+
+  if (products.length === 0) return null;
+
+  return (
+    <section className="mt-12 px-5">
+      <div className="text-center">
+        {eyebrow && <span className="text-[10.5px] tracking-luxury text-gold-deep">{eyebrow}</span>}
+        {title && <h2 className="font-serif text-[30px] leading-tight text-foreground mt-1.5">{title}</h2>}
+      </div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-8 mt-7">
+        {products.map((p) => {
+          const name = ar ? (p.name_ar ?? p.name_en) : (p.name_en ?? p.name_ar);
+          const href = p.slug ? `/product/${p.slug}` : "#";
+          return (
+            <a key={p.id} href={href} className="group flex flex-col items-center text-left active:scale-[0.99] transition">
+              <div className="relative w-full overflow-hidden rounded-[22px] bg-cream-warm aspect-[1.35/1]">
+                {p.image_url && (
+                  <img src={p.image_url} alt={name ?? ""} loading="lazy" className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04]" />
+                )}
+              </div>
+              <span className="mt-3 text-[14px] text-foreground/85 font-medium tracking-tight text-center">{name}</span>
+              {p.price != null && <span className="mt-1 text-[12.5px] text-gold-deep">{p.price.toFixed(2)} {ar ? "ر.س" : "SAR"}</span>}
+            </a>
+          );
+        })}
+      </div>
+    </section>
   );
 }

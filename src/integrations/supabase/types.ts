@@ -1225,6 +1225,57 @@ export type Database = {
         }
         Relationships: []
       }
+      home_sections: {
+        Row: {
+          config: Json
+          created_at: string
+          data_source: string
+          eyebrow_ar: string | null
+          eyebrow_en: string | null
+          id: string
+          is_active: boolean
+          kind: string
+          position: number
+          product_ids: string[]
+          source_ref: string | null
+          title_ar: string | null
+          title_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          data_source?: string
+          eyebrow_ar?: string | null
+          eyebrow_en?: string | null
+          id?: string
+          is_active?: boolean
+          kind: string
+          position?: number
+          product_ids?: string[]
+          source_ref?: string | null
+          title_ar?: string | null
+          title_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          data_source?: string
+          eyebrow_ar?: string | null
+          eyebrow_en?: string | null
+          id?: string
+          is_active?: boolean
+          kind?: string
+          position?: number
+          product_ids?: string[]
+          source_ref?: string | null
+          title_ar?: string | null
+          title_en?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       idempotency_keys: {
         Row: {
           created_at: string

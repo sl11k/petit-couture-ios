@@ -57,6 +57,7 @@ import { Route as AdminInvoicesRouteImport } from './routes/admin.invoices'
 import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
 import { Route as AdminIntegrationsRouteImport } from './routes/admin.integrations'
 import { Route as AdminIncompleteRouteImport } from './routes/admin.incomplete'
+import { Route as AdminHomeBuilderRouteImport } from './routes/admin.home-builder'
 import { Route as AdminHelpRouteImport } from './routes/admin.help'
 import { Route as AdminErrorsRouteImport } from './routes/admin.errors'
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
@@ -325,6 +326,11 @@ const AdminIncompleteRoute = AdminIncompleteRouteImport.update({
   path: '/incomplete',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminHomeBuilderRoute = AdminHomeBuilderRouteImport.update({
+  id: '/home-builder',
+  path: '/home-builder',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminHelpRoute = AdminHelpRouteImport.update({
   id: '/help',
   path: '/help',
@@ -487,6 +493,7 @@ export interface FileRoutesByFullPath {
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/errors': typeof AdminErrorsRoute
   '/admin/help': typeof AdminHelpRoute
+  '/admin/home-builder': typeof AdminHomeBuilderRoute
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/inventory': typeof AdminInventoryRoute
@@ -562,6 +569,7 @@ export interface FileRoutesByTo {
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/errors': typeof AdminErrorsRoute
   '/admin/help': typeof AdminHelpRoute
+  '/admin/home-builder': typeof AdminHomeBuilderRoute
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/inventory': typeof AdminInventoryRoute
@@ -639,6 +647,7 @@ export interface FileRoutesById {
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/errors': typeof AdminErrorsRoute
   '/admin/help': typeof AdminHelpRoute
+  '/admin/home-builder': typeof AdminHomeBuilderRoute
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/inventory': typeof AdminInventoryRoute
@@ -717,6 +726,7 @@ export interface FileRouteTypes {
     | '/admin/customers'
     | '/admin/errors'
     | '/admin/help'
+    | '/admin/home-builder'
     | '/admin/incomplete'
     | '/admin/integrations'
     | '/admin/inventory'
@@ -792,6 +802,7 @@ export interface FileRouteTypes {
     | '/admin/customers'
     | '/admin/errors'
     | '/admin/help'
+    | '/admin/home-builder'
     | '/admin/incomplete'
     | '/admin/integrations'
     | '/admin/inventory'
@@ -868,6 +879,7 @@ export interface FileRouteTypes {
     | '/admin/customers'
     | '/admin/errors'
     | '/admin/help'
+    | '/admin/home-builder'
     | '/admin/incomplete'
     | '/admin/integrations'
     | '/admin/inventory'
@@ -1284,6 +1296,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIncompleteRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/home-builder': {
+      id: '/admin/home-builder'
+      path: '/home-builder'
+      fullPath: '/admin/home-builder'
+      preLoaderRoute: typeof AdminHomeBuilderRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/help': {
       id: '/admin/help'
       path: '/help'
@@ -1546,6 +1565,7 @@ interface AdminRouteChildren {
   AdminCustomersRoute: typeof AdminCustomersRouteWithChildren
   AdminErrorsRoute: typeof AdminErrorsRoute
   AdminHelpRoute: typeof AdminHelpRoute
+  AdminHomeBuilderRoute: typeof AdminHomeBuilderRoute
   AdminIncompleteRoute: typeof AdminIncompleteRoute
   AdminIntegrationsRoute: typeof AdminIntegrationsRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
@@ -1587,6 +1607,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCustomersRoute: AdminCustomersRouteWithChildren,
   AdminErrorsRoute: AdminErrorsRoute,
   AdminHelpRoute: AdminHelpRoute,
+  AdminHomeBuilderRoute: AdminHomeBuilderRoute,
   AdminIncompleteRoute: AdminIncompleteRoute,
   AdminIntegrationsRoute: AdminIntegrationsRoute,
   AdminInventoryRoute: AdminInventoryRoute,
