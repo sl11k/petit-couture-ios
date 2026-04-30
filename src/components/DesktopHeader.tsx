@@ -5,6 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useBag } from "@/state/BagContext";
 import { categories } from "@/data/categories";
+import { BrandLogo } from "@/components/Logo";
 
 /**
  * Wide luxury header shown only on desktop (lg+). The mobile experience keeps
@@ -62,10 +63,8 @@ export function DesktopHeader() {
           </Link>
         </div>
 
-        <Link to="/" className="flex flex-col items-center select-none group">
-          <span className="font-serif text-[34px] leading-none text-foreground tracking-[0.04em] group-hover:opacity-90 transition">
-            Mais<span className="text-gold">on</span>nét
-          </span>
+        <Link to="/" className="flex flex-col items-center select-none group" aria-label="Le Petit Paradis">
+          <BrandLogo height={48} className="group-hover:opacity-90 transition" />
           <span className="mt-1 text-[9px] tracking-luxury text-muted-foreground">
             {isRTL ? "بوتيك أطفال فاخر" : "LUXURY KIDS BOUTIQUE"}
           </span>
