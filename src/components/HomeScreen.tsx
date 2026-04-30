@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import hero from "@/assets/hero-campaign.jpg";
