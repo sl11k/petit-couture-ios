@@ -112,7 +112,7 @@ function chunk<T>(arr: T[], size: number): T[][] {
 async function translateBatch(
   texts: string[],
   target: "en" | "ar",
-): Promise<string[]> {
+): Promise<{ translations: string[]; fallback?: boolean; error?: string }> {
   const resp = await fetch(ENDPOINT, {
     method: "POST",
     headers: {
@@ -124,7 +124,26 @@ async function translateBatch(
   });
   if (!resp.ok) throw new Error(`translate ${resp.status}`);
   const j = await resp.json();
-  return Array.isArray(j.translations) ? j.translations : texts;
+  return {
+    translations: Array.isArray(j.translations) ? j.translations : texts,
+    fallback: !!j.fallback,
+    error: j.error,
+  };
+}
+
+// Module-level kill-switch — once the gateway signals it can't serve us
+// (out of credits / rate-limited), stop calling for the rest of the session.
+let translationDisabled = false;
+let disabledReason: string | null = null;
+function notifyDisabled(reason: string) {
+  if (translationDisabled) return;
+  translationDisabled = true;
+  disabledReason = reason;
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent("admin-translate-disabled", { detail: { reason } }),
+    );
+  }
 }
 
 /**
