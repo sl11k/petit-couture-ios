@@ -294,7 +294,7 @@ function SectionEditor({
       data_source: form.data_source,
       source_ref: form.source_ref || null,
       product_ids: form.product_ids ?? [],
-      config: form.config ?? {},
+      config: (form.config ?? {}) as any,
       position: form.position,
       is_active: form.is_active,
     };
