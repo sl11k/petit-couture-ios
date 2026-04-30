@@ -186,7 +186,7 @@ async function translateRoot(root: HTMLElement, target: "en" | "ar") {
     });
   }
 
-  if (pending.length === 0) return;
+  if (pending.length === 0 || translationDisabled) return;
 
   // Deduplicate while preserving multiple appliers per source string
   const bySrc = new Map<string, ((out: string) => void)[]>();
@@ -198,11 +198,17 @@ async function translateRoot(root: HTMLElement, target: "en" | "ar") {
 
   const batches = chunk(uniqueSources, 40);
   for (const b of batches) {
+    if (translationDisabled) break;
     try {
-      const translated = await translateBatch(b, target);
+      const result = await translateBatch(b, target);
+      if (result.fallback) {
+        notifyDisabled(result.error || "unavailable");
+        break;
+      }
+      const translations = result.translations;
       const updates: Cache = {};
       b.forEach((src, i) => {
-        const out = translated[i] || src;
+        const out = translations[i] || src;
         updates[`${target}:${src}`] = out;
         bySrc.get(src)?.forEach((fn) => fn(out));
       });
@@ -210,11 +216,13 @@ async function translateRoot(root: HTMLElement, target: "en" | "ar") {
       saveCache(next);
     } catch (e) {
       console.warn("translate-batch failed", e);
-      // Leave originals in place; user sees Arabic mixed with English which
-      // is still readable rather than a broken UI.
       break;
     }
   }
+}
+
+export function getTranslationDisabledReason() {
+  return translationDisabled ? disabledReason : null;
 }
 
 /**
