@@ -56,6 +56,8 @@ export function HomeScreen() {
   const [settings, setSettings] = useState<StorefrontSettings | null>(null);
   const [bannerIdx, setBannerIdx] = useState(0);
   const [annIdx, setAnnIdx] = useState(0);
+  const [sections, setSections] = useState<HomeSection[]>([]);
+  const [sectionProducts, setSectionProducts] = useState<Record<string, ResolvedProduct[]>>({});
 
   useEffect(() => {
     fetchBanners().then(setBanners).catch(() => {});
@@ -63,6 +65,20 @@ export function HomeScreen() {
     fetchPopularPicks().then(setPopular).catch(() => {});
     fetchAnnouncements().then(setAnnouncements).catch(() => {});
     fetchStorefrontSettings().then(setSettings).catch(() => {});
+    fetchHomeSections(true).then(async (secs) => {
+      setSections(secs);
+      const productKinds = new Set(["most_popular", "new_arrivals", "custom_collection"]);
+      const entries = await Promise.all(
+        secs
+          .filter((s) => productKinds.has(s.kind))
+          .map(async (s) => {
+            const limit = Number((s.config as any)?.limit ?? 8);
+            const items = await resolveSectionProducts(s, limit).catch(() => []);
+            return [s.id, items] as const;
+          }),
+      );
+      setSectionProducts(Object.fromEntries(entries));
+    }).catch(() => {});
   }, []);
 
   const displayMode = settings?.banner_display_mode ?? "rotate";
