@@ -128,7 +128,7 @@ function CouponsAdmin() {
   }
 
   async function remove(id: string) {
-    if (!confirm("حذف هذا الكوبون؟")) return;
+    if (!confirm(tr("حذف هذا الكوبون؟", "Delete this coupon?"))) return;
     await supabase.from("coupons").delete().eq("id", id);
     await load();
   }
