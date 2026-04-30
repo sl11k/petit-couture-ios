@@ -59,7 +59,14 @@ export const getRouter = () => {
     routeTree,
     context: {},
     scrollRestoration: true,
-    defaultPreloadStaleTime: 0,
+    // Prefetch route + data on hover/focus → instant navigation feel.
+    defaultPreload: "intent",
+    // Keep loaded data fresh for 30s so navigating between admin pages re-uses cache instantly.
+    defaultPreloadStaleTime: 30_000,
+    // Show stale data immediately while revalidating in background (no spinner flash).
+    defaultPreloadGcTime: 5 * 60_000,
+    defaultPendingMs: 0,
+    defaultPendingMinMs: 0,
     defaultErrorComponent: DefaultErrorComponent,
   });
 
