@@ -112,7 +112,7 @@ function chunk<T>(arr: T[], size: number): T[][] {
 async function translateBatch(
   texts: string[],
   target: "en" | "ar",
-): Promise<string[]> {
+): Promise<{ translations: string[]; fallback?: boolean; error?: string }> {
   const resp = await fetch(ENDPOINT, {
     method: "POST",
     headers: {
@@ -124,7 +124,26 @@ async function translateBatch(
   });
   if (!resp.ok) throw new Error(`translate ${resp.status}`);
   const j = await resp.json();
-  return Array.isArray(j.translations) ? j.translations : texts;
+  return {
+    translations: Array.isArray(j.translations) ? j.translations : texts,
+    fallback: !!j.fallback,
+    error: j.error,
+  };
+}
+
+// Module-level kill-switch — once the gateway signals it can't serve us
+// (out of credits / rate-limited), stop calling for the rest of the session.
+let translationDisabled = false;
+let disabledReason: string | null = null;
+function notifyDisabled(reason: string) {
+  if (translationDisabled) return;
+  translationDisabled = true;
+  disabledReason = reason;
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent("admin-translate-disabled", { detail: { reason } }),
+    );
+  }
 }
 
 /**
@@ -167,7 +186,7 @@ async function translateRoot(root: HTMLElement, target: "en" | "ar") {
     });
   }
 
-  if (pending.length === 0) return;
+  if (pending.length === 0 || translationDisabled) return;
 
   // Deduplicate while preserving multiple appliers per source string
   const bySrc = new Map<string, ((out: string) => void)[]>();
@@ -179,11 +198,17 @@ async function translateRoot(root: HTMLElement, target: "en" | "ar") {
 
   const batches = chunk(uniqueSources, 40);
   for (const b of batches) {
+    if (translationDisabled) break;
     try {
-      const translated = await translateBatch(b, target);
+      const result = await translateBatch(b, target);
+      if (result.fallback) {
+        notifyDisabled(result.error || "unavailable");
+        break;
+      }
+      const translations = result.translations;
       const updates: Cache = {};
       b.forEach((src, i) => {
-        const out = translated[i] || src;
+        const out = translations[i] || src;
         updates[`${target}:${src}`] = out;
         bySrc.get(src)?.forEach((fn) => fn(out));
       });
@@ -191,11 +216,13 @@ async function translateRoot(root: HTMLElement, target: "en" | "ar") {
       saveCache(next);
     } catch (e) {
       console.warn("translate-batch failed", e);
-      // Leave originals in place; user sees Arabic mixed with English which
-      // is still readable rather than a broken UI.
       break;
     }
   }
+}
+
+export function getTranslationDisabledReason() {
+  return translationDisabled ? disabledReason : null;
 }
 
 /**

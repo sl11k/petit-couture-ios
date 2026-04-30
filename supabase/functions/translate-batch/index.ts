@@ -88,24 +88,27 @@ Rules:
     );
 
     if (!resp.ok) {
-      if (resp.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "rate_limited" }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
-      }
-      if (resp.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "credits_required" }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
-      }
-      const t = await resp.text();
+      const t = await resp.text().catch(() => "");
       console.error("Gateway error", resp.status, t);
-      return new Response(JSON.stringify({ error: "gateway_error" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      // Return 200 + fallback signal so the client receives the body and
+      // can stop calling. Translations array mirrors the input unchanged.
+      const errorCode =
+        resp.status === 402
+          ? "credits_required"
+          : resp.status === 429
+          ? "rate_limited"
+          : "gateway_error";
+      return new Response(
+        JSON.stringify({
+          error: errorCode,
+          fallback: true,
+          translations: texts,
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     const data = await resp.json();
