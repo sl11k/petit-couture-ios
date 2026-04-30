@@ -264,16 +264,19 @@ function buildTree(flat: Cat[]): TreeNode[] {
 // ============= Row =============
 
 function CategoryRow({
-  cat, depth, expanded, toggleExpand, onEdit, onDelete, onToggleActive, onMove, onLink, canDelete,
+  cat, depth, expanded, toggleExpand, onEdit, onDelete, onToggleActive, onMove, onLink, canDelete, tr, lang,
 }: {
   cat: TreeNode; depth: number; expanded: Set<string>;
   toggleExpand: (id: string) => void;
   onEdit: (c: Cat) => void; onDelete: (c: Cat) => void;
   onToggleActive: (c: Cat) => void; onMove: (c: Cat, dir: -1 | 1) => void;
   onLink: (id: string) => void; canDelete: boolean;
+  tr: TrFn; lang: string;
 }) {
   const hasChildren = cat.children.length > 0;
   const isOpen = expanded.has(cat.id);
+  const displayName = lang === "ar" ? (cat.name_ar || cat.name_en) : (cat.name_en || cat.name_ar);
+  const altName = lang === "ar" ? cat.name_en : cat.name_ar;
 
   return (
     <>
@@ -284,7 +287,7 @@ function CategoryRow({
         <button
           onClick={() => hasChildren && toggleExpand(cat.id)}
           className={`rounded p-1 ${hasChildren ? "hover:bg-muted" : "opacity-0"}`}
-          aria-label="توسيع"
+          aria-label={tr("توسيع", "Expand")}
         >
           {isOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
         </button>
@@ -299,14 +302,14 @@ function CategoryRow({
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="truncate text-sm font-medium">{cat.name_ar}</span>
-            {cat.name_en && <span className="text-[11px] text-muted-foreground">{cat.name_en}</span>}
+            <span className="truncate text-sm font-medium">{displayName}</span>
+            {altName && altName !== displayName && <span className="text-[11px] text-muted-foreground">{altName}</span>}
             {!cat.is_active && (
-              <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-700">معطّل</span>
+              <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-700">{tr("معطّل", "Disabled")}</span>
             )}
             {hasChildren && (
               <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">
-                {cat.children.length} فرعي
+                {cat.children.length} {tr("فرعي", "sub")}
               </span>
             )}
           </div>
@@ -314,23 +317,23 @@ function CategoryRow({
         </div>
 
         <div className="flex items-center gap-0.5">
-          <button onClick={() => onMove(cat, -1)} className="rounded p-1.5 hover:bg-muted" title="أعلى">
+          <button onClick={() => onMove(cat, -1)} className="rounded p-1.5 hover:bg-muted" title={tr("أعلى", "Move up")}>
             <ArrowUp className="h-3.5 w-3.5" />
           </button>
-          <button onClick={() => onMove(cat, 1)} className="rounded p-1.5 hover:bg-muted" title="أسفل">
+          <button onClick={() => onMove(cat, 1)} className="rounded p-1.5 hover:bg-muted" title={tr("أسفل", "Move down")}>
             <ArrowDown className="h-3.5 w-3.5" />
           </button>
-          <button onClick={() => onToggleActive(cat)} className="rounded p-1.5 hover:bg-muted" title={cat.is_active ? "إخفاء" : "إظهار"}>
+          <button onClick={() => onToggleActive(cat)} className="rounded p-1.5 hover:bg-muted" title={cat.is_active ? tr("إخفاء", "Hide") : tr("إظهار", "Show")}>
             {cat.is_active ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />}
           </button>
-          <button onClick={() => onLink(cat.id)} className="rounded p-1.5 hover:bg-muted" title="ربط منتجات">
+          <button onClick={() => onLink(cat.id)} className="rounded p-1.5 hover:bg-muted" title={tr("ربط منتجات", "Link products")}>
             <Package className="h-3.5 w-3.5" />
           </button>
-          <button onClick={() => onEdit(cat)} className="rounded p-1.5 hover:bg-muted" title="تعديل">
+          <button onClick={() => onEdit(cat)} className="rounded p-1.5 hover:bg-muted" title={tr("تعديل", "Edit")}>
             <Pencil className="h-3.5 w-3.5" />
           </button>
           {canDelete && (
-            <button onClick={() => onDelete(cat)} className="rounded p-1.5 text-destructive hover:bg-destructive/10" title="حذف">
+            <button onClick={() => onDelete(cat)} className="rounded p-1.5 text-destructive hover:bg-destructive/10" title={tr("حذف", "Delete")}>
               <Trash2 className="h-3.5 w-3.5" />
             </button>
           )}
@@ -343,6 +346,7 @@ function CategoryRow({
           expanded={expanded} toggleExpand={toggleExpand}
           onEdit={onEdit} onDelete={onDelete} onToggleActive={onToggleActive}
           onMove={onMove} onLink={onLink} canDelete={canDelete}
+          tr={tr} lang={lang}
         />
       ))}
     </>
