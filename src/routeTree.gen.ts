@@ -51,6 +51,7 @@ import { Route as AdminPaymentsRouteImport } from './routes/admin.payments'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
+import { Route as AdminLandingPagesRouteImport } from './routes/admin.landing-pages'
 import { Route as AdminInvoicesRouteImport } from './routes/admin.invoices'
 import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
 import { Route as AdminIntegrationsRouteImport } from './routes/admin.integrations'
@@ -293,6 +294,11 @@ const AdminMessagesRoute = AdminMessagesRouteImport.update({
   path: '/messages',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLandingPagesRoute = AdminLandingPagesRouteImport.update({
+  id: '/landing-pages',
+  path: '/landing-pages',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminInvoicesRoute = AdminInvoicesRouteImport.update({
   id: '/invoices',
   path: '/invoices',
@@ -479,6 +485,7 @@ export interface FileRoutesByFullPath {
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/invoices': typeof AdminInvoicesRoute
+  '/admin/landing-pages': typeof AdminLandingPagesRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
@@ -552,6 +559,7 @@ export interface FileRoutesByTo {
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/invoices': typeof AdminInvoicesRoute
+  '/admin/landing-pages': typeof AdminLandingPagesRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
@@ -627,6 +635,7 @@ export interface FileRoutesById {
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/invoices': typeof AdminInvoicesRoute
+  '/admin/landing-pages': typeof AdminLandingPagesRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
@@ -703,6 +712,7 @@ export interface FileRouteTypes {
     | '/admin/integrations'
     | '/admin/inventory'
     | '/admin/invoices'
+    | '/admin/landing-pages'
     | '/admin/messages'
     | '/admin/notifications'
     | '/admin/orders'
@@ -776,6 +786,7 @@ export interface FileRouteTypes {
     | '/admin/integrations'
     | '/admin/inventory'
     | '/admin/invoices'
+    | '/admin/landing-pages'
     | '/admin/messages'
     | '/admin/notifications'
     | '/admin/orders'
@@ -850,6 +861,7 @@ export interface FileRouteTypes {
     | '/admin/integrations'
     | '/admin/inventory'
     | '/admin/invoices'
+    | '/admin/landing-pages'
     | '/admin/messages'
     | '/admin/notifications'
     | '/admin/orders'
@@ -1217,6 +1229,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMessagesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/landing-pages': {
+      id: '/admin/landing-pages'
+      path: '/landing-pages'
+      fullPath: '/admin/landing-pages'
+      preLoaderRoute: typeof AdminLandingPagesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/invoices': {
       id: '/admin/invoices'
       path: '/invoices'
@@ -1511,6 +1530,7 @@ interface AdminRouteChildren {
   AdminIntegrationsRoute: typeof AdminIntegrationsRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
   AdminInvoicesRoute: typeof AdminInvoicesRoute
+  AdminLandingPagesRoute: typeof AdminLandingPagesRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminOrdersRoute: typeof AdminOrdersRouteWithChildren
@@ -1551,6 +1571,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminIntegrationsRoute: AdminIntegrationsRoute,
   AdminInventoryRoute: AdminInventoryRoute,
   AdminInvoicesRoute: AdminInvoicesRoute,
+  AdminLandingPagesRoute: AdminLandingPagesRoute,
   AdminMessagesRoute: AdminMessagesRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminOrdersRoute: AdminOrdersRouteWithChildren,
