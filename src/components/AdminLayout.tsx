@@ -1,8 +1,9 @@
 import { Link, useLocation, useNavigate, Outlet } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAuth } from "@/state/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useAdminAutoTranslate } from "@/hooks/useAdminAutoTranslate";
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -142,12 +143,16 @@ function flatNav() {
 export function AdminShell({ children }: { children?: ReactNode }) {
   const { user, ready, signOut } = useAuth();
   const { canAccessAdmin, loading, isAdmin, isManager, isStaff, isViewer } = useUserRole();
-  const { lang, isRTL } = useLanguage();
+  const { lang, isRTL, toggle } = useLanguage();
   const ar = lang === "ar";
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const mainRef = useRef<HTMLElement | null>(null);
+  // Auto-translate any Arabic text inside the admin main content to English
+  // (or vice versa) when the admin toggles language. Cached in localStorage.
+  useAdminAutoTranslate(mainRef as React.RefObject<HTMLElement>);
   const [dark, setDark] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return document.documentElement.classList.contains("dark");
