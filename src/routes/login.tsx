@@ -3,8 +3,12 @@ import { buildMeta } from "@/lib/seo";
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/state/AuthContext";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    redirect: typeof search.redirect === "string" ? (search.redirect as string) : "",
+  }),
   head: () =>
     buildMeta({
       title: "تسجيل الدخول — Le Petit Paradis",
@@ -16,10 +20,17 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
+const ADMIN_ROLES = new Set([
+  "super_admin", "admin", "store_manager", "orders_manager", "support",
+  "inventory_manager", "marketing_manager", "finance_manager",
+  "content_manager", "developer", "manager", "staff", "viewer",
+]);
+
 function LoginPage() {
   const { signIn, signUp } = useAuth();
   const { lang, t, isRTL } = useLanguage();
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const ar = lang === "ar";
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
@@ -37,6 +48,26 @@ function LoginPage() {
       } else {
         await signUp(email, password);
       }
+
+      // إذا كان فيه redirect واضح، استخدمه (مثل العودة لصفحة محمية)
+      if (search.redirect) {
+        navigate({ to: search.redirect as any });
+        return;
+      }
+
+      // افحص إذا المستخدم أدمن — إذا نعم خليه في /admin
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: roles } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", user.id);
+          const isAdmin = (roles ?? []).some((r: any) => ADMIN_ROLES.has(r.role));
+          navigate({ to: isAdmin ? "/admin" : "/account" });
+          return;
+        }
+      } catch { /* fallthrough */ }
       navigate({ to: "/account" });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : (ar ? "فشل المصادقة" : "Authentication failed");
