@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, Save, Eye, EyeOff, Search, X, ExternalLink } from "lucide-react";
+import { Plus, Trash2, Save, Eye, EyeOff, Search, X, ExternalLink, Rocket } from "lucide-react";
 import { AdminShell } from "@/components/AdminLayout";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import { CollectionIOSPreview } from "@/components/admin/CollectionIOSPreview";
 
 export const Route = createFileRoute("/admin/landing-pages")({
   component: LandingPagesAdmin,
@@ -230,12 +231,13 @@ function PageEditor({
     setForm((f) => ({ ...f, [k]: v }));
   }
 
-  async function save() {
+  async function save(opts?: { publish?: boolean }) {
     if (!form.slug.trim() || !form.title.trim()) {
       toast.error(ar ? "العنوان والـ slug مطلوبان" : "Title and slug are required");
       return;
     }
     setSaving(true);
+    const willPublish = opts?.publish ?? form.is_active;
     const payload = {
       slug: form.slug.trim(),
       title: form.title.trim(),
@@ -246,7 +248,7 @@ function PageEditor({
       cta_url: form.cta_url || null,
       product_ids: form.product_ids,
       coupon_code: form.coupon_code || null,
-      is_active: form.is_active,
+      is_active: willPublish,
       show_as_collection: form.show_as_collection,
       sort_mode: form.sort_mode,
       position: form.position,
@@ -257,7 +259,15 @@ function PageEditor({
     const { error } = await q;
     setSaving(false);
     if (error) toast.error(error.message);
-    else { toast.success(ar ? "تم الحفظ" : "Saved"); onSaved(); }
+    else {
+      if (opts?.publish !== undefined) update("is_active", willPublish);
+      toast.success(
+        willPublish
+          ? (ar ? "تم الحفظ والنشر — التغييرات ظاهرة الآن" : "Saved & published — changes are live")
+          : (ar ? "تم حفظ المسودة" : "Draft saved")
+      );
+      onSaved();
+    }
   }
 
   function moveItem(from: number, to: number) {
@@ -275,19 +285,25 @@ function PageEditor({
   return (
     <div className="fixed inset-0 z-50 flex" role="dialog" aria-modal="true">
       <button className="flex-1 bg-black/40" onClick={onClose} aria-label="Close" />
-      <div className="w-full max-w-2xl bg-background overflow-y-auto border-s border-border">
+      <div className="w-full max-w-5xl bg-background overflow-y-auto border-s border-border">
         <header className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border px-5 h-14 flex items-center justify-between">
           <h2 className="font-medium">{isNew ? (ar ? "صفحة جديدة" : "New page") : (ar ? "تعديل الصفحة" : "Edit page")}</h2>
           <div className="flex items-center gap-2">
             <button onClick={onClose} className="h-9 px-3 rounded-md border border-border text-sm hover:bg-cream-warm">
               {ar ? "إلغاء" : "Cancel"}
             </button>
-            <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 h-9 px-4 rounded-md bg-foreground text-background text-sm disabled:opacity-50">
-              <Save className="h-3.5 w-3.5" /> {saving ? (ar ? "..." : "...") : (ar ? "حفظ" : "Save")}
+            <button onClick={() => save({ publish: false })} disabled={saving}
+              className="inline-flex items-center gap-2 h-9 px-3 rounded-md border border-border text-sm hover:bg-cream-warm disabled:opacity-50">
+              <Save className="h-3.5 w-3.5" /> {ar ? "حفظ كمسودة" : "Save draft"}
+            </button>
+            <button onClick={() => save({ publish: true })} disabled={saving}
+              className="inline-flex items-center gap-2 h-9 px-4 rounded-md bg-foreground text-background text-sm disabled:opacity-50">
+              <Rocket className="h-3.5 w-3.5" /> {saving ? "..." : (ar ? "حفظ ونشر" : "Save & publish")}
             </button>
           </div>
         </header>
 
+        <div className="grid lg:grid-cols-[1fr_360px] gap-0">
         <div className="p-5 space-y-5">
           <div className="grid grid-cols-2 gap-3">
             <Field label={ar ? "العنوان" : "Title"}>
@@ -418,6 +434,24 @@ function PageEditor({
               </ul>
             )}
           </div>
+        </div>
+
+        {/* Right: live iOS preview */}
+        <aside className="hidden lg:block border-s border-border bg-cream-warm/30 p-5">
+          <CollectionIOSPreview
+            page={{
+              title: form.title,
+              subtitle: form.subtitle,
+              description: form.description,
+              hero_image: form.hero_image,
+              cta_text: form.cta_text,
+              coupon_code: form.coupon_code,
+              product_ids: form.product_ids,
+              sort_mode: form.sort_mode,
+              is_active: form.is_active,
+            }}
+          />
+        </aside>
         </div>
       </div>
 
