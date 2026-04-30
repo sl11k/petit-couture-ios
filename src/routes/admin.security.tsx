@@ -444,9 +444,9 @@ function BackupTab({ canEdit }: { canEdit: boolean }) {
   async function trigger() {
     if (!canEdit) return;
     setRunning(true);
-    // MVP: log a manual backup record (real backup runs via Lovable Cloud automated daily backups)
+    // MVP: log a manual backup record (real backup runs via lppme Cloud automated daily backups)
     await db.from("backup_log").insert({
-      status: "completed", location: "Lovable Cloud automated", notes: "Manual snapshot recorded by admin",
+      status: "completed", location: "lppme Cloud automated", notes: "Manual snapshot recorded by admin",
     });
     await db.from("security_settings").update({ last_backup_at: new Date().toISOString() }).eq("id", true);
     setRunning(false);
@@ -458,7 +458,7 @@ function BackupTab({ canEdit }: { canEdit: boolean }) {
         <div className="mb-3 flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold">النسخ الاحتياطي</h3>
-            <p className="text-xs text-muted-foreground">Lovable Cloud يجري نسخًا احتياطيًا تلقائيًا يوميًا. يمكنك تسجيل نسخة يدوية.</p>
+            <p className="text-xs text-muted-foreground">lppme Cloud يجري نسخًا احتياطيًا تلقائيًا يوميًا. يمكنك تسجيل نسخة يدوية.</p>
           </div>
           {canEdit && (
             <button onClick={trigger} disabled={running}
@@ -468,7 +468,7 @@ function BackupTab({ canEdit }: { canEdit: boolean }) {
           )}
         </div>
         <div className="rounded-lg border border-blue-300/30 bg-blue-50/40 p-3 text-xs text-blue-800 dark:bg-blue-950/20 dark:text-blue-300">
-          💡 خطة الاستعادة: التواصل مع دعم Lovable Cloud، أو استخدام لقطة استرجاع نقطة زمنية (PITR) من قاعدة البيانات.
+          💡 خطة الاستعادة: التواصل مع دعم lppme Cloud، أو استخدام لقطة استرجاع نقطة زمنية (PITR) من قاعدة البيانات.
         </div>
       </div>
 

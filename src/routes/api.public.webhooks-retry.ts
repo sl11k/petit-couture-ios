@@ -4,7 +4,7 @@
  *   GET /api/public/webhooks-retry
  *   Header: x-cron-key: <secret>
  *
- * Set WEBHOOK_CRON_SECRET in Lovable Cloud secrets.
+ * Set WEBHOOK_CRON_SECRET in lppme Cloud secrets.
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { processRetries } from "@/server/webhooks.server";

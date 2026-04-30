@@ -159,7 +159,7 @@ export async function notify(params: NotifyParams) {
           error_message: "SMS provider not configured",
         }).eq("id", logRow!.id);
       } else if (channel === "email") {
-        // Email goes through Lovable Email infrastructure if set up; else log queued
+        // Email goes through lppme Email infrastructure if set up; else log queued
         await supabase.from("notification_log").update({
           status: "queued",
           error_message: null,

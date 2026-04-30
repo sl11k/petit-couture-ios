@@ -292,7 +292,7 @@ function SettingsPage() {
                 </p>
               )}
               <p className="rounded-md bg-muted/40 p-2 text-[11px] text-muted-foreground">
-                💡 قاعدة البيانات يتم نسخها تلقائياً يومياً بواسطة Lovable Cloud. يمكنك أيضاً تصدير البيانات يدوياً من صفحات التقارير.
+                💡 قاعدة البيانات يتم نسخها تلقائياً يومياً بواسطة lppme Cloud. يمكنك أيضاً تصدير البيانات يدوياً من صفحات التقارير.
               </p>
             </Section>
           )}
