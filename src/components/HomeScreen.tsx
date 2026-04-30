@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import hero from "@/assets/hero-campaign.jpg";
@@ -12,12 +12,16 @@ import {
   fetchAnnouncements,
   fetchBanners,
   fetchFeaturedCategories,
+  fetchHomeSections,
   fetchPopularPicks,
   fetchStorefrontSettings,
+  resolveSectionProducts,
   type AnnouncementMessage,
   type Banner,
   type FeaturedCategory,
+  type HomeSection,
   type PopularPick,
+  type ResolvedProduct,
   type StorefrontSettings,
 } from "@/lib/storefront";
 
