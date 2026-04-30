@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/AdminLayout";
+import { useTr, type TrFn } from "@/i18n/tr";
+import { useLanguage } from "@/i18n/LanguageContext";
 import {
   Plus, Trash2, Pencil, Save, X, ChevronDown, ChevronLeft,
   Image as ImageIcon, Package, Search, GripVertical, Pin, PinOff,
