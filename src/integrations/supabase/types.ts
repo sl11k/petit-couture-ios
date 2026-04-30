@@ -1483,11 +1483,15 @@ export type Database = {
           created_at: string
           cta_text: string | null
           cta_url: string | null
+          description: string | null
           hero_image: string | null
           id: string
           is_active: boolean
+          position: number
           product_ids: string[]
+          show_as_collection: boolean
           slug: string
+          sort_mode: string
           subtitle: string | null
           title: string
           updated_at: string
@@ -1499,11 +1503,15 @@ export type Database = {
           created_at?: string
           cta_text?: string | null
           cta_url?: string | null
+          description?: string | null
           hero_image?: string | null
           id?: string
           is_active?: boolean
+          position?: number
           product_ids?: string[]
+          show_as_collection?: boolean
           slug: string
+          sort_mode?: string
           subtitle?: string | null
           title: string
           updated_at?: string
@@ -1515,11 +1523,15 @@ export type Database = {
           created_at?: string
           cta_text?: string | null
           cta_url?: string | null
+          description?: string | null
           hero_image?: string | null
           id?: string
           is_active?: boolean
+          position?: number
           product_ids?: string[]
+          show_as_collection?: boolean
           slug?: string
+          sort_mode?: string
           subtitle?: string | null
           title?: string
           updated_at?: string
