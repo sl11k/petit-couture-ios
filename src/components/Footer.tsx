@@ -16,13 +16,16 @@ export function Footer() {
 
   useEffect(() => {
     fetchStorefrontSettings().then(setSettings).catch(() => {/* noop */});
-    supabase
-      .from("content_pages")
-      .select("slug,title_ar,title_en")
-      .eq("is_published", true)
-      .order("sort_order", { ascending: true })
-      .then(({ data }) => setPages((data as ContentPageLink[]) ?? []))
-      .catch(() => {/* noop */});
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("content_pages")
+          .select("slug,title_ar,title_en")
+          .eq("is_published", true)
+          .order("sort_order", { ascending: true });
+        setPages((data as ContentPageLink[]) ?? []);
+      } catch { /* noop */ }
+    })();
   }, []);
 
   const about = ar
