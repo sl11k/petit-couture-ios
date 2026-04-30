@@ -123,8 +123,8 @@ function CategoriesAdmin() {
   }
 
   async function remove(c: Cat) {
-    if (!canDelete) return alert("لا تملك صلاحية الحذف");
-    if (!confirm(`حذف القسم "${c.name_ar}"؟ سيتم فصل الأقسام الفرعية وروابط المنتجات.`)) return;
+    if (!canDelete) return alert(tr("لا تملك صلاحية الحذف", "You don't have delete permission"));
+    if (!confirm(tr(`حذف القسم "${c.name_ar}"؟ سيتم فصل الأقسام الفرعية وروابط المنتجات.`, `Delete category "${c.name_en || c.name_ar}"? Subcategories and product links will be detached.`))) return;
     await supabase.from("categories").delete().eq("id", c.id);
     const { data: u } = await supabase.auth.getUser();
     if (u.user) {
