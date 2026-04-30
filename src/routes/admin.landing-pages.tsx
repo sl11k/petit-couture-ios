@@ -231,12 +231,13 @@ function PageEditor({
     setForm((f) => ({ ...f, [k]: v }));
   }
 
-  async function save() {
+  async function save(opts?: { publish?: boolean }) {
     if (!form.slug.trim() || !form.title.trim()) {
       toast.error(ar ? "العنوان والـ slug مطلوبان" : "Title and slug are required");
       return;
     }
     setSaving(true);
+    const willPublish = opts?.publish ?? form.is_active;
     const payload = {
       slug: form.slug.trim(),
       title: form.title.trim(),
@@ -247,7 +248,7 @@ function PageEditor({
       cta_url: form.cta_url || null,
       product_ids: form.product_ids,
       coupon_code: form.coupon_code || null,
-      is_active: form.is_active,
+      is_active: willPublish,
       show_as_collection: form.show_as_collection,
       sort_mode: form.sort_mode,
       position: form.position,
@@ -258,7 +259,15 @@ function PageEditor({
     const { error } = await q;
     setSaving(false);
     if (error) toast.error(error.message);
-    else { toast.success(ar ? "تم الحفظ" : "Saved"); onSaved(); }
+    else {
+      if (opts?.publish !== undefined) update("is_active", willPublish);
+      toast.success(
+        willPublish
+          ? (ar ? "تم الحفظ والنشر — التغييرات ظاهرة الآن" : "Saved & published — changes are live")
+          : (ar ? "تم حفظ المسودة" : "Draft saved")
+      );
+      onSaved();
+    }
   }
 
   function moveItem(from: number, to: number) {
