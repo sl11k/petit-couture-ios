@@ -53,6 +53,8 @@ const defaultRules: DisplayRules = {
 };
 
 function CategoriesAdmin() {
+  const tr = useTr();
+  const { lang } = useLanguage();
   const { isAdmin, isManager } = useUserRole();
   const canDelete = isAdmin || isManager;
 
