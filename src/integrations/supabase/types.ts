@@ -233,6 +233,51 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_help_articles: {
+        Row: {
+          body_ar: string
+          body_en: string
+          category: string
+          created_at: string
+          external_url: string | null
+          id: string
+          is_published: boolean
+          sort_order: number
+          title_ar: string
+          title_en: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          body_ar?: string
+          body_en?: string
+          category?: string
+          created_at?: string
+          external_url?: string | null
+          id?: string
+          is_published?: boolean
+          sort_order?: number
+          title_ar: string
+          title_en: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          body_ar?: string
+          body_en?: string
+          category?: string
+          created_at?: string
+          external_url?: string | null
+          id?: string
+          is_published?: boolean
+          sort_order?: number
+          title_ar?: string
+          title_en?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       admin_notifications: {
         Row: {
           body: string | null
@@ -756,6 +801,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      content_pages: {
+        Row: {
+          body_ar: string
+          body_en: string
+          created_at: string
+          id: string
+          is_published: boolean
+          meta_description_ar: string | null
+          meta_description_en: string | null
+          show_in_footer: boolean
+          slug: string
+          sort_order: number
+          title_ar: string
+          title_en: string
+          updated_at: string
+        }
+        Insert: {
+          body_ar?: string
+          body_en?: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          meta_description_ar?: string | null
+          meta_description_en?: string | null
+          show_in_footer?: boolean
+          slug: string
+          sort_order?: number
+          title_ar: string
+          title_en: string
+          updated_at?: string
+        }
+        Update: {
+          body_ar?: string
+          body_en?: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          meta_description_ar?: string | null
+          meta_description_en?: string | null
+          show_in_footer?: boolean
+          slug?: string
+          sort_order?: number
+          title_ar?: string
+          title_en?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       cookie_consents: {
         Row: {
@@ -1642,6 +1735,78 @@ export type Database = {
           reason?: string
           related_id?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      marketing_campaigns: {
+        Row: {
+          banner_image_url: string | null
+          banner_link_url: string | null
+          campaign_type: string
+          click_count: number
+          conversion_count: number
+          coupon_code: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          email_body: string | null
+          email_subject: string | null
+          ends_at: string | null
+          id: string
+          name: string
+          open_count: number
+          revenue_attributed: number
+          sent_count: number
+          starts_at: string | null
+          status: string
+          target_audience: string
+          updated_at: string
+        }
+        Insert: {
+          banner_image_url?: string | null
+          banner_link_url?: string | null
+          campaign_type?: string
+          click_count?: number
+          conversion_count?: number
+          coupon_code?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          email_body?: string | null
+          email_subject?: string | null
+          ends_at?: string | null
+          id?: string
+          name: string
+          open_count?: number
+          revenue_attributed?: number
+          sent_count?: number
+          starts_at?: string | null
+          status?: string
+          target_audience?: string
+          updated_at?: string
+        }
+        Update: {
+          banner_image_url?: string | null
+          banner_link_url?: string | null
+          campaign_type?: string
+          click_count?: number
+          conversion_count?: number
+          coupon_code?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          email_body?: string | null
+          email_subject?: string | null
+          ends_at?: string | null
+          id?: string
+          name?: string
+          open_count?: number
+          revenue_attributed?: number
+          sent_count?: number
+          starts_at?: string | null
+          status?: string
+          target_audience?: string
+          updated_at?: string
         }
         Relationships: []
       }
