@@ -435,6 +435,24 @@ function PageEditor({
             )}
           </div>
         </div>
+
+        {/* Right: live iOS preview */}
+        <aside className="hidden lg:block border-s border-border bg-cream-warm/30 p-5">
+          <CollectionIOSPreview
+            page={{
+              title: form.title,
+              subtitle: form.subtitle,
+              description: form.description,
+              hero_image: form.hero_image,
+              cta_text: form.cta_text,
+              coupon_code: form.coupon_code,
+              product_ids: form.product_ids,
+              sort_mode: form.sort_mode,
+              is_active: form.is_active,
+            }}
+          />
+        </aside>
+        </div>
       </div>
 
       {picker && (
