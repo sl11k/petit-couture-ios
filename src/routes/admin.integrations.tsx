@@ -23,7 +23,7 @@ type WebhookEndpoint = {
   enabled: boolean; last_delivery_at: string | null; last_delivery_status: number | null; failure_count: number;
 };
 
-const PROJECT_ORIGIN = typeof window !== "undefined" ? window.location.origin : "https://your-store.lovable.app";
+const PROJECT_ORIGIN = typeof window !== "undefined" ? window.location.origin : "https://lppme.com";
 const EVENT_TYPES = ["order.created","order.paid","order.shipped","order.delivered","order.cancelled","order.refunded","product.updated","customer.created","return.created"];
 
 function IntegrationsAdmin() {
