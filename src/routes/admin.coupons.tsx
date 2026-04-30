@@ -65,6 +65,8 @@ const blank: Partial<Coupon> = {
 };
 
 function CouponsAdmin() {
+  const tr = useTr();
+  const { lang } = useLanguage();
   const [list, setList] = useState<Coupon[]>([]);
   const [editing, setEditing] = useState<Partial<Coupon> | null>(null);
   const [stats, setStats] = useState<Coupon | null>(null);
