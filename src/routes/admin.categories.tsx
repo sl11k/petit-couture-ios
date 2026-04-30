@@ -165,14 +165,14 @@ function CategoriesAdmin() {
     <AdminShell>
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold">الأقسام</h1>
-          <p className="text-xs text-muted-foreground">إدارة الأقسام الرئيسية والفرعية، الصور، SEO، وقواعد العرض</p>
+          <h1 className="text-xl font-semibold">{tr("الأقسام", "Categories")}</h1>
+          <p className="text-xs text-muted-foreground">{tr("إدارة الأقسام الرئيسية والفرعية، الصور، SEO، وقواعد العرض", "Manage main and sub categories, media, SEO, and display rules")}</p>
         </div>
         <button
           onClick={() => { setEditing({ display_order: list.length, is_active: true, display_rules: defaultRules }); setTab("basic"); }}
           className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground"
         >
-          <Plus className="h-3.5 w-3.5" /> قسم جديد
+          <Plus className="h-3.5 w-3.5" /> {tr("قسم جديد", "New category")}
         </button>
       </div>
 
@@ -185,14 +185,16 @@ function CategoriesAdmin() {
           setTab={setTab}
           onSave={save}
           onCancel={() => setEditing(null)}
+          tr={tr}
+          lang={lang}
         />
       )}
 
       <div className="rounded-xl border border-border bg-card">
         {loading ? (
-          <p className="p-6 text-center text-sm text-muted-foreground">جاري التحميل...</p>
+          <p className="p-6 text-center text-sm text-muted-foreground">{tr("جاري التحميل...", "Loading...")}</p>
         ) : tree.length === 0 ? (
-          <p className="p-6 text-center text-xs text-muted-foreground">لا توجد أقسام</p>
+          <p className="p-6 text-center text-xs text-muted-foreground">{tr("لا توجد أقسام", "No categories")}</p>
         ) : (
           <div className="divide-y divide-border">
             {tree.map((c) => (
@@ -208,6 +210,8 @@ function CategoriesAdmin() {
                 onMove={move}
                 onLink={(id) => setLinkingId(id)}
                 canDelete={canDelete}
+                tr={tr}
+                lang={lang}
               />
             ))}
           </div>
@@ -219,6 +223,8 @@ function CategoriesAdmin() {
           categoryId={linkingId}
           category={list.find((c) => c.id === linkingId)!}
           onClose={() => setLinkingId(null)}
+          tr={tr}
+          lang={lang}
         />
       )}
     </AdminShell>
