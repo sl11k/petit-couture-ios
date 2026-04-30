@@ -15,6 +15,7 @@ import {
   type HomeSectionDataSource,
 } from "@/lib/storefront";
 import { categories as seedCategories } from "@/data/categories";
+import { SelectedProductsList } from "@/components/admin/ProductPicker";
 
 export const Route = createFileRoute("/admin/home-builder")({
   component: HomeBuilderPage,
@@ -384,7 +385,21 @@ function SectionEditor({
             </Field>
           )}
 
-          {meta.productBased && (
+          {meta.productBased && form.data_source === "manual" && (
+            <div className="rounded-lg border border-border p-3">
+              <SelectedProductsList
+                productIds={form.product_ids ?? []}
+                onChange={(ids) => update("product_ids", ids)}
+              />
+              <p className="text-[11px] text-muted-foreground mt-2">
+                {ar
+                  ? "اسحب باستخدام الأسهم لإعادة الترتيب. يظهر المنتج الأول أولاً."
+                  : "Use the arrows to reorder. The first item appears first."}
+              </p>
+            </div>
+          )}
+
+          {meta.productBased && form.data_source !== "manual" && (
             <Field label={ar ? "عدد المنتجات للعرض" : "Products to show"}>
               <input
                 type="number" min={1} max={50}
