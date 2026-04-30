@@ -601,9 +601,9 @@ function ProductLinkerModal({
       <div className="max-h-[85vh] w-full max-w-3xl overflow-hidden rounded-xl border border-border bg-card shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-border p-4">
           <div>
-            <h2 className="text-sm font-semibold">منتجات قسم: {category.name_ar}</h2>
+            <h2 className="text-sm font-semibold">{tr("منتجات قسم:", "Products in:")} {lang === "ar" ? category.name_ar : (category.name_en || category.name_ar)}</h2>
             <p className="text-[11px] text-muted-foreground">
-              ترتيب {category.display_rules?.sort === "manual" ? "يدوي — السحب يحدد العرض" : `تلقائي (${category.display_rules?.sort})`}
+              {tr("ترتيب", "Sort")} {category.display_rules?.sort === "manual" ? tr("يدوي — السحب يحدد العرض", "manual — drag to reorder") : tr(`تلقائي (${category.display_rules?.sort})`, `auto (${category.display_rules?.sort})`)}
             </p>
           </div>
           <button onClick={onClose} className="rounded p-1.5 hover:bg-muted"><X className="h-4 w-4" /></button>
@@ -613,7 +613,7 @@ function ProductLinkerModal({
           <div className="relative">
             <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input value={search} onChange={(e) => setSearch(e.target.value)}
-              placeholder="ابحث عن منتج بالاسم أو SKU..."
+              placeholder={tr("ابحث عن منتج بالاسم أو SKU...", "Search products by name or SKU...")}
               className="w-full rounded-md border border-border bg-background py-2 pr-10 pl-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
           </div>
           {results.length > 0 && (
@@ -625,7 +625,7 @@ function ProductLinkerModal({
                     <div className="h-8 w-8 rounded bg-muted" />}
                   <div className="flex-1">
                     <div className="text-xs font-medium">{p.name_ar}</div>
-                    <div className="text-[11px] text-muted-foreground">{p.sku ?? "—"} · {p.price} ر.س</div>
+                    <div className="text-[11px] text-muted-foreground">{p.sku ?? "—"} · {p.price} {tr("ر.س", "SAR")}</div>
                   </div>
                   <Plus className="h-3.5 w-3.5 text-primary" />
                 </button>
@@ -635,8 +635,8 @@ function ProductLinkerModal({
         </div>
 
         <div className="max-h-96 overflow-y-auto p-4">
-          {loading ? <p className="text-center text-xs text-muted-foreground">جاري التحميل...</p> :
-            linked.length === 0 ? <p className="text-center text-xs text-muted-foreground">لا توجد منتجات مرتبطة بعد</p> : (
+          {loading ? <p className="text-center text-xs text-muted-foreground">{tr("جاري التحميل...", "Loading...")}</p> :
+            linked.length === 0 ? <p className="text-center text-xs text-muted-foreground">{tr("لا توجد منتجات مرتبطة بعد", "No linked products yet")}</p> : (
               <div className="space-y-1.5">
                 {linked.map((p) => (
                   <div key={p.id} className="flex items-center gap-2 rounded-md border border-border bg-background p-2">
@@ -645,11 +645,11 @@ function ProductLinkerModal({
                       <div className="h-9 w-9 rounded bg-muted" />}
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-xs font-medium">{p.name_ar}</div>
-                      <div className="text-[10px] text-muted-foreground">{p.sku ?? "—"} · {p.price} ر.س</div>
+                      <div className="text-[10px] text-muted-foreground">{p.sku ?? "—"} · {p.price} {tr("ر.س", "SAR")}</div>
                     </div>
                     <button onClick={() => reorder(p, -1)} className="rounded p-1 hover:bg-muted"><ArrowUp className="h-3 w-3" /></button>
                     <button onClick={() => reorder(p, 1)} className="rounded p-1 hover:bg-muted"><ArrowDown className="h-3 w-3" /></button>
-                    <button onClick={() => togglePin(p)} className="rounded p-1 hover:bg-muted" title={p.is_pinned ? "إلغاء التثبيت" : "تثبيت"}>
+                    <button onClick={() => togglePin(p)} className="rounded p-1 hover:bg-muted" title={p.is_pinned ? tr("إلغاء التثبيت", "Unpin") : tr("تثبيت", "Pin")}>
                       {p.is_pinned ? <Pin className="h-3 w-3 text-primary" /> : <PinOff className="h-3 w-3 text-muted-foreground" />}
                     </button>
                     <button onClick={() => unlink(p.id)} className="rounded p-1 text-destructive hover:bg-destructive/10">
