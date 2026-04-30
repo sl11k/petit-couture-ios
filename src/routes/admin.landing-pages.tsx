@@ -285,15 +285,20 @@ function PageEditor({
   return (
     <div className="fixed inset-0 z-50 flex" role="dialog" aria-modal="true">
       <button className="flex-1 bg-black/40" onClick={onClose} aria-label="Close" />
-      <div className="w-full max-w-2xl bg-background overflow-y-auto border-s border-border">
+      <div className="w-full max-w-5xl bg-background overflow-y-auto border-s border-border">
         <header className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border px-5 h-14 flex items-center justify-between">
           <h2 className="font-medium">{isNew ? (ar ? "صفحة جديدة" : "New page") : (ar ? "تعديل الصفحة" : "Edit page")}</h2>
           <div className="flex items-center gap-2">
             <button onClick={onClose} className="h-9 px-3 rounded-md border border-border text-sm hover:bg-cream-warm">
               {ar ? "إلغاء" : "Cancel"}
             </button>
-            <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 h-9 px-4 rounded-md bg-foreground text-background text-sm disabled:opacity-50">
-              <Save className="h-3.5 w-3.5" /> {saving ? (ar ? "..." : "...") : (ar ? "حفظ" : "Save")}
+            <button onClick={() => save({ publish: false })} disabled={saving}
+              className="inline-flex items-center gap-2 h-9 px-3 rounded-md border border-border text-sm hover:bg-cream-warm disabled:opacity-50">
+              <Save className="h-3.5 w-3.5" /> {ar ? "حفظ كمسودة" : "Save draft"}
+            </button>
+            <button onClick={() => save({ publish: true })} disabled={saving}
+              className="inline-flex items-center gap-2 h-9 px-4 rounded-md bg-foreground text-background text-sm disabled:opacity-50">
+              <Rocket className="h-3.5 w-3.5" /> {saving ? "..." : (ar ? "حفظ ونشر" : "Save & publish")}
             </button>
           </div>
         </header>
