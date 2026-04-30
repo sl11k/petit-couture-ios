@@ -1,11 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AdminShell } from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useTr } from "@/i18n/tr";
+import { useLanguage } from "@/i18n/LanguageContext";
 import {
   BarChart3, Calendar, Download, Mail, RefreshCw, TrendingUp, TrendingDown,
-  ShoppingBag, Users, Package, CreditCard, Truck, Ticket, MousePointerClick,
+  Users, Package, CreditCard, Truck, Ticket, MousePointerClick,
   AlertTriangle, ShoppingCart, Plus, Trash2, Play,
 } from "lucide-react";
 import {
@@ -22,37 +24,38 @@ type TabKey =
   | "incomplete" | "traffic" | "funnel" | "payments" | "shipping"
   | "coupons" | "schedules";
 
-const TABS: { key: TabKey; label: string; icon: any }[] = [
-  { key: "sales", label: "المبيعات العامة", icon: BarChart3 },
-  { key: "trends", label: "الاتجاهات الزمنية", icon: TrendingUp },
-  { key: "products", label: "المنتجات", icon: Package },
-  { key: "customers", label: "العملاء", icon: Users },
-  { key: "abandoned", label: "السلات المتروكة", icon: ShoppingCart },
-  { key: "incomplete", label: "غير المكتملة", icon: AlertTriangle },
-  { key: "traffic", label: "الزيارات", icon: MousePointerClick },
-  { key: "funnel", label: "Funnel", icon: TrendingDown },
-  { key: "payments", label: "الدفع", icon: CreditCard },
-  { key: "shipping", label: "الشحن", icon: Truck },
-  { key: "coupons", label: "الكوبونات", icon: Ticket },
-  { key: "schedules", label: "الجدولة", icon: Mail },
-];
-
-const PRESETS = [
-  { key: "today", label: "اليوم", days: 0 },
-  { key: "7d", label: "7 أيام", days: 7 },
-  { key: "30d", label: "30 يوم", days: 30 },
-  { key: "90d", label: "90 يوم", days: 90 },
-  { key: "365d", label: "سنة", days: 365 },
-];
-
-function fmt(n: number) {
-  return new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 2 }).format(n);
-}
-function money(n: number) {
-  return `${fmt(n)} ر.س`;
-}
-
 function ReportsPage() {
+  const tr = useTr();
+  const { lang } = useLanguage();
+  const isAr = lang === "ar";
+
+  const fmt = (n: number) =>
+    new Intl.NumberFormat(isAr ? "ar-SA" : "en-US", { maximumFractionDigits: 2 }).format(n);
+  const money = (n: number) => `${fmt(n)} ${isAr ? "ر.س" : "SAR"}`;
+
+  const TABS: { key: TabKey; label: string; icon: any }[] = useMemo(() => ([
+    { key: "sales", label: tr("المبيعات العامة", "General Sales"), icon: BarChart3 },
+    { key: "trends", label: tr("الاتجاهات الزمنية", "Time Trends"), icon: TrendingUp },
+    { key: "products", label: tr("المنتجات", "Products"), icon: Package },
+    { key: "customers", label: tr("العملاء", "Customers"), icon: Users },
+    { key: "abandoned", label: tr("السلات المتروكة", "Abandoned Carts"), icon: ShoppingCart },
+    { key: "incomplete", label: tr("غير المكتملة", "Incomplete"), icon: AlertTriangle },
+    { key: "traffic", label: tr("الزيارات", "Traffic"), icon: MousePointerClick },
+    { key: "funnel", label: "Funnel", icon: TrendingDown },
+    { key: "payments", label: tr("الدفع", "Payments"), icon: CreditCard },
+    { key: "shipping", label: tr("الشحن", "Shipping"), icon: Truck },
+    { key: "coupons", label: tr("الكوبونات", "Coupons"), icon: Ticket },
+    { key: "schedules", label: tr("الجدولة", "Schedules"), icon: Mail },
+  ]), [tr]);
+
+  const PRESETS = useMemo(() => ([
+    { key: "today", label: tr("اليوم", "Today"), days: 0 },
+    { key: "7d", label: tr("7 أيام", "7 days"), days: 7 },
+    { key: "30d", label: tr("30 يوم", "30 days"), days: 30 },
+    { key: "90d", label: tr("90 يوم", "90 days"), days: 90 },
+    { key: "365d", label: tr("سنة", "Year"), days: 365 },
+  ]), [tr]);
+
   const [tab, setTab] = useState<TabKey>("sales");
   const [preset, setPreset] = useState("30d");
   const [from, setFrom] = useState<Date>(() => {
@@ -100,7 +103,7 @@ function ReportsPage() {
         setData({ ...data, schedules: { schedules: schedules ?? [], runs: runs ?? [] } });
       }
     } catch (e: any) {
-      toast.error(e?.message ?? "خطأ في تحميل التقرير");
+      toast.error(e?.message ?? tr("خطأ في تحميل التقرير", "Error loading report"));
     } finally {
       setLoading(false);
     }
@@ -113,8 +116,8 @@ function ReportsPage() {
       <div className="space-y-6 p-4 md:p-6">
         <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">التقارير الشاملة</h1>
-            <p className="text-sm text-muted-foreground">قرارات مبنية على بيانات حقيقية</p>
+            <h1 className="text-2xl font-bold text-foreground">{tr("التقارير الشاملة", "Comprehensive Reports")}</h1>
+            <p className="text-sm text-muted-foreground">{tr("قرارات مبنية على بيانات حقيقية", "Decisions based on real data")}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {PRESETS.map((p) => (
@@ -153,20 +156,20 @@ function ReportsPage() {
         </nav>
 
         <section className="space-y-4">
-          {loading && <div className="rounded-md border border-border bg-card p-8 text-center text-sm text-muted-foreground">جاري التحميل...</div>}
+          {loading && <div className="rounded-md border border-border bg-card p-8 text-center text-sm text-muted-foreground">{tr("جاري التحميل...", "Loading...")}</div>}
 
-          {!loading && tab === "sales" && data.sales && <SalesView s={data.sales} />}
-          {!loading && tab === "trends" && data.trends && <TrendsView t={data.trends} />}
-          {!loading && tab === "products" && data.products && <ProductsView p={data.products} />}
-          {!loading && tab === "customers" && data.customers && <CustomersView c={data.customers} />}
-          {!loading && tab === "abandoned" && data.abandoned && <AbandonedView a={data.abandoned} />}
-          {!loading && tab === "incomplete" && data.incomplete && <IncompleteView i={data.incomplete} />}
-          {!loading && tab === "traffic" && data.traffic && <TrafficView t={data.traffic} />}
-          {!loading && tab === "funnel" && data.funnel && <FunnelView f={data.funnel} />}
-          {!loading && tab === "payments" && data.payments && <PaymentsView p={data.payments} />}
-          {!loading && tab === "shipping" && data.shipping && <ShippingView s={data.shipping} />}
-          {!loading && tab === "coupons" && data.coupons && <CouponsView c={data.coupons} />}
-          {!loading && tab === "schedules" && data.schedules && <SchedulesView d={data.schedules} reload={load} />}
+          {!loading && tab === "sales" && data.sales && <SalesView s={data.sales} tr={tr} fmt={fmt} money={money} />}
+          {!loading && tab === "trends" && data.trends && <TrendsView t={data.trends} tr={tr} fmt={fmt} />}
+          {!loading && tab === "products" && data.products && <ProductsView p={data.products} tr={tr} fmt={fmt} money={money} />}
+          {!loading && tab === "customers" && data.customers && <CustomersView c={data.customers} tr={tr} fmt={fmt} money={money} />}
+          {!loading && tab === "abandoned" && data.abandoned && <AbandonedView a={data.abandoned} tr={tr} fmt={fmt} money={money} />}
+          {!loading && tab === "incomplete" && data.incomplete && <IncompleteView i={data.incomplete} tr={tr} fmt={fmt} money={money} />}
+          {!loading && tab === "traffic" && data.traffic && <TrafficView t={data.traffic} tr={tr} fmt={fmt} />}
+          {!loading && tab === "funnel" && data.funnel && <FunnelView f={data.funnel} tr={tr} fmt={fmt} />}
+          {!loading && tab === "payments" && data.payments && <PaymentsView p={data.payments} tr={tr} fmt={fmt} money={money} />}
+          {!loading && tab === "shipping" && data.shipping && <ShippingView s={data.shipping} tr={tr} money={money} />}
+          {!loading && tab === "coupons" && data.coupons && <CouponsView c={data.coupons} tr={tr} />}
+          {!loading && tab === "schedules" && data.schedules && <SchedulesView d={data.schedules} reload={load} tr={tr} TABS={TABS} isAr={isAr} />}
         </section>
       </div>
     </AdminShell>
@@ -174,7 +177,7 @@ function ReportsPage() {
 }
 
 // ---------- Sub views ----------
-function Stat({ label, value, sub, trend }: any) {
+function Stat({ label, value, sub, trend, tr, fmt }: any) {
   return (
     <div className="rounded-lg border border-border bg-card p-4">
       <p className="text-xs text-muted-foreground">{label}</p>
@@ -182,37 +185,37 @@ function Stat({ label, value, sub, trend }: any) {
       {sub && <p className="mt-0.5 text-[11px] text-muted-foreground">{sub}</p>}
       {trend !== undefined && (
         <p className={`mt-1 text-[11px] font-medium ${trend >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-          {trend >= 0 ? "▲" : "▼"} {fmt(Math.abs(trend))}% مقارنة بالفترة السابقة
+          {trend >= 0 ? "▲" : "▼"} {fmt(Math.abs(trend))}% {tr("مقارنة بالفترة السابقة", "vs previous period")}
         </p>
       )}
     </div>
   );
 }
 
-function SalesView({ s }: any) {
+function SalesView({ s, tr, fmt, money }: any) {
   return (
     <>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="إجمالي المبيعات" value={money(s.gross_sales)} trend={s.growth_pct} />
-        <Stat label="صافي المبيعات" value={money(s.net_sales)} sub="بعد الاستردادات" />
-        <Stat label="عدد الطلبات" value={fmt(s.orders_count)} sub={`السابق: ${fmt(s.prev_orders_count)}`} />
-        <Stat label="متوسط قيمة الطلب" value={money(s.aov)} />
-        <Stat label="المنتجات المباعة" value={fmt(s.items_sold)} />
-        <Stat label="الخصومات" value={money(s.discounts)} />
-        <Stat label="الضرائب" value={money(s.tax)} />
-        <Stat label="رسوم الشحن" value={money(s.shipping)} />
-        <Stat label="الاستردادات" value={money(s.refunds)} />
-        <Stat label="عدد المرتجعات" value={fmt(s.returns_count)} />
+        <Stat label={tr("إجمالي المبيعات", "Gross sales")} value={money(s.gross_sales)} trend={s.growth_pct} tr={tr} fmt={fmt} />
+        <Stat label={tr("صافي المبيعات", "Net sales")} value={money(s.net_sales)} sub={tr("بعد الاستردادات", "After refunds")} tr={tr} fmt={fmt} />
+        <Stat label={tr("عدد الطلبات", "Orders count")} value={fmt(s.orders_count)} sub={`${tr("السابق: ", "Previous: ")}${fmt(s.prev_orders_count)}`} tr={tr} fmt={fmt} />
+        <Stat label={tr("متوسط قيمة الطلب", "Average order value")} value={money(s.aov)} tr={tr} fmt={fmt} />
+        <Stat label={tr("المنتجات المباعة", "Items sold")} value={fmt(s.items_sold)} tr={tr} fmt={fmt} />
+        <Stat label={tr("الخصومات", "Discounts")} value={money(s.discounts)} tr={tr} fmt={fmt} />
+        <Stat label={tr("الضرائب", "Taxes")} value={money(s.tax)} tr={tr} fmt={fmt} />
+        <Stat label={tr("رسوم الشحن", "Shipping fees")} value={money(s.shipping)} tr={tr} fmt={fmt} />
+        <Stat label={tr("الاستردادات", "Refunds")} value={money(s.refunds)} tr={tr} fmt={fmt} />
+        <Stat label={tr("عدد المرتجعات", "Returns count")} value={fmt(s.returns_count)} tr={tr} fmt={fmt} />
       </div>
       <button onClick={() => downloadCSV("sales-summary.csv", [s])}
         className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted">
-        <Download className="h-3.5 w-3.5" />تصدير CSV
+        <Download className="h-3.5 w-3.5" />{tr("تصدير CSV", "Export CSV")}
       </button>
     </>
   );
 }
 
-function BarRow({ label, value, max }: any) {
+function BarRow({ label, value, max, fmt }: any) {
   const pct = max ? (value / max) * 100 : 0;
   return (
     <div className="flex items-center gap-2 text-xs">
@@ -225,45 +228,45 @@ function BarRow({ label, value, max }: any) {
   );
 }
 
-function TrendsView({ t }: any) {
+function TrendsView({ t, tr, fmt }: any) {
   const dayMax = Math.max(1, ...t.day.map((d: any) => d.revenue));
   const hourMax = Math.max(1, ...t.hour.map((d: any) => d.orders));
   const wkMax = Math.max(1, ...t.weekday.map((d: any) => d.orders));
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <Card title="المبيعات اليومية" action={<ExportBtn name="daily.csv" rows={t.day} />}>
+      <Card title={tr("المبيعات اليومية", "Daily sales")} action={<ExportBtn name="daily.csv" rows={t.day} tr={tr} />}>
         <div className="space-y-1">
-          {t.day.slice(-30).map((d: any) => <BarRow key={d.bucket} label={d.bucket} value={d.revenue} max={dayMax} />)}
+          {t.day.slice(-30).map((d: any) => <BarRow key={d.bucket} label={d.bucket} value={d.revenue} max={dayMax} fmt={fmt} />)}
         </div>
       </Card>
-      <Card title="أكثر ساعات الطلب" action={<ExportBtn name="hours.csv" rows={t.hour} />}>
+      <Card title={tr("أكثر ساعات الطلب", "Top order hours")} action={<ExportBtn name="hours.csv" rows={t.hour} tr={tr} />}>
         <div className="space-y-1">
-          {t.hour.map((d: any) => <BarRow key={d.bucket} label={d.bucket} value={d.orders} max={hourMax} />)}
+          {t.hour.map((d: any) => <BarRow key={d.bucket} label={d.bucket} value={d.orders} max={hourMax} fmt={fmt} />)}
         </div>
       </Card>
-      <Card title="أكثر أيام الطلب" action={<ExportBtn name="weekdays.csv" rows={t.weekday} />}>
+      <Card title={tr("أكثر أيام الطلب", "Top order weekdays")} action={<ExportBtn name="weekdays.csv" rows={t.weekday} tr={tr} />}>
         <div className="space-y-1">
-          {t.weekday.map((d: any) => <BarRow key={d.bucket} label={d.bucket} value={d.orders} max={wkMax} />)}
+          {t.weekday.map((d: any) => <BarRow key={d.bucket} label={d.bucket} value={d.orders} max={wkMax} fmt={fmt} />)}
         </div>
       </Card>
     </div>
   );
 }
 
-function ProductsView({ p }: any) {
+function ProductsView({ p, tr, fmt, money }: any) {
   return (
     <div className="space-y-4">
-      <Card title="الأكثر مبيعًا" action={<ExportBtn name="top-products.csv" rows={p.top} />}>
-        <Table cols={["المنتج", "الكمية", "الإيرادات"]}
+      <Card title={tr("الأكثر مبيعًا", "Top sellers")} action={<ExportBtn name="top-products.csv" rows={p.top} tr={tr} />}>
+        <Table cols={[tr("المنتج", "Product"), tr("الكمية", "Qty"), tr("الإيرادات", "Revenue")]} tr={tr}
           rows={p.top.map((r: any) => [r.name, fmt(r.qty), money(r.revenue)])} />
       </Card>
       <div className="grid gap-4 md:grid-cols-2">
-        <Card title={`نفدت من المخزون (${p.inv.out_of_stock.length})`}>
-          <Table cols={["المنتج", "السعر"]}
+        <Card title={`${tr("نفدت من المخزون", "Out of stock")} (${p.inv.out_of_stock.length})`}>
+          <Table cols={[tr("المنتج", "Product"), tr("السعر", "Price")]} tr={tr}
             rows={p.inv.out_of_stock.map((r: any) => [r.name_ar, money(Number(r.price))])} />
         </Card>
-        <Card title={`مخزون منخفض (${p.inv.low_stock.length})`}>
-          <Table cols={["المنتج", "المخزون"]}
+        <Card title={`${tr("مخزون منخفض", "Low stock")} (${p.inv.low_stock.length})`}>
+          <Table cols={[tr("المنتج", "Product"), tr("المخزون", "Stock")]} tr={tr}
             rows={p.inv.low_stock.map((r: any) => [r.name_ar, r.stock])} />
         </Card>
       </div>
@@ -271,26 +274,26 @@ function ProductsView({ p }: any) {
   );
 }
 
-function CustomersView({ c }: any) {
+function CustomersView({ c, tr, fmt, money }: any) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="عملاء جدد" value={fmt(c.new_count)} />
-        <Stat label="عملاء متكررون" value={fmt(c.returning_count)} />
-        <Stat label="معدل تكرار الشراء" value={`${fmt(c.repeat_rate)}%`} />
-        <Stat label="متوسط LTV" value={money(c.ltv_avg)} />
+        <Stat label={tr("عملاء جدد", "New customers")} value={fmt(c.new_count)} tr={tr} fmt={fmt} />
+        <Stat label={tr("عملاء متكررون", "Returning customers")} value={fmt(c.returning_count)} tr={tr} fmt={fmt} />
+        <Stat label={tr("معدل تكرار الشراء", "Repeat purchase rate")} value={`${fmt(c.repeat_rate)}%`} tr={tr} fmt={fmt} />
+        <Stat label={tr("متوسط LTV", "Average LTV")} value={money(c.ltv_avg)} tr={tr} fmt={fmt} />
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card title="أفضل العملاء" action={<ExportBtn name="top-customers.csv" rows={c.top} />}>
-          <Table cols={["العميل", "الطلبات", "الإجمالي"]}
+        <Card title={tr("أفضل العملاء", "Top customers")} action={<ExportBtn name="top-customers.csv" rows={c.top} tr={tr} />}>
+          <Table cols={[tr("العميل", "Customer"), tr("الطلبات", "Orders"), tr("الإجمالي", "Total")]} tr={tr}
             rows={c.top.map((r: any) => [r.name || r.email, r.orders, money(r.spent)])} />
         </Card>
-        <Card title="عملاء غير نشطين (>90 يوم)" action={<ExportBtn name="inactive.csv" rows={c.inactive} />}>
-          <Table cols={["العميل", "آخر طلب", "إجمالي"]}
+        <Card title={tr("عملاء غير نشطين (>90 يوم)", "Inactive customers (>90 days)")} action={<ExportBtn name="inactive.csv" rows={c.inactive} tr={tr} />}>
+          <Table cols={[tr("العميل", "Customer"), tr("آخر طلب", "Last order"), tr("إجمالي", "Total")]} tr={tr}
             rows={c.inactive.map((r: any) => [r.name || r.email, r.last_order_at?.slice(0,10), money(r.spent)])} />
         </Card>
-        <Card title="المدن الأعلى شراءً" action={<ExportBtn name="cities.csv" rows={c.cities} />}>
-          <Table cols={["المدينة", "الطلبات", "الإيرادات"]}
+        <Card title={tr("المدن الأعلى شراءً", "Top spending cities")} action={<ExportBtn name="cities.csv" rows={c.cities} tr={tr} />}>
+          <Table cols={[tr("المدينة", "City"), tr("الطلبات", "Orders"), tr("الإيرادات", "Revenue")]} tr={tr}
             rows={c.cities.map((r: any) => [r.city, r.orders, money(r.revenue)])} />
         </Card>
       </div>
@@ -298,71 +301,71 @@ function CustomersView({ c }: any) {
   );
 }
 
-function AbandonedView({ a }: any) {
+function AbandonedView({ a, tr, fmt, money }: any) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="عدد السلات" value={fmt(a.count)} />
-        <Stat label="قيمة السلات" value={money(a.total_value)} />
-        <Stat label="معدل الاستعادة" value={`${fmt(a.recovery_rate)}%`} />
+        <Stat label={tr("عدد السلات", "Carts count")} value={fmt(a.count)} tr={tr} fmt={fmt} />
+        <Stat label={tr("قيمة السلات", "Carts value")} value={money(a.total_value)} tr={tr} fmt={fmt} />
+        <Stat label={tr("معدل الاستعادة", "Recovery rate")} value={`${fmt(a.recovery_rate)}%`} tr={tr} fmt={fmt} />
       </div>
       <div className="grid gap-4 md:grid-cols-3">
-        <Card title="مرحلة الترك"><Table cols={["المرحلة", "العدد"]} rows={a.stages.map((r:any)=>[r.stage, r.count])} /></Card>
-        <Card title="الأسباب"><Table cols={["السبب", "العدد"]} rows={a.reasons.map((r:any)=>[r.reason, r.count])} /></Card>
-        <Card title="منتجات متروكة" action={<ExportBtn name="abandoned-products.csv" rows={a.top_products} />}>
-          <Table cols={["المنتج", "الكمية"]} rows={a.top_products.map((r:any)=>[r.name, r.qty])} />
+        <Card title={tr("مرحلة الترك", "Abandonment stage")}><Table cols={[tr("المرحلة", "Stage"), tr("العدد", "Count")]} tr={tr} rows={a.stages.map((r:any)=>[r.stage, r.count])} /></Card>
+        <Card title={tr("الأسباب", "Reasons")}><Table cols={[tr("السبب", "Reason"), tr("العدد", "Count")]} tr={tr} rows={a.reasons.map((r:any)=>[r.reason, r.count])} /></Card>
+        <Card title={tr("منتجات متروكة", "Abandoned products")} action={<ExportBtn name="abandoned-products.csv" rows={a.top_products} tr={tr} />}>
+          <Table cols={[tr("المنتج", "Product"), tr("الكمية", "Qty")]} tr={tr} rows={a.top_products.map((r:any)=>[r.name, r.qty])} />
         </Card>
       </div>
     </div>
   );
 }
 
-function IncompleteView({ i }: any) {
+function IncompleteView({ i, tr, fmt, money }: any) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-        <Stat label="عدد الطلبات" value={fmt(i.total_count)} />
-        <Stat label="قيمة الفرص الضائعة" value={money(i.lost_value)} />
+        <Stat label={tr("عدد الطلبات", "Orders count")} value={fmt(i.total_count)} tr={tr} fmt={fmt} />
+        <Stat label={tr("قيمة الفرص الضائعة", "Lost opportunity value")} value={money(i.lost_value)} tr={tr} fmt={fmt} />
       </div>
-      <Card title="حسب الحالة" action={<ExportBtn name="incomplete.csv" rows={i.by_status} />}>
-        <Table cols={["الحالة", "العدد", "القيمة"]}
+      <Card title={tr("حسب الحالة", "By status")} action={<ExportBtn name="incomplete.csv" rows={i.by_status} tr={tr} />}>
+        <Table cols={[tr("الحالة", "Status"), tr("العدد", "Count"), tr("القيمة", "Value")]} tr={tr}
           rows={i.by_status.map((r: any) => [r.status, r.count, money(r.value)])} />
       </Card>
     </div>
   );
 }
 
-function TrafficView({ t }: any) {
+function TrafficView({ t, tr, fmt }: any) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="عدد الزيارات" value={fmt(t.visits)} />
-        <Stat label="زوار فريدون" value={fmt(t.unique_visitors)} />
-        <Stat label="معدل الارتداد" value={`${fmt(t.bounce_rate)}%`} />
+        <Stat label={tr("عدد الزيارات", "Visits")} value={fmt(t.visits)} tr={tr} fmt={fmt} />
+        <Stat label={tr("زوار فريدون", "Unique visitors")} value={fmt(t.unique_visitors)} tr={tr} fmt={fmt} />
+        <Stat label={tr("معدل الارتداد", "Bounce rate")} value={`${fmt(t.bounce_rate)}%`} tr={tr} fmt={fmt} />
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card title="مصادر الزيارات" action={<ExportBtn name="sources.csv" rows={t.sources} />}>
-          <Table cols={["المصدر", "الزيارات"]} rows={t.sources.map((r:any)=>[r.source, r.count])} />
+        <Card title={tr("مصادر الزيارات", "Traffic sources")} action={<ExportBtn name="sources.csv" rows={t.sources} tr={tr} />}>
+          <Table cols={[tr("المصدر", "Source"), tr("الزيارات", "Visits")]} tr={tr} rows={t.sources.map((r:any)=>[r.source, r.count])} />
         </Card>
-        <Card title="الصفحات الأكثر زيارة" action={<ExportBtn name="pages.csv" rows={t.top_pages} />}>
-          <Table cols={["الصفحة", "المشاهدات"]} rows={t.top_pages.map((r:any)=>[r.path, r.views])} />
+        <Card title={tr("الصفحات الأكثر زيارة", "Most visited pages")} action={<ExportBtn name="pages.csv" rows={t.top_pages} tr={tr} />}>
+          <Table cols={[tr("الصفحة", "Page"), tr("المشاهدات", "Views")]} tr={tr} rows={t.top_pages.map((r:any)=>[r.path, r.views])} />
         </Card>
       </div>
     </div>
   );
 }
 
-function FunnelView({ f }: any) {
+function FunnelView({ f, tr, fmt }: any) {
   const max = Math.max(1, ...f.map((s: any) => s.count));
   return (
-    <Card title="مسار التحويل (Funnel)" action={<ExportBtn name="funnel.csv" rows={f} />}>
+    <Card title={tr("مسار التحويل (Funnel)", "Conversion Funnel")} action={<ExportBtn name="funnel.csv" rows={f} tr={tr} />}>
       <div className="space-y-3">
         {f.map((s: any, idx: number) => (
           <div key={s.step}>
             <div className="mb-1 flex items-center justify-between text-xs">
               <span className="font-medium text-foreground">{idx + 1}. {s.step}</span>
               <span className="tabular-nums text-muted-foreground">
-                {fmt(s.count)} · {fmt(s.pct_total)}% من الإجمالي
+                {fmt(s.count)} · {fmt(s.pct_total)}% {tr("من الإجمالي", "of total")}
                 {idx > 0 && <span className="ms-2 text-red-600">▼ {fmt(s.drop_off)}%</span>}
               </span>
             </div>
@@ -376,22 +379,22 @@ function FunnelView({ f }: any) {
   );
 }
 
-function PaymentsView({ p }: any) {
+function PaymentsView({ p, tr, fmt, money }: any) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="ناجحة" value={fmt(p.success)} />
-        <Stat label="فاشلة" value={fmt(p.failed)} />
-        <Stat label="قيد المعالجة" value={fmt(p.pending)} />
-        <Stat label="مستردة" value={fmt(p.refunded)} />
+        <Stat label={tr("ناجحة", "Successful")} value={fmt(p.success)} tr={tr} fmt={fmt} />
+        <Stat label={tr("فاشلة", "Failed")} value={fmt(p.failed)} tr={tr} fmt={fmt} />
+        <Stat label={tr("قيد المعالجة", "Pending")} value={fmt(p.pending)} tr={tr} fmt={fmt} />
+        <Stat label={tr("مستردة", "Refunded")} value={fmt(p.refunded)} tr={tr} fmt={fmt} />
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card title="طرق الدفع" action={<ExportBtn name="methods.csv" rows={p.methods} />}>
-          <Table cols={["الطريقة", "العدد", "المبلغ"]}
+        <Card title={tr("طرق الدفع", "Payment methods")} action={<ExportBtn name="methods.csv" rows={p.methods} tr={tr} />}>
+          <Table cols={[tr("الطريقة", "Method"), tr("العدد", "Count"), tr("المبلغ", "Amount")]} tr={tr}
             rows={p.methods.map((r: any) => [r.method, r.count, money(r.amount)])} />
         </Card>
-        <Card title="فشل البوابات" action={<ExportBtn name="gateways.csv" rows={p.gateway_failure} />}>
-          <Table cols={["البوابة", "نجاح", "فشل", "نسبة الفشل"]}
+        <Card title={tr("فشل البوابات", "Gateway failures")} action={<ExportBtn name="gateways.csv" rows={p.gateway_failure} tr={tr} />}>
+          <Table cols={[tr("البوابة", "Gateway"), tr("نجاح", "Success"), tr("فشل", "Failed"), tr("نسبة الفشل", "Failure rate")]} tr={tr}
             rows={p.gateway_failure.map((r: any) => [r.gateway, r.success, r.failed, `${fmt(r.failure_rate)}%`])} />
         </Card>
       </div>
@@ -399,40 +402,40 @@ function PaymentsView({ p }: any) {
   );
 }
 
-function ShippingView({ s }: any) {
+function ShippingView({ s, tr, money }: any) {
   return (
     <div className="space-y-4">
-      <Stat label="إجمالي تكلفة الشحن" value={money(s.total_cost)} />
+      <Stat label={tr("إجمالي تكلفة الشحن", "Total shipping cost")} value={money(s.total_cost)} tr={tr} />
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card title="حسب شركة الشحن" action={<ExportBtn name="carriers.csv" rows={s.carriers} />}>
-          <Table cols={["الشركة", "الشحنات", "تم التسليم", "فشل", "التكلفة"]}
+        <Card title={tr("حسب شركة الشحن", "By carrier")} action={<ExportBtn name="carriers.csv" rows={s.carriers} tr={tr} />}>
+          <Table cols={[tr("الشركة", "Carrier"), tr("الشحنات", "Shipments"), tr("تم التسليم", "Delivered"), tr("فشل", "Failed"), tr("التكلفة", "Cost")]} tr={tr}
             rows={s.carriers.map((r: any) => [r.carrier, r.count, r.delivered, r.failed, money(r.cost)])} />
         </Card>
-        <Card title="مدن ذات مشاكل" action={<ExportBtn name="problem-cities.csv" rows={s.problem_cities} />}>
-          <Table cols={["المدينة", "المشاكل"]} rows={s.problem_cities.map((r: any) => [r.city, r.issues])} />
+        <Card title={tr("مدن ذات مشاكل", "Problem cities")} action={<ExportBtn name="problem-cities.csv" rows={s.problem_cities} tr={tr} />}>
+          <Table cols={[tr("المدينة", "City"), tr("المشاكل", "Issues")]} tr={tr} rows={s.problem_cities.map((r: any) => [r.city, r.issues])} />
         </Card>
       </div>
     </div>
   );
 }
 
-function CouponsView({ c }: any) {
+function CouponsView({ c, tr }: any) {
   return (
-    <Card title="أكثر الكوبونات استخدامًا" action={<ExportBtn name="coupons.csv" rows={c.top} />}>
-      <Table cols={["الكود", "مرات الاستخدام", "الخصم"]}
+    <Card title={tr("أكثر الكوبونات استخدامًا", "Most used coupons")} action={<ExportBtn name="coupons.csv" rows={c.top} tr={tr} />}>
+      <Table cols={[tr("الكود", "Code"), tr("مرات الاستخدام", "Uses"), tr("الخصم", "Discount")]} tr={tr}
         rows={c.top.map((r: any) => [r.code, r.uses, r.discount])} />
     </Card>
   );
 }
 
-function SchedulesView({ d, reload }: { d: any; reload: () => void }) {
+function SchedulesView({ d, reload, tr, TABS, isAr }: { d: any; reload: () => void; tr: any; TABS: any[]; isAr: boolean }) {
   const [name, setName] = useState("");
   const [reportKey, setReportKey] = useState<TabKey>("sales");
   const [frequency, setFrequency] = useState("daily");
   const [recipients, setRecipients] = useState("");
 
   async function add() {
-    if (!name || !recipients) { toast.error("أدخل الاسم والمستلمين"); return; }
+    if (!name || !recipients) { toast.error(tr("أدخل الاسم والمستلمين", "Enter name and recipients")); return; }
     const emails = recipients.split(/[,;\s]+/).filter(Boolean);
     const next = new Date();
     if (frequency === "daily") next.setDate(next.getDate() + 1);
@@ -442,7 +445,7 @@ function SchedulesView({ d, reload }: { d: any; reload: () => void }) {
       name, report_key: reportKey, frequency, recipients: emails, next_run_at: next.toISOString(),
     });
     if (error) { toast.error(error.message); return; }
-    toast.success("تمت الجدولة");
+    toast.success(tr("تمت الجدولة", "Scheduled"));
     setName(""); setRecipients("");
     reload();
   }
@@ -461,56 +464,56 @@ function SchedulesView({ d, reload }: { d: any; reload: () => void }) {
       recipients: s.recipients, rows_count: 0,
     });
     if (error) toast.error(error.message);
-    else { toast.success("تم تنفيذ التقرير وتسجيله"); reload(); }
+    else { toast.success(tr("تم تنفيذ التقرير وتسجيله", "Report executed and logged")); reload(); }
   }
 
   return (
     <div className="space-y-4">
-      <Card title="جدولة جديدة">
+      <Card title={tr("جدولة جديدة", "New schedule")}>
         <div className="grid gap-3 md:grid-cols-5">
-          <input className="rounded-md border border-border bg-background px-3 py-1.5 text-sm" placeholder="الاسم"
+          <input className="rounded-md border border-border bg-background px-3 py-1.5 text-sm" placeholder={tr("الاسم", "Name")}
             value={name} onChange={(e) => setName(e.target.value)} />
           <select className="rounded-md border border-border bg-background px-3 py-1.5 text-sm"
             value={reportKey} onChange={(e) => setReportKey(e.target.value as TabKey)}>
-            {TABS.filter((t) => t.key !== "schedules").map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
+            {TABS.filter((t: any) => t.key !== "schedules").map((t: any) => <option key={t.key} value={t.key}>{t.label}</option>)}
           </select>
           <select className="rounded-md border border-border bg-background px-3 py-1.5 text-sm"
             value={frequency} onChange={(e) => setFrequency(e.target.value)}>
-            <option value="daily">يومي</option>
-            <option value="weekly">أسبوعي</option>
-            <option value="monthly">شهري</option>
+            <option value="daily">{tr("يومي", "Daily")}</option>
+            <option value="weekly">{tr("أسبوعي", "Weekly")}</option>
+            <option value="monthly">{tr("شهري", "Monthly")}</option>
           </select>
-          <input className="rounded-md border border-border bg-background px-3 py-1.5 text-sm" placeholder="emails مفصولة بفواصل"
+          <input className="rounded-md border border-border bg-background px-3 py-1.5 text-sm" placeholder={tr("emails مفصولة بفواصل", "Emails comma separated")}
             value={recipients} onChange={(e) => setRecipients(e.target.value)} />
           <button onClick={add} className="inline-flex items-center justify-center gap-1 rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground">
-            <Plus className="h-4 w-4" />إضافة
+            <Plus className="h-4 w-4" />{tr("إضافة", "Add")}
           </button>
         </div>
       </Card>
 
-      <Card title={`الجدولات (${d.schedules.length})`}>
-        <Table cols={["الاسم", "التقرير", "التكرار", "المستلمون", "الحالة", "إجراءات"]}
+      <Card title={`${tr("الجدولات", "Schedules")} (${d.schedules.length})`}>
+        <Table cols={[tr("الاسم", "Name"), tr("التقرير", "Report"), tr("التكرار", "Frequency"), tr("المستلمون", "Recipients"), tr("الحالة", "Status"), tr("إجراءات", "Actions")]} tr={tr}
           rows={d.schedules.map((s: any) => [
             s.name,
-            TABS.find((t) => t.key === s.report_key)?.label ?? s.report_key,
+            TABS.find((t: any) => t.key === s.report_key)?.label ?? s.report_key,
             s.frequency,
             (s.recipients as string[]).join(", "),
             <button key="t" onClick={() => toggle(s.id, !s.is_enabled)}
               className={`rounded-full px-2 py-0.5 text-[10px] ${s.is_enabled ? "bg-emerald-500/10 text-emerald-700" : "bg-muted text-muted-foreground"}`}>
-              {s.is_enabled ? "مفعّل" : "معطّل"}
+              {s.is_enabled ? tr("مفعّل", "Enabled") : tr("معطّل", "Disabled")}
             </button>,
             <div key="a" className="flex gap-1">
-              <button onClick={() => runNow(s)} className="rounded p-1 hover:bg-muted" title="تنفيذ الآن"><Play className="h-3.5 w-3.5" /></button>
-              <button onClick={() => remove(s.id)} className="rounded p-1 text-red-600 hover:bg-muted" title="حذف"><Trash2 className="h-3.5 w-3.5" /></button>
+              <button onClick={() => runNow(s)} className="rounded p-1 hover:bg-muted" title={tr("تنفيذ الآن", "Run now")}><Play className="h-3.5 w-3.5" /></button>
+              <button onClick={() => remove(s.id)} className="rounded p-1 text-red-600 hover:bg-muted" title={tr("حذف", "Delete")}><Trash2 className="h-3.5 w-3.5" /></button>
             </div>,
           ])} />
       </Card>
 
-      <Card title="سجل التشغيل">
-        <Table cols={["التاريخ", "التقرير", "الحالة", "المستلمون"]}
+      <Card title={tr("سجل التشغيل", "Execution log")}>
+        <Table cols={[tr("التاريخ", "Date"), tr("التقرير", "Report"), tr("الحالة", "Status"), tr("المستلمون", "Recipients")]} tr={tr}
           rows={d.runs.map((r: any) => [
-            new Date(r.created_at).toLocaleString("ar-SA"),
-            TABS.find((t) => t.key === r.report_key)?.label ?? r.report_key,
+            new Date(r.created_at).toLocaleString(isAr ? "ar-SA" : "en-US"),
+            TABS.find((t: any) => t.key === r.report_key)?.label ?? r.report_key,
             r.status,
             (r.recipients as string[]).join(", "),
           ])} />
@@ -532,8 +535,8 @@ function Card({ title, action, children }: any) {
   );
 }
 
-function Table({ cols, rows }: { cols: string[]; rows: any[][] }) {
-  if (!rows.length) return <p className="py-4 text-center text-xs text-muted-foreground">لا توجد بيانات</p>;
+function Table({ cols, rows, tr }: { cols: string[]; rows: any[][]; tr: any }) {
+  if (!rows.length) return <p className="py-4 text-center text-xs text-muted-foreground">{tr("لا توجد بيانات", "No data")}</p>;
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-xs">
@@ -552,11 +555,11 @@ function Table({ cols, rows }: { cols: string[]; rows: any[][] }) {
   );
 }
 
-function ExportBtn({ name, rows }: { name: string; rows: any[] }) {
+function ExportBtn({ name, rows, tr }: { name: string; rows: any[]; tr: any }) {
   return (
     <button onClick={() => downloadCSV(name, rows)}
       className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:bg-muted">
-      <Download className="h-3 w-3" />CSV
+      <Download className="h-3 w-3" />{tr ? tr("CSV", "CSV") : "CSV"}
     </button>
   );
 }
