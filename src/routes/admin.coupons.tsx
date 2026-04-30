@@ -147,12 +147,12 @@ function CouponsAdmin() {
     <AdminShell>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">العروض والكوبونات</h1>
-          <p className="text-xs text-muted-foreground">إجمالي: {list.length} • النشط: {list.filter(c => c.is_active && (!c.expires_at || new Date(c.expires_at) > new Date())).length}</p>
+          <h1 className="text-xl font-semibold">{tr("العروض والكوبونات", "Offers & Coupons")}</h1>
+          <p className="text-xs text-muted-foreground">{tr("إجمالي:", "Total:")} {list.length} • {tr("النشط:", "Active:")} {list.filter(c => c.is_active && (!c.expires_at || new Date(c.expires_at) > new Date())).length}</p>
         </div>
         <button onClick={() => setEditing({ ...blank })}
           className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground">
-          <Plus className="h-3.5 w-3.5" /> عرض جديد
+          <Plus className="h-3.5 w-3.5" /> {tr("عرض جديد", "New offer")}
         </button>
       </div>
 
@@ -160,27 +160,27 @@ function CouponsAdmin() {
         {(["all", "active", "expired", "auto"] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)}
             className={`rounded-full px-3 py-1 text-xs ${filter === f ? "bg-primary text-primary-foreground" : "border border-border"}`}>
-            {f === "all" ? "الكل" : f === "active" ? "النشط" : f === "expired" ? "المنتهي" : "تلقائي"}
+            {f === "all" ? tr("الكل", "All") : f === "active" ? tr("النشط", "Active") : f === "expired" ? tr("المنتهي", "Expired") : tr("تلقائي", "Auto")}
           </button>
         ))}
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="بحث..."
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={tr("بحث...", "Search...")}
           className="ml-auto rounded-md border border-border bg-background px-3 py-1.5 text-xs" />
       </div>
 
-      {editing && <CouponEditor editing={editing} setEditing={setEditing} save={save} genCode={genCode} />}
-      {stats && <StatsModal coupon={stats} onClose={() => setStats(null)} />}
+      {editing && <CouponEditor editing={editing} setEditing={setEditing} save={save} genCode={genCode} tr={tr} />}
+      {stats && <StatsModal coupon={stats} onClose={() => setStats(null)} tr={tr} lang={lang} />}
 
       <div className="overflow-x-auto rounded-xl border border-border bg-card">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-muted/30 text-right text-xs text-muted-foreground">
             <tr>
-              <th className="p-3">الاسم/الكود</th>
-              <th className="p-3">النوع</th>
-              <th className="p-3">القيمة</th>
-              <th className="p-3">الاستخدام</th>
-              <th className="p-3">الإيراد</th>
-              <th className="p-3">الصلاحية</th>
-              <th className="p-3">الحالة</th>
+              <th className="p-3">{tr("الاسم/الكود", "Name/Code")}</th>
+              <th className="p-3">{tr("النوع", "Type")}</th>
+              <th className="p-3">{tr("القيمة", "Value")}</th>
+              <th className="p-3">{tr("الاستخدام", "Usage")}</th>
+              <th className="p-3">{tr("الإيراد", "Revenue")}</th>
+              <th className="p-3">{tr("الصلاحية", "Expires")}</th>
+              <th className="p-3">{tr("الحالة", "Status")}</th>
               <th className="p-3"></th>
             </tr>
           </thead>
@@ -196,23 +196,23 @@ function CouponsAdmin() {
                     </button>
                   </td>
                   <td className="p-3 text-xs">
-                    <span className="rounded bg-muted px-2 py-0.5 text-[10px]">{labelType(c.discount_type)}</span>
-                    {c.auto_apply && <span className="mr-1 rounded bg-blue-100 px-2 py-0.5 text-[10px] text-blue-800">تلقائي</span>}
+                    <span className="rounded bg-muted px-2 py-0.5 text-[10px]">{labelType(c.discount_type, tr)}</span>
+                    {c.auto_apply && <span className="mr-1 rounded bg-blue-100 px-2 py-0.5 text-[10px] text-blue-800">{tr("تلقائي", "Auto")}</span>}
                   </td>
-                  <td className="p-3 text-xs">{valueLabel(c)}</td>
+                  <td className="p-3 text-xs">{valueLabel(c, tr)}</td>
                   <td className="p-3 text-xs">{c.used_count}{c.max_uses ? ` / ${c.max_uses}` : ""}</td>
-                  <td className="p-3 text-xs">{Number(c.revenue_total ?? 0).toFixed(0)} ر.س</td>
-                  <td className="p-3 text-[11px]">{c.expires_at ? new Date(c.expires_at).toLocaleDateString("ar") : "—"}</td>
+                  <td className="p-3 text-xs">{Number(c.revenue_total ?? 0).toFixed(0)} {tr("ر.س", "SAR")}</td>
+                  <td className="p-3 text-[11px]">{c.expires_at ? new Date(c.expires_at).toLocaleDateString(lang === "ar" ? "ar-SA" : "en-US") : "—"}</td>
                   <td className="p-3">
                     <button onClick={() => toggle(c)} className={`rounded-full px-2 py-0.5 text-[10px] ${
                       !c.is_active ? "bg-gray-100 text-gray-700" : expired ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
                     }`}>
-                      {!c.is_active ? "معطل" : expired ? "منتهي" : "نشط"}
+                      {!c.is_active ? tr("معطل", "Disabled") : expired ? tr("منتهي", "Expired") : tr("نشط", "Active")}
                     </button>
                   </td>
                   <td className="p-3">
                     <div className="flex gap-1">
-                      <button onClick={() => setStats(c)} className="rounded p-1.5 hover:bg-muted" title="تقرير الأداء"><BarChart3 className="h-3.5 w-3.5" /></button>
+                      <button onClick={() => setStats(c)} className="rounded p-1.5 hover:bg-muted" title={tr("تقرير الأداء", "Performance report")}><BarChart3 className="h-3.5 w-3.5" /></button>
                       <button onClick={() => setEditing(c)} className="rounded p-1.5 hover:bg-muted"><Pencil className="h-3.5 w-3.5" /></button>
                       <button onClick={() => remove(c.id)} className="rounded p-1.5 text-destructive hover:bg-destructive/10"><Trash2 className="h-3.5 w-3.5" /></button>
                     </div>
@@ -220,7 +220,7 @@ function CouponsAdmin() {
                 </tr>
               );
             })}
-            {filtered.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-xs text-muted-foreground">لا توجد عروض</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-xs text-muted-foreground">{tr("لا توجد عروض", "No offers")}</td></tr>}
           </tbody>
         </table>
       </div>
@@ -228,19 +228,22 @@ function CouponsAdmin() {
   );
 }
 
-function labelType(t: string) {
+function labelType(t: string, tr: TrFn) {
   return ({
-    percent: "نسبة %", fixed: "ثابت", free_shipping: "شحن مجاني",
-    bxgy: "اشترِ X واحصل Y", bundle: "حزمة",
+    percent: tr("نسبة %", "Percent %"),
+    fixed: tr("ثابت", "Fixed"),
+    free_shipping: tr("شحن مجاني", "Free shipping"),
+    bxgy: tr("اشترِ X واحصل Y", "Buy X get Y"),
+    bundle: tr("حزمة", "Bundle"),
   } as any)[t] || t;
 }
 
-function valueLabel(c: Coupon) {
+function valueLabel(c: Coupon, tr: TrFn) {
   if (c.discount_type === "percent") return `${c.discount_value}%`;
-  if (c.discount_type === "fixed") return `${c.discount_value} ر.س`;
-  if (c.discount_type === "free_shipping") return "شحن مجاني";
+  if (c.discount_type === "fixed") return `${c.discount_value} ${tr("ر.س", "SAR")}`;
+  if (c.discount_type === "free_shipping") return tr("شحن مجاني", "Free shipping");
   if (c.discount_type === "bxgy") return `B${c.bxgy_config?.buy_qty ?? 1} G${c.bxgy_config?.get_qty ?? 1}`;
-  if (c.discount_type === "bundle") return `${c.bundle_config?.bundle_price ?? 0} ر.س`;
+  if (c.discount_type === "bundle") return `${c.bundle_config?.bundle_price ?? 0} ${tr("ر.س", "SAR")}`;
   return "—";
 }
 
