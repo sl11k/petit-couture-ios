@@ -367,6 +367,13 @@ export function HomeScreen() {
               </Link>
             </div>
           </section>
+
+          {/* Dynamic sections from /admin/home-builder */}
+          {sections
+            .filter((s) => ["most_popular", "new_arrivals", "custom_collection", "rich_text"].includes(s.kind))
+            .map((s) => (
+              <DynamicSection key={s.id} section={s} products={sectionProducts[s.id] ?? []} ar={ar} />
+            ))}
         </main>
       </div>
 
