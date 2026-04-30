@@ -91,7 +91,7 @@ function CouponsAdmin() {
   }, [list, filter, search]);
 
   async function save() {
-    if (!editing?.code) return alert("الكود مطلوب");
+    if (!editing?.code) return alert(tr("الكود مطلوب", "Code is required"));
     const payload: any = {
       code: editing.code.toUpperCase().trim(),
       name: editing.name || null,
