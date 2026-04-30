@@ -131,3 +131,141 @@ export async function uploadStorefrontImage(file: File, prefix = "img"): Promise
   const { data } = supabase.storage.from("storefront").getPublicUrl(path);
   return data.publicUrl;
 }
+
+/* ============================================================
+   Home Sections (Page Builder for the storefront landing page)
+   ============================================================ */
+
+export type HomeSectionKind =
+  | "hero"
+  | "banners"
+  | "featured_categories"
+  | "most_popular"
+  | "new_arrivals"
+  | "custom_collection"
+  | "announcements"
+  | "rich_text";
+
+export type HomeSectionDataSource =
+  | "auto"
+  | "best_sellers"
+  | "newest"
+  | "category"
+  | "collection"
+  | "manual";
+
+export type HomeSection = {
+  id: string;
+  kind: HomeSectionKind;
+  title_ar: string | null;
+  title_en: string | null;
+  eyebrow_ar: string | null;
+  eyebrow_en: string | null;
+  data_source: HomeSectionDataSource;
+  source_ref: string | null;
+  product_ids: string[];
+  config: Record<string, unknown>;
+  position: number;
+  is_active: boolean;
+};
+
+export type ResolvedProduct = {
+  id: string;
+  slug: string | null;
+  name_ar: string | null;
+  name_en: string | null;
+  price: number | null;
+  image_url: string | null;
+};
+
+export async function fetchHomeSections(activeOnly = true): Promise<HomeSection[]> {
+  let q = supabase.from("home_sections").select("*").order("position");
+  if (activeOnly) q = q.eq("is_active", true);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as HomeSection[];
+}
+
+/**
+ * Resolves the products to render for a section based on its data_source.
+ * - manual: order matches `section.product_ids`
+ * - best_sellers: order by sales_count desc
+ * - newest: order by created_at desc
+ * - category: products in `categories.slug` = source_ref via category_products
+ * - collection: products from landing_pages.product_ids where id = source_ref
+ * - auto: same as best_sellers (sensible default)
+ */
+export async function resolveSectionProducts(section: HomeSection, limit = 8): Promise<ResolvedProduct[]> {
+  const cols = "id, slug, name_ar, name_en, price, image_url";
+
+  if (section.data_source === "manual" && section.product_ids.length > 0) {
+    const { data } = await supabase
+      .from("products")
+      .select(cols)
+      .in("id", section.product_ids)
+      .eq("is_active", true);
+    const map = new Map((data ?? []).map((p: any) => [p.id, p as ResolvedProduct]));
+    return section.product_ids.map((id) => map.get(id)).filter(Boolean).slice(0, limit) as ResolvedProduct[];
+  }
+
+  if (section.data_source === "collection" && section.source_ref) {
+    const { data: page } = await supabase
+      .from("landing_pages")
+      .select("product_ids, sort_mode")
+      .eq("id", section.source_ref)
+      .maybeSingle();
+    const ids = (page?.product_ids ?? []) as string[];
+    if (ids.length === 0) return [];
+    const { data } = await supabase
+      .from("products")
+      .select(cols)
+      .in("id", ids)
+      .eq("is_active", true);
+    const map = new Map((data ?? []).map((p: any) => [p.id, p as ResolvedProduct]));
+    return ids.map((id) => map.get(id)).filter(Boolean).slice(0, limit) as ResolvedProduct[];
+  }
+
+  if (section.data_source === "category" && section.source_ref) {
+    // Look up category_id by slug, then category_products → products
+    const { data: cat } = await supabase
+      .from("categories")
+      .select("id")
+      .eq("slug", section.source_ref)
+      .maybeSingle();
+    if (!cat) return [];
+    const { data: rows } = await supabase
+      .from("category_products")
+      .select("product_id")
+      .eq("category_id", (cat as any).id)
+      .limit(limit * 2);
+    const ids = ((rows ?? []) as any[]).map((r) => r.product_id).filter(Boolean);
+    if (ids.length === 0) return [];
+    const { data } = await supabase
+      .from("products")
+      .select(cols)
+      .in("id", ids)
+      .eq("is_active", true)
+      .limit(limit);
+    return (data ?? []) as ResolvedProduct[];
+  }
+
+  if (section.data_source === "newest") {
+    const { data } = await supabase
+      .from("products")
+      .select(cols)
+      .eq("is_active", true)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    return (data ?? []) as ResolvedProduct[];
+  }
+
+  // best_sellers / auto
+  const { data } = await supabase
+    .from("products")
+    .select(cols)
+    .eq("is_active", true)
+    .order("sales_count", { ascending: false })
+    .limit(limit);
+  return (data ?? []) as ResolvedProduct[];
+}
+
