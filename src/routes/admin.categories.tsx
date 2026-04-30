@@ -81,7 +81,7 @@ function CategoriesAdmin() {
 
   async function save() {
     if (!editing?.name_ar || !editing?.slug) {
-      alert("الاسم العربي والـ slug مطلوبان");
+      alert(tr("الاسم العربي والـ slug مطلوبان", "Arabic name and slug are required"));
       return;
     }
     const payload: any = {
