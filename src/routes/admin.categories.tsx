@@ -526,8 +526,8 @@ function CategoryForm({
 // ============= Product linker modal =============
 
 function ProductLinkerModal({
-  categoryId, category, onClose,
-}: { categoryId: string; category: Cat; onClose: () => void }) {
+  categoryId, category, onClose, tr, lang,
+}: { categoryId: string; category: Cat; onClose: () => void; tr: TrFn; lang: string }) {
   const [linked, setLinked] = useState<LinkedProduct[]>([]);
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<Product[]>([]);
