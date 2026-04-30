@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/AdminLayout";
-import { Save, AlertTriangle, Package as PackageIcon } from "lucide-react";
+import { useTr } from "@/i18n/tr";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { Save, Package as PackageIcon } from "lucide-react";
 
 export const Route = createFileRoute("/admin/inventory")({
   component: InventoryAdmin,
@@ -28,6 +30,8 @@ type Alert = {
 };
 
 function InventoryAdmin() {
+  const tr = useTr();
+  const { lang } = useLanguage();
   const [products, setProducts] = useState<Product[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [stockEdits, setStockEdits] = useState<Record<string, string>>({});
@@ -68,9 +72,12 @@ function InventoryAdmin() {
   return (
     <AdminShell>
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">المخزون</h1>
+        <h1 className="text-xl font-semibold">{tr("المخزون", "Inventory")}</h1>
         <div className="flex gap-1 rounded-md border border-border bg-card p-1 text-xs">
-          {([["stock", "المخزون"], ["alerts", `طلبات إشعار (${alerts.length})`]] as const).map(([k, l]) => (
+          {([
+            ["stock", tr("المخزون", "Stock")],
+            ["alerts", `${tr("طلبات إشعار", "Notify requests")} (${alerts.length})`],
+          ] as const).map(([k, l]) => (
             <button key={k} onClick={() => setTab(k)}
               className={`rounded px-3 py-1 ${tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>{l}</button>
           ))}
@@ -80,7 +87,11 @@ function InventoryAdmin() {
       {tab === "stock" && (
         <>
           <div className="mb-3 flex gap-1 rounded-md border border-border bg-card p-1 text-xs">
-            {([["all", "الكل"], ["low", "منخفض ≤5"], ["out", "نفد"]] as const).map(([k, l]) => (
+            {([
+              ["all", tr("الكل", "All")],
+              ["low", tr("منخفض ≤5", "Low ≤5")],
+              ["out", tr("نفد", "Out")],
+            ] as const).map(([k, l]) => (
               <button key={k} onClick={() => setFilter(k)}
                 className={`rounded px-3 py-1 ${filter === k ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>{l}</button>
             ))}
@@ -90,10 +101,10 @@ function InventoryAdmin() {
             <table className="w-full text-sm">
               <thead className="border-b border-border bg-muted/30 text-right text-xs text-muted-foreground">
                 <tr>
-                  <th className="p-3">المنتج</th>
-                  <th className="p-3">السعر</th>
-                  <th className="p-3">المخزون</th>
-                  <th className="p-3">تعديل</th>
+                  <th className="p-3">{tr("المنتج", "Product")}</th>
+                  <th className="p-3">{tr("السعر", "Price")}</th>
+                  <th className="p-3">{tr("المخزون", "Stock")}</th>
+                  <th className="p-3">{tr("تعديل", "Edit")}</th>
                   <th className="p-3"></th>
                 </tr>
               </thead>
@@ -104,12 +115,12 @@ function InventoryAdmin() {
                       <div className="flex items-center gap-2">
                         {p.image_url && <img src={p.image_url} className="h-9 w-9 rounded object-cover" alt="" />}
                         <div>
-                          <div className="text-xs font-medium">{p.name_ar}</div>
-                          <div className="text-[11px] text-muted-foreground">{p.name_en}</div>
+                          <div className="text-xs font-medium">{lang === "ar" ? p.name_ar : p.name_en}</div>
+                          <div className="text-[11px] text-muted-foreground">{lang === "ar" ? p.name_en : p.name_ar}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="p-3 text-xs">{p.price} ر.س</td>
+                    <td className="p-3 text-xs">{p.price} {tr("ر.س", "SAR")}</td>
                     <td className="p-3">
                       <span className={`rounded-full px-2 py-0.5 text-[10px] ${
                         p.stock === 0 ? "bg-destructive/10 text-destructive" :
@@ -125,13 +136,13 @@ function InventoryAdmin() {
                     <td className="p-3">
                       {stockEdits[p.id] !== undefined && (
                         <button onClick={() => saveStock(p.id)} className="flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-[10px] text-primary-foreground">
-                          <Save className="h-3 w-3" /> حفظ
+                          <Save className="h-3 w-3" /> {tr("حفظ", "Save")}
                         </button>
                       )}
                     </td>
                   </tr>
                 ))}
-                {filtered.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-xs text-muted-foreground">لا توجد منتجات</td></tr>}
+                {filtered.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-xs text-muted-foreground">{tr("لا توجد منتجات", "No products")}</td></tr>}
               </tbody>
             </table>
           </div>
@@ -143,10 +154,10 @@ function InventoryAdmin() {
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-muted/30 text-right text-xs text-muted-foreground">
               <tr>
-                <th className="p-3">المنتج</th>
-                <th className="p-3">العميل</th>
-                <th className="p-3">المخزون الحالي</th>
-                <th className="p-3">التاريخ</th>
+                <th className="p-3">{tr("المنتج", "Product")}</th>
+                <th className="p-3">{tr("العميل", "Customer")}</th>
+                <th className="p-3">{tr("المخزون الحالي", "Current stock")}</th>
+                <th className="p-3">{tr("التاريخ", "Date")}</th>
                 <th className="p-3"></th>
               </tr>
             </thead>
@@ -155,17 +166,17 @@ function InventoryAdmin() {
                 const p = productMap.get(a.product_id);
                 return (
                   <tr key={a.id} className="border-b border-border/50 last:border-0">
-                    <td className="p-3 text-xs">{p?.name_ar ?? <span className="text-muted-foreground">منتج محذوف</span>}</td>
+                    <td className="p-3 text-xs">{p ? (lang === "ar" ? p.name_ar : p.name_en) : <span className="text-muted-foreground">{tr("منتج محذوف", "Deleted product")}</span>}</td>
                     <td className="p-3 text-xs">{a.email ?? a.phone ?? "—"}</td>
                     <td className="p-3 text-xs">{p ? p.stock : "—"}</td>
-                    <td className="p-3 text-xs text-muted-foreground">{new Date(a.created_at).toLocaleDateString("ar")}</td>
+                    <td className="p-3 text-xs text-muted-foreground">{new Date(a.created_at).toLocaleDateString(lang === "ar" ? "ar" : "en")}</td>
                     <td className="p-3">
-                      <button onClick={() => markNotified(a.id)} className="rounded-md border border-border px-2 py-1 text-[10px]">تم الإشعار</button>
+                      <button onClick={() => markNotified(a.id)} className="rounded-md border border-border px-2 py-1 text-[10px]">{tr("تم الإشعار", "Notified")}</button>
                     </td>
                   </tr>
                 );
               })}
-              {alerts.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-xs text-muted-foreground"><PackageIcon className="mx-auto mb-2 h-6 w-6 opacity-50" />لا توجد طلبات إشعار</td></tr>}
+              {alerts.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-xs text-muted-foreground"><PackageIcon className="mx-auto mb-2 h-6 w-6 opacity-50" />{tr("لا توجد طلبات إشعار", "No notify requests")}</td></tr>}
             </tbody>
           </table>
         </div>
