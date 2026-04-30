@@ -366,7 +366,7 @@ function CouponEditor({ editing, setEditing, save, genCode, tr }: any) {
   );
 }
 
-function StatsModal({ coupon, onClose }: { coupon: Coupon; onClose: () => void }) {
+function StatsModal({ coupon, onClose, tr, lang }: { coupon: Coupon; onClose: () => void; tr: TrFn; lang: string }) {
   const [redemptions, setRedemptions] = useState<any[]>([]);
   useEffect(() => {
     void supabase.from("coupon_redemptions").select("*").eq("coupon_id", coupon.id)
@@ -375,33 +375,34 @@ function StatsModal({ coupon, onClose }: { coupon: Coupon; onClose: () => void }
   }, [coupon.id]);
 
   const avgDiscount = redemptions.length ? redemptions.reduce((s, r) => s + Number(r.discount_amount), 0) / redemptions.length : 0;
+  const sar = tr("ر.س", "SAR");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div className="max-h-[85vh] w-full max-w-2xl overflow-auto rounded-xl bg-card p-5" onClick={(e) => e.stopPropagation()}>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">تقرير: {coupon.name || coupon.code}</h2>
+          <h2 className="text-lg font-semibold">{tr("تقرير:", "Report:")} {coupon.name || coupon.code}</h2>
           <button onClick={onClose}><X className="h-4 w-4" /></button>
         </div>
         <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-          <Stat label="استخدامات" value={String(coupon.used_count)} />
-          <Stat label="إجمالي الإيراد" value={`${Number(coupon.revenue_total).toFixed(0)} ر.س`} />
-          <Stat label="إجمالي الخصم" value={`${Number(coupon.discount_total).toFixed(0)} ر.س`} />
-          <Stat label="متوسط الخصم" value={`${avgDiscount.toFixed(0)} ر.س`} />
+          <Stat label={tr("استخدامات", "Uses")} value={String(coupon.used_count)} />
+          <Stat label={tr("إجمالي الإيراد", "Total revenue")} value={`${Number(coupon.revenue_total).toFixed(0)} ${sar}`} />
+          <Stat label={tr("إجمالي الخصم", "Total discount")} value={`${Number(coupon.discount_total).toFixed(0)} ${sar}`} />
+          <Stat label={tr("متوسط الخصم", "Avg discount")} value={`${avgDiscount.toFixed(0)} ${sar}`} />
         </div>
-        <h3 className="mb-2 text-sm font-semibold">آخر 50 استخداماً</h3>
+        <h3 className="mb-2 text-sm font-semibold">{tr("آخر 50 استخداماً", "Last 50 redemptions")}</h3>
         <table className="w-full text-xs">
-          <thead className="text-right text-muted-foreground"><tr><th className="p-2">التاريخ</th><th>العميل</th><th>الخصم</th><th>الإجمالي</th></tr></thead>
+          <thead className="text-right text-muted-foreground"><tr><th className="p-2">{tr("التاريخ", "Date")}</th><th>{tr("العميل", "Customer")}</th><th>{tr("الخصم", "Discount")}</th><th>{tr("الإجمالي", "Total")}</th></tr></thead>
           <tbody>
             {redemptions.map(r => (
               <tr key={r.id} className="border-t border-border/40">
-                <td className="p-2">{new Date(r.created_at).toLocaleString("ar")}</td>
+                <td className="p-2">{new Date(r.created_at).toLocaleString(lang === "ar" ? "ar-SA" : "en-US")}</td>
                 <td>{r.customer_email || r.user_id?.slice(0,8) || "—"}</td>
                 <td>{Number(r.discount_amount).toFixed(0)}</td>
                 <td>{Number(r.order_total).toFixed(0)}</td>
               </tr>
             ))}
-            {redemptions.length === 0 && <tr><td colSpan={4} className="p-4 text-center text-muted-foreground">لا توجد استخدامات بعد</td></tr>}
+            {redemptions.length === 0 && <tr><td colSpan={4} className="p-4 text-center text-muted-foreground">{tr("لا توجد استخدامات بعد", "No redemptions yet")}</td></tr>}
           </tbody>
         </table>
       </div>
