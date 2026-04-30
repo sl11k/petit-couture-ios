@@ -1,8 +1,9 @@
 import { Link, useLocation, useNavigate, Outlet } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAuth } from "@/state/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useAdminAutoTranslate } from "@/hooks/useAdminAutoTranslate";
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -142,12 +143,16 @@ function flatNav() {
 export function AdminShell({ children }: { children?: ReactNode }) {
   const { user, ready, signOut } = useAuth();
   const { canAccessAdmin, loading, isAdmin, isManager, isStaff, isViewer } = useUserRole();
-  const { lang, isRTL } = useLanguage();
+  const { lang, isRTL, toggle } = useLanguage();
   const ar = lang === "ar";
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const mainRef = useRef<HTMLElement | null>(null);
+  // Auto-translate any Arabic text inside the admin main content to English
+  // (or vice versa) when the admin toggles language. Cached in localStorage.
+  useAdminAutoTranslate(mainRef as React.RefObject<HTMLElement>);
   const [dark, setDark] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return document.documentElement.classList.contains("dark");
@@ -368,6 +373,16 @@ export function AdminShell({ children }: { children?: ReactNode }) {
               {currentPage ? itemLabel(currentPage) : (ar ? "لوحة الإدارة" : "Admin dashboard")}
             </h1>
           </div>
+          <button
+            type="button"
+            onClick={toggle}
+            data-no-translate
+            className="rounded-md border border-border px-2.5 py-1.5 text-[11px] font-medium tracking-wider text-foreground hover:bg-muted"
+            title={ar ? "Switch to English" : "التبديل للعربية"}
+            aria-label={ar ? "Switch to English" : "التبديل للعربية"}
+          >
+            {ar ? "EN" : "ع"}
+          </button>
           <Link
             to="/admin/create-order"
             className="hidden items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 sm:flex"
@@ -385,7 +400,7 @@ export function AdminShell({ children }: { children?: ReactNode }) {
           )}
         </header>
 
-        <main className="flex-1 overflow-x-auto p-4 lg:p-6">
+        <main ref={mainRef} className="flex-1 overflow-x-auto p-4 lg:p-6">
           {children ?? <Outlet />}
         </main>
       </div>
