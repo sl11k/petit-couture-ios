@@ -373,6 +373,16 @@ export function AdminShell({ children }: { children?: ReactNode }) {
               {currentPage ? itemLabel(currentPage) : (ar ? "لوحة الإدارة" : "Admin dashboard")}
             </h1>
           </div>
+          <button
+            type="button"
+            onClick={toggle}
+            data-no-translate
+            className="rounded-md border border-border px-2.5 py-1.5 text-[11px] font-medium tracking-wider text-foreground hover:bg-muted"
+            title={ar ? "Switch to English" : "التبديل للعربية"}
+            aria-label={ar ? "Switch to English" : "التبديل للعربية"}
+          >
+            {ar ? "EN" : "ع"}
+          </button>
           <Link
             to="/admin/create-order"
             className="hidden items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 sm:flex"
@@ -390,7 +400,7 @@ export function AdminShell({ children }: { children?: ReactNode }) {
           )}
         </header>
 
-        <main className="flex-1 overflow-x-auto p-4 lg:p-6">
+        <main ref={mainRef} className="flex-1 overflow-x-auto p-4 lg:p-6">
           {children ?? <Outlet />}
         </main>
       </div>
