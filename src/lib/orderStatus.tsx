@@ -1,5 +1,71 @@
-// Order status constants + helpers (Arabic UI labels + colors)
+// Order status constants + helpers (bilingual AR/EN labels + colors)
 import { supabase } from "@/integrations/supabase/client";
+
+export const ORDER_STATUS_LABEL_EN: Record<string, string> = {
+  pending: "New",
+  payment_failed: "Payment failed",
+  paid: "Paid",
+  under_review: "Under review",
+  processing: "Processing",
+  ready_to_ship: "Ready to ship",
+  shipped: "Shipped",
+  out_for_delivery: "Out for delivery",
+  delivered: "Delivered",
+  cancelled: "Cancelled",
+  returned: "Returned",
+  partially_refunded: "Partially refunded",
+  refunded: "Refunded",
+  fraud: "Fraud",
+  pending_customer: "Awaiting customer",
+};
+
+export const PAYMENT_STATUS_LABEL_EN: Record<string, string> = {
+  unpaid: "Unpaid",
+  awaiting_payment: "Awaiting payment",
+  paid: "Paid",
+  failed: "Payment failed",
+  refund_processing: "Refund processing",
+  partially_refunded: "Partially refunded",
+  refunded: "Refunded",
+  cod: "Cash on delivery",
+  bank_pending_review: "Bank transfer pending",
+};
+
+export const SHIPPING_STATUS_LABEL_EN: Record<string, string> = {
+  not_created: "Not created",
+  awaiting_carrier: "Awaiting carrier",
+  label_created: "Label created",
+  picked_up: "Picked up",
+  in_transit: "In transit",
+  out_for_delivery: "Out for delivery",
+  delivered: "Delivered",
+  delivery_failed: "Delivery failed",
+  returned_to_sender: "Returned to sender",
+  lost: "Lost",
+  delayed: "Delayed",
+};
+
+export const ORDER_SOURCE_LABEL_EN: Record<string, string> = {
+  web: "Web",
+  mobile: "Mobile",
+  admin: "Admin",
+  whatsapp: "WhatsApp",
+  phone: "Phone",
+};
+
+/** Pick the right localized label dictionary for the given language. */
+export function getOrderStatusLabel(lang: string) {
+  return lang === "ar" ? ORDER_STATUS_LABEL : ORDER_STATUS_LABEL_EN;
+}
+export function getPaymentStatusLabel(lang: string) {
+  return lang === "ar" ? PAYMENT_STATUS_LABEL : PAYMENT_STATUS_LABEL_EN;
+}
+export function getShippingStatusLabel(lang: string) {
+  return lang === "ar" ? SHIPPING_STATUS_LABEL : SHIPPING_STATUS_LABEL_EN;
+}
+export function getOrderSourceLabel(lang: string) {
+  return lang === "ar" ? ORDER_SOURCE_LABEL : ORDER_SOURCE_LABEL_EN;
+}
 
 export const ORDER_STATUSES = [
   "pending",

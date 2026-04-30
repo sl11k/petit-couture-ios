@@ -1,11 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/AdminLayout";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useTr } from "@/i18n/tr";
+import { useLanguage } from "@/i18n/LanguageContext";
 import {
-  Search, Plus, Filter, Download, Edit3, Trash2, Eye, EyeOff,
-  Archive, Clock, AlertTriangle, Copy, Image as ImageIcon,
+  Search, Plus, Filter, Download, Edit3,
+  AlertTriangle, Copy, Image as ImageIcon,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/products")({
@@ -33,13 +35,6 @@ type Product = {
   updated_at: string;
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  active: "نشط",
-  hidden: "مخفي",
-  archived: "أرشيف",
-  coming_soon: "قادم قريباً",
-  draft: "مسودة",
-};
 const STATUS_COLOR: Record<string, string> = {
   active: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
   hidden: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
@@ -52,12 +47,22 @@ const PAGE_SIZE = 50;
 
 function ProductsListPage() {
   const navigate = useNavigate();
+  const tr = useTr();
+  const { lang } = useLanguage();
   const { canEditOrders, canManage } = useUserRole();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
+
+  const STATUS_LABEL: Record<string, string> = {
+    active: tr("نشط", "Active"),
+    hidden: tr("مخفي", "Hidden"),
+    archived: tr("أرشيف", "Archived"),
+    coming_soon: tr("قادم قريباً", "Coming soon"),
+    draft: tr("مسودة", "Draft"),
+  };
 
   // Filters
   const [search, setSearch] = useState("");
@@ -123,7 +128,7 @@ function ProductsListPage() {
 
   async function bulkDelete() {
     if (selected.size === 0 || !canManage) return;
-    if (!confirm(`حذف ${selected.size} منتج نهائياً؟`)) return;
+    if (!confirm(tr(`حذف ${selected.size} منتج نهائياً؟`, `Permanently delete ${selected.size} products?`))) return;
     await supabase.from("products").delete().in("id", Array.from(selected));
     setSelected(new Set());
     load();
@@ -138,7 +143,7 @@ function ProductsListPage() {
       ...rest,
       sku: sku ? `${sku}-COPY-${Date.now().toString(36)}` : null,
       slug: `${slug}-copy-${Date.now().toString(36)}`,
-      name_ar: `${rest.name_ar} (نسخة)`,
+      name_ar: `${rest.name_ar} ${tr("(نسخة)", "(copy)")}`,
       status: "draft",
       sales_count: 0,
     }).select().single();
@@ -146,10 +151,14 @@ function ProductsListPage() {
   }
 
   function exportCsv() {
-    const headers = ["SKU","الاسم","القسم","السعر","المخزون","الحالة","المبيعات","تاريخ الإنشاء"];
+    const headers = tr(
+      ["SKU","الاسم","القسم","السعر","المخزون","الحالة","المبيعات","تاريخ الإنشاء"].join("|"),
+      ["SKU","Name","Category","Price","Stock","Status","Sales","Created at"].join("|"),
+    ).split("|");
     const rows = products.map((p) => [
       p.sku ?? "", p.name_ar, p.category_id ?? "", p.price, p.stock,
-      STATUS_LABEL[p.status] ?? p.status, p.sales_count, new Date(p.created_at).toLocaleDateString("ar-SA"),
+      STATUS_LABEL[p.status] ?? p.status, p.sales_count,
+      new Date(p.created_at).toLocaleDateString(lang === "ar" ? "ar-SA" : "en-US"),
     ]);
     const csv = [headers, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv" });
@@ -165,16 +174,16 @@ function ProductsListPage() {
     <AdminShell>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">المنتجات</h1>
-          <p className="mt-1 text-sm text-muted-foreground">إجمالي: {total}</p>
+          <h1 className="text-2xl font-semibold">{tr("المنتجات", "Products")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{tr("إجمالي:", "Total:")} {total}</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={exportCsv} className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-sm hover:bg-accent">
-            <Download className="h-4 w-4" /> تصدير CSV
+            <Download className="h-4 w-4" /> {tr("تصدير CSV", "Export CSV")}
           </button>
           {canEditOrders && (
             <Link to="/admin/products/$id" params={{ id: "new" }} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
-              <Plus className="h-4 w-4" /> منتج جديد
+              <Plus className="h-4 w-4" /> {tr("منتج جديد", "New product")}
             </Link>
           )}
         </div>
@@ -186,7 +195,7 @@ function ProductsListPage() {
           <div className="relative flex-1 min-w-[200px]">
             <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
-              placeholder="ابحث بالاسم، SKU، slug، أو العلامة..."
+              placeholder={tr("ابحث بالاسم، SKU، slug، أو العلامة...", "Search by name, SKU, slug, or brand...")}
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(0); }}
               className="w-full rounded-md border border-input bg-background py-2 pe-9 ps-3 text-sm"
@@ -196,27 +205,27 @@ function ProductsListPage() {
             onClick={() => setShowFilters((s) => !s)}
             className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-sm hover:bg-accent"
           >
-            <Filter className="h-4 w-4" /> فلاتر
+            <Filter className="h-4 w-4" /> {tr("فلاتر", "Filters")}
           </button>
         </div>
         {showFilters && (
           <div className="mt-3 grid gap-2 border-t border-border pt-3 sm:grid-cols-3">
             <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
               className="rounded-md border border-input bg-background px-3 py-2 text-sm">
-              <option value="">كل الحالات</option>
+              <option value="">{tr("كل الحالات", "All statuses")}</option>
               {Object.entries(STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
             <select value={categoryFilter} onChange={(e) => { setCategoryFilter(e.target.value); setPage(0); }}
               className="rounded-md border border-input bg-background px-3 py-2 text-sm">
-              <option value="">كل الأقسام</option>
-              {categories.map((c) => <option key={c.id} value={c.id}>{c.name_ar || c.name_en}</option>)}
+              <option value="">{tr("كل الأقسام", "All categories")}</option>
+              {categories.map((c) => <option key={c.id} value={c.id}>{lang === "ar" ? (c.name_ar || c.name_en) : (c.name_en || c.name_ar)}</option>)}
             </select>
             <select value={stockFilter} onChange={(e) => { setStockFilter(e.target.value); setPage(0); }}
               className="rounded-md border border-input bg-background px-3 py-2 text-sm">
-              <option value="">كل المخزون</option>
-              <option value="in">متوفر</option>
-              <option value="low">مخزون منخفض (≤5)</option>
-              <option value="out">نفد</option>
+              <option value="">{tr("كل المخزون", "All stock")}</option>
+              <option value="in">{tr("متوفر", "In stock")}</option>
+              <option value="low">{tr("مخزون منخفض (≤5)", "Low stock (≤5)")}</option>
+              <option value="out">{tr("نفد", "Out of stock")}</option>
             </select>
           </div>
         )}
@@ -225,16 +234,16 @@ function ProductsListPage() {
       {/* Bulk actions */}
       {selected.size > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
-          <span className="font-medium">{selected.size} محدد</span>
-          <button onClick={() => bulkUpdate({ status: "active" } as any)} className="rounded border border-border bg-background px-2 py-1 text-xs hover:bg-accent">نشط</button>
-          <button onClick={() => bulkUpdate({ status: "hidden" } as any)} className="rounded border border-border bg-background px-2 py-1 text-xs hover:bg-accent">إخفاء</button>
-          <button onClick={() => bulkUpdate({ status: "archived" } as any)} className="rounded border border-border bg-background px-2 py-1 text-xs hover:bg-accent">أرشيف</button>
+          <span className="font-medium">{selected.size} {tr("محدد", "selected")}</span>
+          <button onClick={() => bulkUpdate({ status: "active" } as any)} className="rounded border border-border bg-background px-2 py-1 text-xs hover:bg-accent">{tr("نشط", "Active")}</button>
+          <button onClick={() => bulkUpdate({ status: "hidden" } as any)} className="rounded border border-border bg-background px-2 py-1 text-xs hover:bg-accent">{tr("إخفاء", "Hide")}</button>
+          <button onClick={() => bulkUpdate({ status: "archived" } as any)} className="rounded border border-border bg-background px-2 py-1 text-xs hover:bg-accent">{tr("أرشيف", "Archive")}</button>
           {canManage && (
             <button onClick={bulkDelete} className="rounded border border-destructive/30 bg-destructive/10 px-2 py-1 text-xs text-destructive hover:bg-destructive/20">
-              حذف نهائي
+              {tr("حذف نهائي", "Delete permanently")}
             </button>
           )}
-          <button onClick={() => setSelected(new Set())} className="ms-auto text-xs text-muted-foreground hover:text-foreground">إلغاء التحديد</button>
+          <button onClick={() => setSelected(new Set())} className="ms-auto text-xs text-muted-foreground hover:text-foreground">{tr("إلغاء التحديد", "Clear selection")}</button>
         </div>
       )}
 
@@ -247,28 +256,30 @@ function ProductsListPage() {
                 <th className="p-3 text-right">
                   <input type="checkbox" checked={selected.size === products.length && products.length > 0} onChange={selectAll} />
                 </th>
-                <th className="p-3 text-right">الصورة</th>
-                <th className="p-3 text-right">الاسم / SKU</th>
-                <th className="p-3 text-right">القسم</th>
-                <th className="p-3 text-right">السعر</th>
-                <th className="p-3 text-right">المخزون</th>
-                <th className="p-3 text-right">الحالة</th>
-                <th className="p-3 text-right">المبيعات</th>
-                <th className="p-3 text-right">آخر تحديث</th>
-                <th className="p-3 text-right">إجراءات</th>
+                <th className="p-3 text-right">{tr("الصورة", "Image")}</th>
+                <th className="p-3 text-right">{tr("الاسم / SKU", "Name / SKU")}</th>
+                <th className="p-3 text-right">{tr("القسم", "Category")}</th>
+                <th className="p-3 text-right">{tr("السعر", "Price")}</th>
+                <th className="p-3 text-right">{tr("المخزون", "Stock")}</th>
+                <th className="p-3 text-right">{tr("الحالة", "Status")}</th>
+                <th className="p-3 text-right">{tr("المبيعات", "Sales")}</th>
+                <th className="p-3 text-right">{tr("آخر تحديث", "Last update")}</th>
+                <th className="p-3 text-right">{tr("إجراءات", "Actions")}</th>
               </tr>
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={10} className="p-8 text-center text-muted-foreground">جاري التحميل...</td></tr>
+                <tr><td colSpan={10} className="p-8 text-center text-muted-foreground">{tr("جاري التحميل...", "Loading...")}</td></tr>
               )}
               {!loading && products.length === 0 && (
-                <tr><td colSpan={10} className="p-8 text-center text-muted-foreground">لا توجد منتجات</td></tr>
+                <tr><td colSpan={10} className="p-8 text-center text-muted-foreground">{tr("لا توجد منتجات", "No products")}</td></tr>
               )}
               {products.map((p) => {
                 const cat = categories.find((c) => c.id === p.category_id);
                 const lowStock = p.stock > 0 && p.stock <= (p.low_stock_threshold ?? 5);
                 const outOfStock = p.stock <= 0;
+                const productName = lang === "ar" ? (p.name_ar || p.name_en) : (p.name_en || p.name_ar);
+                const catName = cat ? (lang === "ar" ? (cat.name_ar || cat.name_en) : (cat.name_en || cat.name_ar)) : null;
                 return (
                   <tr key={p.id} className="border-t border-border hover:bg-accent/30">
                     <td className="p-3">
@@ -276,7 +287,7 @@ function ProductsListPage() {
                     </td>
                     <td className="p-3">
                       {p.image_url ? (
-                        <img src={p.image_url} alt={p.name_ar} className="h-12 w-12 rounded object-cover" />
+                        <img src={p.image_url} alt={productName} className="h-12 w-12 rounded object-cover" />
                       ) : (
                         <div className="flex h-12 w-12 items-center justify-center rounded bg-muted">
                           <ImageIcon className="h-5 w-5 text-muted-foreground" />
@@ -285,13 +296,13 @@ function ProductsListPage() {
                     </td>
                     <td className="p-3">
                       <Link to="/admin/products/$id" params={{ id: p.id }} className="font-medium hover:underline">
-                        {p.name_ar || p.name_en}
+                        {productName}
                       </Link>
                       <div className="text-xs text-muted-foreground">{p.sku ?? p.slug}</div>
                     </td>
-                    <td className="p-3 text-xs text-muted-foreground">{cat?.name_ar ?? "—"}</td>
+                    <td className="p-3 text-xs text-muted-foreground">{catName ?? "—"}</td>
                     <td className="p-3 whitespace-nowrap">
-                      <div>{Number(p.price).toFixed(2)} ر.س</div>
+                      <div>{Number(p.price).toFixed(2)} {tr("ر.س", "SAR")}</div>
                       {p.compare_at_price && (
                         <div className="text-xs text-muted-foreground line-through">{Number(p.compare_at_price).toFixed(2)}</div>
                       )}
@@ -309,15 +320,15 @@ function ProductsListPage() {
                     </td>
                     <td className="p-3 text-xs text-muted-foreground">{p.sales_count}</td>
                     <td className="p-3 text-xs text-muted-foreground whitespace-nowrap">
-                      {new Date(p.updated_at).toLocaleDateString("ar-SA")}
+                      {new Date(p.updated_at).toLocaleDateString(lang === "ar" ? "ar-SA" : "en-US")}
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-1">
-                        <Link to="/admin/products/$id" params={{ id: p.id }} title="تعديل" className="rounded p-1.5 hover:bg-accent">
+                        <Link to="/admin/products/$id" params={{ id: p.id }} title={tr("تعديل", "Edit")} className="rounded p-1.5 hover:bg-accent">
                           <Edit3 className="h-4 w-4" />
                         </Link>
                         {canEditOrders && (
-                          <button onClick={() => duplicate(p)} title="نسخ" className="rounded p-1.5 hover:bg-accent">
+                          <button onClick={() => duplicate(p)} title={tr("نسخ", "Duplicate")} className="rounded p-1.5 hover:bg-accent">
                             <Copy className="h-4 w-4" />
                           </button>
                         )}
@@ -334,13 +345,13 @@ function ProductsListPage() {
       {/* Pagination */}
       <div className="mt-4 flex items-center justify-between text-sm">
         <div className="text-muted-foreground">
-          صفحة {page + 1} من {totalPages}
+          {tr("صفحة", "Page")} {page + 1} {tr("من", "of")} {totalPages}
         </div>
         <div className="flex gap-2">
           <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}
-            className="rounded-md border border-border bg-background px-3 py-1.5 disabled:opacity-50">السابق</button>
+            className="rounded-md border border-border bg-background px-3 py-1.5 disabled:opacity-50">{tr("السابق", "Previous")}</button>
           <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}
-            className="rounded-md border border-border bg-background px-3 py-1.5 disabled:opacity-50">التالي</button>
+            className="rounded-md border border-border bg-background px-3 py-1.5 disabled:opacity-50">{tr("التالي", "Next")}</button>
         </div>
       </div>
     </AdminShell>

@@ -2,11 +2,14 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/AdminLayout";
+import { useTr } from "@/i18n/tr";
+import { useLanguage } from "@/i18n/LanguageContext";
 import {
-  ORDER_STATUSES, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR,
-  PAYMENT_STATUSES, PAYMENT_STATUS_LABEL, PAYMENT_STATUS_COLOR,
-  SHIPPING_STATUSES, SHIPPING_STATUS_LABEL, SHIPPING_STATUS_COLOR,
-  SHIPPING_CARRIERS, ORDER_SOURCE_LABEL,
+  ORDER_STATUSES, ORDER_STATUS_COLOR,
+  PAYMENT_STATUSES, PAYMENT_STATUS_COLOR,
+  SHIPPING_STATUSES, SHIPPING_STATUS_COLOR,
+  SHIPPING_CARRIERS,
+  getOrderStatusLabel, getPaymentStatusLabel, getShippingStatusLabel, getOrderSourceLabel,
   Pill, logOrderEvent,
 } from "@/lib/orderStatus";
 import {
@@ -44,6 +47,14 @@ type Order = {
 const PAGE_SIZE = 50;
 
 function OrdersPage() {
+  const tr = useTr();
+  const { lang } = useLanguage();
+  const locale = lang === "ar" ? "ar-SA" : "en-US";
+  const ORDER_LABEL = getOrderStatusLabel(lang);
+  const PAYMENT_LABEL = getPaymentStatusLabel(lang);
+  const SHIPPING_LABEL = getShippingStatusLabel(lang);
+  const SOURCE_LABEL = getOrderSourceLabel(lang);
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -84,7 +95,6 @@ function OrdersPage() {
     if (dateFrom) q = q.gte("created_at", dateFrom);
     if (dateTo) q = q.lte("created_at", dateTo + "T23:59:59");
 
-    // Quick filters
     if (quickFilter === "overdue") {
       const cutoff = new Date(Date.now() - 3 * 86400000).toISOString();
       q = q.eq("status", "pending").lt("created_at", cutoff);
@@ -103,7 +113,6 @@ function OrdersPage() {
     const { data, count } = await q;
     let result = (data ?? []) as Order[];
 
-    // City filter (client-side because shipping_address is JSONB)
     if (cityF.trim()) {
       const c = cityF.trim().toLowerCase();
       result = result.filter((o) => {
@@ -122,7 +131,6 @@ function OrdersPage() {
     void load();
   }, [page, statusF, paymentF, shippingF, carrierF, paymentMethodF, sourceF, dateFrom, dateTo, quickFilter]);
 
-  // Debounced search
   useEffect(() => {
     const t = setTimeout(() => { setPage(0); void load(); }, 300);
     return () => clearTimeout(t);
@@ -149,7 +157,6 @@ function OrdersPage() {
     return n;
   }, [statusF, paymentF, shippingF, carrierF, paymentMethodF, sourceF, cityF, dateFrom, dateTo, quickFilter]);
 
-  // Toggle selection
   function toggleOne(id: string) {
     const n = new Set(selected);
     if (n.has(id)) n.delete(id); else n.add(id);
@@ -160,7 +167,6 @@ function OrdersPage() {
     else setSelected(new Set(orders.map((o) => o.id)));
   }
 
-  // Bulk actions
   async function runBulk() {
     if (selected.size === 0 || !bulkAction) return;
     const ids = [...selected];
@@ -175,7 +181,10 @@ function OrdersPage() {
     }
     if (bulkAction.startsWith("status:")) {
       const newStatus = bulkAction.split(":")[1];
-      if (!confirm(`تغيير حالة ${ids.length} طلب إلى "${ORDER_STATUS_LABEL[newStatus]}"؟`)) return;
+      if (!confirm(tr(
+        `تغيير حالة ${ids.length} طلب إلى "${ORDER_LABEL[newStatus]}"؟`,
+        `Change status of ${ids.length} orders to "${ORDER_LABEL[newStatus]}"?`,
+      ))) return;
       await supabase.from("orders").update({ status: newStatus as any }).in("id", ids);
       await Promise.all(ids.map((id) => logOrderEvent(id, "bulk_status_change", { to: newStatus })));
       await load();
@@ -189,22 +198,21 @@ function OrdersPage() {
   }
 
   function exportCsv(rows: Order[]) {
-    const headers = [
-      "رقم الطلب", "التاريخ", "العميل", "الجوال", "البريد", "المدينة",
-      "الإجمالي", "العملة", "حالة الطلب", "حالة الدفع", "حالة الشحن",
-      "طريقة الدفع", "شركة الشحن", "رقم التتبع", "المصدر",
-    ];
+    const headers = tr(
+      "رقم الطلب|التاريخ|العميل|الجوال|البريد|المدينة|الإجمالي|العملة|حالة الطلب|حالة الدفع|حالة الشحن|طريقة الدفع|شركة الشحن|رقم التتبع|المصدر",
+      "Order #|Date|Customer|Phone|Email|City|Total|Currency|Order status|Payment status|Shipping status|Payment method|Carrier|Tracking #|Source",
+    ).split("|");
     const lines = rows.map((o) => [
       o.order_number,
-      new Date(o.created_at).toLocaleString("ar"),
+      new Date(o.created_at).toLocaleString(locale),
       o.customer_name, o.customer_phone, o.customer_email,
       o.shipping_address?.city ?? "",
       o.total, o.currency,
-      ORDER_STATUS_LABEL[o.status] ?? o.status,
-      PAYMENT_STATUS_LABEL[o.payment_status] ?? o.payment_status,
-      SHIPPING_STATUS_LABEL[o.shipping_status] ?? o.shipping_status,
+      ORDER_LABEL[o.status] ?? o.status,
+      PAYMENT_LABEL[o.payment_status] ?? o.payment_status,
+      SHIPPING_LABEL[o.shipping_status] ?? o.shipping_status,
       o.payment_method, o.shipping_carrier ?? "", o.tracking_number ?? "",
-      ORDER_SOURCE_LABEL[o.source] ?? o.source,
+      SOURCE_LABEL[o.source] ?? o.source,
     ].map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(","));
     const csv = "\uFEFF" + [headers.join(","), ...lines].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -223,9 +231,9 @@ function OrdersPage() {
       {/* Header */}
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">الطلبات</h1>
+          <h1 className="text-xl font-semibold text-foreground">{tr("الطلبات", "Orders")}</h1>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {totalCount} طلب · صفحة {page + 1} من {Math.max(pageCount, 1)}
+            {totalCount} {tr("طلب · صفحة", "orders · page")} {page + 1} {tr("من", "of")} {Math.max(pageCount, 1)}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -233,10 +241,10 @@ function OrdersPage() {
             onClick={() => exportCsv(orders)}
             className="flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted"
           >
-            <Download className="h-3.5 w-3.5" /> تصدير CSV
+            <Download className="h-3.5 w-3.5" /> {tr("تصدير CSV", "Export CSV")}
           </button>
           <Link to="/admin/create-order" className="rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground hover:opacity-90">
-            + طلب جديد
+            {tr("+ طلب جديد", "+ New order")}
           </Link>
         </div>
       </div>
@@ -244,10 +252,10 @@ function OrdersPage() {
       {/* Quick filters */}
       <div className="mb-3 flex flex-wrap gap-2">
         {([
-          ["overdue", "متأخرة (>3 أيام)", "border-red-200 text-red-700"],
-          ["payment_failed", "فشل الدفع", "border-orange-200 text-orange-700"],
-          ["no_shipment", "لم تُشحن بعد", "border-amber-200 text-amber-700"],
-          ["needs_review", "قيد المراجعة", "border-blue-200 text-blue-700"],
+          ["overdue", tr("متأخرة (>3 أيام)", "Overdue (>3 days)"), "border-red-200 text-red-700"],
+          ["payment_failed", tr("فشل الدفع", "Payment failed"), "border-orange-200 text-orange-700"],
+          ["no_shipment", tr("لم تُشحن بعد", "Not shipped yet"), "border-amber-200 text-amber-700"],
+          ["needs_review", tr("قيد المراجعة", "Under review"), "border-blue-200 text-blue-700"],
         ] as const).map(([k, l, c]) => (
           <button
             key={k}
@@ -268,7 +276,7 @@ function OrdersPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="بحث برقم الطلب، الاسم، الجوال، البريد، رقم التتبع..."
+            placeholder={tr("بحث برقم الطلب، الاسم، الجوال، البريد، رقم التتبع...", "Search by order #, name, phone, email, tracking #...")}
             className="w-full rounded-md border border-border bg-background py-2 pr-9 pl-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
@@ -277,7 +285,7 @@ function OrdersPage() {
           className="flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-2 text-xs hover:bg-muted"
         >
           <Filter className="h-3.5 w-3.5" />
-          فلاتر
+          {tr("فلاتر", "Filters")}
           {activeFiltersCount > 0 && (
             <span className="rounded-full bg-primary px-1.5 text-[10px] text-primary-foreground">{activeFiltersCount}</span>
           )}
@@ -285,7 +293,7 @@ function OrdersPage() {
         </button>
         {activeFiltersCount > 0 && (
           <button onClick={clearFilters} className="flex items-center gap-1 rounded-md border border-border px-3 py-2 text-xs text-muted-foreground hover:bg-muted">
-            <X className="h-3 w-3" /> مسح
+            <X className="h-3 w-3" /> {tr("مسح", "Clear")}
           </button>
         )}
       </div>
@@ -293,25 +301,31 @@ function OrdersPage() {
       {/* Advanced filter panel */}
       {showFilters && (
         <div className="mb-3 grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Select label="حالة الطلب" value={statusF} onChange={setStatusF} options={[["all", "الكل"], ...ORDER_STATUSES.map((s) => [s, ORDER_STATUS_LABEL[s]] as [string, string])]} />
-          <Select label="حالة الدفع" value={paymentF} onChange={setPaymentF} options={[["all", "الكل"], ...PAYMENT_STATUSES.map((s) => [s, PAYMENT_STATUS_LABEL[s]] as [string, string])]} />
-          <Select label="حالة الشحن" value={shippingF} onChange={setShippingF} options={[["all", "الكل"], ...SHIPPING_STATUSES.map((s) => [s, SHIPPING_STATUS_LABEL[s]] as [string, string])]} />
-          <Select label="شركة الشحن" value={carrierF} onChange={setCarrierF} options={[["all", "الكل"], ...SHIPPING_CARRIERS.map((c) => [c, c] as [string, string])]} />
-          <Select label="طريقة الدفع" value={paymentMethodF} onChange={setPaymentMethodF} options={[["all", "الكل"], ["card", "بطاقة"], ["cod", "عند الاستلام"], ["bank_transfer", "تحويل بنكي"], ["apple_pay", "Apple Pay"]]} />
-          <Select label="مصدر الطلب" value={sourceF} onChange={setSourceF} options={[["all", "الكل"], ["web", "ويب"], ["mobile", "موبايل"], ["admin", "أدمن"], ["whatsapp", "واتساب"]]} />
+          <Select label={tr("حالة الطلب", "Order status")} value={statusF} onChange={setStatusF}
+            options={[["all", tr("الكل", "All")], ...ORDER_STATUSES.map((s) => [s, ORDER_LABEL[s]] as [string, string])]} />
+          <Select label={tr("حالة الدفع", "Payment status")} value={paymentF} onChange={setPaymentF}
+            options={[["all", tr("الكل", "All")], ...PAYMENT_STATUSES.map((s) => [s, PAYMENT_LABEL[s]] as [string, string])]} />
+          <Select label={tr("حالة الشحن", "Shipping status")} value={shippingF} onChange={setShippingF}
+            options={[["all", tr("الكل", "All")], ...SHIPPING_STATUSES.map((s) => [s, SHIPPING_LABEL[s]] as [string, string])]} />
+          <Select label={tr("شركة الشحن", "Carrier")} value={carrierF} onChange={setCarrierF}
+            options={[["all", tr("الكل", "All")], ...SHIPPING_CARRIERS.map((c) => [c, c] as [string, string])]} />
+          <Select label={tr("طريقة الدفع", "Payment method")} value={paymentMethodF} onChange={setPaymentMethodF}
+            options={[["all", tr("الكل", "All")], ["card", tr("بطاقة", "Card")], ["cod", tr("عند الاستلام", "Cash on delivery")], ["bank_transfer", tr("تحويل بنكي", "Bank transfer")], ["apple_pay", "Apple Pay"]]} />
+          <Select label={tr("مصدر الطلب", "Order source")} value={sourceF} onChange={setSourceF}
+            options={[["all", tr("الكل", "All")], ["web", tr("ويب", "Web")], ["mobile", tr("موبايل", "Mobile")], ["admin", tr("أدمن", "Admin")], ["whatsapp", tr("واتساب", "WhatsApp")]]} />
           <label className="block text-xs">
-            <span className="mb-1 block text-muted-foreground">المدينة</span>
-            <input value={cityF} onChange={(e) => setCityF(e.target.value)} placeholder="مثال: الرياض"
+            <span className="mb-1 block text-muted-foreground">{tr("المدينة", "City")}</span>
+            <input value={cityF} onChange={(e) => setCityF(e.target.value)} placeholder={tr("مثال: الرياض", "e.g. Riyadh")}
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
           </label>
           <div className="grid grid-cols-2 gap-2">
             <label className="block text-xs">
-              <span className="mb-1 block text-muted-foreground">من</span>
+              <span className="mb-1 block text-muted-foreground">{tr("من", "From")}</span>
               <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
                 className="w-full rounded-md border border-border bg-background px-2 py-2 text-xs" />
             </label>
             <label className="block text-xs">
-              <span className="mb-1 block text-muted-foreground">إلى</span>
+              <span className="mb-1 block text-muted-foreground">{tr("إلى", "To")}</span>
               <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
                 className="w-full rounded-md border border-border bg-background px-2 py-2 text-xs" />
             </label>
@@ -322,26 +336,26 @@ function OrdersPage() {
       {/* Bulk actions bar */}
       {selected.size > 0 && (
         <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
-          <span className="text-xs font-medium text-primary">{selected.size} محدد</span>
+          <span className="text-xs font-medium text-primary">{selected.size} {tr("محدد", "selected")}</span>
           <select value={bulkAction} onChange={(e) => setBulkAction(e.target.value)}
             className="rounded-md border border-border bg-background px-2 py-1 text-xs">
-            <option value="">— اختر إجراء —</option>
-            <option value="export">تصدير المحدد (CSV)</option>
-            <option value="print_invoices">طباعة فواتير</option>
-            <option value="print_awb">طباعة بوالص الشحن</option>
-            <option value="mark_reviewed">تأشير "تمت المراجعة"</option>
-            <optgroup label="تغيير الحالة">
+            <option value="">{tr("— اختر إجراء —", "— Choose action —")}</option>
+            <option value="export">{tr("تصدير المحدد (CSV)", "Export selected (CSV)")}</option>
+            <option value="print_invoices">{tr("طباعة فواتير", "Print invoices")}</option>
+            <option value="print_awb">{tr("طباعة بوالص الشحن", "Print shipping labels")}</option>
+            <option value="mark_reviewed">{tr('تأشير "تمت المراجعة"', 'Mark as "Reviewed"')}</option>
+            <optgroup label={tr("تغيير الحالة", "Change status")}>
               {ORDER_STATUSES.map((s) => (
-                <option key={s} value={`status:${s}`}>إلى: {ORDER_STATUS_LABEL[s]}</option>
+                <option key={s} value={`status:${s}`}>{tr("إلى:", "To:")} {ORDER_LABEL[s]}</option>
               ))}
             </optgroup>
           </select>
           <button onClick={runBulk} disabled={!bulkAction}
             className="rounded-md bg-primary px-3 py-1 text-xs text-primary-foreground disabled:opacity-50">
-            تنفيذ
+            {tr("تنفيذ", "Apply")}
           </button>
           <button onClick={() => setSelected(new Set())} className="rounded-md border border-border px-2 py-1 text-xs">
-            إلغاء التحديد
+            {tr("إلغاء التحديد", "Clear selection")}
           </button>
         </div>
       )}
@@ -349,9 +363,9 @@ function OrdersPage() {
       {/* Table */}
       <div className="overflow-x-auto rounded-xl border border-border bg-card">
         {loading ? (
-          <p className="p-8 text-center text-sm text-muted-foreground">جاري التحميل...</p>
+          <p className="p-8 text-center text-sm text-muted-foreground">{tr("جاري التحميل...", "Loading...")}</p>
         ) : orders.length === 0 ? (
-          <p className="p-8 text-center text-sm text-muted-foreground">لا توجد طلبات تطابق الفلاتر</p>
+          <p className="p-8 text-center text-sm text-muted-foreground">{tr("لا توجد طلبات تطابق الفلاتر", "No orders match the filters")}</p>
         ) : (
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-muted/30 text-right text-[11px] text-muted-foreground">
@@ -359,16 +373,16 @@ function OrdersPage() {
                 <th className="p-2.5 w-8">
                   <input type="checkbox" checked={selected.size === orders.length} onChange={toggleAll} />
                 </th>
-                <th className="p-2.5">رقم الطلب</th>
-                <th className="p-2.5">التاريخ</th>
-                <th className="p-2.5">العميل</th>
-                <th className="p-2.5">المدينة</th>
-                <th className="p-2.5">الإجمالي</th>
-                <th className="p-2.5">الدفع</th>
-                <th className="p-2.5">الطلب</th>
-                <th className="p-2.5">الشحن</th>
-                <th className="p-2.5">شركة/تتبع</th>
-                <th className="p-2.5">المصدر</th>
+                <th className="p-2.5">{tr("رقم الطلب", "Order #")}</th>
+                <th className="p-2.5">{tr("التاريخ", "Date")}</th>
+                <th className="p-2.5">{tr("العميل", "Customer")}</th>
+                <th className="p-2.5">{tr("المدينة", "City")}</th>
+                <th className="p-2.5">{tr("الإجمالي", "Total")}</th>
+                <th className="p-2.5">{tr("الدفع", "Payment")}</th>
+                <th className="p-2.5">{tr("الطلب", "Order")}</th>
+                <th className="p-2.5">{tr("الشحن", "Shipping")}</th>
+                <th className="p-2.5">{tr("شركة/تتبع", "Carrier/Track")}</th>
+                <th className="p-2.5">{tr("المصدر", "Source")}</th>
                 <th className="p-2.5"></th>
               </tr>
             </thead>
@@ -385,21 +399,21 @@ function OrdersPage() {
                       <Link to="/admin/orders/$id" params={{ id: o.id }} className="font-mono text-xs font-medium text-primary hover:underline">
                         {o.order_number}
                       </Link>
-                      {isOverdue && <div className="mt-0.5 flex items-center gap-1 text-[10px] text-red-600"><AlertTriangle className="h-3 w-3" /> متأخر</div>}
+                      {isOverdue && <div className="mt-0.5 flex items-center gap-1 text-[10px] text-red-600"><AlertTriangle className="h-3 w-3" /> {tr("متأخر", "Overdue")}</div>}
                     </td>
                     <td className="p-2.5 text-[11px] text-muted-foreground whitespace-nowrap">
-                      {new Date(o.created_at).toLocaleDateString("ar", { day: "numeric", month: "short" })}
-                      <div className="text-[10px]">{new Date(o.created_at).toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit" })}</div>
+                      {new Date(o.created_at).toLocaleDateString(locale, { day: "numeric", month: "short" })}
+                      <div className="text-[10px]">{new Date(o.created_at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}</div>
                     </td>
                     <td className="p-2.5">
                       <div className="text-xs font-medium text-foreground">{o.customer_name}</div>
                       <div className="text-[11px] text-muted-foreground">{o.customer_phone}</div>
                     </td>
                     <td className="p-2.5 text-[11px]">{o.shipping_address?.city ?? "—"}</td>
-                    <td className="p-2.5 text-xs font-semibold whitespace-nowrap">{Number(o.total).toLocaleString("ar-SA")} {o.currency}</td>
-                    <td className="p-2.5"><Pill label={PAYMENT_STATUS_LABEL[o.payment_status] ?? o.payment_status} color={PAYMENT_STATUS_COLOR[o.payment_status] ?? "bg-gray-100"} /></td>
-                    <td className="p-2.5"><Pill label={ORDER_STATUS_LABEL[o.status] ?? o.status} color={ORDER_STATUS_COLOR[o.status] ?? "bg-gray-100"} /></td>
-                    <td className="p-2.5"><Pill label={SHIPPING_STATUS_LABEL[o.shipping_status] ?? o.shipping_status} color={SHIPPING_STATUS_COLOR[o.shipping_status] ?? "bg-gray-100"} /></td>
+                    <td className="p-2.5 text-xs font-semibold whitespace-nowrap">{Number(o.total).toLocaleString(locale)} {o.currency}</td>
+                    <td className="p-2.5"><Pill label={PAYMENT_LABEL[o.payment_status] ?? o.payment_status} color={PAYMENT_STATUS_COLOR[o.payment_status] ?? "bg-gray-100"} /></td>
+                    <td className="p-2.5"><Pill label={ORDER_LABEL[o.status] ?? o.status} color={ORDER_STATUS_COLOR[o.status] ?? "bg-gray-100"} /></td>
+                    <td className="p-2.5"><Pill label={SHIPPING_LABEL[o.shipping_status] ?? o.shipping_status} color={SHIPPING_STATUS_COLOR[o.shipping_status] ?? "bg-gray-100"} /></td>
                     <td className="p-2.5 text-[11px]">
                       {o.shipping_carrier && <div className="font-medium">{o.shipping_carrier}</div>}
                       {o.tracking_number && (
@@ -407,37 +421,37 @@ function OrdersPage() {
                       )}
                       {!o.shipping_carrier && !o.tracking_number && <span className="text-muted-foreground">—</span>}
                     </td>
-                    <td className="p-2.5 text-[11px] text-muted-foreground">{ORDER_SOURCE_LABEL[o.source] ?? o.source}</td>
+                    <td className="p-2.5 text-[11px] text-muted-foreground">{SOURCE_LABEL[o.source] ?? o.source}</td>
                     <td className="p-2.5">
                       <div className="flex items-center gap-0.5">
-                        <Link to="/admin/orders/$id" params={{ id: o.id }} title="عرض"
+                        <Link to="/admin/orders/$id" params={{ id: o.id }} title={tr("عرض", "View")}
                           className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
                           <Eye className="h-3.5 w-3.5" />
                         </Link>
-                        <button onClick={() => navigator.clipboard.writeText(o.order_number)} title="نسخ الرقم"
+                        <button onClick={() => navigator.clipboard.writeText(o.order_number)} title={tr("نسخ الرقم", "Copy number")}
                           className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
                           <Copy className="h-3.5 w-3.5" />
                         </button>
-                        <a href={`/admin/orders/${o.id}/invoice`} target="_blank" rel="noreferrer" title="طباعة الفاتورة"
+                        <a href={`/admin/orders/${o.id}/invoice`} target="_blank" rel="noreferrer" title={tr("طباعة الفاتورة", "Print invoice")}
                           className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
                           <Printer className="h-3.5 w-3.5" />
                         </a>
                         {wa && (
-                          <a href={`https://wa.me/${wa}?text=${encodeURIComponent(`مرحباً، بخصوص طلبك ${o.order_number}`)}`}
-                            target="_blank" rel="noreferrer" title="واتساب"
+                          <a href={`https://wa.me/${wa}?text=${encodeURIComponent(tr(`مرحباً، بخصوص طلبك ${o.order_number}`, `Hello, regarding your order ${o.order_number}`))}`}
+                            target="_blank" rel="noreferrer" title="WhatsApp"
                             className="rounded p-1.5 text-green-600 hover:bg-green-50">
                             <MessageCircle className="h-3.5 w-3.5" />
                           </a>
                         )}
                         {o.customer_email && (
-                          <a href={`mailto:${o.customer_email}?subject=${encodeURIComponent("طلبك " + o.order_number)}`}
-                            title="إيميل" className="rounded p-1.5 text-muted-foreground hover:bg-muted">
+                          <a href={`mailto:${o.customer_email}?subject=${encodeURIComponent(tr("طلبك " + o.order_number, "Your order " + o.order_number))}`}
+                            title={tr("إيميل", "Email")} className="rounded p-1.5 text-muted-foreground hover:bg-muted">
                             <Mail className="h-3.5 w-3.5" />
                           </a>
                         )}
                         {o.shipping_address?.lat && o.shipping_address?.lng && (
                           <a href={`https://www.google.com/maps?q=${o.shipping_address.lat},${o.shipping_address.lng}`}
-                            target="_blank" rel="noreferrer" title="موقع العميل"
+                            target="_blank" rel="noreferrer" title={tr("موقع العميل", "Customer location")}
                             className="rounded p-1.5 text-blue-600 hover:bg-blue-50">
                             <MapPin className="h-3.5 w-3.5" />
                           </a>
@@ -456,10 +470,10 @@ function OrdersPage() {
       {pageCount > 1 && (
         <div className="mt-4 flex items-center justify-center gap-2">
           <button disabled={page === 0} onClick={() => setPage((p) => p - 1)}
-            className="rounded-md border border-border px-3 py-1.5 text-xs disabled:opacity-40">السابق</button>
-          <span className="text-xs text-muted-foreground">صفحة {page + 1} / {pageCount}</span>
+            className="rounded-md border border-border px-3 py-1.5 text-xs disabled:opacity-40">{tr("السابق", "Previous")}</button>
+          <span className="text-xs text-muted-foreground">{tr("صفحة", "Page")} {page + 1} / {pageCount}</span>
           <button disabled={page + 1 >= pageCount} onClick={() => setPage((p) => p + 1)}
-            className="rounded-md border border-border px-3 py-1.5 text-xs disabled:opacity-40">التالي</button>
+            className="rounded-md border border-border px-3 py-1.5 text-xs disabled:opacity-40">{tr("التالي", "Next")}</button>
         </div>
       )}
     </AdminShell>
