@@ -1,4 +1,1 @@
 project_id = "wttdhpbghikiofezumaq"
-
-[functions.translate-batch]
-verify_jwt = false
