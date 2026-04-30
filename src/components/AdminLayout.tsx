@@ -385,7 +385,7 @@ export function AdminShell({ children }: { children?: ReactNode }) {
           )}
         </header>
 
-        <main key={location.pathname} className="flex-1 overflow-x-auto p-4 lg:p-6 animate-in fade-in duration-200">
+        <main className="flex-1 overflow-x-auto p-4 lg:p-6">
           {children ?? <Outlet />}
         </main>
       </div>

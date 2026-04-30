@@ -211,7 +211,7 @@ export async function logError(code: ErrorCode, opts: LogErrorOptions = {}) {
 }
 
 // ---------- Offline buffer ----------
-const BUFFER_KEY = "lovable_error_buffer";
+const BUFFER_KEY = "lppme_error_buffer";
 
 function bufferOffline(payload: Record<string, unknown>) {
   if (typeof localStorage === "undefined") return;

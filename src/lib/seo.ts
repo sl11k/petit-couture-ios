@@ -8,11 +8,10 @@
 
 export const SITE = {
   name: "Le Petit Paradis",
-  url: "https://golden-boutique-ios.lovable.app",
-  defaultImage:
-    "https://golden-boutique-ios.lovable.app/og-default.jpg",
+  url: "https://lppme.com",
+  defaultImage: "https://lppme.com/og-default.jpg",
   locale: "ar_SA",
-  twitter: "@maisonnet",
+  twitter: "@lppme",
   themeColor: "#F8F5EF",
 };
 
@@ -170,9 +169,9 @@ export function organizationJsonLd() {
     url: SITE.url,
     logo: `${SITE.url}/logo.png`,
     sameAs: [
-      "https://instagram.com/maisonnet",
-      "https://twitter.com/maisonnet",
-      "https://facebook.com/maisonnet",
+      "https://instagram.com/lppme",
+      "https://twitter.com/lppme",
+      "https://facebook.com/lppme",
     ],
     contactPoint: [
       {

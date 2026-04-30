@@ -27,6 +27,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as WishlistShareRouteImport } from './routes/wishlist.share'
 import { Route as SupportNewRouteImport } from './routes/support.new'
+import { Route as PageSlugRouteImport } from './routes/page.$slug'
 import { Route as OrderConfirmationOrderNumberRouteImport } from './routes/order-confirmation.$orderNumber'
 import { Route as LandingSlugRouteImport } from './routes/landing.$slug'
 import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
@@ -173,6 +174,11 @@ const WishlistShareRoute = WishlistShareRouteImport.update({
 const SupportNewRoute = SupportNewRouteImport.update({
   id: '/support/new',
   path: '/support/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PageSlugRoute = PageSlugRouteImport.update({
+  id: '/page/$slug',
+  path: '/page/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrderConfirmationOrderNumberRoute =
@@ -524,6 +530,7 @@ export interface FileRoutesByFullPath {
   '/invoice/$id': typeof InvoiceIdRoute
   '/landing/$slug': typeof LandingSlugRoute
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
+  '/page/$slug': typeof PageSlugRoute
   '/support/new': typeof SupportNewRoute
   '/wishlist/share': typeof WishlistShareRoute
   '/admin/': typeof AdminIndexRoute
@@ -600,6 +607,7 @@ export interface FileRoutesByTo {
   '/invoice/$id': typeof InvoiceIdRoute
   '/landing/$slug': typeof LandingSlugRoute
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
+  '/page/$slug': typeof PageSlugRoute
   '/support/new': typeof SupportNewRoute
   '/wishlist/share': typeof WishlistShareRoute
   '/admin': typeof AdminIndexRoute
@@ -678,6 +686,7 @@ export interface FileRoutesById {
   '/invoice/$id': typeof InvoiceIdRoute
   '/landing/$slug': typeof LandingSlugRoute
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
+  '/page/$slug': typeof PageSlugRoute
   '/support/new': typeof SupportNewRoute
   '/wishlist/share': typeof WishlistShareRoute
   '/admin/': typeof AdminIndexRoute
@@ -757,6 +766,7 @@ export interface FileRouteTypes {
     | '/invoice/$id'
     | '/landing/$slug'
     | '/order-confirmation/$orderNumber'
+    | '/page/$slug'
     | '/support/new'
     | '/wishlist/share'
     | '/admin/'
@@ -833,6 +843,7 @@ export interface FileRouteTypes {
     | '/invoice/$id'
     | '/landing/$slug'
     | '/order-confirmation/$orderNumber'
+    | '/page/$slug'
     | '/support/new'
     | '/wishlist/share'
     | '/admin'
@@ -910,6 +921,7 @@ export interface FileRouteTypes {
     | '/invoice/$id'
     | '/landing/$slug'
     | '/order-confirmation/$orderNumber'
+    | '/page/$slug'
     | '/support/new'
     | '/wishlist/share'
     | '/admin/'
@@ -949,6 +961,7 @@ export interface RootRouteChildren {
   InvoiceIdRoute: typeof InvoiceIdRoute
   LandingSlugRoute: typeof LandingSlugRoute
   OrderConfirmationOrderNumberRoute: typeof OrderConfirmationOrderNumberRoute
+  PageSlugRoute: typeof PageSlugRoute
   SupportNewRoute: typeof SupportNewRoute
   ApiPublicPaymentWebhookRoute: typeof ApiPublicPaymentWebhookRoute
   ApiPublicShippingWebhookRoute: typeof ApiPublicShippingWebhookRoute
@@ -1084,6 +1097,13 @@ declare module '@tanstack/react-router' {
       path: '/support/new'
       fullPath: '/support/new'
       preLoaderRoute: typeof SupportNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/page/$slug': {
+      id: '/page/$slug'
+      path: '/page/$slug'
+      fullPath: '/page/$slug'
+      preLoaderRoute: typeof PageSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/order-confirmation/$orderNumber': {
@@ -1671,6 +1691,7 @@ const rootRouteChildren: RootRouteChildren = {
   InvoiceIdRoute: InvoiceIdRoute,
   LandingSlugRoute: LandingSlugRoute,
   OrderConfirmationOrderNumberRoute: OrderConfirmationOrderNumberRoute,
+  PageSlugRoute: PageSlugRoute,
   SupportNewRoute: SupportNewRoute,
   ApiPublicPaymentWebhookRoute: ApiPublicPaymentWebhookRoute,
   ApiPublicShippingWebhookRoute: ApiPublicShippingWebhookRoute,
