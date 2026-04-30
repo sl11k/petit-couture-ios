@@ -15,6 +15,7 @@ import {
   type HomeSectionDataSource,
 } from "@/lib/storefront";
 import { categories as seedCategories } from "@/data/categories";
+import { SelectedProductsList } from "@/components/admin/ProductPicker";
 
 export const Route = createFileRoute("/admin/home-builder")({
   component: HomeBuilderPage,
