@@ -356,7 +356,7 @@ function CategoryRow({
 // ============= Form =============
 
 function CategoryForm({
-  editing, setEditing, allCats, tab, setTab, onSave, onCancel,
+  editing, setEditing, allCats, tab, setTab, onSave, onCancel, tr, lang,
 }: {
   editing: Partial<Cat>;
   setEditing: (c: Partial<Cat>) => void;
@@ -364,6 +364,7 @@ function CategoryForm({
   tab: "basic" | "media" | "seo" | "rules";
   setTab: (t: "basic" | "media" | "seo" | "rules") => void;
   onSave: () => void; onCancel: () => void;
+  tr: TrFn; lang: string;
 }) {
   const rules: DisplayRules = editing.display_rules ?? defaultRules;
   const parentOptions = allCats.filter((c) => c.id !== editing.id && !c.parent_id);
@@ -371,14 +372,14 @@ function CategoryForm({
   return (
     <div className="mb-4 rounded-xl border border-primary/30 bg-primary/5 p-4">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold">{editing.id ? "تعديل قسم" : "قسم جديد"}</h2>
+        <h2 className="text-sm font-semibold">{editing.id ? tr("تعديل قسم", "Edit category") : tr("قسم جديد", "New category")}</h2>
         <div className="flex gap-1 rounded-md bg-background p-1 text-xs">
           {(["basic", "media", "seo", "rules"] as const).map((t) => (
             <button
               key={t} onClick={() => setTab(t)}
               className={`rounded px-2.5 py-1 ${tab === t ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
             >
-              {t === "basic" ? "أساسي" : t === "media" ? "الوسائط" : t === "seo" ? "SEO" : "قواعد العرض"}
+              {t === "basic" ? tr("أساسي", "Basic") : t === "media" ? tr("الوسائط", "Media") : t === "seo" ? "SEO" : tr("قواعد العرض", "Display rules")}
             </button>
           ))}
         </div>
@@ -386,37 +387,37 @@ function CategoryForm({
 
       {tab === "basic" && (
         <div className="grid gap-3 md:grid-cols-2">
-          <Field label="القسم الأب (لإنشاء قسم فرعي)">
+          <Field label={tr("القسم الأب (لإنشاء قسم فرعي)", "Parent category (for sub-categories)")}>
             <select
               value={editing.parent_id ?? ""}
               onChange={(e) => setEditing({ ...editing, parent_id: e.target.value || null })}
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
             >
-              <option value="">— قسم رئيسي —</option>
+              <option value="">{tr("— قسم رئيسي —", "— Top-level —")}</option>
               {parentOptions.map((c) => (
-                <option key={c.id} value={c.id}>{c.name_ar}</option>
+                <option key={c.id} value={c.id}>{lang === "ar" ? c.name_ar : (c.name_en || c.name_ar)}</option>
               ))}
             </select>
           </Field>
-          <Input label="الترتيب" type="number" value={String(editing.display_order ?? 0)}
+          <Input label={tr("الترتيب", "Order")} type="number" value={String(editing.display_order ?? 0)}
             onChange={(v) => setEditing({ ...editing, display_order: Number(v) })} />
-          <Input label="الاسم بالعربية *" value={editing.name_ar ?? ""}
+          <Input label={tr("الاسم بالعربية *", "Arabic name *")} value={editing.name_ar ?? ""}
             onChange={(v) => setEditing({ ...editing, name_ar: v })} />
-          <Input label="الاسم بالإنجليزية" value={editing.name_en ?? ""}
+          <Input label={tr("الاسم بالإنجليزية", "English name")} value={editing.name_en ?? ""}
             onChange={(v) => setEditing({ ...editing, name_en: v })} />
-          <Input label="الرابط (slug) *" value={editing.slug ?? ""}
+          <Input label={tr("الرابط (slug) *", "URL slug *")} value={editing.slug ?? ""}
             onChange={(v) => setEditing({ ...editing, slug: v.toLowerCase().replace(/\s+/g, "-") })} />
           <label className="flex items-end gap-2 text-sm">
             <input type="checkbox" checked={editing.is_active ?? true}
               onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })} />
-            القسم نشط (ظاهر في المتجر)
+            {tr("القسم نشط (ظاهر في المتجر)", "Active (visible in store)")}
           </label>
-          <Field label="الوصف بالعربية">
+          <Field label={tr("الوصف بالعربية", "Arabic description")}>
             <textarea rows={3} value={editing.description_ar ?? ""}
               onChange={(e) => setEditing({ ...editing, description_ar: e.target.value })}
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
           </Field>
-          <Field label="الوصف بالإنجليزية">
+          <Field label={tr("الوصف بالإنجليزية", "English description")}>
             <textarea rows={3} value={editing.description_en ?? ""}
               onChange={(e) => setEditing({ ...editing, description_en: e.target.value })}
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
@@ -426,26 +427,26 @@ function CategoryForm({
 
       {tab === "media" && (
         <div className="grid gap-3 md:grid-cols-2">
-          <Input label="رابط صورة القسم" value={editing.image_url ?? ""}
+          <Input label={tr("رابط صورة القسم", "Category image URL")} value={editing.image_url ?? ""}
             onChange={(v) => setEditing({ ...editing, image_url: v })} />
-          <Input label="نص بديل للصورة (Alt)" value={editing.image_alt ?? ""}
+          <Input label={tr("نص بديل للصورة (Alt)", "Image alt text")} value={editing.image_alt ?? ""}
             onChange={(v) => setEditing({ ...editing, image_alt: v })} />
-          <Input label="أيقونة (إيموجي أو رمز)" value={editing.icon ?? ""}
+          <Input label={tr("أيقونة (إيموجي أو رمز)", "Icon (emoji or symbol)")} value={editing.icon ?? ""}
             onChange={(v) => setEditing({ ...editing, icon: v })} />
           <div />
-          <Input label="رابط بانر القسم" value={editing.banner_url ?? ""}
+          <Input label={tr("رابط بانر القسم", "Category banner URL")} value={editing.banner_url ?? ""}
             onChange={(v) => setEditing({ ...editing, banner_url: v })} />
-          <Input label="رابط النقر على البانر" value={editing.banner_link ?? ""}
+          <Input label={tr("رابط النقر على البانر", "Banner click URL")} value={editing.banner_link ?? ""}
             onChange={(v) => setEditing({ ...editing, banner_link: v })} />
           {editing.image_url && (
             <div className="md:col-span-2">
-              <p className="mb-1 text-xs text-muted-foreground">معاينة الصورة:</p>
+              <p className="mb-1 text-xs text-muted-foreground">{tr("معاينة الصورة:", "Image preview:")}</p>
               <img src={editing.image_url} alt="" className="h-24 w-24 rounded-lg object-cover" />
             </div>
           )}
           {editing.banner_url && (
             <div className="md:col-span-2">
-              <p className="mb-1 text-xs text-muted-foreground">معاينة البانر:</p>
+              <p className="mb-1 text-xs text-muted-foreground">{tr("معاينة البانر:", "Banner preview:")}</p>
               <img src={editing.banner_url} alt="" className="h-32 w-full rounded-lg object-cover" />
             </div>
           )}
@@ -456,7 +457,7 @@ function CategoryForm({
         <div className="grid gap-3 md:grid-cols-2">
           <Input label="Meta Title" value={editing.meta_title ?? ""}
             onChange={(v) => setEditing({ ...editing, meta_title: v })} />
-          <Input label="OG Image (للمشاركة)" value={editing.og_image ?? ""}
+          <Input label={tr("OG Image (للمشاركة)", "OG Image (for sharing)")} value={editing.og_image ?? ""}
             onChange={(v) => setEditing({ ...editing, og_image: v })} />
           <Field label="Meta Description">
             <textarea rows={3} value={editing.meta_description ?? ""}
@@ -464,11 +465,11 @@ function CategoryForm({
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm md:col-span-2" />
           </Field>
           <div className="md:col-span-2 rounded-lg border border-border bg-background p-3">
-            <p className="mb-1 text-xs text-muted-foreground">معاينة Google:</p>
+            <p className="mb-1 text-xs text-muted-foreground">{tr("معاينة Google:", "Google preview:")}</p>
             <div className="text-xs">
-              <div className="text-blue-700">{editing.meta_title || editing.name_ar || "عنوان القسم"}</div>
+              <div className="text-blue-700">{editing.meta_title || (lang === "ar" ? editing.name_ar : editing.name_en) || tr("عنوان القسم", "Category title")}</div>
               <div className="text-green-700">/{editing.slug || "slug"}</div>
-              <div className="text-muted-foreground">{editing.meta_description || editing.description_ar || "وصف القسم..."}</div>
+              <div className="text-muted-foreground">{editing.meta_description || (lang === "ar" ? editing.description_ar : editing.description_en) || tr("وصف القسم...", "Category description...")}</div>
             </div>
           </div>
         </div>
@@ -476,28 +477,28 @@ function CategoryForm({
 
       {tab === "rules" && (
         <div className="space-y-4">
-          <Field label="ترتيب المنتجات الافتراضي">
+          <Field label={tr("ترتيب المنتجات الافتراضي", "Default product sort")}>
             <select
               value={rules.sort}
               onChange={(e) => setEditing({ ...editing, display_rules: { ...rules, sort: e.target.value as any } })}
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
             >
-              <option value="manual">يدوي (حسب ترتيب الربط)</option>
-              <option value="newest">الأحدث أولاً</option>
-              <option value="best_selling">الأكثر مبيعاً</option>
-              <option value="price_asc">السعر: من الأقل</option>
-              <option value="price_desc">السعر: من الأعلى</option>
+              <option value="manual">{tr("يدوي (حسب ترتيب الربط)", "Manual (by linking order)")}</option>
+              <option value="newest">{tr("الأحدث أولاً", "Newest first")}</option>
+              <option value="best_selling">{tr("الأكثر مبيعاً", "Best selling")}</option>
+              <option value="price_asc">{tr("السعر: من الأقل", "Price: low to high")}</option>
+              <option value="price_desc">{tr("السعر: من الأعلى", "Price: high to low")}</option>
             </select>
           </Field>
           <div>
-            <p className="mb-2 text-xs text-muted-foreground">الفلاتر المتاحة في صفحة القسم:</p>
+            <p className="mb-2 text-xs text-muted-foreground">{tr("الفلاتر المتاحة في صفحة القسم:", "Filters available on category page:")}</p>
             <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
               {([
-                ["price", "السعر"], ["color", "اللون"], ["size", "المقاس"],
-                ["brand", "العلامة"], ["availability", "التوفر"], ["rating", "التقييم"],
+                ["price", tr("السعر", "Price")], ["color", tr("اللون", "Color")], ["size", tr("المقاس", "Size")],
+                ["brand", tr("العلامة", "Brand")], ["availability", tr("التوفر", "Availability")], ["rating", tr("التقييم", "Rating")],
               ] as const).map(([key, label]) => (
                 <label key={key} className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm">
-                  <input type="checkbox" checked={rules.filters[key]}
+                  <input type="checkbox" checked={rules.filters[key as keyof typeof rules.filters]}
                     onChange={(e) => setEditing({
                       ...editing,
                       display_rules: { ...rules, filters: { ...rules.filters, [key]: e.target.checked } },
@@ -512,10 +513,10 @@ function CategoryForm({
 
       <div className="mt-4 flex gap-2 border-t border-border pt-3">
         <button onClick={onSave} className="flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground">
-          <Save className="h-3.5 w-3.5" /> حفظ
+          <Save className="h-3.5 w-3.5" /> {tr("حفظ", "Save")}
         </button>
         <button onClick={onCancel} className="flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs">
-          <X className="h-3.5 w-3.5" /> إلغاء
+          <X className="h-3.5 w-3.5" /> {tr("إلغاء", "Cancel")}
         </button>
       </div>
     </div>
