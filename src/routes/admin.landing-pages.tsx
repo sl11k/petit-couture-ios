@@ -303,6 +303,7 @@ function PageEditor({
           </div>
         </header>
 
+        <div className="grid lg:grid-cols-[1fr_360px] gap-0">
         <div className="p-5 space-y-5">
           <div className="grid grid-cols-2 gap-3">
             <Field label={ar ? "العنوان" : "Title"}>
