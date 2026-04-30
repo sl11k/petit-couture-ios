@@ -4,14 +4,28 @@ import { Instagram, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { fetchStorefrontSettings, type StorefrontSettings } from "@/lib/storefront";
 import { BrandLogo, BRAND_NAME } from "@/components/Logo";
+import { supabase } from "@/integrations/supabase/client";
+
+type ContentPageLink = { slug: string; title_ar: string; title_en: string };
 
 export function Footer() {
   const { lang, isRTL } = useLanguage();
   const ar = lang === "ar";
   const [settings, setSettings] = useState<StorefrontSettings | null>(null);
+  const [pages, setPages] = useState<ContentPageLink[]>([]);
 
   useEffect(() => {
     fetchStorefrontSettings().then(setSettings).catch(() => {/* noop */});
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("content_pages")
+          .select("slug,title_ar,title_en")
+          .eq("is_published", true)
+          .order("sort_order", { ascending: true });
+        setPages((data as ContentPageLink[]) ?? []);
+      } catch { /* noop */ }
+    })();
   }, []);
 
   const about = ar
@@ -58,6 +72,17 @@ export function Footer() {
               <li><Link to="/contact" className="hover:text-gold transition">{ar ? "تواصل معنا" : "Contact us"}</Link></li>
               <li><Link to="/track-order" className="hover:text-gold transition">{ar ? "تتبع الطلب" : "Track order"}</Link></li>
               <li><Link to="/privacy" className="hover:text-gold transition">{ar ? "الخصوصية" : "Privacy"}</Link></li>
+              {pages.map((p) => (
+                <li key={p.slug}>
+                  <Link
+                    to="/page/$slug"
+                    params={{ slug: p.slug }}
+                    className="hover:text-gold transition"
+                  >
+                    {ar ? p.title_ar : p.title_en}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
