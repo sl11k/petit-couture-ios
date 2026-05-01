@@ -16,6 +16,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as OurStoryRouteImport } from './routes/our-story'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -119,6 +120,11 @@ const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OurStoryRoute = OurStoryRouteImport.update({
+  id: '/our-story',
+  path: '/our-story',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -478,6 +484,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
+  '/our-story': typeof OurStoryRoute
   '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/search': typeof SearchRoute
@@ -555,6 +562,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
+  '/our-story': typeof OurStoryRoute
   '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/search': typeof SearchRoute
@@ -634,6 +642,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
+  '/our-story': typeof OurStoryRoute
   '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/search': typeof SearchRoute
@@ -714,6 +723,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/help'
     | '/login'
+    | '/our-story'
     | '/privacy'
     | '/robots.txt'
     | '/search'
@@ -791,6 +801,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/help'
     | '/login'
+    | '/our-story'
     | '/privacy'
     | '/robots.txt'
     | '/search'
@@ -869,6 +880,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/help'
     | '/login'
+    | '/our-story'
     | '/privacy'
     | '/robots.txt'
     | '/search'
@@ -948,6 +960,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   HelpRoute: typeof HelpRoute
   LoginRoute: typeof LoginRoute
+  OurStoryRoute: typeof OurStoryRoute
   PrivacyRoute: typeof PrivacyRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SearchRoute: typeof SearchRoute
@@ -1020,6 +1033,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/our-story': {
+      id: '/our-story'
+      path: '/our-story'
+      fullPath: '/our-story'
+      preLoaderRoute: typeof OurStoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -1678,6 +1698,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   HelpRoute: HelpRoute,
   LoginRoute: LoginRoute,
+  OurStoryRoute: OurStoryRoute,
   PrivacyRoute: PrivacyRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SearchRoute: SearchRoute,
