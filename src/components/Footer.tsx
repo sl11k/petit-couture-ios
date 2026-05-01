@@ -68,6 +68,7 @@ export function Footer() {
               {ar ? "خدمة العملاء" : "Customer Care"}
             </h3>
             <ul className="space-y-2 text-[13px]">
+              <li><Link to="/our-story" className="hover:text-gold transition">{ar ? "قصتنا" : "Our Story"}</Link></li>
               <li><Link to="/help" className="hover:text-gold transition">{ar ? "الأسئلة الشائعة" : "FAQ"}</Link></li>
               <li><Link to="/contact" className="hover:text-gold transition">{ar ? "تواصل معنا" : "Contact us"}</Link></li>
               <li><Link to="/track-order" className="hover:text-gold transition">{ar ? "تتبع الطلب" : "Track order"}</Link></li>
