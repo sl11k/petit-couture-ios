@@ -54,9 +54,9 @@ async function loadCategory(slug: string): Promise<{
     // Try category_products link table first
     const { data: links } = await supabase
       .from("category_products")
-      .select("product_id, sort_order")
+      .select("product_id, display_order")
       .eq("category_id", category.id)
-      .order("sort_order", { ascending: true });
+      .order("display_order", { ascending: true });
 
     const ids = (links ?? []).map((l: any) => l.product_id);
     if (ids.length > 0) {
