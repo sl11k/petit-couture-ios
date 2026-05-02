@@ -35,11 +35,11 @@ import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
 import { buildMeta, productJsonLd, breadcrumbJsonLd, canonical } from "@/lib/seo";
 import { devValidateJsonLd } from "@/lib/seoValidate";
 
-export const Route = createFileRoute("/category/$slug")({
+export const Route = createFileRoute("/product/$slug")({
   head: ({ params }) => {
     const cat = categories.find((c) => c.slug === params.slug);
     const product = productsByCategory[params.slug];
-    const path = `/category/${params.slug}`;
+    const path = `/product/${params.slug}`;
     if (!cat) {
       return buildMeta({
         title: "غير موجود — Le Petit Paradis",
