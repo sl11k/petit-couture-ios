@@ -35,6 +35,7 @@ import { Route as LandingSlugRouteImport } from './routes/landing.$slug'
 import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
 import { Route as DebugAnalyticsRouteImport } from './routes/debug.analytics'
 import { Route as CollectionSlugRouteImport } from './routes/collection.$slug'
+import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as AdminWebhooksRouteImport } from './routes/admin.webhooks'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminSupportRouteImport } from './routes/admin.support'
@@ -216,6 +217,11 @@ const DebugAnalyticsRoute = DebugAnalyticsRouteImport.update({
 const CollectionSlugRoute = CollectionSlugRouteImport.update({
   id: '/collection/$slug',
   path: '/collection/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CategorySlugRoute = CategorySlugRouteImport.update({
+  id: '/category/$slug',
+  path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminWebhooksRoute = AdminWebhooksRouteImport.update({
@@ -531,6 +537,7 @@ export interface FileRoutesByFullPath {
   '/admin/support': typeof AdminSupportRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/webhooks': typeof AdminWebhooksRoute
+  '/category/$slug': typeof CategorySlugRoute
   '/collection/$slug': typeof CollectionSlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
   '/invoice/$id': typeof InvoiceIdRoute
@@ -609,6 +616,7 @@ export interface FileRoutesByTo {
   '/admin/support': typeof AdminSupportRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/webhooks': typeof AdminWebhooksRoute
+  '/category/$slug': typeof CategorySlugRoute
   '/collection/$slug': typeof CollectionSlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
   '/invoice/$id': typeof InvoiceIdRoute
@@ -689,6 +697,7 @@ export interface FileRoutesById {
   '/admin/support': typeof AdminSupportRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/webhooks': typeof AdminWebhooksRoute
+  '/category/$slug': typeof CategorySlugRoute
   '/collection/$slug': typeof CollectionSlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
   '/invoice/$id': typeof InvoiceIdRoute
@@ -770,6 +779,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/users'
     | '/admin/webhooks'
+    | '/category/$slug'
     | '/collection/$slug'
     | '/debug/analytics'
     | '/invoice/$id'
@@ -848,6 +858,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/users'
     | '/admin/webhooks'
+    | '/category/$slug'
     | '/collection/$slug'
     | '/debug/analytics'
     | '/invoice/$id'
@@ -927,6 +938,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/users'
     | '/admin/webhooks'
+    | '/category/$slug'
     | '/collection/$slug'
     | '/debug/analytics'
     | '/invoice/$id'
@@ -968,6 +980,7 @@ export interface RootRouteChildren {
   TrackOrderRoute: typeof TrackOrderRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   WishlistRoute: typeof WishlistRouteWithChildren
+  CategorySlugRoute: typeof CategorySlugRoute
   CollectionSlugRoute: typeof CollectionSlugRoute
   DebugAnalyticsRoute: typeof DebugAnalyticsRoute
   InvoiceIdRoute: typeof InvoiceIdRoute
@@ -1166,6 +1179,13 @@ declare module '@tanstack/react-router' {
       path: '/collection/$slug'
       fullPath: '/collection/$slug'
       preLoaderRoute: typeof CollectionSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/category/$slug': {
+      id: '/category/$slug'
+      path: '/category/$slug'
+      fullPath: '/category/$slug'
+      preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/webhooks': {
@@ -1706,6 +1726,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrackOrderRoute: TrackOrderRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   WishlistRoute: WishlistRouteWithChildren,
+  CategorySlugRoute: CategorySlugRoute,
   CollectionSlugRoute: CollectionSlugRoute,
   DebugAnalyticsRoute: DebugAnalyticsRoute,
   InvoiceIdRoute: InvoiceIdRoute,
