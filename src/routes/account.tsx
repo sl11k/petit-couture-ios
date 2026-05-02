@@ -60,13 +60,22 @@ function AccountPage() {
       }
       setPassword("");
     } catch (err) {
-      const message = err instanceof Error ? err.message.toLowerCase() : "";
-      if (message.includes("already") || message.includes("registered")) {
+      const raw = err instanceof Error ? err.message : "";
+      const message = raw.toLowerCase();
+      if (message.includes("already") || message.includes("registered") || message.includes("user_already_exists")) {
         setError(t.account.emailInUse);
-      } else if (message.includes("invalid") || message.includes("credentials")) {
+      } else if (message.includes("invalid") && message.includes("credentials")) {
         setError(t.account.invalidCredentials);
+      } else if (message.includes("pwned") || message.includes("compromised") || message.includes("leaked")) {
+        setError(isRTL ? "كلمة المرور هذه مسرّبة في خروقات بيانات سابقة، اختر كلمة مرور أخرى." : "This password has appeared in a data breach. Choose another one.");
+      } else if (message.includes("weak") || message.includes("password should") || message.includes("at least")) {
+        setError(isRTL ? "كلمة المرور ضعيفة، استخدم 8 أحرف على الأقل مع أرقام ورموز." : "Password too weak — use at least 8 characters with numbers/symbols.");
+      } else if (message.includes("invalid") && message.includes("email")) {
+        setError(isRTL ? "البريد الإلكتروني غير صالح." : "Invalid email address.");
+      } else if (message.includes("rate") || message.includes("too many")) {
+        setError(isRTL ? "محاولات كثيرة، حاول لاحقًا." : "Too many attempts, try again later.");
       } else {
-        setError(t.account.error);
+        setError(raw || t.account.error);
       }
     } finally {
       setSubmitting(false);
