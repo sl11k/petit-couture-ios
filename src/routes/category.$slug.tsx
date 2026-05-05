@@ -237,7 +237,7 @@ function CategoryView() {
               {ar ? `${products.length} منتج` : `${products.length} products`}
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-              {products.map((p) => (
+              {products.map((p: any) => (
                 <ProductCard key={p.id} p={p} ar={ar} wishlist={wishlist} />
               ))}
             </div>
