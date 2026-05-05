@@ -75,14 +75,14 @@
     "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
 
   --shadow-soft: 0 1px 2px rgba(30, 30, 30, 0.04), 0 8px 24px rgba(30, 30, 30, 0.05);
-  --shadow-gold: 0 8px 22px rgba(185, 145, 59, 0.28);
-  --shadow-nav: 0 -1px 0 rgba(230, 226, 218, 0.9), 0 -8px 24px rgba(30, 30, 30, 0.04);
+  --shadow-gold: 0 8px 22px rgba(172, 67, 89, 0.22);
+  --shadow-nav: 0 -1px 0 rgba(232, 220, 224, 0.9), 0 -8px 24px rgba(30, 30, 30, 0.04);
 }
 
 :root {
   --radius: 0.875rem;
 
-  /* Surfaces */
+  /* Surfaces — soft blush-tinted whites inspired by the logo */
   --background: oklch(1 0 0);                     /* #FFFFFF */
   --foreground: oklch(0.245 0 0);                 /* #1E1E1E */
   --card: oklch(1 0 0);
@@ -94,48 +94,50 @@
   --primary: oklch(0.245 0 0);                    /* #1E1E1E */
   --primary-foreground: oklch(1 0 0);
 
-  --secondary: oklch(0.965 0.012 85);             /* #F8F5EF */
+  --secondary: oklch(0.975 0.008 350);            /* #FBF6F7 */
   --secondary-foreground: oklch(0.245 0 0);
 
-  --muted: oklch(0.96 0.014 80);                  /* #F7F3EA */
+  --muted: oklch(0.96 0.012 350);                 /* #F7EEF1 */
   --muted-foreground: oklch(0.52 0 0);            /* #6F6F6F */
 
-  --accent: oklch(0.93 0.038 82);                 /* soft gold fill #F3E8D0 */
-  --accent-foreground: oklch(0.52 0.10 70);       /* deep gold #9D7628 */
+  /* Accent = blush fill + burgundy text (from the logo) */
+  --accent: oklch(0.93 0.025 350);                /* #F3E1E7 blush */
+  --accent-foreground: oklch(0.42 0.16 16);       /* #94203A burgundy */
 
   --destructive: oklch(0.55 0.15 25);             /* #B94A48 */
   --destructive-foreground: oklch(1 0 0);
 
-  --border: oklch(0.91 0.012 80);                 /* #E6E2DA */
-  --input: oklch(0.91 0.012 80);
-  --ring: oklch(0.66 0.11 75);                    /* gold ring */
+  --border: oklch(0.92 0.014 350);                /* #ECE0E4 */
+  --input: oklch(0.92 0.014 350);
+  --ring: oklch(0.52 0.14 12);                    /* burgundy ring */
 
-  /* Luxury palette */
-  --gold: oklch(0.66 0.11 75);                    /* #B9913B */
-  --gold-deep: oklch(0.55 0.105 72);              /* #9D7628 */
-  --gold-soft: oklch(0.93 0.038 82);              /* #F3E8D0 */
-  --cream: oklch(0.965 0.012 85);                 /* #F8F5EF */
-  --cream-warm: oklch(0.96 0.014 80);             /* #F7F3EA */
-  --pastel-mint: oklch(0.93 0.04 145);            /* #DDEEDB */
-  --pastel-peach: oklch(0.89 0.045 45);           /* #F7D8C5 */
-  --pastel-blue: oklch(0.92 0.03 230);            /* #DCECF4 */
-  --pastel-cream: oklch(0.97 0.05 95);            /* #FFF4D8 */
+  /* Brand palette (token names kept for compatibility,
+     but values now reflect the LPP logo: burgundy + blush) */
+  --gold: oklch(0.52 0.14 12);                    /* #AC4359 burgundy mid */
+  --gold-deep: oklch(0.40 0.16 18);               /* #7D0011 burgundy deep */
+  --gold-soft: oklch(0.93 0.025 350);             /* #F3E1E7 blush soft */
+  --cream: oklch(0.975 0.008 350);                /* #FBF6F7 blush cream */
+  --cream-warm: oklch(0.96 0.012 350);            /* #F7EEF1 warm blush */
+  --pastel-mint: oklch(0.92 0.022 350);           /* #EDDCE2 */
+  --pastel-peach: oklch(0.89 0.035 10);           /* #F2D2D8 */
+  --pastel-blue: oklch(0.94 0.018 340);           /* #F1E2E8 */
+  --pastel-cream: oklch(0.97 0.012 350);          /* #F9EFF2 */
   --success: oklch(0.6 0.07 145);                 /* #5E8C61 */
 
-  --chart-1: oklch(0.66 0.11 75);
-  --chart-2: oklch(0.89 0.045 45);
-  --chart-3: oklch(0.92 0.03 230);
-  --chart-4: oklch(0.93 0.04 145);
-  --chart-5: oklch(0.55 0.105 72);
+  --chart-1: oklch(0.52 0.14 12);
+  --chart-2: oklch(0.68 0.09 8);
+  --chart-3: oklch(0.82 0.05 350);
+  --chart-4: oklch(0.93 0.025 350);
+  --chart-5: oklch(0.40 0.16 18);
 
   --sidebar: oklch(0.984 0.003 247.858);
   --sidebar-foreground: oklch(0.245 0 0);
   --sidebar-primary: oklch(0.245 0 0);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.93 0.038 82);
-  --sidebar-accent-foreground: oklch(0.52 0.10 70);
-  --sidebar-border: oklch(0.91 0.012 80);
-  --sidebar-ring: oklch(0.66 0.11 75);
+  --sidebar-accent: oklch(0.93 0.025 350);
+  --sidebar-accent-foreground: oklch(0.42 0.16 16);
+  --sidebar-border: oklch(0.92 0.014 350);
+  --sidebar-ring: oklch(0.52 0.14 12);
 }
 
 @layer base {

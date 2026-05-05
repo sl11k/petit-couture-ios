@@ -192,7 +192,7 @@ function CollectionView() {
           <p className="text-center text-muted-foreground">{ar ? "لا توجد منتجات في هذه المجموعة بعد." : "No products in this collection yet."}</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-            {products.map((p) => (
+            {products.map((p: any) => (
               <ProductCard key={p.id} p={p} ar={ar} />
             ))}
           </div>
