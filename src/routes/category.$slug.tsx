@@ -181,6 +181,23 @@ function CategoryView() {
     setShowSeedFallback(products.length === 0 && !!productsByCategory["best-sellers"]);
   }, [products.length]);
 
+  // Sort
+  const [sortKey, setSortKey] = useState<SortKey>("popular");
+  const sortedProducts = useMemo(() => {
+    const arr = [...products];
+    switch (sortKey) {
+      case "newest":
+        return arr.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+      case "price_asc":
+        return arr.sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
+      case "price_desc":
+        return arr.sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
+      case "popular":
+      default:
+        return arr.sort((a, b) => (b.sales_count ?? 0) - (a.sales_count ?? 0));
+    }
+  }, [products, sortKey]);
+
   return (
     <main className="min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
       {/* Header */}
