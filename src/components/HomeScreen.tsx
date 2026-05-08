@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Heart, ChevronLeft, ChevronRight } from "lucide-react";
+import { Heart, ChevronLeft, ChevronRight, Flame } from "lucide-react";
 import hero from "@/assets/hero-campaign.jpg";
 import { categories } from "@/data/categories";
+import productDress1 from "@/assets/product-dress-1.jpg";
+import productDress2 from "@/assets/product-dress-2.jpg";
+import productDress3 from "@/assets/product-dress-3.jpg";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useImpression } from "@/hooks/useImpression";
