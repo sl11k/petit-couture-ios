@@ -227,24 +227,102 @@ function CategoryView() {
         </section>
       )}
 
+      {/* Filter / Sort bar */}
+      <FilterSortBar ar={ar} count={sortedProducts.length} sort={sortKey} onSortChange={setSortKey} />
+
       {/* Products grid */}
       <section className="px-4 sm:px-6 py-6 sm:py-10 max-w-[1200px] mx-auto">
-        {products.length === 0 ? (
+        {sortedProducts.length === 0 ? (
           <EmptyState ar={ar} slug={slug} showFallback={showSeedFallback} />
         ) : (
-          <>
-            <p className="text-sm text-muted-foreground mb-4">
-              {ar ? `${products.length} منتج` : `${products.length} products`}
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-              {products.map((p: any) => (
-                <ProductCard key={p.id} p={p} ar={ar} wishlist={wishlist} />
-              ))}
-            </div>
-          </>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {sortedProducts.map((p: any) => (
+              <ProductCard key={p.id} p={p} ar={ar} wishlist={wishlist} />
+            ))}
+          </div>
         )}
       </section>
     </main>
+  );
+}
+
+type SortKey = "popular" | "newest" | "price_asc" | "price_desc";
+
+function FilterSortBar({
+  ar,
+  count,
+  sort,
+  onSortChange,
+}: {
+  ar: boolean;
+  count: number;
+  sort: SortKey;
+  onSortChange: (s: SortKey) => void;
+}) {
+  const [openSort, setOpenSort] = useState(false);
+  const sortLabels: Record<SortKey, string> = ar
+    ? {
+        popular: "الأكثر شهرة",
+        newest: "الأحدث",
+        price_asc: "السعر: من الأقل",
+        price_desc: "السعر: من الأعلى",
+      }
+    : {
+        popular: "Most Popular",
+        newest: "Newest",
+        price_asc: "Price: Low to High",
+        price_desc: "Price: High to Low",
+      };
+
+  return (
+    <div className="sticky top-14 z-20 bg-background/95 backdrop-blur border-b border-border">
+      <div className="max-w-[1200px] mx-auto grid grid-cols-2 divide-x divide-border">
+        <button
+          type="button"
+          className="h-12 flex items-center justify-center gap-2 text-[14px] font-medium text-foreground hover:bg-muted/50 transition"
+        >
+          <span>{ar ? "تصفية" : "Filter By"}</span>
+          <SlidersHorizontal className="h-4 w-4 text-primary" />
+        </button>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setOpenSort((v) => !v)}
+            className="w-full h-12 flex items-center justify-center gap-2 text-[14px] font-medium text-foreground hover:bg-muted/50 transition"
+          >
+            <span>{sortLabels[sort]}</span>
+            <ArrowUpDown className="h-4 w-4 text-primary" />
+          </button>
+          {openSort && (
+            <>
+              <div className="fixed inset-0 z-30" onClick={() => setOpenSort(false)} aria-hidden />
+              <ul className="absolute z-40 end-2 mt-1 w-56 rounded-lg border border-border bg-background shadow-lg overflow-hidden">
+                {(Object.keys(sortLabels) as SortKey[]).map((k) => (
+                  <li key={k}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onSortChange(k);
+                        setOpenSort(false);
+                      }}
+                      className="w-full flex items-center justify-between px-4 py-3 text-[13.5px] hover:bg-muted text-start"
+                    >
+                      <span>{sortLabels[k]}</span>
+                      {sort === k && <Check className="h-4 w-4 text-primary" />}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      </div>
+      {count > 0 && (
+        <p className="text-center text-[12.5px] text-muted-foreground py-1.5">
+          {ar ? `عرض ${count} منتج` : `Showing ${count} styles`}
+        </p>
+      )}
+    </div>
   );
 }
 
