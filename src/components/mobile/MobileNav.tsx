@@ -128,13 +128,12 @@ const HIDE_ON: string[] = [
 export function MobileBottomNav() {
   const location = useLocation();
   const bag = useBag();
-  const wishlist = useWishlist();
   const path = location.pathname;
+  const [menuOpen, setMenuOpen] = useState(false);
 
   if (HIDE_ON.some((p) => path.startsWith(p))) return null;
 
   const bagCount = bag.items?.reduce?.((n, i) => n + (i.qty ?? 1), 0) ?? 0;
-  const wlCount = wishlist.items?.length ?? 0;
 
   type Item = {
     to: string;
@@ -146,7 +145,6 @@ export function MobileBottomNav() {
   const items: Item[] = [
     { to: "/", icon: Home, label: "الرئيسية", exact: true },
     { to: "/search", icon: Search, label: "البحث" },
-    { to: "/wishlist", icon: Heart, label: "المفضلة", count: wlCount },
     { to: "/bag", icon: ShoppingBag, label: "السلة", count: bagCount },
     { to: "/account", icon: User, label: "حسابي" },
   ];
@@ -156,13 +154,36 @@ export function MobileBottomNav() {
 
   return (
     <>
-      {/* Spacer to prevent content overlap */}
       <div className="lg:hidden h-[calc(64px+env(safe-area-inset-bottom))]" aria-hidden />
       <nav
         className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur-md border-t border-border pb-[env(safe-area-inset-bottom)]"
         aria-label="Primary"
       >
         <ul className="grid grid-cols-5 h-16">
+          {/* Menu button (opens sheet) */}
+          <li>
+            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+              <SheetTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="القائمة"
+                  className="h-full w-full flex flex-col items-center justify-center gap-0.5 text-primary transition-colors active:bg-accent/60"
+                >
+                  <MenuIcon className="h-5 w-5" />
+                  <span className="text-[10px] leading-none">القائمة</span>
+                </button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[88vw] sm:w-[420px] overflow-y-auto p-0">
+                <SheetHeader className="px-5 pt-6 pb-3 border-b">
+                  <SheetTitle className="text-right font-serif text-2xl text-primary">
+                    القائمة
+                  </SheetTitle>
+                </SheetHeader>
+                <CategoryMenu onNavigate={() => setMenuOpen(false)} />
+              </SheetContent>
+            </Sheet>
+          </li>
+
           {items.map(({ to, icon: Icon, label, count, exact }) => {
             const active = isActive(to, exact);
             return (
@@ -172,7 +193,7 @@ export function MobileBottomNav() {
                   className={cn(
                     "h-full w-full flex flex-col items-center justify-center gap-0.5 relative",
                     "transition-colors active:bg-accent/60",
-                    active ? "text-primary" : "text-muted-foreground",
+                    active ? "text-primary font-medium" : "text-primary/70",
                   )}
                   aria-current={active ? "page" : undefined}
                   aria-label={label}
@@ -193,6 +214,95 @@ export function MobileBottomNav() {
         </ul>
       </nav>
     </>
+  );
+}
+
+/** Category menu groups shown inside the Menu sheet */
+function CategoryMenu({ onNavigate }: { onNavigate: () => void }) {
+  const groups: {
+    title: string;
+    icon: typeof Baby;
+    items: { label: string; to: string; params?: any }[];
+  }[] = [
+    {
+      title: "التسوق حسب العمر",
+      icon: Baby,
+      items: [
+        { label: "حديثي الولادة (0-12 شهر)", to: "/category/$slug", params: { slug: "babysuits" } },
+        { label: "أطفال (1-3 سنوات)", to: "/category/$slug", params: { slug: "outfit-sets" } },
+        { label: "أطفال (4-7 سنوات)", to: "/category/$slug", params: { slug: "dresses" } },
+        { label: "أطفال (8-12 سنة)", to: "/category/$slug", params: { slug: "tops" } },
+      ],
+    },
+    {
+      title: "التسوق حسب الفئة",
+      icon: ShoppingBasket,
+      items: [
+        { label: "بنات", to: "/category/$slug", params: { slug: "dresses" } },
+        { label: "أولاد", to: "/category/$slug", params: { slug: "outfit-sets" } },
+        { label: "رضّع", to: "/category/$slug", params: { slug: "babysuits" } },
+      ],
+    },
+    {
+      title: "التصنيفات",
+      icon: Crown,
+      items: [
+        { label: "الفساتين", to: "/category/$slug", params: { slug: "dresses" } },
+        { label: "الأحذية", to: "/category/$slug", params: { slug: "shoes" } },
+        { label: "الحقائب", to: "/category/$slug", params: { slug: "bags" } },
+        { label: "ملابس السباحة", to: "/category/$slug", params: { slug: "swimwear" } },
+        { label: "الأطقم", to: "/category/$slug", params: { slug: "outfit-sets" } },
+      ],
+    },
+    {
+      title: "مميّز",
+      icon: Sparkles,
+      items: [
+        { label: "الأكثر مبيعاً", to: "/category/$slug", params: { slug: "best-sellers" } },
+        { label: "الجديد", to: "/category/$slug", params: { slug: "new-in" } },
+      ],
+    },
+    {
+      title: "الهدايا",
+      icon: Gift,
+      items: [
+        { label: "هدايا للرضّع", to: "/category/$slug", params: { slug: "gifts" } },
+        { label: "هدايا فاخرة", to: "/category/$slug", params: { slug: "gifts" } },
+      ],
+    },
+  ];
+
+  return (
+    <div className="px-2 pb-8">
+      {groups.map((g) => {
+        const Icon = g.icon;
+        return (
+          <section key={g.title} className="py-3">
+            <div className="flex items-center gap-2 px-3 py-2 text-primary">
+              <Icon className="h-4 w-4" />
+              <h3 className="text-[13px] font-semibold tracking-wide">{g.title}</h3>
+            </div>
+            <ul className="mt-1">
+              {g.items.map((it) => (
+                <li key={it.label}>
+                  <SheetClose asChild>
+                    <Link
+                      to={it.to as any}
+                      params={it.params}
+                      onClick={onNavigate}
+                      className="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-accent/60 active:bg-accent text-[14px] text-foreground"
+                    >
+                      <span>{it.label}</span>
+                      <ArrowLeft className="h-4 w-4 text-primary/60" />
+                    </Link>
+                  </SheetClose>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })}
+    </div>
   );
 }
 
