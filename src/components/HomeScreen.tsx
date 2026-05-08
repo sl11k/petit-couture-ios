@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Heart, ChevronLeft, ChevronRight } from "lucide-react";
+import { Heart, ChevronLeft, ChevronRight, Flame } from "lucide-react";
 import hero from "@/assets/hero-campaign.jpg";
 import { categories } from "@/data/categories";
+import productDress1 from "@/assets/product-dress-1.jpg";
+import productDress2 from "@/assets/product-dress-2.jpg";
+import productDress3 from "@/assets/product-dress-3.jpg";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useImpression } from "@/hooks/useImpression";
@@ -368,6 +371,9 @@ export function HomeScreen() {
             </div>
           </section>
 
+          {/* Best Sellers — real product cards (apparel) */}
+          <BestSellersSection ar={ar} />
+
           {/* Dynamic sections from /admin/home-builder */}
           {sections
             .filter((s) => ["most_popular", "new_arrivals", "custom_collection", "rich_text"].includes(s.kind))
@@ -378,6 +384,110 @@ export function HomeScreen() {
       </div>
 
     </div>
+  );
+}
+
+function BestSellersSection({ ar }: { ar: boolean }) {
+  // Fallback preview items so the section never looks empty.
+  const items = [
+    {
+      id: "bs1",
+      name_ar: "فستان روزالي تول",
+      name_en: "Rosalie Tulle Dress",
+      price: 1250,
+      compareAt: 1650,
+      image: productDress1,
+      slug: "best-sellers",
+    },
+    {
+      id: "bs2",
+      name_ar: "فستان زهور كلاسيك",
+      name_en: "Classic Floral Dress",
+      price: 980,
+      compareAt: 1280,
+      image: productDress2,
+      slug: "dresses",
+    },
+    {
+      id: "bs3",
+      name_ar: "طقم احتفال أنيق",
+      name_en: "Elegant Celebration Set",
+      price: 1450,
+      compareAt: undefined,
+      image: productDress3,
+      slug: "outfit-sets",
+    },
+    {
+      id: "bs4",
+      name_ar: "فستان أميرة",
+      name_en: "Princess Dress",
+      price: 1180,
+      compareAt: 1520,
+      image: productDress1,
+      slug: "dresses",
+    },
+  ];
+
+  return (
+    <section className="mt-14 px-5">
+      <div className="text-center">
+        <span className="inline-flex items-center gap-1.5 text-[10.5px] tracking-luxury text-primary">
+          <Flame className="h-3.5 w-3.5" />
+          {ar ? "الأكثر مبيعاً" : "Top Selling"}
+        </span>
+        <h2 className="font-serif text-[30px] leading-tight text-foreground mt-1.5">
+          {ar ? "تشكيلة الأكثر مبيعاً" : "Best Sellers"}
+        </h2>
+      </div>
+
+      <div className="grid grid-cols-2 gap-x-4 gap-y-7 mt-7">
+        {items.map((p) => (
+          <Link
+            key={p.id}
+            to="/product/$slug"
+            params={{ slug: p.slug }}
+            className="group flex flex-col text-start active:scale-[0.99] transition"
+          >
+            <div className="relative w-full overflow-hidden rounded-[18px] bg-cream-warm aspect-[4/5]">
+              <img
+                src={p.image}
+                alt={ar ? p.name_ar : p.name_en}
+                loading="lazy"
+                className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04]"
+              />
+              {p.compareAt && (
+                <span className="absolute top-2 start-2 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium tracking-wide">
+                  {ar ? "خصم" : "SALE"}
+                </span>
+              )}
+            </div>
+            <span className="mt-2.5 text-[13.5px] text-foreground font-medium line-clamp-1">
+              {ar ? p.name_ar : p.name_en}
+            </span>
+            <div className="mt-1 flex items-baseline gap-2">
+              <span className="text-[13px] text-primary font-semibold">
+                {p.price.toFixed(0)} {ar ? "ر.س" : "SAR"}
+              </span>
+              {p.compareAt && (
+                <span className="text-[11.5px] text-muted-foreground line-through">
+                  {p.compareAt.toFixed(0)}
+                </span>
+              )}
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      <div className="mt-8 flex justify-center">
+        <Link
+          to="/category/$slug"
+          params={{ slug: "best-sellers" }}
+          className="h-[48px] px-9 rounded-full bg-primary text-primary-foreground text-[12px] tracking-luxury font-medium grid place-items-center active:scale-[0.97] transition shadow-soft"
+        >
+          {ar ? "تسوّقي الأكثر مبيعاً" : "SHOP BEST SELLERS"}
+        </Link>
+      </div>
+    </section>
   );
 }
 
