@@ -90,8 +90,8 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.245 0 0);
 
-  /* Primary = brand foreground/dark text */
-  --primary: oklch(0.245 0 0);                    /* #1E1E1E */
+  /* Primary = main brand red from the logo */
+  --primary: oklch(0.42 0.16 16);                 /* #94203A brand burgundy/red */
   --primary-foreground: oklch(1 0 0);
 
   --secondary: oklch(0.975 0.008 350);            /* #FBF6F7 */
@@ -132,7 +132,7 @@
 
   --sidebar: oklch(0.984 0.003 247.858);
   --sidebar-foreground: oklch(0.245 0 0);
-  --sidebar-primary: oklch(0.245 0 0);
+  --sidebar-primary: oklch(0.42 0.16 16);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.93 0.025 350);
   --sidebar-accent-foreground: oklch(0.42 0.16 16);
