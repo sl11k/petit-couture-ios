@@ -167,9 +167,9 @@ export function MobileBottomNav() {
                 <button
                   type="button"
                   aria-label="القائمة"
-                  className="h-full w-full flex flex-col items-center justify-center gap-0.5 text-primary transition-colors active:bg-accent/60"
+                  className="h-full w-full flex flex-col items-center justify-center gap-0.5 text-primary opacity-70 hover:opacity-100 transition-colors active:bg-accent/60"
                 >
-                  <MenuIcon className="h-5 w-5" />
+                  <MenuIcon className="h-5 w-5" strokeWidth={1.8} />
                   <span className="text-[10px] leading-none">القائمة</span>
                 </button>
               </SheetTrigger>
