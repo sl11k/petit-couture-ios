@@ -192,8 +192,8 @@ export function MobileBottomNav() {
                   to={to}
                   className={cn(
                     "h-full w-full flex flex-col items-center justify-center gap-0.5 relative",
-                    "transition-colors active:bg-accent/60",
-                    active ? "text-primary font-medium" : "text-primary/70",
+                    "transition-colors active:bg-accent/60 text-primary",
+                    active ? "font-semibold" : "opacity-70 hover:opacity-100",
                   )}
                   aria-current={active ? "page" : undefined}
                   aria-label={label}
