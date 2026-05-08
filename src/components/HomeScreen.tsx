@@ -477,7 +477,7 @@ function BestSellersSection({ ar }: { ar: boolean }) {
             <div className="relative w-full overflow-hidden rounded-[18px] bg-cream-warm aspect-[4/5]">
               <img
                 src={p.image}
-                alt={ar ? p.name_ar : p.name_en}
+                alt={(ar ? p.name_ar : p.name_en) ?? ""}
                 loading="lazy"
                 className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04]"
               />
