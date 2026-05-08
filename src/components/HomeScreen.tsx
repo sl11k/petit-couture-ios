@@ -310,22 +310,39 @@ export function HomeScreen() {
             )}
           </section>
 
-          {/* Featured categories (dynamic) */}
-          {featuredCats.length > 0 && (
-            <section className="px-5 mt-7">
-              <div className={`grid gap-3`} style={{ gridTemplateColumns: `repeat(${Math.min(featuredCats.length, 3)}, minmax(0, 1fr))` }}>
-                {featuredCats.map((fc) => (
-                  <a
-                    key={fc.id}
-                    href={fc.link_url}
-                    className="h-[54px] rounded-full bg-gold-soft border border-gold text-gold-deep font-medium text-[15px] grid place-items-center active:scale-[0.97] transition"
-                  >
-                    {ar ? fc.label_ar : fc.label_en}
-                  </a>
-                ))}
-              </div>
-            </section>
-          )}
+          {/* Shop by category — Babies / Girls / Boys (DB-driven, with fallback) */}
+          {(() => {
+            const cats = featuredCats.length > 0
+              ? featuredCats
+              : [
+                  { id: "f1", label_ar: "رضّع", label_en: "Babies", link_url: "/category/babysuits" },
+                  { id: "f2", label_ar: "بنات", label_en: "Girls", link_url: "/category/dresses" },
+                  { id: "f3", label_ar: "أولاد", label_en: "Boys", link_url: "/category/outfit-sets" },
+                ] as any[];
+            return (
+              <section className="px-5 mt-8">
+                <div className="text-center mb-4">
+                  <span className="text-[10.5px] tracking-luxury text-primary">
+                    {ar ? "تسوّقي حسب الفئة" : "SHOP BY"}
+                  </span>
+                </div>
+                <div
+                  className="grid gap-3"
+                  style={{ gridTemplateColumns: `repeat(${Math.min(cats.length, 3)}, minmax(0, 1fr))` }}
+                >
+                  {cats.map((fc) => (
+                    <a
+                      key={fc.id}
+                      href={fc.link_url}
+                      className="h-[58px] rounded-full bg-background border-2 border-primary/30 text-primary font-medium text-[16px] grid place-items-center active:scale-[0.97] hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 shadow-sm"
+                    >
+                      {ar ? fc.label_ar : fc.label_en}
+                    </a>
+                  ))}
+                </div>
+              </section>
+            );
+          })()}
 
           {/* Most Popular */}
           <section className="mt-12 px-5">
