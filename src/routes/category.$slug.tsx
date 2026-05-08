@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Heart, ChevronLeft } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Heart, ChevronLeft, SlidersHorizontal, ArrowUpDown, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { LazyImage } from "@/components/LazyImage";
 import { useLanguage } from "@/i18n/LanguageContext";
