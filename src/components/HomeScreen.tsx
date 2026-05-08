@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
 import { Heart, ChevronLeft, ChevronRight, Flame } from "lucide-react";
 import hero from "@/assets/hero-campaign.jpg";
 import { categories } from "@/data/categories";
@@ -310,22 +311,39 @@ export function HomeScreen() {
             )}
           </section>
 
-          {/* Featured categories (dynamic) */}
-          {featuredCats.length > 0 && (
-            <section className="px-5 mt-7">
-              <div className={`grid gap-3`} style={{ gridTemplateColumns: `repeat(${Math.min(featuredCats.length, 3)}, minmax(0, 1fr))` }}>
-                {featuredCats.map((fc) => (
-                  <a
-                    key={fc.id}
-                    href={fc.link_url}
-                    className="h-[54px] rounded-full bg-gold-soft border border-gold text-gold-deep font-medium text-[15px] grid place-items-center active:scale-[0.97] transition"
-                  >
-                    {ar ? fc.label_ar : fc.label_en}
-                  </a>
-                ))}
-              </div>
-            </section>
-          )}
+          {/* Shop by category — Babies / Girls / Boys (DB-driven, with fallback) */}
+          {(() => {
+            const cats = featuredCats.length > 0
+              ? featuredCats
+              : [
+                  { id: "f1", label_ar: "رضّع", label_en: "Babies", link_url: "/category/babysuits" },
+                  { id: "f2", label_ar: "بنات", label_en: "Girls", link_url: "/category/dresses" },
+                  { id: "f3", label_ar: "أولاد", label_en: "Boys", link_url: "/category/outfit-sets" },
+                ] as any[];
+            return (
+              <section className="px-5 mt-8">
+                <div className="text-center mb-4">
+                  <span className="text-[10.5px] tracking-luxury text-primary">
+                    {ar ? "تسوّقي حسب الفئة" : "SHOP BY"}
+                  </span>
+                </div>
+                <div
+                  className="grid gap-3"
+                  style={{ gridTemplateColumns: `repeat(${Math.min(cats.length, 3)}, minmax(0, 1fr))` }}
+                >
+                  {cats.map((fc) => (
+                    <a
+                      key={fc.id}
+                      href={fc.link_url}
+                      className="h-[58px] rounded-full bg-background border-2 border-primary/30 text-primary font-medium text-[16px] grid place-items-center active:scale-[0.97] hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 shadow-sm"
+                    >
+                      {ar ? fc.label_ar : fc.label_en}
+                    </a>
+                  ))}
+                </div>
+              </section>
+            );
+          })()}
 
           {/* Most Popular */}
           <section className="mt-12 px-5">
@@ -388,45 +406,53 @@ export function HomeScreen() {
 }
 
 function BestSellersSection({ ar }: { ar: boolean }) {
-  // Fallback preview items so the section never looks empty.
-  const items = [
-    {
-      id: "bs1",
-      name_ar: "فستان روزالي تول",
-      name_en: "Rosalie Tulle Dress",
-      price: 1250,
-      compareAt: 1650,
-      image: productDress1,
-      slug: "best-sellers",
-    },
-    {
-      id: "bs2",
-      name_ar: "فستان زهور كلاسيك",
-      name_en: "Classic Floral Dress",
-      price: 980,
-      compareAt: 1280,
-      image: productDress2,
-      slug: "dresses",
-    },
-    {
-      id: "bs3",
-      name_ar: "طقم احتفال أنيق",
-      name_en: "Elegant Celebration Set",
-      price: 1450,
-      compareAt: undefined,
-      image: productDress3,
-      slug: "outfit-sets",
-    },
-    {
-      id: "bs4",
-      name_ar: "فستان أميرة",
-      name_en: "Princess Dress",
-      price: 1180,
-      compareAt: 1520,
-      image: productDress1,
-      slug: "dresses",
-    },
-  ];
+  const [items, setItems] = useState<Array<{
+    id: string;
+    name_ar: string | null;
+    name_en: string | null;
+    price: number;
+    compareAt: number | null;
+    image: string;
+    slug: string;
+  }>>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("id, slug, name_ar, name_en, price, compare_at_price, image_url")
+        .eq("is_active", true)
+        .order("sales_count", { ascending: false })
+        .limit(4);
+      if (cancelled) return;
+      const real = (data ?? [])
+        .filter((p: any) => p.image_url)
+        .map((p: any) => ({
+          id: p.id,
+          name_ar: p.name_ar,
+          name_en: p.name_en,
+          price: Number(p.price ?? 0),
+          compareAt: p.compare_at_price != null ? Number(p.compare_at_price) : null,
+          image: p.image_url as string,
+          slug: p.slug ?? p.id,
+        }));
+      if (real.length > 0) {
+        setItems(real);
+        return;
+      }
+      // Fallback preview items
+      setItems([
+        { id: "bs1", name_ar: "فستان روزالي تول", name_en: "Rosalie Tulle Dress", price: 1250, compareAt: 1650, image: productDress1, slug: "best-sellers" },
+        { id: "bs2", name_ar: "فستان زهور كلاسيك", name_en: "Classic Floral Dress", price: 980, compareAt: 1280, image: productDress2, slug: "dresses" },
+        { id: "bs3", name_ar: "طقم احتفال أنيق", name_en: "Elegant Celebration Set", price: 1450, compareAt: null, image: productDress3, slug: "outfit-sets" },
+        { id: "bs4", name_ar: "فستان أميرة", name_en: "Princess Dress", price: 1180, compareAt: 1520, image: productDress1, slug: "dresses" },
+      ]);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  if (items.length === 0) return null;
 
   return (
     <section className="mt-14 px-5">
@@ -451,7 +477,7 @@ function BestSellersSection({ ar }: { ar: boolean }) {
             <div className="relative w-full overflow-hidden rounded-[18px] bg-cream-warm aspect-[4/5]">
               <img
                 src={p.image}
-                alt={ar ? p.name_ar : p.name_en}
+                alt={(ar ? p.name_ar : p.name_en) ?? ""}
                 loading="lazy"
                 className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04]"
               />
