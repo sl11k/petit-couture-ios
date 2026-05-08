@@ -159,29 +159,28 @@ export function MobileBottomNav() {
         className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur-md border-t border-border pb-[env(safe-area-inset-bottom)]"
         aria-label="Primary"
       >
+        <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+          <SheetContent side="right" className="w-[88vw] sm:w-[420px] overflow-y-auto p-0 z-[60]">
+            <SheetHeader className="px-5 pt-6 pb-3 border-b">
+              <SheetTitle className="text-right font-serif text-2xl text-primary">
+                القائمة
+              </SheetTitle>
+            </SheetHeader>
+            <CategoryMenu onNavigate={() => setMenuOpen(false)} />
+          </SheetContent>
+        </Sheet>
         <ul className="grid grid-cols-5 h-16">
           {/* Menu button (opens sheet) */}
           <li>
-            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-              <SheetTrigger asChild>
-                <button
-                  type="button"
-                  aria-label="القائمة"
-                  className="h-full w-full flex flex-col items-center justify-center gap-0.5 text-primary opacity-70 hover:opacity-100 transition-colors active:bg-accent/60"
-                >
-                  <MenuIcon className="h-5 w-5" strokeWidth={1.8} />
-                  <span className="text-[10px] leading-none">القائمة</span>
-                </button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[88vw] sm:w-[420px] overflow-y-auto p-0">
-                <SheetHeader className="px-5 pt-6 pb-3 border-b">
-                  <SheetTitle className="text-right font-serif text-2xl text-primary">
-                    القائمة
-                  </SheetTitle>
-                </SheetHeader>
-                <CategoryMenu onNavigate={() => setMenuOpen(false)} />
-              </SheetContent>
-            </Sheet>
+            <button
+              type="button"
+              aria-label="القائمة"
+              onClick={() => setMenuOpen(true)}
+              className="h-full w-full flex flex-col items-center justify-center gap-0.5 text-primary opacity-70 hover:opacity-100 transition-colors active:bg-accent/60"
+            >
+              <MenuIcon className="h-5 w-5" strokeWidth={1.8} />
+              <span className="text-[10px] leading-none">القائمة</span>
+            </button>
           </li>
 
           {items.map(({ to, icon: Icon, label, count, exact }) => {
