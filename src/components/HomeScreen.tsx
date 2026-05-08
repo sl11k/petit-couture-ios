@@ -405,45 +405,53 @@ export function HomeScreen() {
 }
 
 function BestSellersSection({ ar }: { ar: boolean }) {
-  // Fallback preview items so the section never looks empty.
-  const items = [
-    {
-      id: "bs1",
-      name_ar: "فستان روزالي تول",
-      name_en: "Rosalie Tulle Dress",
-      price: 1250,
-      compareAt: 1650,
-      image: productDress1,
-      slug: "best-sellers",
-    },
-    {
-      id: "bs2",
-      name_ar: "فستان زهور كلاسيك",
-      name_en: "Classic Floral Dress",
-      price: 980,
-      compareAt: 1280,
-      image: productDress2,
-      slug: "dresses",
-    },
-    {
-      id: "bs3",
-      name_ar: "طقم احتفال أنيق",
-      name_en: "Elegant Celebration Set",
-      price: 1450,
-      compareAt: undefined,
-      image: productDress3,
-      slug: "outfit-sets",
-    },
-    {
-      id: "bs4",
-      name_ar: "فستان أميرة",
-      name_en: "Princess Dress",
-      price: 1180,
-      compareAt: 1520,
-      image: productDress1,
-      slug: "dresses",
-    },
-  ];
+  const [items, setItems] = useState<Array<{
+    id: string;
+    name_ar: string | null;
+    name_en: string | null;
+    price: number;
+    compareAt: number | null;
+    image: string;
+    slug: string;
+  }>>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("id, slug, name_ar, name_en, price, compare_at_price, image_url")
+        .eq("is_active", true)
+        .order("sales_count", { ascending: false })
+        .limit(4);
+      if (cancelled) return;
+      const real = (data ?? [])
+        .filter((p: any) => p.image_url)
+        .map((p: any) => ({
+          id: p.id,
+          name_ar: p.name_ar,
+          name_en: p.name_en,
+          price: Number(p.price ?? 0),
+          compareAt: p.compare_at_price != null ? Number(p.compare_at_price) : null,
+          image: p.image_url as string,
+          slug: p.slug ?? p.id,
+        }));
+      if (real.length > 0) {
+        setItems(real);
+        return;
+      }
+      // Fallback preview items
+      setItems([
+        { id: "bs1", name_ar: "فستان روزالي تول", name_en: "Rosalie Tulle Dress", price: 1250, compareAt: 1650, image: productDress1, slug: "best-sellers" },
+        { id: "bs2", name_ar: "فستان زهور كلاسيك", name_en: "Classic Floral Dress", price: 980, compareAt: 1280, image: productDress2, slug: "dresses" },
+        { id: "bs3", name_ar: "طقم احتفال أنيق", name_en: "Elegant Celebration Set", price: 1450, compareAt: null, image: productDress3, slug: "outfit-sets" },
+        { id: "bs4", name_ar: "فستان أميرة", name_en: "Princess Dress", price: 1180, compareAt: 1520, image: productDress1, slug: "dresses" },
+      ]);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  if (items.length === 0) return null;
 
   return (
     <section className="mt-14 px-5">
