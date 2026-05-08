@@ -3,16 +3,28 @@ import { useState } from "react";
 import {
   Home,
   Search,
-  Heart,
   ShoppingBag,
   User,
   ArrowLeft,
   ArrowRight,
+  Menu as MenuIcon,
+  Baby,
+  Sparkles,
+  ShoppingBasket,
+  Gift,
+  Crown,
 } from "lucide-react";
 import { useBag } from "@/state/BagContext";
-import { useWishlist } from "@/state/WishlistContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { cn } from "@/lib/utils";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetClose,
+} from "@/components/ui/sheet";
 
 /**
  * MobileHeader — هيدر مدمج للجوال:
