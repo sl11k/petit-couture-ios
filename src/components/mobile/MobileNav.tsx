@@ -199,7 +199,7 @@ export function MobileBottomNav() {
                   aria-label={label}
                 >
                   <span className="relative">
-                    <Icon className="h-5 w-5" />
+                    <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 1.8} />
                     {!!count && count > 0 && (
                       <span className="absolute -top-1.5 -end-2 min-w-[16px] h-4 px-1 grid place-items-center rounded-full bg-primary text-primary-foreground text-[10px] font-medium">
                         {count > 99 ? "99+" : count}
@@ -207,6 +207,9 @@ export function MobileBottomNav() {
                     )}
                   </span>
                   <span className="text-[10px] leading-none">{label}</span>
+                  {active && (
+                    <span aria-hidden className="absolute top-0 inset-x-6 h-[2px] rounded-full bg-primary" />
+                  )}
                 </Link>
               </li>
             );
