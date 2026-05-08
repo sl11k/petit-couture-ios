@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
 import { Heart, ChevronLeft, ChevronRight, Flame } from "lucide-react";
 import hero from "@/assets/hero-campaign.jpg";
 import { categories } from "@/data/categories";
