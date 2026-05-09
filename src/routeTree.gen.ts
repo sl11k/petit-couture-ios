@@ -92,6 +92,7 @@ import { Route as AdminIntegrationsIdRouteImport } from './routes/admin.integrat
 import { Route as AdminCustomersIdRouteImport } from './routes/admin.customers.$id'
 import { Route as AdminCouponsIdRouteImport } from './routes/admin.coupons.$id'
 import { Route as AdminCampaignsIdRouteImport } from './routes/admin.campaigns.$id'
+import { Route as AdminAuditIdRouteImport } from './routes/admin.audit.$id'
 import { Route as AccountReturnsNewRouteImport } from './routes/account.returns.new'
 
 const WishlistRoute = WishlistRouteImport.update({
@@ -511,6 +512,11 @@ const AdminCampaignsIdRoute = AdminCampaignsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AdminCampaignsRoute,
 } as any)
+const AdminAuditIdRoute = AdminAuditIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminAuditRoute,
+} as any)
 const AccountReturnsNewRoute = AccountReturnsNewRouteImport.update({
   id: '/returns/new',
   path: '/returns/new',
@@ -537,7 +543,7 @@ export interface FileRoutesByFullPath {
   '/account/privacy': typeof AccountPrivacyRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
-  '/admin/audit': typeof AdminAuditRoute
+  '/admin/audit': typeof AdminAuditRouteWithChildren
   '/admin/audit-logins': typeof AdminAuditLoginsRoute
   '/admin/campaigns': typeof AdminCampaignsRouteWithChildren
   '/admin/categories': typeof AdminCategoriesRoute
@@ -586,6 +592,7 @@ export interface FileRoutesByFullPath {
   '/wishlist/share': typeof WishlistShareRoute
   '/admin/': typeof AdminIndexRoute
   '/account/returns/new': typeof AccountReturnsNewRoute
+  '/admin/audit/$id': typeof AdminAuditIdRoute
   '/admin/campaigns/$id': typeof AdminCampaignsIdRoute
   '/admin/coupons/$id': typeof AdminCouponsIdRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
@@ -622,7 +629,7 @@ export interface FileRoutesByTo {
   '/account/privacy': typeof AccountPrivacyRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
-  '/admin/audit': typeof AdminAuditRoute
+  '/admin/audit': typeof AdminAuditRouteWithChildren
   '/admin/audit-logins': typeof AdminAuditLoginsRoute
   '/admin/campaigns': typeof AdminCampaignsRouteWithChildren
   '/admin/categories': typeof AdminCategoriesRoute
@@ -671,6 +678,7 @@ export interface FileRoutesByTo {
   '/wishlist/share': typeof WishlistShareRoute
   '/admin': typeof AdminIndexRoute
   '/account/returns/new': typeof AccountReturnsNewRoute
+  '/admin/audit/$id': typeof AdminAuditIdRoute
   '/admin/campaigns/$id': typeof AdminCampaignsIdRoute
   '/admin/coupons/$id': typeof AdminCouponsIdRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
@@ -709,7 +717,7 @@ export interface FileRoutesById {
   '/account/privacy': typeof AccountPrivacyRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
-  '/admin/audit': typeof AdminAuditRoute
+  '/admin/audit': typeof AdminAuditRouteWithChildren
   '/admin/audit-logins': typeof AdminAuditLoginsRoute
   '/admin/campaigns': typeof AdminCampaignsRouteWithChildren
   '/admin/categories': typeof AdminCategoriesRoute
@@ -758,6 +766,7 @@ export interface FileRoutesById {
   '/wishlist/share': typeof WishlistShareRoute
   '/admin/': typeof AdminIndexRoute
   '/account/returns/new': typeof AccountReturnsNewRoute
+  '/admin/audit/$id': typeof AdminAuditIdRoute
   '/admin/campaigns/$id': typeof AdminCampaignsIdRoute
   '/admin/coupons/$id': typeof AdminCouponsIdRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
@@ -846,6 +855,7 @@ export interface FileRouteTypes {
     | '/wishlist/share'
     | '/admin/'
     | '/account/returns/new'
+    | '/admin/audit/$id'
     | '/admin/campaigns/$id'
     | '/admin/coupons/$id'
     | '/admin/customers/$id'
@@ -931,6 +941,7 @@ export interface FileRouteTypes {
     | '/wishlist/share'
     | '/admin'
     | '/account/returns/new'
+    | '/admin/audit/$id'
     | '/admin/campaigns/$id'
     | '/admin/coupons/$id'
     | '/admin/customers/$id'
@@ -1017,6 +1028,7 @@ export interface FileRouteTypes {
     | '/wishlist/share'
     | '/admin/'
     | '/account/returns/new'
+    | '/admin/audit/$id'
     | '/admin/campaigns/$id'
     | '/admin/coupons/$id'
     | '/admin/customers/$id'
@@ -1652,6 +1664,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCampaignsIdRouteImport
       parentRoute: typeof AdminCampaignsRoute
     }
+    '/admin/audit/$id': {
+      id: '/admin/audit/$id'
+      path: '/$id'
+      fullPath: '/admin/audit/$id'
+      preLoaderRoute: typeof AdminAuditIdRouteImport
+      parentRoute: typeof AdminAuditRoute
+    }
     '/account/returns/new': {
       id: '/account/returns/new'
       path: '/returns/new'
@@ -1674,6 +1693,18 @@ const AccountRouteChildren: AccountRouteChildren = {
 
 const AccountRouteWithChildren =
   AccountRoute._addFileChildren(AccountRouteChildren)
+
+interface AdminAuditRouteChildren {
+  AdminAuditIdRoute: typeof AdminAuditIdRoute
+}
+
+const AdminAuditRouteChildren: AdminAuditRouteChildren = {
+  AdminAuditIdRoute: AdminAuditIdRoute,
+}
+
+const AdminAuditRouteWithChildren = AdminAuditRoute._addFileChildren(
+  AdminAuditRouteChildren,
+)
 
 interface AdminCampaignsRouteChildren {
   AdminCampaignsIdRoute: typeof AdminCampaignsIdRoute
@@ -1796,7 +1827,7 @@ const AdminWebhooksRouteWithChildren = AdminWebhooksRoute._addFileChildren(
 interface AdminRouteChildren {
   AdminAbandonedRoute: typeof AdminAbandonedRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
-  AdminAuditRoute: typeof AdminAuditRoute
+  AdminAuditRoute: typeof AdminAuditRouteWithChildren
   AdminAuditLoginsRoute: typeof AdminAuditLoginsRoute
   AdminCampaignsRoute: typeof AdminCampaignsRouteWithChildren
   AdminCategoriesRoute: typeof AdminCategoriesRoute
@@ -1839,7 +1870,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAbandonedRoute: AdminAbandonedRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
-  AdminAuditRoute: AdminAuditRoute,
+  AdminAuditRoute: AdminAuditRouteWithChildren,
   AdminAuditLoginsRoute: AdminAuditLoginsRoute,
   AdminCampaignsRoute: AdminCampaignsRouteWithChildren,
   AdminCategoriesRoute: AdminCategoriesRoute,
