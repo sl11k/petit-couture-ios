@@ -36,6 +36,7 @@ import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
 import { Route as DebugAnalyticsRouteImport } from './routes/debug.analytics'
 import { Route as CollectionSlugRouteImport } from './routes/collection.$slug'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as AdminWebhooksRouteImport } from './routes/admin.webhooks'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminSupportRouteImport } from './routes/admin.support'
 import { Route as AdminStorefrontRouteImport } from './routes/admin.storefront'
@@ -43,25 +44,37 @@ import { Route as AdminStatesRouteImport } from './routes/admin.states'
 import { Route as AdminSiteAnalyticsRouteImport } from './routes/admin.site-analytics'
 import { Route as AdminShippingRouteImport } from './routes/admin.shipping'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminSecurityRouteImport } from './routes/admin.security'
 import { Route as AdminSearchRouteImport } from './routes/admin.search'
 import { Route as AdminReturnsRouteImport } from './routes/admin.returns'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
+import { Route as AdminPrivacyRouteImport } from './routes/admin.privacy'
 import { Route as AdminPerformanceRouteImport } from './routes/admin.performance'
 import { Route as AdminPaymentsRouteImport } from './routes/admin.payments'
 import { Route as AdminOtoRouteImport } from './routes/admin.oto'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
+import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminLandingPagesRouteImport } from './routes/admin.landing-pages'
 import { Route as AdminInvoicesRouteImport } from './routes/admin.invoices'
 import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
 import { Route as AdminIntegrationsRouteImport } from './routes/admin.integrations'
 import { Route as AdminIncompleteRouteImport } from './routes/admin.incomplete'
+import { Route as AdminHomeBuilderRouteImport } from './routes/admin.home-builder'
+import { Route as AdminHelpRouteImport } from './routes/admin.help'
 import { Route as AdminErrorsRouteImport } from './routes/admin.errors'
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
+import { Route as AdminCreateOrderRouteImport } from './routes/admin.create-order'
+import { Route as AdminCouponsRouteImport } from './routes/admin.coupons'
+import { Route as AdminConversionRouteImport } from './routes/admin.conversion'
+import { Route as AdminContentRouteImport } from './routes/admin.content'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
+import { Route as AdminCampaignsRouteImport } from './routes/admin.campaigns'
+import { Route as AdminAuditLoginsRouteImport } from './routes/admin.audit-logins'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
+import { Route as AdminAbandonedRouteImport } from './routes/admin.abandoned'
 import { Route as AccountPrivacyRouteImport } from './routes/account.privacy'
 import { Route as ApiV1ProductsRouteImport } from './routes/api.v1.products'
 import { Route as ApiV1OrdersRouteImport } from './routes/api.v1.orders'
@@ -210,6 +223,11 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
   path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminWebhooksRoute = AdminWebhooksRouteImport.update({
+  id: '/webhooks',
+  path: '/webhooks',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
@@ -245,6 +263,11 @@ const AdminSettingsRoute = AdminSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSecurityRoute = AdminSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSearchRoute = AdminSearchRouteImport.update({
   id: '/search',
   path: '/search',
@@ -265,6 +288,11 @@ const AdminProductsRoute = AdminProductsRouteImport.update({
   path: '/products',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPrivacyRoute = AdminPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPerformanceRoute = AdminPerformanceRouteImport.update({
   id: '/performance',
   path: '/performance',
@@ -283,6 +311,11 @@ const AdminOtoRoute = AdminOtoRouteImport.update({
 const AdminOrdersRoute = AdminOrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminMessagesRoute = AdminMessagesRouteImport.update({
@@ -315,6 +348,16 @@ const AdminIncompleteRoute = AdminIncompleteRouteImport.update({
   path: '/incomplete',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminHomeBuilderRoute = AdminHomeBuilderRouteImport.update({
+  id: '/home-builder',
+  path: '/home-builder',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminHelpRoute = AdminHelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminErrorsRoute = AdminErrorsRouteImport.update({
   id: '/errors',
   path: '/errors',
@@ -325,9 +368,39 @@ const AdminCustomersRoute = AdminCustomersRouteImport.update({
   path: '/customers',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCreateOrderRoute = AdminCreateOrderRouteImport.update({
+  id: '/create-order',
+  path: '/create-order',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCouponsRoute = AdminCouponsRouteImport.update({
+  id: '/coupons',
+  path: '/coupons',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminConversionRoute = AdminConversionRouteImport.update({
+  id: '/conversion',
+  path: '/conversion',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminContentRoute = AdminContentRouteImport.update({
+  id: '/content',
+  path: '/content',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCampaignsRoute = AdminCampaignsRouteImport.update({
+  id: '/campaigns',
+  path: '/campaigns',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAuditLoginsRoute = AdminAuditLoginsRouteImport.update({
+  id: '/audit-logins',
+  path: '/audit-logins',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAuditRoute = AdminAuditRouteImport.update({
@@ -338,6 +411,11 @@ const AdminAuditRoute = AdminAuditRouteImport.update({
 const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAbandonedRoute = AdminAbandonedRouteImport.update({
+  id: '/abandoned',
+  path: '/abandoned',
   getParentRoute: () => AdminRoute,
 } as any)
 const AccountPrivacyRoute = AccountPrivacyRouteImport.update({
@@ -415,25 +493,37 @@ export interface FileRoutesByFullPath {
   '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRouteWithChildren
   '/account/privacy': typeof AccountPrivacyRoute
+  '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
+  '/admin/audit-logins': typeof AdminAuditLoginsRoute
+  '/admin/campaigns': typeof AdminCampaignsRoute
   '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/content': typeof AdminContentRoute
+  '/admin/conversion': typeof AdminConversionRoute
+  '/admin/coupons': typeof AdminCouponsRoute
+  '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/errors': typeof AdminErrorsRoute
+  '/admin/help': typeof AdminHelpRoute
+  '/admin/home-builder': typeof AdminHomeBuilderRoute
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/landing-pages': typeof AdminLandingPagesRoute
   '/admin/messages': typeof AdminMessagesRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/oto': typeof AdminOtoRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/privacy': typeof AdminPrivacyRoute
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
   '/admin/search': typeof AdminSearchRoute
+  '/admin/security': typeof AdminSecurityRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/shipping': typeof AdminShippingRoute
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
@@ -441,6 +531,7 @@ export interface FileRoutesByFullPath {
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/webhooks': typeof AdminWebhooksRoute
   '/category/$slug': typeof CategorySlugRoute
   '/collection/$slug': typeof CollectionSlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
@@ -480,25 +571,37 @@ export interface FileRoutesByTo {
   '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRouteWithChildren
   '/account/privacy': typeof AccountPrivacyRoute
+  '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
+  '/admin/audit-logins': typeof AdminAuditLoginsRoute
+  '/admin/campaigns': typeof AdminCampaignsRoute
   '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/content': typeof AdminContentRoute
+  '/admin/conversion': typeof AdminConversionRoute
+  '/admin/coupons': typeof AdminCouponsRoute
+  '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/errors': typeof AdminErrorsRoute
+  '/admin/help': typeof AdminHelpRoute
+  '/admin/home-builder': typeof AdminHomeBuilderRoute
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/landing-pages': typeof AdminLandingPagesRoute
   '/admin/messages': typeof AdminMessagesRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/oto': typeof AdminOtoRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/privacy': typeof AdminPrivacyRoute
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
   '/admin/search': typeof AdminSearchRoute
+  '/admin/security': typeof AdminSecurityRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/shipping': typeof AdminShippingRoute
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
@@ -506,6 +609,7 @@ export interface FileRoutesByTo {
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/webhooks': typeof AdminWebhooksRoute
   '/category/$slug': typeof CategorySlugRoute
   '/collection/$slug': typeof CollectionSlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
@@ -547,25 +651,37 @@ export interface FileRoutesById {
   '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRouteWithChildren
   '/account/privacy': typeof AccountPrivacyRoute
+  '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
+  '/admin/audit-logins': typeof AdminAuditLoginsRoute
+  '/admin/campaigns': typeof AdminCampaignsRoute
   '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/content': typeof AdminContentRoute
+  '/admin/conversion': typeof AdminConversionRoute
+  '/admin/coupons': typeof AdminCouponsRoute
+  '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/errors': typeof AdminErrorsRoute
+  '/admin/help': typeof AdminHelpRoute
+  '/admin/home-builder': typeof AdminHomeBuilderRoute
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/landing-pages': typeof AdminLandingPagesRoute
   '/admin/messages': typeof AdminMessagesRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/oto': typeof AdminOtoRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/privacy': typeof AdminPrivacyRoute
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
   '/admin/search': typeof AdminSearchRoute
+  '/admin/security': typeof AdminSecurityRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/shipping': typeof AdminShippingRoute
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
@@ -573,6 +689,7 @@ export interface FileRoutesById {
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/webhooks': typeof AdminWebhooksRoute
   '/category/$slug': typeof CategorySlugRoute
   '/collection/$slug': typeof CollectionSlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
@@ -615,25 +732,37 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/wishlist'
     | '/account/privacy'
+    | '/admin/abandoned'
     | '/admin/analytics'
     | '/admin/audit'
+    | '/admin/audit-logins'
+    | '/admin/campaigns'
     | '/admin/categories'
+    | '/admin/content'
+    | '/admin/conversion'
+    | '/admin/coupons'
+    | '/admin/create-order'
     | '/admin/customers'
     | '/admin/errors'
+    | '/admin/help'
+    | '/admin/home-builder'
     | '/admin/incomplete'
     | '/admin/integrations'
     | '/admin/inventory'
     | '/admin/invoices'
     | '/admin/landing-pages'
     | '/admin/messages'
+    | '/admin/notifications'
     | '/admin/orders'
     | '/admin/oto'
     | '/admin/payments'
     | '/admin/performance'
+    | '/admin/privacy'
     | '/admin/products'
     | '/admin/reports'
     | '/admin/returns'
     | '/admin/search'
+    | '/admin/security'
     | '/admin/settings'
     | '/admin/shipping'
     | '/admin/site-analytics'
@@ -641,6 +770,7 @@ export interface FileRouteTypes {
     | '/admin/storefront'
     | '/admin/support'
     | '/admin/users'
+    | '/admin/webhooks'
     | '/category/$slug'
     | '/collection/$slug'
     | '/debug/analytics'
@@ -680,25 +810,37 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/wishlist'
     | '/account/privacy'
+    | '/admin/abandoned'
     | '/admin/analytics'
     | '/admin/audit'
+    | '/admin/audit-logins'
+    | '/admin/campaigns'
     | '/admin/categories'
+    | '/admin/content'
+    | '/admin/conversion'
+    | '/admin/coupons'
+    | '/admin/create-order'
     | '/admin/customers'
     | '/admin/errors'
+    | '/admin/help'
+    | '/admin/home-builder'
     | '/admin/incomplete'
     | '/admin/integrations'
     | '/admin/inventory'
     | '/admin/invoices'
     | '/admin/landing-pages'
     | '/admin/messages'
+    | '/admin/notifications'
     | '/admin/orders'
     | '/admin/oto'
     | '/admin/payments'
     | '/admin/performance'
+    | '/admin/privacy'
     | '/admin/products'
     | '/admin/reports'
     | '/admin/returns'
     | '/admin/search'
+    | '/admin/security'
     | '/admin/settings'
     | '/admin/shipping'
     | '/admin/site-analytics'
@@ -706,6 +848,7 @@ export interface FileRouteTypes {
     | '/admin/storefront'
     | '/admin/support'
     | '/admin/users'
+    | '/admin/webhooks'
     | '/category/$slug'
     | '/collection/$slug'
     | '/debug/analytics'
@@ -746,25 +889,37 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/wishlist'
     | '/account/privacy'
+    | '/admin/abandoned'
     | '/admin/analytics'
     | '/admin/audit'
+    | '/admin/audit-logins'
+    | '/admin/campaigns'
     | '/admin/categories'
+    | '/admin/content'
+    | '/admin/conversion'
+    | '/admin/coupons'
+    | '/admin/create-order'
     | '/admin/customers'
     | '/admin/errors'
+    | '/admin/help'
+    | '/admin/home-builder'
     | '/admin/incomplete'
     | '/admin/integrations'
     | '/admin/inventory'
     | '/admin/invoices'
     | '/admin/landing-pages'
     | '/admin/messages'
+    | '/admin/notifications'
     | '/admin/orders'
     | '/admin/oto'
     | '/admin/payments'
     | '/admin/performance'
+    | '/admin/privacy'
     | '/admin/products'
     | '/admin/reports'
     | '/admin/returns'
     | '/admin/search'
+    | '/admin/security'
     | '/admin/settings'
     | '/admin/shipping'
     | '/admin/site-analytics'
@@ -772,6 +927,7 @@ export interface FileRouteTypes {
     | '/admin/storefront'
     | '/admin/support'
     | '/admin/users'
+    | '/admin/webhooks'
     | '/category/$slug'
     | '/collection/$slug'
     | '/debug/analytics'
@@ -1020,6 +1176,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/webhooks': {
+      id: '/admin/webhooks'
+      path: '/webhooks'
+      fullPath: '/admin/webhooks'
+      preLoaderRoute: typeof AdminWebhooksRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/users': {
       id: '/admin/users'
       path: '/users'
@@ -1069,6 +1232,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSettingsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/security': {
+      id: '/admin/security'
+      path: '/security'
+      fullPath: '/admin/security'
+      preLoaderRoute: typeof AdminSecurityRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/search': {
       id: '/admin/search'
       path: '/search'
@@ -1097,6 +1267,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProductsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/privacy': {
+      id: '/admin/privacy'
+      path: '/privacy'
+      fullPath: '/admin/privacy'
+      preLoaderRoute: typeof AdminPrivacyRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/performance': {
       id: '/admin/performance'
       path: '/performance'
@@ -1123,6 +1300,13 @@ declare module '@tanstack/react-router' {
       path: '/orders'
       fullPath: '/admin/orders'
       preLoaderRoute: typeof AdminOrdersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/messages': {
@@ -1167,6 +1351,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIncompleteRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/home-builder': {
+      id: '/admin/home-builder'
+      path: '/home-builder'
+      fullPath: '/admin/home-builder'
+      preLoaderRoute: typeof AdminHomeBuilderRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/help': {
+      id: '/admin/help'
+      path: '/help'
+      fullPath: '/admin/help'
+      preLoaderRoute: typeof AdminHelpRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/errors': {
       id: '/admin/errors'
       path: '/errors'
@@ -1181,11 +1379,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCustomersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/create-order': {
+      id: '/admin/create-order'
+      path: '/create-order'
+      fullPath: '/admin/create-order'
+      preLoaderRoute: typeof AdminCreateOrderRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/coupons': {
+      id: '/admin/coupons'
+      path: '/coupons'
+      fullPath: '/admin/coupons'
+      preLoaderRoute: typeof AdminCouponsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/conversion': {
+      id: '/admin/conversion'
+      path: '/conversion'
+      fullPath: '/admin/conversion'
+      preLoaderRoute: typeof AdminConversionRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/content': {
+      id: '/admin/content'
+      path: '/content'
+      fullPath: '/admin/content'
+      preLoaderRoute: typeof AdminContentRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/categories': {
       id: '/admin/categories'
       path: '/categories'
       fullPath: '/admin/categories'
       preLoaderRoute: typeof AdminCategoriesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/campaigns': {
+      id: '/admin/campaigns'
+      path: '/campaigns'
+      fullPath: '/admin/campaigns'
+      preLoaderRoute: typeof AdminCampaignsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/audit-logins': {
+      id: '/admin/audit-logins'
+      path: '/audit-logins'
+      fullPath: '/admin/audit-logins'
+      preLoaderRoute: typeof AdminAuditLoginsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/audit': {
@@ -1200,6 +1440,13 @@ declare module '@tanstack/react-router' {
       path: '/analytics'
       fullPath: '/admin/analytics'
       preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/abandoned': {
+      id: '/admin/abandoned'
+      path: '/abandoned'
+      fullPath: '/admin/abandoned'
+      preLoaderRoute: typeof AdminAbandonedRouteImport
       parentRoute: typeof AdminRoute
     }
     '/account/privacy': {
@@ -1332,25 +1579,37 @@ const AdminProductsRouteWithChildren = AdminProductsRoute._addFileChildren(
 )
 
 interface AdminRouteChildren {
+  AdminAbandonedRoute: typeof AdminAbandonedRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminAuditRoute: typeof AdminAuditRoute
+  AdminAuditLoginsRoute: typeof AdminAuditLoginsRoute
+  AdminCampaignsRoute: typeof AdminCampaignsRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
+  AdminContentRoute: typeof AdminContentRoute
+  AdminConversionRoute: typeof AdminConversionRoute
+  AdminCouponsRoute: typeof AdminCouponsRoute
+  AdminCreateOrderRoute: typeof AdminCreateOrderRoute
   AdminCustomersRoute: typeof AdminCustomersRouteWithChildren
   AdminErrorsRoute: typeof AdminErrorsRoute
+  AdminHelpRoute: typeof AdminHelpRoute
+  AdminHomeBuilderRoute: typeof AdminHomeBuilderRoute
   AdminIncompleteRoute: typeof AdminIncompleteRoute
   AdminIntegrationsRoute: typeof AdminIntegrationsRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
   AdminInvoicesRoute: typeof AdminInvoicesRoute
   AdminLandingPagesRoute: typeof AdminLandingPagesRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminOrdersRoute: typeof AdminOrdersRouteWithChildren
   AdminOtoRoute: typeof AdminOtoRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
   AdminPerformanceRoute: typeof AdminPerformanceRoute
+  AdminPrivacyRoute: typeof AdminPrivacyRoute
   AdminProductsRoute: typeof AdminProductsRouteWithChildren
   AdminReportsRoute: typeof AdminReportsRoute
   AdminReturnsRoute: typeof AdminReturnsRoute
   AdminSearchRoute: typeof AdminSearchRoute
+  AdminSecurityRoute: typeof AdminSecurityRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminShippingRoute: typeof AdminShippingRoute
   AdminSiteAnalyticsRoute: typeof AdminSiteAnalyticsRoute
@@ -1358,29 +1617,42 @@ interface AdminRouteChildren {
   AdminStorefrontRoute: typeof AdminStorefrontRoute
   AdminSupportRoute: typeof AdminSupportRoute
   AdminUsersRoute: typeof AdminUsersRoute
+  AdminWebhooksRoute: typeof AdminWebhooksRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAbandonedRoute: AdminAbandonedRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminAuditRoute: AdminAuditRoute,
+  AdminAuditLoginsRoute: AdminAuditLoginsRoute,
+  AdminCampaignsRoute: AdminCampaignsRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,
+  AdminContentRoute: AdminContentRoute,
+  AdminConversionRoute: AdminConversionRoute,
+  AdminCouponsRoute: AdminCouponsRoute,
+  AdminCreateOrderRoute: AdminCreateOrderRoute,
   AdminCustomersRoute: AdminCustomersRouteWithChildren,
   AdminErrorsRoute: AdminErrorsRoute,
+  AdminHelpRoute: AdminHelpRoute,
+  AdminHomeBuilderRoute: AdminHomeBuilderRoute,
   AdminIncompleteRoute: AdminIncompleteRoute,
   AdminIntegrationsRoute: AdminIntegrationsRoute,
   AdminInventoryRoute: AdminInventoryRoute,
   AdminInvoicesRoute: AdminInvoicesRoute,
   AdminLandingPagesRoute: AdminLandingPagesRoute,
   AdminMessagesRoute: AdminMessagesRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
   AdminOrdersRoute: AdminOrdersRouteWithChildren,
   AdminOtoRoute: AdminOtoRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
   AdminPerformanceRoute: AdminPerformanceRoute,
+  AdminPrivacyRoute: AdminPrivacyRoute,
   AdminProductsRoute: AdminProductsRouteWithChildren,
   AdminReportsRoute: AdminReportsRoute,
   AdminReturnsRoute: AdminReturnsRoute,
   AdminSearchRoute: AdminSearchRoute,
+  AdminSecurityRoute: AdminSecurityRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminShippingRoute: AdminShippingRoute,
   AdminSiteAnalyticsRoute: AdminSiteAnalyticsRoute,
@@ -1388,6 +1660,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminStorefrontRoute: AdminStorefrontRoute,
   AdminSupportRoute: AdminSupportRoute,
   AdminUsersRoute: AdminUsersRoute,
+  AdminWebhooksRoute: AdminWebhooksRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
@@ -1441,12 +1714,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
