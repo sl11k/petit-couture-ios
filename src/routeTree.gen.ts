@@ -94,6 +94,7 @@ import { Route as AdminCouponsIdRouteImport } from './routes/admin.coupons.$id'
 import { Route as AdminCampaignsIdRouteImport } from './routes/admin.campaigns.$id'
 import { Route as AdminAuditIdRouteImport } from './routes/admin.audit.$id'
 import { Route as AccountReturnsNewRouteImport } from './routes/account.returns.new'
+import { Route as ApiPublicCronNotifyDelaysRouteImport } from './routes/api/public/cron.notify-delays'
 
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
@@ -522,6 +523,12 @@ const AccountReturnsNewRoute = AccountReturnsNewRouteImport.update({
   path: '/returns/new',
   getParentRoute: () => AccountRoute,
 } as any)
+const ApiPublicCronNotifyDelaysRoute =
+  ApiPublicCronNotifyDelaysRouteImport.update({
+    id: '/api/public/cron/notify-delays',
+    path: '/api/public/cron/notify-delays',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -609,6 +616,7 @@ export interface FileRoutesByFullPath {
   '/api/v1/inventory': typeof ApiV1InventoryRoute
   '/api/v1/orders': typeof ApiV1OrdersRoute
   '/api/v1/products': typeof ApiV1ProductsRoute
+  '/api/public/cron/notify-delays': typeof ApiPublicCronNotifyDelaysRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -695,6 +703,7 @@ export interface FileRoutesByTo {
   '/api/v1/inventory': typeof ApiV1InventoryRoute
   '/api/v1/orders': typeof ApiV1OrdersRoute
   '/api/v1/products': typeof ApiV1ProductsRoute
+  '/api/public/cron/notify-delays': typeof ApiPublicCronNotifyDelaysRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -783,6 +792,7 @@ export interface FileRoutesById {
   '/api/v1/inventory': typeof ApiV1InventoryRoute
   '/api/v1/orders': typeof ApiV1OrdersRoute
   '/api/v1/products': typeof ApiV1ProductsRoute
+  '/api/public/cron/notify-delays': typeof ApiPublicCronNotifyDelaysRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -872,6 +882,7 @@ export interface FileRouteTypes {
     | '/api/v1/inventory'
     | '/api/v1/orders'
     | '/api/v1/products'
+    | '/api/public/cron/notify-delays'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -958,6 +969,7 @@ export interface FileRouteTypes {
     | '/api/v1/inventory'
     | '/api/v1/orders'
     | '/api/v1/products'
+    | '/api/public/cron/notify-delays'
   id:
     | '__root__'
     | '/'
@@ -1045,6 +1057,7 @@ export interface FileRouteTypes {
     | '/api/v1/inventory'
     | '/api/v1/orders'
     | '/api/v1/products'
+    | '/api/public/cron/notify-delays'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1079,6 +1092,7 @@ export interface RootRouteChildren {
   ApiV1InventoryRoute: typeof ApiV1InventoryRoute
   ApiV1OrdersRoute: typeof ApiV1OrdersRoute
   ApiV1ProductsRoute: typeof ApiV1ProductsRoute
+  ApiPublicCronNotifyDelaysRoute: typeof ApiPublicCronNotifyDelaysRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1678,6 +1692,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountReturnsNewRouteImport
       parentRoute: typeof AccountRoute
     }
+    '/api/public/cron/notify-delays': {
+      id: '/api/public/cron/notify-delays'
+      path: '/api/public/cron/notify-delays'
+      fullPath: '/api/public/cron/notify-delays'
+      preLoaderRoute: typeof ApiPublicCronNotifyDelaysRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1956,6 +1977,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiV1InventoryRoute: ApiV1InventoryRoute,
   ApiV1OrdersRoute: ApiV1OrdersRoute,
   ApiV1ProductsRoute: ApiV1ProductsRoute,
+  ApiPublicCronNotifyDelaysRoute: ApiPublicCronNotifyDelaysRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

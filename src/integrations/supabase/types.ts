@@ -5323,6 +5323,16 @@ export type Database = {
       mask_email: { Args: { _email: string }; Returns: string }
       mask_phone: { Args: { _phone: string }; Returns: string }
       next_invoice_number: { Args: { _prefix?: string }; Returns: string }
+      notify_shipping_delays: {
+        Args: {
+          _intransit_threshold_days?: number
+          _pending_threshold_hours?: number
+        }
+        Returns: {
+          kind: string
+          notified: number
+        }[]
+      }
       refresh_product_sales_counts: { Args: never; Returns: undefined }
       register_failed_login: { Args: { _email: string }; Returns: undefined }
       release_expired_order_stock: {
