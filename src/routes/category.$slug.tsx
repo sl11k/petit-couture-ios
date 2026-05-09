@@ -301,13 +301,28 @@ function FilterSortBar({
   count,
   sort,
   onSortChange,
+  priceMax,
+  priceBounds,
+  onPriceMaxChange,
+  inStockOnly,
+  onInStockChange,
+  onSaleOnly,
+  onOnSaleChange,
 }: {
   ar: boolean;
   count: number;
   sort: SortKey;
   onSortChange: (s: SortKey) => void;
+  priceMax: number;
+  priceBounds: [number, number];
+  onPriceMaxChange: (n: number) => void;
+  inStockOnly: boolean;
+  onInStockChange: (b: boolean) => void;
+  onSaleOnly: boolean;
+  onOnSaleChange: (b: boolean) => void;
 }) {
   const [openSort, setOpenSort] = useState(false);
+  const [openFilter, setOpenFilter] = useState(false);
   const sortLabels: Record<SortKey, string> = ar
     ? {
         popular: "الأكثر شهرة",
@@ -327,6 +342,7 @@ function FilterSortBar({
       <div className="max-w-[1200px] mx-auto grid grid-cols-2 divide-x divide-border">
         <button
           type="button"
+          onClick={() => setOpenFilter(true)}
           className="h-12 flex items-center justify-center gap-2 text-[14px] font-medium text-foreground hover:bg-muted/50 transition"
         >
           <span>{ar ? "تصفية" : "Filter By"}</span>
