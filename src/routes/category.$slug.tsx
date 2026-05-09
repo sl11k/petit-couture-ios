@@ -183,10 +183,10 @@ function CategoryView() {
 
   // Sort + Filter state
   const [sortKey, setSortKey] = useState<SortKey>("popular");
-  const priceBounds = useMemo(() => {
-    const prices = products.map((p) => p.price ?? 0).filter((n) => n > 0);
-    if (prices.length === 0) return [0, 1000] as [number, number];
-    return [Math.floor(Math.min(...prices)), Math.ceil(Math.max(...prices))] as [number, number];
+  const priceBounds = useMemo<[number, number]>(() => {
+    const prices = (products as DbProduct[]).map((p) => p.price ?? 0).filter((n: number) => n > 0);
+    if (prices.length === 0) return [0, 1000];
+    return [Math.floor(Math.min(...prices)), Math.ceil(Math.max(...prices))];
   }, [products]);
   const [priceMax, setPriceMax] = useState<number>(priceBounds[1]);
   const [inStockOnly, setInStockOnly] = useState(false);
@@ -194,7 +194,7 @@ function CategoryView() {
   useEffect(() => { setPriceMax(priceBounds[1]); }, [priceBounds[1]]);
 
   const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
+    return (products as DbProduct[]).filter((p) => {
       if ((p.price ?? 0) > priceMax) return false;
       if (inStockOnly && (p.stock ?? 0) <= 0) return false;
       if (onSaleOnly && !(p.compare_at_price && p.price && p.compare_at_price > p.price)) return false;
