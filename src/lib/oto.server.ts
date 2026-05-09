@@ -93,3 +93,87 @@ export async function otoCreateOrder(input: OtoCreateOrderInput) {
     body: JSON.stringify(payload),
   });
 }
+
+// Shared helper used by both the manual server-fn and the auto-creation
+// inside placeOrder. Returns { ok, shipment?, error? } and never throws.
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
+export async function createOtoShipmentForOrder(
+  orderId: string,
+  createdBy?: string | null,
+): Promise<{ ok: boolean; shipment?: any; otoResp?: any; error?: string }> {
+  const { data: order, error } = await supabaseAdmin
+    .from("orders").select("*").eq("id", orderId).single();
+  if (error || !order) return { ok: false, error: "Order not found" };
+
+  // Skip if already has an OTO shipment
+  const existing = await supabaseAdmin
+    .from("shipments").select("id").eq("order_id", orderId).eq("carrier_code", "oto").maybeSingle();
+  if (existing.data) return { ok: true, shipment: existing.data };
+
+  const addr: any = order.shipping_address || {};
+  const itemsCountRes = await supabaseAdmin
+    .from("order_items").select("qty").eq("order_id", order.id);
+  const itemsCount = (itemsCountRes.data || []).reduce((s, r: any) => s + Number(r.qty || 0), 0) || 1;
+
+  let otoResp: any;
+  try {
+    otoResp = await otoCreateOrder({
+      orderId: order.id,
+      orderNumber: order.order_number,
+      customerName: order.customer_name,
+      customerPhone: order.customer_phone,
+      customerEmail: order.customer_email,
+      city: addr.city || (order as any).shipping_city || "Riyadh",
+      country: addr.country_code || "SA",
+      address1: addr.line1 || addr.street || addr.address || "",
+      address2: addr.line2 || addr.district || null,
+      postcode: addr.postcode || addr.postalCode || addr.zip || null,
+      weight: Number((order as any).total_weight_kg || 1),
+      codAmount: order.payment_status !== "paid" ? Number(order.total) : 0,
+      itemsCount,
+      totalValue: Number(order.total),
+      currency: order.currency || "SAR",
+    });
+  } catch (e: any) {
+    return { ok: false, error: e?.message || "OTO request failed" };
+  }
+
+  const trackingNumber: string | undefined =
+    otoResp?.tracking_number || otoResp?.awb || otoResp?.otoId || otoResp?.reference;
+  const trackingUrl: string | undefined =
+    otoResp?.tracking_url || otoResp?.trackingLink || otoResp?.label_url;
+  const awbUrl: string | undefined = otoResp?.label_url || otoResp?.awb_url;
+
+  const { data: shipment } = await supabaseAdmin
+    .from("shipments").insert({
+      order_id: order.id,
+      order_number: order.order_number,
+      carrier_code: "oto",
+      status: "label_created",
+      tracking_number: trackingNumber || null,
+      tracking_url: trackingUrl || null,
+      awb_url: awbUrl || null,
+      customer_name: order.customer_name,
+      customer_phone: order.customer_phone,
+      customer_email: order.customer_email,
+      shipping_address: addr,
+      city: addr.city || null,
+      country_code: addr.country_code || "SA",
+      weight_kg: Number((order as any).total_weight_kg || 1),
+      declared_value: Number(order.total),
+      cod_amount: order.payment_status !== "paid" ? Number(order.total) : 0,
+      shipping_fee: Number(order.shipping_fee || 0),
+      raw_response: otoResp,
+      created_by: createdBy || null,
+    }).select().single();
+
+  await supabaseAdmin.from("orders").update({
+    shipping_carrier: "oto",
+    tracking_number: trackingNumber || null,
+    tracking_url: trackingUrl || null,
+    shipping_status: "label_created",
+  }).eq("id", order.id);
+
+  return { ok: true, shipment, otoResp };
+}
