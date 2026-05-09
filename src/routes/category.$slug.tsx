@@ -181,10 +181,29 @@ function CategoryView() {
     setShowSeedFallback(products.length === 0 && !!productsByCategory["best-sellers"]);
   }, [products.length]);
 
-  // Sort
+  // Sort + Filter state
   const [sortKey, setSortKey] = useState<SortKey>("popular");
+  const priceBounds = useMemo<[number, number]>(() => {
+    const prices = (products as DbProduct[]).map((p) => p.price ?? 0).filter((n: number) => n > 0);
+    if (prices.length === 0) return [0, 1000];
+    return [Math.floor(Math.min(...prices)), Math.ceil(Math.max(...prices))];
+  }, [products]);
+  const [priceMax, setPriceMax] = useState<number>(priceBounds[1]);
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [onSaleOnly, setOnSaleOnly] = useState(false);
+  useEffect(() => { setPriceMax(priceBounds[1]); }, [priceBounds[1]]);
+
+  const filteredProducts = useMemo(() => {
+    return (products as DbProduct[]).filter((p) => {
+      if ((p.price ?? 0) > priceMax) return false;
+      if (inStockOnly && (p.stock ?? 0) <= 0) return false;
+      if (onSaleOnly && !(p.compare_at_price && p.price && p.compare_at_price > p.price)) return false;
+      return true;
+    });
+  }, [products, priceMax, inStockOnly, onSaleOnly]);
+
   const sortedProducts = useMemo(() => {
-    const arr = [...products];
+    const arr = [...filteredProducts];
     switch (sortKey) {
       case "newest":
         return arr.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
@@ -196,7 +215,7 @@ function CategoryView() {
       default:
         return arr.sort((a, b) => (b.sales_count ?? 0) - (a.sales_count ?? 0));
     }
-  }, [products, sortKey]);
+  }, [filteredProducts, sortKey]);
 
   return (
     <main className="min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
@@ -245,7 +264,19 @@ function CategoryView() {
       )}
 
       {/* Filter / Sort bar */}
-      <FilterSortBar ar={ar} count={sortedProducts.length} sort={sortKey} onSortChange={setSortKey} />
+      <FilterSortBar
+        ar={ar}
+        count={sortedProducts.length}
+        sort={sortKey}
+        onSortChange={setSortKey}
+        priceMax={priceMax}
+        priceBounds={priceBounds}
+        onPriceMaxChange={setPriceMax}
+        inStockOnly={inStockOnly}
+        onInStockChange={setInStockOnly}
+        onSaleOnly={onSaleOnly}
+        onOnSaleChange={setOnSaleOnly}
+      />
 
       {/* Products grid */}
       <section className="px-4 sm:px-6 py-6 sm:py-10 max-w-[1200px] mx-auto">
@@ -270,13 +301,28 @@ function FilterSortBar({
   count,
   sort,
   onSortChange,
+  priceMax,
+  priceBounds,
+  onPriceMaxChange,
+  inStockOnly,
+  onInStockChange,
+  onSaleOnly,
+  onOnSaleChange,
 }: {
   ar: boolean;
   count: number;
   sort: SortKey;
   onSortChange: (s: SortKey) => void;
+  priceMax: number;
+  priceBounds: [number, number];
+  onPriceMaxChange: (n: number) => void;
+  inStockOnly: boolean;
+  onInStockChange: (b: boolean) => void;
+  onSaleOnly: boolean;
+  onOnSaleChange: (b: boolean) => void;
 }) {
   const [openSort, setOpenSort] = useState(false);
+  const [openFilter, setOpenFilter] = useState(false);
   const sortLabels: Record<SortKey, string> = ar
     ? {
         popular: "الأكثر شهرة",
@@ -296,6 +342,7 @@ function FilterSortBar({
       <div className="max-w-[1200px] mx-auto grid grid-cols-2 divide-x divide-border">
         <button
           type="button"
+          onClick={() => setOpenFilter(true)}
           className="h-12 flex items-center justify-center gap-2 text-[14px] font-medium text-foreground hover:bg-muted/50 transition"
         >
           <span>{ar ? "تصفية" : "Filter By"}</span>
@@ -338,6 +385,73 @@ function FilterSortBar({
         <p className="text-center text-[12.5px] text-muted-foreground py-1.5">
           {ar ? `عرض ${count} منتج` : `Showing ${count} styles`}
         </p>
+      )}
+
+      {openFilter && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setOpenFilter(false)} aria-hidden />
+          <div className="fixed inset-x-0 bottom-0 z-50 bg-background rounded-t-2xl border-t border-border p-5 max-w-[600px] mx-auto animate-in slide-in-from-bottom duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold">{ar ? "تصفية" : "Filter"}</h3>
+              <button onClick={() => setOpenFilter(false)} className="text-sm text-primary">
+                {ar ? "تم" : "Done"}
+              </button>
+            </div>
+
+            <div className="space-y-5">
+              <div>
+                <div className="flex justify-between text-[13px] mb-2">
+                  <span>{ar ? "أقصى سعر" : "Max price"}</span>
+                  <span className="text-primary font-medium">{priceMax} {ar ? "ر.س" : "SAR"}</span>
+                </div>
+                <input
+                  type="range"
+                  min={priceBounds[0]}
+                  max={priceBounds[1]}
+                  value={priceMax}
+                  onChange={(e) => onPriceMaxChange(Number(e.target.value))}
+                  className="w-full accent-primary"
+                />
+                <div className="flex justify-between text-[11px] text-muted-foreground mt-1">
+                  <span>{priceBounds[0]}</span>
+                  <span>{priceBounds[1]}</span>
+                </div>
+              </div>
+
+              <label className="flex items-center justify-between py-2 cursor-pointer">
+                <span className="text-[14px]">{ar ? "متوفر فقط" : "In stock only"}</span>
+                <input
+                  type="checkbox"
+                  checked={inStockOnly}
+                  onChange={(e) => onInStockChange(e.target.checked)}
+                  className="h-4 w-4 accent-primary"
+                />
+              </label>
+
+              <label className="flex items-center justify-between py-2 cursor-pointer">
+                <span className="text-[14px]">{ar ? "العروض فقط" : "On sale only"}</span>
+                <input
+                  type="checkbox"
+                  checked={onSaleOnly}
+                  onChange={(e) => onOnSaleChange(e.target.checked)}
+                  className="h-4 w-4 accent-primary"
+                />
+              </label>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onPriceMaxChange(priceBounds[1]);
+                  onInStockChange(false);
+                  onOnSaleChange(false);
+                }}
+                className="w-full h-11 rounded-lg border border-border text-[13px] text-foreground hover:bg-muted transition"
+              >
+                {ar ? "إعادة ضبط" : "Reset filters"}
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
