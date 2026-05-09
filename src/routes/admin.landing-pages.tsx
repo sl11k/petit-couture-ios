@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "@/features/admin/components/ComingSoon";
+import { AdminPage } from "@/features/admin/components/AdminPage";
+import { landingPagesConfig } from "@/features/admin/configs/phase4.config";
 
 export const Route = createFileRoute("/admin/landing-pages")({
-  component: () => <ComingSoon title={{ ar: "صفحات الهبوط", en: "Landing pages" }} />,
+  component: () => <AdminPage config={landingPagesConfig} />,
 });
