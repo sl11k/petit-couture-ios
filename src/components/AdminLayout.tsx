@@ -396,7 +396,9 @@ export function AdminShell({ children }: { children?: ReactNode }) {
         </header>
 
         <main className="flex-1 overflow-x-auto p-4 lg:p-6">
-          {children ?? <Outlet />}
+          <AdminTranslateScope enabled={lang === "en"}>
+            {children ?? <Outlet />}
+          </AdminTranslateScope>
         </main>
       </div>
     </div>
