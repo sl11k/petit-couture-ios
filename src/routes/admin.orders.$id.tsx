@@ -260,6 +260,7 @@ function OrderDetail() {
                   فتح رابط التتبع ↗
                 </a>
               )}
+              <OtoCreateShipmentButton orderId={order.id} hasTracking={!!order.tracking_number} onDone={load} />
             </Section>
           </div>
 
