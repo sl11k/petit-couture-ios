@@ -46,6 +46,9 @@ const ADMIN_DYNAMIC_PATTERNS: Array<[(text: string) => boolean, (text: string) =
   [(text) => /^\d+\s*د متبقية$/.test(text), (text) => text.replace(/^(\d+)\s*د متبقية$/, "$1m remaining")],
   [(text) => /^\d+\s*س متبقية$/.test(text), (text) => text.replace(/^(\d+)\s*س متبقية$/, "$1h remaining")],
   [(text) => /^\d+\s*ي متبقية$/.test(text), (text) => text.replace(/^(\d+)\s*ي متبقية$/, "$1d remaining")],
+  [(text) => /^\d+\s+عملية بحث خلال آخر\s+\d+\s+يوم$/.test(text), (text) => text.replace(/^(\d+)\s+عملية بحث خلال آخر\s+(\d+)\s+يوم$/, "$1 searches over the last $2 days")],
+  [(text) => /^\d+\s+قياس خلال آخر\s+\d+\s+يوم$/.test(text), (text) => text.replace(/^(\d+)\s+قياس خلال آخر\s+(\d+)\s+يوم$/, "$1 measurements over the last $2 days")],
+  [(text) => /^صندوق الوارد\s+\d+$/.test(text), (text) => text.replace(/^صندوق الوارد\s+(\d+)$/, "Inbox $1")],
   [(text) => /^سيُلغى تلقائيًا بعد\s+\d+\s+ساعة$/.test(text), (text) => text.replace(/^سيُلغى تلقائيًا بعد\s+(\d+)\s+ساعة$/, "Will auto-cancel in $1 hours")],
   [(text) => /^✅\s*تحوّلت إلى طلب$/.test(text), () => "✅ Converted to order"],
   [(text) => /^🛒\s*سلة متروكة$/.test(text), () => "🛒 Abandoned cart"],
@@ -90,6 +93,10 @@ const ADMIN_FRAGMENT_TO_EN: Array<[string, string]> = [
   ["إيميل", "Email"],
   ["مكالمة", "Call"],
   ["ملاحظة", "Note"],
+  ["المحتوى — استخدم", "Content — use"],
+  ["للمتغيرات المتاحة", "for available variables"],
+  ["الحملات التسويقية تستهدف فقط المستخدمين الموافقين عبر", "Marketing campaigns target only users opted in via"],
+  ["في كود الإرسال.", "in the sending code."],
 ];
 
 const ADMIN_PRESENTATION_REPLACEMENTS: Array<[RegExp, string]> = [
