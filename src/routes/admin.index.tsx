@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { PageHeader } from "@/features/admin/components/PageHeader";
 import { DashboardCharts } from "@/features/admin/components/DashboardCharts";
+import { AdminQuickSearch } from "@/features/admin/components/AdminQuickSearch";
 import {
   ShoppingBag,
   Package,
@@ -270,6 +271,11 @@ function Dashboard() {
           en: "Unified overview of orders, products and customers",
         }}
       />
+
+      {/* Quick search */}
+      <div className="max-w-xl">
+        <AdminQuickSearch />
+      </div>
 
       {/* Top KPI cards */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
