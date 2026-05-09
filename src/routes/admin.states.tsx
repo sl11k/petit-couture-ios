@@ -24,11 +24,11 @@ function StatesPage() {
       const payment: Record<string, number> = {};
       await Promise.all([
         ...ORDER_STATUSES.map(async (s) => {
-          const { count } = await supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", s);
+          const { count } = await supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", s as any);
           status[s] = count ?? 0;
         }),
         ...PAYMENT_STATUSES.map(async (s) => {
-          const { count } = await supabase.from("orders").select("id", { count: "exact", head: true }).eq("payment_status", s);
+          const { count } = await supabase.from("orders").select("id", { count: "exact", head: true }).eq("payment_status", s as any);
           payment[s] = count ?? 0;
         }),
       ]);
