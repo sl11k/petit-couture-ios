@@ -115,6 +115,9 @@ function RelatedTable({ def, mainRow, lang }: { def: RelatedTableDef; mainRow: a
     const fkVal = def.foreignKeyValue ? def.foreignKeyValue(mainRow) : mainRow.id;
     if (!fkVal) { setRows([]); setLoading(false); return; }
     let q = supabase.from(def.table as any).select(def.select ?? "*").eq(def.foreignKey, fkVal).limit(def.limit ?? 100);
+    if (def.extraEq) {
+      for (const [k, v] of Object.entries(def.extraEq)) q = q.eq(k, v);
+    }
     if (def.orderBy) q = q.order(def.orderBy.column, { ascending: def.orderBy.ascending ?? false });
     q.then(({ data }) => { setRows(data ?? []); setLoading(false); });
   }, [mainRow, def.table]);
