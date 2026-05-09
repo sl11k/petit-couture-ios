@@ -47,3 +47,28 @@ export const categoriesConfig: AdminPageConfig = {
   ],
   actions: { export: true },
 };
+
+categoriesConfig.actions = { ...categoriesConfig.actions, create: true, edit: true, delete: true };
+categoriesConfig.form = [
+  { key: "name_ar", label: { ar: "الاسم (AR)", en: "Name (AR)" }, type: "text", required: true, maxLength: 120 },
+  { key: "name_en", label: { ar: "الاسم (EN)", en: "Name (EN)" }, type: "text", required: true, maxLength: 120 },
+  { key: "slug", label: { ar: "Slug", en: "Slug" }, type: "text", required: true, pattern: "^[a-z0-9-]+$" },
+  { key: "icon", label: { ar: "أيقونة", en: "Icon" }, type: "text" },
+  { key: "image_url", label: { ar: "رابط الصورة", en: "Image URL" }, type: "url" },
+  { key: "image_alt", label: { ar: "وصف الصورة", en: "Image alt" }, type: "text" },
+  { key: "banner_url", label: { ar: "رابط البانر", en: "Banner URL" }, type: "url" },
+  { key: "banner_link", label: { ar: "رابط نقر البانر", en: "Banner link" }, type: "url" },
+  { key: "display_order", label: { ar: "الترتيب", en: "Sort order" }, type: "number", min: 0, defaultValue: 0 },
+  { key: "is_active", label: { ar: "نشط", en: "Active" }, type: "boolean", defaultValue: true },
+  { key: "description_ar", label: { ar: "الوصف (AR)", en: "Description (AR)" }, type: "textarea", rows: 3 },
+  { key: "description_en", label: { ar: "الوصف (EN)", en: "Description (EN)" }, type: "textarea", rows: 3 },
+  { key: "meta_title", label: { ar: "Meta Title", en: "Meta Title" }, type: "text" },
+  { key: "meta_description", label: { ar: "Meta Description", en: "Meta Description" }, type: "textarea", rows: 2 },
+];
+
+customersConfig.actions = { ...customersConfig.actions, edit: true };
+customersConfig.form = [
+  { key: "full_name", label: { ar: "الاسم الكامل", en: "Full name" }, type: "text", required: true, maxLength: 120 },
+  { key: "email", label: { ar: "البريد الإلكتروني", en: "Email" }, type: "email", editOnly: true },
+  { key: "phone", label: { ar: "الهاتف", en: "Phone" }, type: "tel" },
+];

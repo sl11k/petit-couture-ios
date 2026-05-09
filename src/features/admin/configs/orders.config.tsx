@@ -54,3 +54,25 @@ export const ordersConfig: AdminPageConfig = {
     },
   ],
 };
+
+ordersConfig.actions = { ...ordersConfig.actions, edit: true };
+ordersConfig.form = [
+  { key: "status", label: { ar: "حالة الطلب", en: "Order status" }, type: "select", required: true, options: [
+    { value: "pending", label: { ar: "قيد الانتظار", en: "Pending" } },
+    { value: "processing", label: { ar: "قيد التنفيذ", en: "Processing" } },
+    { value: "shipped", label: { ar: "تم الشحن", en: "Shipped" } },
+    { value: "delivered", label: { ar: "تم التسليم", en: "Delivered" } },
+    { value: "cancelled", label: { ar: "ملغي", en: "Cancelled" } },
+    { value: "refunded", label: { ar: "مسترد", en: "Refunded" } },
+  ]},
+  { key: "payment_status", label: { ar: "حالة الدفع", en: "Payment status" }, type: "select", required: true, options: [
+    { value: "paid", label: { ar: "مدفوع", en: "Paid" } },
+    { value: "unpaid", label: { ar: "غير مدفوع", en: "Unpaid" } },
+    { value: "partially_paid", label: { ar: "مدفوع جزئياً", en: "Partially paid" } },
+    { value: "refunded", label: { ar: "مسترجع", en: "Refunded" } },
+    { value: "failed", label: { ar: "فشل", en: "Failed" } },
+  ]},
+  { key: "tracking_number", label: { ar: "رقم التتبع", en: "Tracking number" }, type: "text" },
+  { key: "shipping_carrier", label: { ar: "شركة الشحن", en: "Carrier" }, type: "text" },
+  { key: "notes", label: { ar: "ملاحظات داخلية", en: "Admin notes" }, type: "textarea", rows: 3 },
+];

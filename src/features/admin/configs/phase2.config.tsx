@@ -215,3 +215,78 @@ export const reportsConfig: AdminPageConfig = {
 
 // Add row navigation to detail pages
 couponsConfig.rowHref = (row: any) => `/admin/coupons/${row.id}`;
+
+couponsConfig.actions = { ...couponsConfig.actions, create: true, edit: true, delete: true };
+couponsConfig.form = [
+  { key: "code", label: { ar: "كود الكوبون", en: "Coupon code" }, type: "text", required: true, maxLength: 40, helpText: { ar: "بدون مسافات، يحوّل لأحرف كبيرة", en: "No spaces, will be uppercased" } },
+  { key: "name", label: { ar: "اسم العرض", en: "Display name" }, type: "text", maxLength: 120 },
+  { key: "description", label: { ar: "الوصف", en: "Description" }, type: "textarea", rows: 2 },
+  { key: "discount_type", label: { ar: "نوع الخصم", en: "Discount type" }, type: "select", required: true, defaultValue: "percent", options: [
+    { value: "percent", label: { ar: "نسبة %", en: "Percentage" } },
+    { value: "fixed", label: { ar: "مبلغ ثابت", en: "Fixed amount" } },
+    { value: "free_shipping", label: { ar: "شحن مجاني", en: "Free shipping" } },
+  ]},
+  { key: "discount_value", label: { ar: "قيمة الخصم", en: "Discount value" }, type: "number", required: true, min: 0, step: 0.01 },
+  { key: "min_subtotal", label: { ar: "الحد الأدنى للسلة", en: "Min subtotal" }, type: "number", min: 0, step: 0.01 },
+  { key: "max_uses", label: { ar: "أقصى عدد استخدامات", en: "Max uses" }, type: "number", min: 0 },
+  { key: "per_customer_limit", label: { ar: "حد لكل عميل", en: "Per-customer limit" }, type: "number", min: 0 },
+  { key: "starts_at", label: { ar: "يبدأ من", en: "Starts at" }, type: "datetime" },
+  { key: "expires_at", label: { ar: "ينتهي في", en: "Expires at" }, type: "datetime" },
+  { key: "first_order_only", label: { ar: "أول طلب فقط", en: "First order only" }, type: "boolean" },
+  { key: "is_active", label: { ar: "نشط", en: "Active" }, type: "boolean", defaultValue: true },
+];
+
+returnsConfig.actions = { ...returnsConfig.actions, edit: true };
+returnsConfig.form = [
+  { key: "status", label: { ar: "الحالة", en: "Status" }, type: "select", required: true, options: [
+    { value: "new", label: { ar: "جديد", en: "New" } },
+    { value: "pending", label: { ar: "معلق", en: "Pending" } },
+    { value: "approved", label: { ar: "موافق عليه", en: "Approved" } },
+    { value: "rejected", label: { ar: "مرفوض", en: "Rejected" } },
+    { value: "refunded", label: { ar: "مسترد", en: "Refunded" } },
+    { value: "completed", label: { ar: "مكتمل", en: "Completed" } },
+  ]},
+  { key: "refund_method", label: { ar: "طريقة الاسترداد", en: "Refund method" }, type: "select", options: [
+    { value: "original", label: { ar: "نفس وسيلة الدفع", en: "Original method" } },
+    { value: "wallet", label: { ar: "محفظة", en: "Wallet" } },
+    { value: "bank_transfer", label: { ar: "حوالة بنكية", en: "Bank transfer" } },
+  ]},
+  { key: "refund_amount", label: { ar: "المبلغ المسترد", en: "Refund amount" }, type: "number", min: 0, step: 0.01 },
+  { key: "shipping_fee_deducted", label: { ar: "رسوم الشحن المخصومة", en: "Shipping fee deducted" }, type: "number", min: 0, step: 0.01 },
+  { key: "return_shipping_carrier", label: { ar: "شركة شحن الإرجاع", en: "Return carrier" }, type: "text" },
+  { key: "return_tracking_number", label: { ar: "رقم تتبع الإرجاع", en: "Return tracking #" }, type: "text" },
+  { key: "decision_reason", label: { ar: "سبب القرار", en: "Decision reason" }, type: "textarea", rows: 3 },
+];
+
+invoicesConfig.actions = { ...invoicesConfig.actions, edit: true };
+invoicesConfig.form = [
+  { key: "status", label: { ar: "الحالة", en: "Status" }, type: "select", required: true, options: [
+    { value: "draft", label: { ar: "مسودة", en: "Draft" } },
+    { value: "issued", label: { ar: "صادرة", en: "Issued" } },
+    { value: "paid", label: { ar: "مدفوعة", en: "Paid" } },
+    { value: "cancelled", label: { ar: "ملغاة", en: "Cancelled" } },
+  ]},
+];
+
+shippingConfig.actions = { ...shippingConfig.actions, create: true, edit: true, delete: true };
+shippingConfig.form = [
+  { key: "code", label: { ar: "الكود", en: "Code" }, type: "text", required: true, maxLength: 30, pattern: "^[a-z0-9_-]+$" },
+  { key: "name_ar", label: { ar: "الاسم (AR)", en: "Name (AR)" }, type: "text", required: true },
+  { key: "name_en", label: { ar: "الاسم (EN)", en: "Name (EN)" }, type: "text", required: true },
+  { key: "carrier_type", label: { ar: "النوع", en: "Type" }, type: "select", defaultValue: "local", options: [
+    { value: "local", label: { ar: "محلي", en: "Local" } },
+    { value: "international", label: { ar: "دولي", en: "International" } },
+    { value: "express", label: { ar: "سريع", en: "Express" } },
+  ]},
+  { key: "logo_url", label: { ar: "رابط الشعار", en: "Logo URL" }, type: "url" },
+  { key: "api_endpoint", label: { ar: "API Endpoint", en: "API endpoint" }, type: "url" },
+  { key: "default_delivery_days_min", label: { ar: "أقل أيام تسليم", en: "Min delivery days" }, type: "number", min: 0, defaultValue: 1 },
+  { key: "default_delivery_days_max", label: { ar: "أكثر أيام تسليم", en: "Max delivery days" }, type: "number", min: 0, defaultValue: 5 },
+  { key: "display_order", label: { ar: "الترتيب", en: "Sort order" }, type: "number", min: 0, defaultValue: 0 },
+  { key: "is_active", label: { ar: "نشط", en: "Active" }, type: "boolean", defaultValue: true },
+  { key: "supports_cod", label: { ar: "يدعم الدفع عند الاستلام", en: "Supports COD" }, type: "boolean" },
+  { key: "supports_tracking", label: { ar: "يدعم التتبع", en: "Supports tracking" }, type: "boolean", defaultValue: true },
+  { key: "supports_international", label: { ar: "يدعم الدولي", en: "Supports international" }, type: "boolean" },
+  { key: "supports_webhook", label: { ar: "يدعم Webhook", en: "Supports webhook" }, type: "boolean" },
+  { key: "api_credentials", label: { ar: "بيانات الاعتماد (JSON)", en: "API credentials (JSON)" }, type: "json" },
+];

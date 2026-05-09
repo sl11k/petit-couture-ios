@@ -32,3 +32,43 @@ export const productsConfig: AdminPageConfig = {
   ],
   actions: { export: true },
 };
+
+productsConfig.actions = { ...productsConfig.actions, create: true, edit: true, delete: true };
+productsConfig.form = [
+  { key: "name_ar", label: { ar: "الاسم العربي", en: "Name (AR)" }, type: "text", required: true, maxLength: 200 },
+  { key: "name_en", label: { ar: "الاسم الإنجليزي", en: "Name (EN)" }, type: "text", required: true, maxLength: 200 },
+  { key: "slug", label: { ar: "Slug", en: "Slug" }, type: "text", required: true, pattern: "^[a-z0-9-]+$", helpText: { ar: "حروف صغيرة وأرقام وشرطة", en: "lowercase letters, numbers and dashes" } },
+  { key: "sku", label: { ar: "SKU", en: "SKU" }, type: "text" },
+  { key: "barcode", label: { ar: "الباركود", en: "Barcode" }, type: "text" },
+  { key: "brand", label: { ar: "العلامة التجارية", en: "Brand" }, type: "text" },
+  { key: "price", label: { ar: "السعر", en: "Price" }, type: "number", required: true, min: 0, step: 0.01 },
+  { key: "compare_at_price", label: { ar: "السعر قبل الخصم", en: "Compare-at price" }, type: "number", min: 0, step: 0.01 },
+  { key: "cost", label: { ar: "التكلفة", en: "Cost" }, type: "number", min: 0, step: 0.01 },
+  { key: "currency", label: { ar: "العملة", en: "Currency" }, type: "text", defaultValue: "SAR", maxLength: 3 },
+  { key: "tax_rate", label: { ar: "ضريبة القيمة المضافة", en: "Tax rate" }, type: "number", min: 0, max: 1, step: 0.01, defaultValue: 0.15 },
+  { key: "stock", label: { ar: "المخزون", en: "Stock" }, type: "number", min: 0, defaultValue: 0 },
+  { key: "low_stock_threshold", label: { ar: "حد المخزون المنخفض", en: "Low stock threshold" }, type: "number", min: 0, defaultValue: 5 },
+  { key: "weight", label: { ar: "الوزن (كجم)", en: "Weight (kg)" }, type: "number", min: 0, step: 0.01 },
+  { key: "image_url", label: { ar: "رابط الصورة الرئيسية", en: "Main image URL" }, type: "url" },
+  { key: "video_url", label: { ar: "رابط الفيديو", en: "Video URL" }, type: "url" },
+  { key: "image_alt", label: { ar: "وصف الصورة (alt)", en: "Image alt" }, type: "text" },
+  { key: "status", label: { ar: "الحالة", en: "Status" }, type: "select", required: true, defaultValue: "active", options: [
+    { value: "active", label: { ar: "نشط", en: "Active" } },
+    { value: "draft", label: { ar: "مسودة", en: "Draft" } },
+    { value: "archived", label: { ar: "مؤرشف", en: "Archived" } },
+  ]},
+  { key: "product_type", label: { ar: "نوع المنتج", en: "Product type" }, type: "select", defaultValue: "physical", options: [
+    { value: "physical", label: { ar: "مادي", en: "Physical" } },
+    { value: "digital", label: { ar: "رقمي", en: "Digital" } },
+    { value: "service", label: { ar: "خدمة", en: "Service" } },
+  ]},
+  { key: "is_active", label: { ar: "نشط في المتجر", en: "Visible in store" }, type: "boolean", defaultValue: true },
+  { key: "allow_preorder", label: { ar: "السماح بالطلب المسبق", en: "Allow preorder" }, type: "boolean" },
+  { key: "hide_when_out_of_stock", label: { ar: "إخفاء عند نفاد المخزون", en: "Hide when out of stock" }, type: "boolean" },
+  { key: "short_description_ar", label: { ar: "وصف مختصر (AR)", en: "Short description (AR)" }, type: "textarea", rows: 2 },
+  { key: "short_description_en", label: { ar: "وصف مختصر (EN)", en: "Short description (EN)" }, type: "textarea", rows: 2 },
+  { key: "description_ar", label: { ar: "الوصف (AR)", en: "Description (AR)" }, type: "textarea", rows: 5 },
+  { key: "description_en", label: { ar: "الوصف (EN)", en: "Description (EN)" }, type: "textarea", rows: 5 },
+  { key: "meta_title", label: { ar: "Meta Title", en: "Meta Title" }, type: "text" },
+  { key: "meta_description", label: { ar: "Meta Description", en: "Meta Description" }, type: "textarea", rows: 2 },
+];

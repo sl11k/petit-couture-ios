@@ -220,3 +220,92 @@ supportConfig.rowHref = (row: any) => `/admin/support/${row.id}`;
 messagesConfig.rowHref = (row: any) => `/admin/messages/${row.id}`;
 integrationsConfig.rowHref = (row: any) => `/admin/integrations/${row.id}`;
 webhooksConfig.rowHref = (row: any) => `/admin/webhooks/${row.id}`;
+
+usersConfig.actions = { ...usersConfig.actions, create: true, edit: true, delete: true };
+usersConfig.form = [
+  { key: "user_id", label: { ar: "معرف المستخدم", en: "User ID" }, type: "text", required: true, createOnly: true, helpText: { ar: "معرف auth.users", en: "auth.users UUID" } },
+  { key: "role", label: { ar: "الدور", en: "Role" }, type: "select", required: true, defaultValue: "customer", options: [
+    { value: "super_admin", label: { ar: "مدير عام", en: "Super Admin" } },
+    { value: "admin", label: { ar: "مدير", en: "Admin" } },
+    { value: "manager", label: { ar: "مشرف", en: "Manager" } },
+    { value: "staff", label: { ar: "موظف", en: "Staff" } },
+    { value: "viewer", label: { ar: "مشاهد", en: "Viewer" } },
+    { value: "customer", label: { ar: "عميل", en: "Customer" } },
+    { value: "developer", label: { ar: "مطور", en: "Developer" } },
+  ]},
+];
+
+notificationsConfig.actions = { ...notificationsConfig.actions, create: true, delete: true };
+notificationsConfig.form = [
+  { key: "title", label: { ar: "العنوان", en: "Title" }, type: "text", required: true, maxLength: 200 },
+  { key: "body", label: { ar: "النص", en: "Body" }, type: "textarea", rows: 4 },
+  { key: "event_code", label: { ar: "كود الحدث", en: "Event code" }, type: "text", required: true },
+  { key: "severity", label: { ar: "الشدة", en: "Severity" }, type: "select", required: true, defaultValue: "info", options: [
+    { value: "info", label: { ar: "معلومة", en: "Info" } },
+    { value: "warning", label: { ar: "تحذير", en: "Warning" } },
+    { value: "error", label: { ar: "خطأ", en: "Error" } },
+    { value: "critical", label: { ar: "حرج", en: "Critical" } },
+  ]},
+  { key: "related_entity", label: { ar: "الكيان المرتبط", en: "Related entity" }, type: "text" },
+  { key: "related_entity_id", label: { ar: "معرف الكيان", en: "Entity ID" }, type: "text" },
+  { key: "link", label: { ar: "رابط", en: "Link" }, type: "url" },
+];
+
+supportConfig.actions = { ...supportConfig.actions, edit: true };
+supportConfig.form = [
+  { key: "subject", label: { ar: "الموضوع", en: "Subject" }, type: "text", required: true, maxLength: 200 },
+  { key: "status", label: { ar: "الحالة", en: "Status" }, type: "select", required: true, options: [
+    { value: "new", label: { ar: "جديدة", en: "New" } },
+    { value: "waiting_admin", label: { ar: "بانتظار الرد", en: "Waiting admin" } },
+    { value: "waiting_customer", label: { ar: "بانتظار العميل", en: "Waiting customer" } },
+    { value: "resolved", label: { ar: "محلولة", en: "Resolved" } },
+    { value: "closed", label: { ar: "مغلقة", en: "Closed" } },
+  ]},
+  { key: "priority", label: { ar: "الأولوية", en: "Priority" }, type: "select", required: true, defaultValue: "normal", options: [
+    { value: "low", label: { ar: "منخفضة", en: "Low" } },
+    { value: "normal", label: { ar: "عادية", en: "Normal" } },
+    { value: "high", label: { ar: "عالية", en: "High" } },
+    { value: "urgent", label: { ar: "عاجلة", en: "Urgent" } },
+  ]},
+];
+
+integrationsConfig.actions = { ...integrationsConfig.actions, create: true, edit: true, delete: true };
+integrationsConfig.form = [
+  { key: "category", label: { ar: "الفئة", en: "Category" }, type: "select", required: true, options: [
+    { value: "payment", label: { ar: "دفع", en: "Payment" } },
+    { value: "shipping", label: { ar: "شحن", en: "Shipping" } },
+    { value: "messaging", label: { ar: "رسائل", en: "Messaging" } },
+    { value: "analytics", label: { ar: "تحليلات", en: "Analytics" } },
+  ]},
+  { key: "provider", label: { ar: "المزود", en: "Provider" }, type: "text", required: true, maxLength: 60 },
+  { key: "display_name", label: { ar: "الاسم الظاهر", en: "Display name" }, type: "text" },
+  { key: "mode", label: { ar: "الوضع", en: "Mode" }, type: "select", defaultValue: "sandbox", options: [
+    { value: "sandbox", label: { ar: "تجريبي", en: "Sandbox" } },
+    { value: "live", label: { ar: "مباشر", en: "Live" } },
+  ]},
+  { key: "enabled", label: { ar: "مفعّل", en: "Enabled" }, type: "boolean" },
+  { key: "api_key", label: { ar: "API Key", en: "API Key" }, type: "text" },
+  { key: "api_secret", label: { ar: "API Secret", en: "API Secret" }, type: "text" },
+  { key: "webhook_url", label: { ar: "رابط Webhook", en: "Webhook URL" }, type: "url" },
+  { key: "webhook_secret", label: { ar: "سر Webhook", en: "Webhook secret" }, type: "text" },
+  { key: "config", label: { ar: "إعدادات إضافية (JSON)", en: "Extra config (JSON)" }, type: "json" },
+];
+
+webhooksConfig.actions = { ...webhooksConfig.actions, create: true, edit: true, delete: true };
+webhooksConfig.form = [
+  { key: "name", label: { ar: "الاسم", en: "Name" }, type: "text", required: true, maxLength: 80 },
+  { key: "url", label: { ar: "الرابط", en: "URL" }, type: "url", required: true },
+  { key: "secret", label: { ar: "السر", en: "Secret" }, type: "text" },
+  { key: "enabled", label: { ar: "مفعّل", en: "Enabled" }, type: "boolean", defaultValue: true },
+  { key: "events", label: { ar: "الأحداث (JSON array)", en: "Events (JSON array)" }, type: "json", helpText: { ar: 'مثال: ["order.created","order.paid"]', en: 'e.g. ["order.created","order.paid"]' } },
+];
+
+messagesConfig.actions = { ...messagesConfig.actions, edit: true };
+messagesConfig.form = [
+  { key: "status", label: { ar: "الحالة", en: "Status" }, type: "select", required: true, options: [
+    { value: "open", label: { ar: "مفتوحة", en: "Open" } },
+    { value: "resolved", label: { ar: "محلولة", en: "Resolved" } },
+    { value: "archived", label: { ar: "مؤرشفة", en: "Archived" } },
+  ]},
+  { key: "customer_name", label: { ar: "اسم العميل", en: "Customer name" }, type: "text" },
+];
