@@ -377,7 +377,7 @@ integrationsConfig.form = [
   { key: "api_secret", label: { ar: "API Secret", en: "API Secret" }, type: "text" },
   { key: "webhook_url", label: { ar: "رابط Webhook", en: "Webhook URL" }, type: "url" },
   { key: "webhook_secret", label: { ar: "سر Webhook", en: "Webhook secret" }, type: "text" },
-  { key: "config", label: { ar: "إعدادات إضافية (JSON)", en: "Extra config (JSON)" }, type: "json" },
+  { key: "config", label: { ar: "إعدادات إضافية (JSON)", en: "Extra config (JSON)" }, type: "json", defaultValue: {}, helpText: { ar: 'يمكن تركه فارغًا {}', en: 'Can be left as {}' } },
 ];
 
 webhooksConfig.actions = { ...webhooksConfig.actions, create: true, edit: true, delete: true };

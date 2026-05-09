@@ -89,7 +89,16 @@ function coerceForDb(fields: FormFieldDef[], values: Record<string, any>) {
   const out: Record<string, any> = {};
   for (const f of fields) {
     let v = values[f.key];
-    if (v === "" || v === undefined) { out[f.key] = null; continue; }
+    if (v === "" || v === undefined) {
+      // Fallback to defaultValue when the field is empty (prevents NOT NULL violations
+      // for fields like JSON config that have a sane default such as {}).
+      if (f.defaultValue !== undefined && f.defaultValue !== null && f.defaultValue !== "") {
+        out[f.key] = f.defaultValue;
+      } else {
+        out[f.key] = null;
+      }
+      continue;
+    }
     if (f.type === "number") v = Number(v);
     else if (f.type === "boolean") v = typeof v === "string" ? v === "true" : Boolean(v);
     else if (f.type === "json") { try { v = JSON.parse(v); } catch { /* keep string */ } }
