@@ -1,22 +1,111 @@
+import { Link } from "@tanstack/react-router";
+import { ExternalLink } from "lucide-react";
 import type { AdminPageConfig } from "@/features/admin/types";
+
+// Map audit entity name → admin route prefix (singular/plural variants supported)
+const ENTITY_ROUTE: Record<string, string> = {
+  orders: "/admin/orders",
+  order: "/admin/orders",
+  products: "/admin/products",
+  product: "/admin/products",
+  profiles: "/admin/customers",
+  customer: "/admin/customers",
+  user: "/admin/users",
+  user_roles: "/admin/users",
+  integrations: "/admin/integrations",
+  integration: "/admin/integrations",
+  coupons: "/admin/coupons",
+  coupon: "/admin/coupons",
+  marketing_campaigns: "/admin/campaigns",
+  campaign: "/admin/campaigns",
+  landing_pages: "/admin/landing-pages",
+  webhook_endpoints: "/admin/webhooks",
+  support_tickets: "/admin/support",
+  site_settings: "/admin/settings",
+  settings: "/admin/settings",
+};
+
+function entityHref(entity?: string | null, id?: string | null): string | null {
+  if (!entity) return null;
+  const base = ENTITY_ROUTE[entity];
+  if (!base) return null;
+  return id ? `${base}/${id}` : base;
+}
 
 export const auditLogsConfig: AdminPageConfig = {
   title: { ar: "سجل العمليات", en: "Audit Log" },
-  description: { ar: "تتبع جميع التغييرات والعمليات", en: "Track all changes and operations" },
+  description: {
+    ar: "تتبع جميع التغييرات وروابط للكيان والمستخدم",
+    en: "Track all changes with links to the related entity and user",
+  },
   table: "audit_logs",
   orderBy: { column: "created_at", ascending: false },
   columns: [
     { key: "created_at", label: { ar: "التاريخ", en: "Date" }, type: "datetime" },
-    { key: "actor_email", label: { ar: "المستخدم", en: "Actor" } },
+    {
+      key: "actor_email",
+      label: { ar: "المستخدم", en: "Actor" },
+      render: (value, row: any) => {
+        if (!value) return <span className="text-muted-foreground">—</span>;
+        return row.actor_id ? (
+          <Link
+            to="/admin/customers/$id"
+            params={{ id: row.actor_id }}
+            onClick={(e) => e.stopPropagation()}
+            className="text-primary hover:underline"
+          >
+            {value}
+          </Link>
+        ) : (
+          <span>{value}</span>
+        );
+      },
+    },
     { key: "action", label: { ar: "الإجراء", en: "Action" }, type: "badge" },
-    { key: "entity", label: { ar: "الكيان", en: "Entity" }, hideOnMobile: true },
-    { key: "entity_id", label: { ar: "المعرف", en: "Entity ID" }, hideOnMobile: true },
+    {
+      key: "entity",
+      label: { ar: "الكيان", en: "Entity" },
+      hideOnMobile: true,
+      render: (_v, row: any) => {
+        const href = entityHref(row.entity, row.entity_id);
+        if (!row.entity) return <span className="text-muted-foreground">—</span>;
+        const text = row.entity_id
+          ? `${row.entity} • ${String(row.entity_id).slice(0, 8)}…`
+          : row.entity;
+        return href ? (
+          <a
+            href={href}
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-1 text-primary hover:underline"
+          >
+            {text}
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        ) : (
+          <span>{text}</span>
+        );
+      },
+    },
     { key: "ip_address", label: { ar: "IP", en: "IP" }, hideOnMobile: true },
   ],
   filters: [
-    { key: "search", type: "search", columns: ["actor_email", "action", "entity"] },
+    { key: "search", type: "search", columns: ["actor_email", "action", "entity", "entity_id"] },
+    {
+      key: "entity",
+      type: "select",
+      label: { ar: "الكيان", en: "Entity" },
+      options: [
+        { value: "orders", label: { ar: "الطلبات", en: "Orders" } },
+        { value: "products", label: { ar: "المنتجات", en: "Products" } },
+        { value: "user", label: { ar: "المستخدمون", en: "Users" } },
+        { value: "user_roles", label: { ar: "الأدوار", en: "Roles" } },
+        { value: "integrations", label: { ar: "التكاملات", en: "Integrations" } },
+        { value: "site_settings", label: { ar: "الإعدادات", en: "Settings" } },
+      ],
+    },
   ],
   actions: { export: true },
+  rowHref: (row: any) => `/admin/audit/${row.id}`,
 };
 
 export const auditLoginsConfig: AdminPageConfig = {
