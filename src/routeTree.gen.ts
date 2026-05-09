@@ -65,6 +65,7 @@ import { Route as AdminInvoicesRouteImport } from './routes/admin.invoices'
 import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
 import { Route as AdminIntegrationsRouteImport } from './routes/admin.integrations'
 import { Route as AdminIncompleteRouteImport } from './routes/admin.incomplete'
+import { Route as AdminIncomingWebhooksRouteImport } from './routes/admin.incoming-webhooks'
 import { Route as AdminHomeBuilderRouteImport } from './routes/admin.home-builder'
 import { Route as AdminHelpRouteImport } from './routes/admin.help'
 import { Route as AdminErrorsRouteImport } from './routes/admin.errors'
@@ -381,6 +382,11 @@ const AdminIncompleteRoute = AdminIncompleteRouteImport.update({
   path: '/incomplete',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminIncomingWebhooksRoute = AdminIncomingWebhooksRouteImport.update({
+  id: '/incoming-webhooks',
+  path: '/incoming-webhooks',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminHomeBuilderRoute = AdminHomeBuilderRouteImport.update({
   id: '/home-builder',
   path: '/home-builder',
@@ -586,6 +592,7 @@ export interface FileRoutesByFullPath {
   '/admin/errors': typeof AdminErrorsRoute
   '/admin/help': typeof AdminHelpRoute
   '/admin/home-builder': typeof AdminHomeBuilderRoute
+  '/admin/incoming-webhooks': typeof AdminIncomingWebhooksRoute
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRouteWithChildren
   '/admin/inventory': typeof AdminInventoryRoute
@@ -677,6 +684,7 @@ export interface FileRoutesByTo {
   '/admin/errors': typeof AdminErrorsRoute
   '/admin/help': typeof AdminHelpRoute
   '/admin/home-builder': typeof AdminHomeBuilderRoute
+  '/admin/incoming-webhooks': typeof AdminIncomingWebhooksRoute
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRouteWithChildren
   '/admin/inventory': typeof AdminInventoryRoute
@@ -770,6 +778,7 @@ export interface FileRoutesById {
   '/admin/errors': typeof AdminErrorsRoute
   '/admin/help': typeof AdminHelpRoute
   '/admin/home-builder': typeof AdminHomeBuilderRoute
+  '/admin/incoming-webhooks': typeof AdminIncomingWebhooksRoute
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRouteWithChildren
   '/admin/inventory': typeof AdminInventoryRoute
@@ -864,6 +873,7 @@ export interface FileRouteTypes {
     | '/admin/errors'
     | '/admin/help'
     | '/admin/home-builder'
+    | '/admin/incoming-webhooks'
     | '/admin/incomplete'
     | '/admin/integrations'
     | '/admin/inventory'
@@ -955,6 +965,7 @@ export interface FileRouteTypes {
     | '/admin/errors'
     | '/admin/help'
     | '/admin/home-builder'
+    | '/admin/incoming-webhooks'
     | '/admin/incomplete'
     | '/admin/integrations'
     | '/admin/inventory'
@@ -1047,6 +1058,7 @@ export interface FileRouteTypes {
     | '/admin/errors'
     | '/admin/help'
     | '/admin/home-builder'
+    | '/admin/incoming-webhooks'
     | '/admin/incomplete'
     | '/admin/integrations'
     | '/admin/inventory'
@@ -1537,6 +1549,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIncompleteRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/incoming-webhooks': {
+      id: '/admin/incoming-webhooks'
+      path: '/incoming-webhooks'
+      fullPath: '/admin/incoming-webhooks'
+      preLoaderRoute: typeof AdminIncomingWebhooksRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/home-builder': {
       id: '/admin/home-builder'
       path: '/home-builder'
@@ -1936,6 +1955,7 @@ interface AdminRouteChildren {
   AdminErrorsRoute: typeof AdminErrorsRoute
   AdminHelpRoute: typeof AdminHelpRoute
   AdminHomeBuilderRoute: typeof AdminHomeBuilderRoute
+  AdminIncomingWebhooksRoute: typeof AdminIncomingWebhooksRoute
   AdminIncompleteRoute: typeof AdminIncompleteRoute
   AdminIntegrationsRoute: typeof AdminIntegrationsRouteWithChildren
   AdminInventoryRoute: typeof AdminInventoryRoute
@@ -1983,6 +2003,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminErrorsRoute: AdminErrorsRoute,
   AdminHelpRoute: AdminHelpRoute,
   AdminHomeBuilderRoute: AdminHomeBuilderRoute,
+  AdminIncomingWebhooksRoute: AdminIncomingWebhooksRoute,
   AdminIncompleteRoute: AdminIncompleteRoute,
   AdminIntegrationsRoute: AdminIntegrationsRouteWithChildren,
   AdminInventoryRoute: AdminInventoryRoute,

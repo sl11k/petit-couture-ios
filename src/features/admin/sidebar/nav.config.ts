@@ -87,6 +87,7 @@ export const ADMIN_NAV: NavGroup[] = [
       { to: "/admin/shipping", label: { ar: "الشحن", en: "Shipping" }, icon: Truck },
       { to: "/admin/integrations", label: { ar: "التكاملات", en: "Integrations" }, icon: Plug },
       { to: "/admin/webhooks", label: { ar: "Webhooks", en: "Webhooks" }, icon: Webhook },
+      { to: "/admin/incoming-webhooks", label: { ar: "Webhooks الواردة", en: "Incoming webhooks" }, icon: Webhook },
       { to: "/admin/webhooks-deliveries", label: { ar: "تسليمات Webhooks", en: "Webhook deliveries" }, icon: ScrollText },
       { to: "/admin/webhooks-health", label: { ar: "صحة Webhooks", en: "Webhooks health" }, icon: Activity },
       { to: "/admin/oto", label: { ar: "OTO", en: "OTO" }, icon: Truck },
