@@ -12,8 +12,11 @@ import {
 import {
   ArrowRight, Printer, MessageCircle, Mail, MapPin, Copy,
   Pin, Save, Trash2, Plus, Package as PackageIcon, AlertTriangle,
-  Phone, User, Calendar, CreditCard, Truck, FileText, Clock,
+  Phone, User, Calendar, CreditCard, Truck, FileText, Clock, Send, Loader2,
 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { otoCreateShipment } from "@/lib/oto.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/orders/$id")({
   component: OrderDetail,
