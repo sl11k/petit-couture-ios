@@ -131,6 +131,23 @@ function statusBadge(status: string, ar: boolean) {
   );
 }
 
+type StatusFilter = "all" | "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";
+type PeriodFilter = "all" | "today" | "7d" | "30d" | "90d";
+
+function periodSince(p: PeriodFilter): string | null {
+  const now = Date.now();
+  const day = 24 * 60 * 60 * 1000;
+  switch (p) {
+    case "today": {
+      const d = new Date(); d.setHours(0, 0, 0, 0); return d.toISOString();
+    }
+    case "7d": return new Date(now - 7 * day).toISOString();
+    case "30d": return new Date(now - 30 * day).toISOString();
+    case "90d": return new Date(now - 90 * day).toISOString();
+    default: return null;
+  }
+}
+
 function Dashboard() {
   const { lang } = useLanguage();
   const ar = lang === "ar";
@@ -138,6 +155,9 @@ function Dashboard() {
   const [recent, setRecent] = useState<RecentOrder[]>([]);
   const [top, setTop] = useState<TopProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [recentLoading, setRecentLoading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("all");
 
   useEffect(() => {
     (async () => {
@@ -155,7 +175,6 @@ function Dashboard() {
         productsAll,
         customersTotal,
         customersNew,
-        recentRes,
         itemsRes,
       ] = await Promise.all([
         supabase.from("orders").select("id", { count: "exact", head: true }),
@@ -169,11 +188,6 @@ function Dashboard() {
         supabase.from("products").select("stock,low_stock_threshold"),
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", since30),
-        supabase
-          .from("orders")
-          .select("id,order_number,customer_name,status,total,created_at")
-          .order("created_at", { ascending: false })
-          .limit(6),
         supabase
           .from("order_items")
           .select("product_id,quantity,product_name_ar,product_name_en")
@@ -217,11 +231,29 @@ function Dashboard() {
         customersTotal: customersTotal.count ?? 0,
         customersNew30d: customersNew.count ?? 0,
       });
-      setRecent((recentRes.data as RecentOrder[]) ?? []);
       setTop(topList);
       setLoading(false);
     })();
   }, []);
+
+  // Recent orders: refetch on filter change
+  useEffect(() => {
+    (async () => {
+      setRecentLoading(true);
+      let q = supabase
+        .from("orders")
+        .select("id,order_number,customer_name,status,total,created_at")
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (statusFilter !== "all") q = q.eq("status", statusFilter);
+      const since = periodSince(periodFilter);
+      if (since) q = q.gte("created_at", since);
+      const { data } = await q;
+      setRecent((data as RecentOrder[]) ?? []);
+      setRecentLoading(false);
+    })();
+  }, [statusFilter, periodFilter]);
+
 
   const v = (n?: number) =>
     loading || stats == null ? "…" : fmtNum(n ?? 0, ar);
