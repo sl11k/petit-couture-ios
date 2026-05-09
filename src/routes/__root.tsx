@@ -12,6 +12,8 @@ import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { CookieBanner } from "@/components/CookieBanner";
 import { Footer } from "@/components/Footer";
+import { TranslateScope } from "@/i18n/TranslateScope";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { useEffect } from "react";
 import { startWebVitals } from "@/lib/perf";
 import { GlobalErrorBoundary, OfflineBanner } from "@/components/ErrorDisplay";
