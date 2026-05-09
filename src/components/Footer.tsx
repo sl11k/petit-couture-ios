@@ -108,7 +108,7 @@ export function Footer() {
 
         <div className="mt-10 pt-6 border-t border-background/15 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-background/55 tracking-soft">
           <span>© {new Date().getFullYear()} {BRAND_NAME}. {ar ? "جميع الحقوق محفوظة." : "All rights reserved."}</span>
-          <span>{ar ? "صُنع بحب في المملكة العربية السعودية" : "Made with love in Saudi Arabia"}</span>
+          
         </div>
       </div>
     </footer>
