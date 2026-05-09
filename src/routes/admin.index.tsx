@@ -5,6 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { PageHeader } from "@/features/admin/components/PageHeader";
 import { DashboardCharts } from "@/features/admin/components/DashboardCharts";
 import { AdminQuickSearch } from "@/features/admin/components/AdminQuickSearch";
+import { LowStockAlerts } from "@/features/admin/components/LowStockAlerts";
 import {
   ShoppingBag,
   Package,
