@@ -37,6 +37,7 @@ import { Route as DebugAnalyticsRouteImport } from './routes/debug.analytics'
 import { Route as CollectionSlugRouteImport } from './routes/collection.$slug'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as AdminWebhooksHealthRouteImport } from './routes/admin.webhooks-health'
+import { Route as AdminWebhooksDeliveriesRouteImport } from './routes/admin.webhooks-deliveries'
 import { Route as AdminWebhooksRouteImport } from './routes/admin.webhooks'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminSupportRouteImport } from './routes/admin.support'
@@ -238,6 +239,11 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
 const AdminWebhooksHealthRoute = AdminWebhooksHealthRouteImport.update({
   id: '/webhooks-health',
   path: '/webhooks-health',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminWebhooksDeliveriesRoute = AdminWebhooksDeliveriesRouteImport.update({
+  id: '/webhooks-deliveries',
+  path: '/webhooks-deliveries',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminWebhooksRoute = AdminWebhooksRouteImport.update({
@@ -607,6 +613,7 @@ export interface FileRoutesByFullPath {
   '/admin/support': typeof AdminSupportRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
   '/admin/webhooks': typeof AdminWebhooksRouteWithChildren
+  '/admin/webhooks-deliveries': typeof AdminWebhooksDeliveriesRoute
   '/admin/webhooks-health': typeof AdminWebhooksHealthRoute
   '/category/$slug': typeof CategorySlugRoute
   '/collection/$slug': typeof CollectionSlugRoute
@@ -697,6 +704,7 @@ export interface FileRoutesByTo {
   '/admin/support': typeof AdminSupportRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
   '/admin/webhooks': typeof AdminWebhooksRouteWithChildren
+  '/admin/webhooks-deliveries': typeof AdminWebhooksDeliveriesRoute
   '/admin/webhooks-health': typeof AdminWebhooksHealthRoute
   '/category/$slug': typeof CategorySlugRoute
   '/collection/$slug': typeof CollectionSlugRoute
@@ -789,6 +797,7 @@ export interface FileRoutesById {
   '/admin/support': typeof AdminSupportRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
   '/admin/webhooks': typeof AdminWebhooksRouteWithChildren
+  '/admin/webhooks-deliveries': typeof AdminWebhooksDeliveriesRoute
   '/admin/webhooks-health': typeof AdminWebhooksHealthRoute
   '/category/$slug': typeof CategorySlugRoute
   '/collection/$slug': typeof CollectionSlugRoute
@@ -882,6 +891,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/users'
     | '/admin/webhooks'
+    | '/admin/webhooks-deliveries'
     | '/admin/webhooks-health'
     | '/category/$slug'
     | '/collection/$slug'
@@ -972,6 +982,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/users'
     | '/admin/webhooks'
+    | '/admin/webhooks-deliveries'
     | '/admin/webhooks-health'
     | '/category/$slug'
     | '/collection/$slug'
@@ -1063,6 +1074,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/users'
     | '/admin/webhooks'
+    | '/admin/webhooks-deliveries'
     | '/admin/webhooks-health'
     | '/category/$slug'
     | '/collection/$slug'
@@ -1327,6 +1339,13 @@ declare module '@tanstack/react-router' {
       path: '/webhooks-health'
       fullPath: '/admin/webhooks-health'
       preLoaderRoute: typeof AdminWebhooksHealthRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/webhooks-deliveries': {
+      id: '/admin/webhooks-deliveries'
+      path: '/webhooks-deliveries'
+      fullPath: '/admin/webhooks-deliveries'
+      preLoaderRoute: typeof AdminWebhooksDeliveriesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/webhooks': {
@@ -1944,6 +1963,7 @@ interface AdminRouteChildren {
   AdminSupportRoute: typeof AdminSupportRouteWithChildren
   AdminUsersRoute: typeof AdminUsersRoute
   AdminWebhooksRoute: typeof AdminWebhooksRouteWithChildren
+  AdminWebhooksDeliveriesRoute: typeof AdminWebhooksDeliveriesRoute
   AdminWebhooksHealthRoute: typeof AdminWebhooksHealthRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -1990,6 +2010,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSupportRoute: AdminSupportRouteWithChildren,
   AdminUsersRoute: AdminUsersRoute,
   AdminWebhooksRoute: AdminWebhooksRouteWithChildren,
+  AdminWebhooksDeliveriesRoute: AdminWebhooksDeliveriesRoute,
   AdminWebhooksHealthRoute: AdminWebhooksHealthRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
