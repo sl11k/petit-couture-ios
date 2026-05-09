@@ -161,5 +161,14 @@ export const placeOrder = createServerFn({ method: "POST" })
       .update({ converted: true, updated_at: new Date().toISOString() })
       .eq("session_id", data.session_id);
 
+    // 5. Auto-create OTO shipment (best-effort, never blocks order creation).
+    try {
+      const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
+      const res = await createOtoShipmentForOrder(order.id, data.user_id ?? null);
+      if (!res.ok) console.error("[placeOrder] OTO auto-create failed:", res.error);
+    } catch (e: any) {
+      console.error("[placeOrder] OTO auto-create threw:", e?.message || e);
+    }
+
     return { order, duplicate: false as const };
   });
