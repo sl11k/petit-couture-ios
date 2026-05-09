@@ -128,28 +128,59 @@ function RootComponent() {
           <WishlistProvider>
             <BagProvider>
               <AddressProvider>
-                <SkipLink />
-                {showStoreChrome && <DesktopHeader />}
-                <AnalyticsTracker />
-                <div id="main-content" tabIndex={-1}>
-                  <Outlet />
-                </div>
-                {!hideFooter && <Footer />}
-                {showStoreChrome && (
-                  <>
-                    <WishlistBanner />
-                    <WhatsAppButton />
-                    <MobileBottomNav />
-                    <CookieBanner />
-                  </>
-                )}
-                <OfflineBanner />
-                <Toaster />
+                <StorefrontShell
+                  showStoreChrome={showStoreChrome}
+                  hideFooter={hideFooter}
+                  isAdmin={isAdmin}
+                />
               </AddressProvider>
             </BagProvider>
           </WishlistProvider>
         </AuthProvider>
       </LanguageProvider>
     </GlobalErrorBoundary>
+  );
+}
+
+function StorefrontShell({
+  showStoreChrome,
+  hideFooter,
+  isAdmin,
+}: {
+  showStoreChrome: boolean;
+  hideFooter: boolean;
+  isAdmin: boolean;
+}) {
+  const { lang } = useLanguage();
+  // Admin pages have their own AdminTranslateScope inside AdminShell.
+  // Wrap storefront only — translates Arabic → English (or vice versa) at runtime
+  // using the bulk dictionary in src/i18n/adminDict.ts.
+  const wrapped = (
+    <>
+      <SkipLink />
+      {showStoreChrome && <DesktopHeader />}
+      <AnalyticsTracker />
+      <div id="main-content" tabIndex={-1}>
+        <Outlet />
+      </div>
+      {!hideFooter && <Footer />}
+      {showStoreChrome && (
+        <>
+          <WishlistBanner />
+          <WhatsAppButton />
+          <MobileBottomNav />
+          <CookieBanner />
+        </>
+      )}
+      <OfflineBanner />
+      <Toaster />
+    </>
+  );
+
+  if (isAdmin) return wrapped;
+  return (
+    <TranslateScope enabled toLang={lang} scopeKey={lang}>
+      {wrapped}
+    </TranslateScope>
   );
 }
