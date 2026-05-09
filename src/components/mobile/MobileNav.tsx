@@ -163,13 +163,13 @@ export function MobileBottomNav() {
         aria-label="Primary"
       >
         <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-          <SheetContent side="right" className="w-[88vw] sm:w-[420px] overflow-y-auto p-0 z-[60]">
+          <SheetContent side={ar ? "right" : "left"} className="w-[88vw] sm:w-[420px] overflow-y-auto p-0 z-[60]">
             <SheetHeader className="px-5 pt-6 pb-3 border-b">
-              <SheetTitle className="text-right font-serif text-2xl text-primary">
-                القائمة
+              <SheetTitle className={cn("font-serif text-2xl text-primary", ar ? "text-right" : "text-left")}>
+                {menuLabel}
               </SheetTitle>
             </SheetHeader>
-            <CategoryMenu onNavigate={() => setMenuOpen(false)} />
+            <CategoryMenu onNavigate={() => setMenuOpen(false)} ar={ar} />
           </SheetContent>
         </Sheet>
         <ul className="grid grid-cols-5 h-16">
@@ -177,12 +177,12 @@ export function MobileBottomNav() {
           <li>
             <button
               type="button"
-              aria-label="القائمة"
+              aria-label={menuLabel}
               onClick={() => setMenuOpen(true)}
               className="h-full w-full flex flex-col items-center justify-center gap-0.5 text-primary transition-colors active:bg-accent/60"
             >
               <MenuIcon className="h-5 w-5" strokeWidth={1.8} />
-              <span className="text-[10px] leading-none">القائمة</span>
+              <span className="text-[10px] leading-none">{menuLabel}</span>
             </button>
           </li>
 
