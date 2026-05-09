@@ -251,8 +251,6 @@ export const ADMIN_AR_TO_EN: Record<string, string> = {
   "معدل الارتداد": "Bounce rate",
   "مستخدمون جدد": "New users",
   "مستخدمون عائدون": "Returning users",
-  "مستخدمون جدد": "New users",
-  "مستخدمون عائدون": "Returning users",
   "سلوك المستخدم": "User behavior",
   "التجارة": "Commerce",
   "غير المكملين": "Drop-offs",
