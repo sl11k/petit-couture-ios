@@ -1,1 +1,4 @@
 project_id = "wttdhpbghikiofezumaq"
+
+[functions.webhook-test]
+verify_jwt = true
