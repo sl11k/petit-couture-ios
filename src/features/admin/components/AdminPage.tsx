@@ -6,25 +6,11 @@ import { PageHeader } from "./PageHeader";
 import { FilterBar } from "./FilterBar";
 import { DataTable } from "./DataTable";
 import { FormDialog } from "./FormDialog";
-import { Download, Plus, Pencil, Trash2 } from "lucide-react";
+import { Download, FileText, Plus, Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { exportTableToCSV, exportTableToPDF } from "../utils/exportTable";
 
-function exportCSV(rows: any[], filename: string) {
-  if (rows.length === 0) return;
-  const keys = Object.keys(rows[0]);
-  const csv = [
-    keys.join(","),
-    ...rows.map((r) => keys.map((k) => `"${String(r[k] ?? "").replace(/"/g, '""')}"`).join(",")),
-  ].join("\n");
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${filename}-${Date.now()}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 export function AdminPage<T extends Record<string, any>>({ config }: { config: AdminPageConfig<T> }) {
   const { lang } = useLanguage();
@@ -74,13 +60,31 @@ export function AdminPage<T extends Record<string, any>>({ config }: { config: A
         }
         actions={
           <div className="flex items-center gap-2">
-            {config.actions?.export && (
-              <button
-                onClick={() => exportCSV(rows, config.table)}
-                className="flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted"
-              >
-                <Download className="h-3 w-3" /> {ar ? "تصدير CSV" : "Export CSV"}
-              </button>
+            {config.actions?.export !== false && (
+              <>
+                <button
+                  onClick={() => exportTableToCSV(rows, config.columns, config.table, ar ? "ar" : "en")}
+                  disabled={!rows.length}
+                  className="flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted disabled:opacity-50"
+                >
+                  <Download className="h-3 w-3" /> {ar ? "تصدير CSV" : "Export CSV"}
+                </button>
+                <button
+                  onClick={() =>
+                    exportTableToPDF(
+                      rows,
+                      config.columns,
+                      config.table,
+                      (config.title as any)?.[ar ? "ar" : "en"] ?? config.table,
+                      ar ? "ar" : "en",
+                    ).catch((e) => toast.error(e?.message || "PDF export failed"))
+                  }
+                  disabled={!rows.length}
+                  className="flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted disabled:opacity-50"
+                >
+                  <FileText className="h-3 w-3" /> {ar ? "تصدير PDF" : "Export PDF"}
+                </button>
+              </>
             )}
             {canCreate && (
               <button
