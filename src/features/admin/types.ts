@@ -22,14 +22,42 @@ export type FilterDef =
   | { key: string; type: "select"; label: Bilingual; options: SelectOption[] }
   | { key: string; type: "date"; label: Bilingual };
 
+export type FormFieldType =
+  | "text"
+  | "textarea"
+  | "number"
+  | "select"
+  | "boolean"
+  | "date"
+  | "datetime"
+  | "image"
+  | "url"
+  | "email"
+  | "tel"
+  | "color"
+  | "json";
+
 export type FormFieldDef = {
   key: string;
   label: Bilingual;
-  type: "text" | "textarea" | "number" | "select" | "boolean" | "date" | "image";
+  type: FormFieldType;
   required?: boolean;
   options?: SelectOption[];
   placeholder?: Bilingual;
   defaultValue?: any;
+  min?: number;
+  max?: number;
+  step?: number;
+  rows?: number;
+  maxLength?: number;
+  pattern?: string;
+  helpText?: Bilingual;
+  /** Show field only when creating */
+  createOnly?: boolean;
+  /** Show field only when editing */
+  editOnly?: boolean;
+  /** Take full row width (default true for textarea/json) */
+  fullWidth?: boolean;
 };
 
 export type RowAction<T = any> = {
