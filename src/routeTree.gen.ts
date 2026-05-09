@@ -52,6 +52,7 @@ import { Route as AdminProductsRouteImport } from './routes/admin.products'
 import { Route as AdminPrivacyRouteImport } from './routes/admin.privacy'
 import { Route as AdminPerformanceRouteImport } from './routes/admin.performance'
 import { Route as AdminPaymentsRouteImport } from './routes/admin.payments'
+import { Route as AdminOtoRouteImport } from './routes/admin.oto'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
@@ -304,6 +305,11 @@ const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
   path: '/payments',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminOtoRoute = AdminOtoRouteImport.update({
+  id: '/oto',
+  path: '/oto',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminOrdersRoute = AdminOrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
@@ -521,6 +527,7 @@ export interface FileRoutesByFullPath {
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
+  '/admin/oto': typeof AdminOtoRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/privacy': typeof AdminPrivacyRoute
@@ -600,6 +607,7 @@ export interface FileRoutesByTo {
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
+  '/admin/oto': typeof AdminOtoRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/privacy': typeof AdminPrivacyRoute
@@ -681,6 +689,7 @@ export interface FileRoutesById {
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
+  '/admin/oto': typeof AdminOtoRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/privacy': typeof AdminPrivacyRoute
@@ -763,6 +772,7 @@ export interface FileRouteTypes {
     | '/admin/messages'
     | '/admin/notifications'
     | '/admin/orders'
+    | '/admin/oto'
     | '/admin/payments'
     | '/admin/performance'
     | '/admin/privacy'
@@ -842,6 +852,7 @@ export interface FileRouteTypes {
     | '/admin/messages'
     | '/admin/notifications'
     | '/admin/orders'
+    | '/admin/oto'
     | '/admin/payments'
     | '/admin/performance'
     | '/admin/privacy'
@@ -922,6 +933,7 @@ export interface FileRouteTypes {
     | '/admin/messages'
     | '/admin/notifications'
     | '/admin/orders'
+    | '/admin/oto'
     | '/admin/payments'
     | '/admin/performance'
     | '/admin/privacy'
@@ -1300,6 +1312,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPaymentsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/oto': {
+      id: '/admin/oto'
+      path: '/oto'
+      fullPath: '/admin/oto'
+      preLoaderRoute: typeof AdminOtoRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/orders': {
       id: '/admin/orders'
       path: '/orders'
@@ -1634,6 +1653,7 @@ interface AdminRouteChildren {
   AdminMessagesRoute: typeof AdminMessagesRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminOrdersRoute: typeof AdminOrdersRouteWithChildren
+  AdminOtoRoute: typeof AdminOtoRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
   AdminPerformanceRoute: typeof AdminPerformanceRoute
   AdminPrivacyRoute: typeof AdminPrivacyRoute
@@ -1676,6 +1696,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminMessagesRoute: AdminMessagesRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminOrdersRoute: AdminOrdersRouteWithChildren,
+  AdminOtoRoute: AdminOtoRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
   AdminPerformanceRoute: AdminPerformanceRoute,
   AdminPrivacyRoute: AdminPrivacyRoute,
