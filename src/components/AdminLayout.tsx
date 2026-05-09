@@ -39,6 +39,118 @@ import {
 import { useRef } from "react";
 import { ADMIN_AR_TO_EN } from "@/i18n/adminDict";
 
+const ADMIN_DYNAMIC_PATTERNS: Array<[(text: string) => boolean, (text: string) => string]> = [
+  [(text) => /^منذ\s+\d+\s+د$/.test(text), (text) => text.replace(/^منذ\s+(\d+)\s+د$/, "$1m ago")],
+  [(text) => /^منذ\s+\d+\s+س$/.test(text), (text) => text.replace(/^منذ\s+(\d+)\s+س$/, "$1h ago")],
+  [(text) => /^منذ\s+\d+\s+ي$/.test(text), (text) => text.replace(/^منذ\s+(\d+)\s+ي$/, "$1d ago")],
+  [(text) => /^\d+\s*د متبقية$/.test(text), (text) => text.replace(/^(\d+)\s*د متبقية$/, "$1m remaining")],
+  [(text) => /^\d+\s*س متبقية$/.test(text), (text) => text.replace(/^(\d+)\s*س متبقية$/, "$1h remaining")],
+  [(text) => /^\d+\s*ي متبقية$/.test(text), (text) => text.replace(/^(\d+)\s*ي متبقية$/, "$1d remaining")],
+  [(text) => /^سيُلغى تلقائيًا بعد\s+\d+\s+ساعة$/.test(text), (text) => text.replace(/^سيُلغى تلقائيًا بعد\s+(\d+)\s+ساعة$/, "Will auto-cancel in $1 hours")],
+  [(text) => /^✅\s*تحوّلت إلى طلب$/.test(text), () => "✅ Converted to order"],
+  [(text) => /^🛒\s*سلة متروكة$/.test(text), () => "🛒 Abandoned cart"],
+  [(text) => /^\d+[\d\s,]*\s+زيارة،\s+\d+[\d\s,]*\s+طلب$/.test(text), (text) => text.replace(/^(\d+[\d\s,]*)\s+زيارة،\s+(\d+[\d\s,]*)\s+طلب$/, "$1 visits, $2 orders")],
+  [(text) => /^\d+[\d\s,]*\s+جلسة$/.test(text), (text) => text.replace(/^(\d+[\d\s,]*)\s+جلسة$/, "$1 sessions")],
+  [(text) => /^≤\s*\d+\s*قطع متبقية$/.test(text), (text) => text.replace(/^≤\s*(\d+)\s*قطع متبقية$/, "≤ $1 items left")],
+];
+
+const ADMIN_FRAGMENT_TO_EN: Array<[string, string]> = [
+  ["ر.س", "SAR"],
+  ["ريال", "SAR"],
+  ["التحويل الكلي", "Overall conversion"],
+  ["تاريخ الإصدار", "Issue date"],
+  ["تاريخ الدفع", "Payment date"],
+  ["رقم الفاتورة", "Invoice #"],
+  ["رقم الطلب", "Order #"],
+  ["آخر استخدام", "Last used"],
+  ["أول مشاهدة", "First seen"],
+  ["آخر نشاط", "Last activity"],
+  ["تاريخ التسجيل", "Registration date"],
+  ["آخر تواصل", "Last contact"],
+  ["راجعها", "Reviewed by"],
+  ["ينتهي في", "Expires in"],
+  ["جاري التحميل", "Loading"],
+  ["جارِ التحميل", "Loading"],
+  ["جاري الإنشاء", "Creating"],
+  ["قيد التجهيز", "Preparing"],
+  ["بانتظار الشحن", "Awaiting shipment"],
+  ["تم التوصيل", "Delivered"],
+  ["تم الشحن", "Shipped"],
+  ["مدفوع", "Paid"],
+  ["معلق", "Pending"],
+  ["مسترد", "Refunded"],
+  ["ملغي", "Cancelled"],
+  ["مفتوحة", "Open"],
+  ["محلولة", "Resolved"],
+  ["مؤرشفة", "Archived"],
+  ["الكل", "All"],
+  ["بحث", "Search"],
+  ["تصدير CSV", "Export CSV"],
+  ["واتساب", "WhatsApp"],
+  ["إيميل", "Email"],
+  ["مكالمة", "Call"],
+  ["ملاحظة", "Note"],
+];
+
+const ADMIN_PRESENTATION_REPLACEMENTS: Array<[RegExp, string]> = [
+  [/٠/g, "0"],
+  [/١/g, "1"],
+  [/٢/g, "2"],
+  [/٣/g, "3"],
+  [/٤/g, "4"],
+  [/٥/g, "5"],
+  [/٦/g, "6"],
+  [/٧/g, "7"],
+  [/٨/g, "8"],
+  [/٩/g, "9"],
+  [/يناير/g, "January"],
+  [/فبراير/g, "February"],
+  [/مارس/g, "March"],
+  [/أبريل/g, "April"],
+  [/ابريل/g, "April"],
+  [/مايو/g, "May"],
+  [/يونيو/g, "June"],
+  [/يوليو/g, "July"],
+  [/أغسطس/g, "August"],
+  [/اغسطس/g, "August"],
+  [/سبتمبر/g, "September"],
+  [/أكتوبر/g, "October"],
+  [/اكتوبر/g, "October"],
+  [/نوفمبر/g, "November"],
+  [/ديسمبر/g, "December"],
+  [/الأحد/g, "Sunday"],
+  [/الاثنين/g, "Monday"],
+  [/الإثنين/g, "Monday"],
+  [/الثلاثاء/g, "Tuesday"],
+  [/الأربعاء/g, "Wednesday"],
+  [/الخميس/g, "Thursday"],
+  [/الجمعة/g, "Friday"],
+  [/السبت/g, "Saturday"],
+  [/٬/g, ","],
+  [/٫/g, "."],
+  [/٪/g, "%"],
+  [/\sفي\s/g, " at "],
+  [/\sص(?=\b|\s)/g, " AM"],
+  [/\sم(?=\b|\s)/g, " PM"],
+  [/،/g, ","],
+];
+
+function normalizeAdminPresentation(text: string) {
+  return ADMIN_PRESENTATION_REPLACEMENTS.reduce((acc, [pattern, value]) => acc.replace(pattern, value), text);
+}
+
+function translateAdminFragments(text: string) {
+  if (text.length > 120) return text;
+  return ADMIN_FRAGMENT_TO_EN.reduce((acc, [ar, en]) => acc.replaceAll(ar, en), text);
+}
+
+function translateAdminDynamicText(text: string) {
+  for (const [test, replace] of ADMIN_DYNAMIC_PATTERNS) {
+    if (test(text)) return replace(text);
+  }
+  return text;
+}
+
 /**
  * Runtime DOM translation overlay for the admin area.
  * When `enabled`, walks all text nodes inside its subtree and replaces any
@@ -75,7 +187,13 @@ function AdminTranslateScope({ enabled, children }: { enabled: boolean; children
     function translateText(raw: string): string | null {
       const trimmed = raw.trim();
       if (!trimmed) return null;
-      const en = ADMIN_AR_TO_EN[trimmed];
+
+      const exact = ADMIN_AR_TO_EN[trimmed];
+      const dynamic = translateAdminDynamicText(trimmed);
+      const fragments = translateAdminFragments(dynamic === trimmed ? trimmed : dynamic);
+      const normalized = normalizeAdminPresentation(fragments);
+      const en = normalizeAdminPresentation(exact ?? normalized);
+
       if (!en || en === trimmed) return null;
       // Preserve surrounding whitespace.
       const lead = raw.match(/^\s*/)?.[0] ?? "";
