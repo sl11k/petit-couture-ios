@@ -50,7 +50,7 @@ function OtoPage() {
       .from("integrations")
       .select("*")
       .eq("category", "shipping")
-      .eq("provider", "oto")
+      .ilike("provider", "oto")
       .maybeSingle();
     setOto(data);
     setLoading(false);
