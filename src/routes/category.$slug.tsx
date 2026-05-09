@@ -181,10 +181,29 @@ function CategoryView() {
     setShowSeedFallback(products.length === 0 && !!productsByCategory["best-sellers"]);
   }, [products.length]);
 
-  // Sort
+  // Sort + Filter state
   const [sortKey, setSortKey] = useState<SortKey>("popular");
+  const priceBounds = useMemo(() => {
+    const prices = products.map((p) => p.price ?? 0).filter((n) => n > 0);
+    if (prices.length === 0) return [0, 1000] as [number, number];
+    return [Math.floor(Math.min(...prices)), Math.ceil(Math.max(...prices))] as [number, number];
+  }, [products]);
+  const [priceMax, setPriceMax] = useState<number>(priceBounds[1]);
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [onSaleOnly, setOnSaleOnly] = useState(false);
+  useEffect(() => { setPriceMax(priceBounds[1]); }, [priceBounds[1]]);
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) => {
+      if ((p.price ?? 0) > priceMax) return false;
+      if (inStockOnly && (p.stock ?? 0) <= 0) return false;
+      if (onSaleOnly && !(p.compare_at_price && p.price && p.compare_at_price > p.price)) return false;
+      return true;
+    });
+  }, [products, priceMax, inStockOnly, onSaleOnly]);
+
   const sortedProducts = useMemo(() => {
-    const arr = [...products];
+    const arr = [...filteredProducts];
     switch (sortKey) {
       case "newest":
         return arr.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
@@ -196,7 +215,7 @@ function CategoryView() {
       default:
         return arr.sort((a, b) => (b.sales_count ?? 0) - (a.sales_count ?? 0));
     }
-  }, [products, sortKey]);
+  }, [filteredProducts, sortKey]);
 
   return (
     <main className="min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
