@@ -238,3 +238,7 @@ export const helpConfig: AdminPageConfig = {
     { key: "search", type: "search", columns: ["title_ar", "title_en"] },
   ],
 };
+
+// Add row navigation to detail pages
+campaignsConfig.rowHref = (row: any) => `/admin/campaigns/${row.id}`;
+landingPagesConfig.rowHref = (row: any) => `/admin/landing-pages/${row.id}`;

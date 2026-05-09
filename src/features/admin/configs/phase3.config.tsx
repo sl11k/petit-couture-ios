@@ -214,3 +214,9 @@ export const webhooksConfig: AdminPageConfig = {
     { key: "search", type: "search", columns: ["name", "url"] },
   ],
 };
+
+// Add row navigation to detail pages
+supportConfig.rowHref = (row: any) => `/admin/support/${row.id}`;
+messagesConfig.rowHref = (row: any) => `/admin/messages/${row.id}`;
+integrationsConfig.rowHref = (row: any) => `/admin/integrations/${row.id}`;
+webhooksConfig.rowHref = (row: any) => `/admin/webhooks/${row.id}`;
