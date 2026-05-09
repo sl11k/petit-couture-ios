@@ -508,3 +508,32 @@ function describeMeta(meta: any): string {
   if (meta.to) parts.push(`→ ${ORDER_STATUS_LABEL[meta.to] ?? meta.to}`);
   return parts.join(" · ");
 }
+
+function OtoCreateShipmentButton({ orderId, hasTracking, onDone }: { orderId: string; hasTracking: boolean; onDone: () => void }) {
+  const create = useServerFn(otoCreateShipment);
+  const [loading, setLoading] = useState(false);
+  async function handleClick() {
+    if (hasTracking && !confirm("الطلب يحتوي على رقم تتبع. إنشاء شحنة جديدة عبر OTO؟")) return;
+    setLoading(true);
+    try {
+      const res: any = await create({ data: { orderId } });
+      if (res?.ok) {
+        toast.success("تم إنشاء الشحنة عبر OTO ✅");
+        onDone();
+      } else {
+        toast.error(`فشل إنشاء الشحنة: ${res?.error || "خطأ غير معروف"}`);
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "فشل الاتصال بـ OTO");
+    } finally {
+      setLoading(false);
+    }
+  }
+  return (
+    <button onClick={handleClick} disabled={loading}
+      className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60">
+      {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+      إنشاء شحنة عبر OTO
+    </button>
+  );
+}
