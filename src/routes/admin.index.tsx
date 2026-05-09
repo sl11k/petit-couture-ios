@@ -245,7 +245,7 @@ function Dashboard() {
         .select("id,order_number,customer_name,status,total,created_at")
         .order("created_at", { ascending: false })
         .limit(10);
-      if (statusFilter !== "all") q = q.eq("status", statusFilter);
+      if (statusFilter !== "all") q = q.eq("status", statusFilter as any);
       const since = periodSince(periodFilter);
       if (since) q = q.gte("created_at", since);
       const { data } = await q;
