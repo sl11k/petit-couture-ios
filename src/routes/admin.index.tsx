@@ -272,6 +272,11 @@ function Dashboard() {
         }}
       />
 
+      {/* Quick search */}
+      <div className="max-w-xl">
+        <AdminQuickSearch />
+      </div>
+
       {/* Top KPI cards */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
