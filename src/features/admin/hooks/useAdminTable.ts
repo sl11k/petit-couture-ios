@@ -17,7 +17,7 @@ export function useAdminTable<T extends Record<string, any>>(config: AdminPageCo
     }
     const { data, error: err } = await q;
     if (err) setError(err.message);
-    setRows((data ?? []) as T[]);
+    setRows((data ?? []) as unknown as T[]);
     setLoading(false);
   };
 
