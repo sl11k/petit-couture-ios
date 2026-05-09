@@ -406,7 +406,9 @@ function OrdersPage() {
                       <div className="text-[10px]">{new Date(o.created_at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}</div>
                     </td>
                     <td className="p-2.5">
-                      <div className="text-xs font-medium text-foreground">{o.customer_name}</div>
+                      <Link to="/admin/orders/$id" params={{ id: o.id }} className="text-xs font-medium text-foreground hover:text-primary hover:underline">
+                        {o.customer_name}
+                      </Link>
                       <div className="text-[11px] text-muted-foreground">{o.customer_phone}</div>
                     </td>
                     <td className="p-2.5 text-[11px]">{o.shipping_address?.city ?? "—"}</td>
