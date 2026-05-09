@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/AdminLayout";
@@ -47,7 +47,6 @@ type Order = {
 const PAGE_SIZE = 50;
 
 function OrdersPage() {
-  const navigate = useNavigate();
   const tr = useTr();
   const { lang } = useLanguage();
   const locale = lang === "ar" ? "ar-SA" : "en-US";
