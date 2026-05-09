@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/AdminLayout";
@@ -47,6 +47,7 @@ type Order = {
 const PAGE_SIZE = 50;
 
 function OrdersPage() {
+  const navigate = useNavigate();
   const tr = useTr();
   const { lang } = useLanguage();
   const locale = lang === "ar" ? "ar-SA" : "en-US";
@@ -391,12 +392,22 @@ function OrdersPage() {
                 const isOverdue = o.status === "pending" && Date.now() - new Date(o.created_at).getTime() > 3 * 86400000;
                 const wa = o.customer_phone?.replace(/\D/g, "");
                 return (
-                  <tr key={o.id} className={`border-b border-border/50 last:border-0 align-top ${selected.has(o.id) ? "bg-primary/5" : "hover:bg-muted/30"}`}>
+                  <tr
+                    key={o.id}
+                    className={`border-b border-border/50 last:border-0 align-top ${selected.has(o.id) ? "bg-primary/5" : "hover:bg-muted/30"}`}
+                  >
                     <td className="p-2.5">
                       <input type="checkbox" checked={selected.has(o.id)} onChange={() => toggleOne(o.id)} />
                     </td>
-                    <td className="p-2.5">
-                      <Link to="/admin/orders/$id" params={{ id: o.id }} className="font-mono text-xs font-medium text-primary hover:underline">
+                    <td
+                      className="cursor-pointer p-2.5"
+                      onClick={() => navigate({ to: "/admin/orders/$id", params: { id: o.id } })}
+                    >
+                      <Link
+                        to="/admin/orders/$id"
+                        params={{ id: o.id }}
+                        className="font-mono text-xs font-medium text-primary hover:underline"
+                      >
                         {o.order_number}
                       </Link>
                       {isOverdue && <div className="mt-0.5 flex items-center gap-1 text-[10px] text-red-600"><AlertTriangle className="h-3 w-3" /> {tr("متأخر", "Overdue")}</div>}
@@ -405,8 +416,15 @@ function OrdersPage() {
                       {new Date(o.created_at).toLocaleDateString(locale, { day: "numeric", month: "short" })}
                       <div className="text-[10px]">{new Date(o.created_at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}</div>
                     </td>
-                    <td className="p-2.5">
-                      <Link to="/admin/orders/$id" params={{ id: o.id }} className="text-xs font-medium text-foreground hover:text-primary hover:underline">
+                    <td
+                      className="cursor-pointer p-2.5"
+                      onClick={() => navigate({ to: "/admin/orders/$id", params: { id: o.id } })}
+                    >
+                      <Link
+                        to="/admin/orders/$id"
+                        params={{ id: o.id }}
+                        className="text-xs font-medium text-foreground hover:text-primary hover:underline"
+                      >
                         {o.customer_name}
                       </Link>
                       <div className="text-[11px] text-muted-foreground">{o.customer_phone}</div>
@@ -426,10 +444,14 @@ function OrdersPage() {
                     <td className="p-2.5 text-[11px] text-muted-foreground">{SOURCE_LABEL[o.source] ?? o.source}</td>
                     <td className="p-2.5">
                       <div className="flex items-center gap-0.5">
-                        <Link to="/admin/orders/$id" params={{ id: o.id }} title={tr("عرض", "View")}
-                          className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+                        <button
+                          type="button"
+                          onClick={() => navigate({ to: "/admin/orders/$id", params: { id: o.id } })}
+                          title={tr("عرض", "View")}
+                          className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        >
                           <Eye className="h-3.5 w-3.5" />
-                        </Link>
+                        </button>
                         <button onClick={() => navigator.clipboard.writeText(o.order_number)} title={tr("نسخ الرقم", "Copy number")}
                           className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
                           <Copy className="h-3.5 w-3.5" />
