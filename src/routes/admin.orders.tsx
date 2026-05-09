@@ -399,34 +399,26 @@ function OrdersPage() {
                     <td className="p-2.5">
                       <input type="checkbox" checked={selected.has(o.id)} onChange={() => toggleOne(o.id)} />
                     </td>
-                    <td
-                      className="cursor-pointer p-2.5"
-                      onClick={() => navigate({ to: "/admin/orders/$id", params: { id: o.id } })}
-                    >
-                      <Link
-                        to="/admin/orders/$id"
-                        params={{ id: o.id }}
-                        className="font-mono text-xs font-medium text-primary hover:underline"
+                    <td className="p-2.5">
+                      <a
+                        href={`/admin/orders/${o.id}`}
+                        className="inline-block font-mono text-xs font-medium text-primary hover:underline"
                       >
                         {o.order_number}
-                      </Link>
+                      </a>
                       {isOverdue && <div className="mt-0.5 flex items-center gap-1 text-[10px] text-red-600"><AlertTriangle className="h-3 w-3" /> {tr("متأخر", "Overdue")}</div>}
                     </td>
                     <td className="p-2.5 text-[11px] text-muted-foreground whitespace-nowrap">
                       {new Date(o.created_at).toLocaleDateString(locale, { day: "numeric", month: "short" })}
                       <div className="text-[10px]">{new Date(o.created_at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}</div>
                     </td>
-                    <td
-                      className="cursor-pointer p-2.5"
-                      onClick={() => navigate({ to: "/admin/orders/$id", params: { id: o.id } })}
-                    >
-                      <Link
-                        to="/admin/orders/$id"
-                        params={{ id: o.id }}
+                    <td className="p-2.5">
+                      <a
+                        href={`/admin/orders/${o.id}`}
                         className="text-xs font-medium text-foreground hover:text-primary hover:underline"
                       >
                         {o.customer_name}
-                      </Link>
+                      </a>
                       <div className="text-[11px] text-muted-foreground">{o.customer_phone}</div>
                     </td>
                     <td className="p-2.5 text-[11px]">{o.shipping_address?.city ?? "—"}</td>
@@ -444,14 +436,13 @@ function OrdersPage() {
                     <td className="p-2.5 text-[11px] text-muted-foreground">{SOURCE_LABEL[o.source] ?? o.source}</td>
                     <td className="p-2.5">
                       <div className="flex items-center gap-0.5">
-                        <button
-                          type="button"
-                          onClick={() => navigate({ to: "/admin/orders/$id", params: { id: o.id } })}
+                        <a
+                          href={`/admin/orders/${o.id}`}
                           title={tr("عرض", "View")}
                           className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                         >
                           <Eye className="h-3.5 w-3.5" />
-                        </button>
+                        </a>
                         <button onClick={() => navigator.clipboard.writeText(o.order_number)} title={tr("نسخ الرقم", "Copy number")}
                           className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
                           <Copy className="h-3.5 w-3.5" />
