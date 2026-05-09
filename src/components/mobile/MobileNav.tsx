@@ -316,12 +316,15 @@ function CategoryMenu({ onNavigate, ar }: { onNavigate: () => void; ar: boolean 
  * (مختلف عن SearchBar في الهيدر الذي قد يكون مخفيًا).
  */
 export function MobileSearchBar({
-  placeholder = "ابحث عن منتج، قسم، علامة…",
+  placeholder,
 }: {
   placeholder?: string;
 }) {
   const [q, setQ] = useState("");
   const navigate = useNavigate();
+  const { isRTL } = useLanguage();
+  const ar = isRTL;
+  const ph = placeholder ?? (ar ? "ابحث عن منتج، قسم، علامة…" : "Search products, categories, brands…");
   return (
     <form
       role="search"
@@ -339,9 +342,9 @@ export function MobileSearchBar({
           onChange={(e) => setQ(e.target.value)}
           inputMode="search"
           enterKeyHint="search"
-          placeholder={placeholder}
+          placeholder={ph}
           className="flex-1 bg-transparent border-0 outline-none text-sm placeholder:text-muted-foreground"
-          aria-label="بحث"
+          aria-label={ar ? "بحث" : "Search"}
         />
       </label>
     </form>
