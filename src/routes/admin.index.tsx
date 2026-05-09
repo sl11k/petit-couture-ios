@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { PageHeader } from "@/features/admin/components/PageHeader";
+import { DashboardCharts } from "@/features/admin/components/DashboardCharts";
 import {
   ShoppingBag,
   Package,
@@ -297,6 +298,9 @@ function Dashboard() {
           href="/admin/customers"
         />
       </div>
+
+      {/* Interactive trend charts */}
+      <DashboardCharts />
 
       {/* Orders breakdown */}
       <div>
