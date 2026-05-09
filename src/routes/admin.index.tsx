@@ -299,6 +299,9 @@ function Dashboard() {
         />
       </div>
 
+      {/* Interactive trend charts */}
+      <DashboardCharts />
+
       {/* Orders breakdown */}
       <div>
         <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
