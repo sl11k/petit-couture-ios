@@ -177,7 +177,7 @@ function StorefrontShell({
     </>
   );
 
-  if (isAdmin) return wrapped;
+  if (isAdmin || lang === "ar") return wrapped;
   return (
     <TranslateScope enabled toLang={lang} scopeKey={lang}>
       {wrapped}
