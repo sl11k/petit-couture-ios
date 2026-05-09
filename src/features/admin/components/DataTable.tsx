@@ -43,7 +43,7 @@ export function DataTable<T extends Record<string, any>>({
   emptyMessage?: string;
 }) {
   const { lang } = useLanguage();
-  const navigate = useNavigate();
+  const router = useRouter();
   const ar = lang === "ar";
 
   if (loading) {
