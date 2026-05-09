@@ -30,6 +30,7 @@ export const ADMIN_NAV: NavGroup[] = [
     items: [
       { to: "/admin", label: { ar: "لوحة التحكم", en: "Dashboard" }, icon: LayoutDashboard },
       { to: "/admin/analytics", label: { ar: "التحليلات", en: "Analytics" }, icon: BarChart3 },
+      { to: "/admin/metrics", label: { ar: "المؤشرات", en: "Metrics" }, icon: Activity },
     ],
   },
   {
