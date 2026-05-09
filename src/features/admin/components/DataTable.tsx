@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { ColumnDef, RowAction } from "../types";
 import { StatusBadge } from "./StatusBadge";
