@@ -147,7 +147,6 @@ function normalizeAdminPresentation(text: string) {
 }
 
 function translateAdminFragments(text: string) {
-  if (text.length > 120) return text;
   return ADMIN_FRAGMENT_TO_EN.reduce((acc, [ar, en]) => acc.replaceAll(ar, en), text);
 }
 
@@ -167,7 +166,7 @@ function translateAdminDynamicText(text: string) {
  * Skips: <script>, <style>, <input>, <textarea>, elements with [data-no-translate]
  * or [contenteditable]. Does NOT mutate input values.
  */
-function AdminTranslateScope({ enabled, children }: { enabled: boolean; children: ReactNode }) {
+function AdminTranslateScope({ enabled, children, scopeKey }: { enabled: boolean; children: ReactNode; scopeKey: string }) {
   const ref = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -230,7 +229,11 @@ function AdminTranslateScope({ enabled, children }: { enabled: boolean; children
       }
     }
 
-    walk(root);
+    const rescan = () => walk(root);
+    rescan();
+    const raf = typeof window !== "undefined" ? window.requestAnimationFrame(rescan) : 0;
+    const timerA = typeof window !== "undefined" ? window.setTimeout(rescan, 120) : 0;
+    const timerB = typeof window !== "undefined" ? window.setTimeout(rescan, 600) : 0;
 
     const obs = new MutationObserver((mutations) => {
       for (const m of mutations) {
@@ -262,8 +265,15 @@ function AdminTranslateScope({ enabled, children }: { enabled: boolean; children
       attributes: true,
       attributeFilter: ["placeholder", "title", "aria-label"],
     });
-    return () => obs.disconnect();
-  }, [enabled]);
+    return () => {
+      obs.disconnect();
+      if (typeof window !== "undefined") {
+        window.cancelAnimationFrame(raf);
+        window.clearTimeout(timerA);
+        window.clearTimeout(timerB);
+      }
+    };
+  }, [enabled, scopeKey]);
 
   return <div ref={ref} className="contents">{children}</div>;
 }
@@ -627,7 +637,7 @@ export function AdminShell({ children }: { children?: ReactNode }) {
         </header>
 
         <main className="flex-1 overflow-x-auto p-4 lg:p-6">
-          <AdminTranslateScope enabled={lang === "en"}>
+          <AdminTranslateScope enabled={lang === "en"} scopeKey={`${lang}:${location.pathname}`}>
             {children ?? <Outlet />}
           </AdminTranslateScope>
         </main>
