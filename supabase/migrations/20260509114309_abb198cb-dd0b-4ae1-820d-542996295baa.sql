@@ -1,0 +1,3 @@
+INSERT INTO public.shipping_carriers (code, name_ar, name_en, carrier_type, is_active, supports_cod, supports_international, supports_tracking, supports_webhook, default_delivery_days_min, default_delivery_days_max, display_order)
+VALUES ('oto', 'OTO', 'OTO', 'aggregator', true, true, false, true, true, 1, 3, 0)
+ON CONFLICT (code) DO UPDATE SET is_active = true, supports_webhook = true, name_en = 'OTO';
