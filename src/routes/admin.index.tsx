@@ -377,15 +377,60 @@ function Dashboard() {
             href="/admin/orders"
             hrefLabel={ar ? "عرض الكل" : "View all"}
           >
+            <div className="flex flex-wrap items-center gap-2 border-b border-border bg-muted/20 px-4 py-3">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+                className="h-8 rounded-md border border-border bg-background px-2 text-xs"
+              >
+                <option value="all">{ar ? "كل الحالات" : "All statuses"}</option>
+                <option value="pending">{ar ? "قيد الانتظار" : "Pending"}</option>
+                <option value="confirmed">{ar ? "مؤكد" : "Confirmed"}</option>
+                <option value="processing">{ar ? "قيد المعالجة" : "Processing"}</option>
+                <option value="shipped">{ar ? "مشحون" : "Shipped"}</option>
+                <option value="delivered">{ar ? "مُسلَّم" : "Delivered"}</option>
+                <option value="cancelled">{ar ? "ملغي" : "Cancelled"}</option>
+                <option value="refunded">{ar ? "مُرتجع" : "Refunded"}</option>
+              </select>
+              <div className="flex flex-wrap items-center gap-1">
+                {([
+                  ["all", ar ? "الكل" : "All"],
+                  ["today", ar ? "اليوم" : "Today"],
+                  ["7d", ar ? "7 أيام" : "7d"],
+                  ["30d", ar ? "30 يوم" : "30d"],
+                  ["90d", ar ? "90 يوم" : "90d"],
+                ] as [PeriodFilter, string][]).map(([p, label]) => (
+                  <button
+                    key={p}
+                    onClick={() => setPeriodFilter(p)}
+                    className={`h-8 rounded-md border px-2 text-xs transition-colors ${
+                      periodFilter === p
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-background hover:bg-muted/50"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {(statusFilter !== "all" || periodFilter !== "all") && (
+                <button
+                  onClick={() => { setStatusFilter("all"); setPeriodFilter("all"); }}
+                  className="ms-auto text-xs text-muted-foreground hover:text-foreground"
+                >
+                  {ar ? "مسح" : "Clear"}
+                </button>
+              )}
+            </div>
             <div className="divide-y divide-border">
-              {loading && (
+              {recentLoading && (
                 <div className="px-4 py-6 text-center text-sm text-muted-foreground">
                   {ar ? "جاري التحميل…" : "Loading…"}
                 </div>
               )}
-              {!loading && recent.length === 0 && (
+              {!recentLoading && recent.length === 0 && (
                 <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                  {ar ? "لا توجد طلبات بعد" : "No orders yet"}
+                  {ar ? "لا توجد طلبات مطابقة" : "No matching orders"}
                 </div>
               )}
               {recent.map((o) => (
