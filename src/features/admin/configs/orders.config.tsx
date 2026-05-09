@@ -74,5 +74,5 @@ ordersConfig.form = [
   ]},
   { key: "tracking_number", label: { ar: "رقم التتبع", en: "Tracking number" }, type: "text" },
   { key: "shipping_carrier", label: { ar: "شركة الشحن", en: "Carrier" }, type: "text" },
-  { key: "admin_notes", label: { ar: "ملاحظات داخلية", en: "Admin notes" }, type: "textarea", rows: 3 },
+  { key: "notes", label: { ar: "ملاحظات داخلية", en: "Admin notes" }, type: "textarea", rows: 3 },
 ];
