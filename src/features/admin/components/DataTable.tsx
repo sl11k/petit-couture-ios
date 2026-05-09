@@ -93,7 +93,7 @@ export function DataTable<T extends Record<string, any>>({
                   "border-b border-border/50 last:border-0",
                   href && "cursor-pointer hover:bg-muted/30",
                 )}
-                onClick={() => href && navigate({ to: href })}
+                onClick={() => href && router.history.push(href)}
               >
                 {columns.map((c) => (
                   <td
