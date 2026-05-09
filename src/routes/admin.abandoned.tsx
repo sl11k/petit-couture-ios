@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "@/features/admin/components/ComingSoon";
+import { AdminPage } from "@/features/admin/components/AdminPage";
+import { abandonedConfig } from "@/features/admin/configs/phase4.config";
 
 export const Route = createFileRoute("/admin/abandoned")({
-  component: () => <ComingSoon title={{ ar: "السلال المتروكة", en: "Abandoned carts" }} />,
+  component: () => <AdminPage config={abandonedConfig} />,
 });

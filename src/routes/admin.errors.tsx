@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "@/features/admin/components/ComingSoon";
+import { AdminPage } from "@/features/admin/components/AdminPage";
+import { errorLogsConfig } from "@/features/admin/configs/phase4.config";
 
 export const Route = createFileRoute("/admin/errors")({
-  component: () => <ComingSoon title={{ ar: "الأخطاء", en: "Errors" }} />,
+  component: () => <AdminPage config={errorLogsConfig} />,
 });
