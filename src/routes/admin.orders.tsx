@@ -444,10 +444,14 @@ function OrdersPage() {
                     <td className="p-2.5 text-[11px] text-muted-foreground">{SOURCE_LABEL[o.source] ?? o.source}</td>
                     <td className="p-2.5">
                       <div className="flex items-center gap-0.5">
-                        <Link to="/admin/orders/$id" params={{ id: o.id }} title={tr("عرض", "View")}
-                          className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+                        <button
+                          type="button"
+                          onClick={() => navigate({ to: "/admin/orders/$id", params: { id: o.id } })}
+                          title={tr("عرض", "View")}
+                          className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        >
                           <Eye className="h-3.5 w-3.5" />
-                        </Link>
+                        </button>
                         <button onClick={() => navigator.clipboard.writeText(o.order_number)} title={tr("نسخ الرقم", "Copy number")}
                           className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
                           <Copy className="h-3.5 w-3.5" />
