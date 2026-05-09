@@ -82,9 +82,16 @@ import { Route as ApiV1InventoryRouteImport } from './routes/api.v1.inventory'
 import { Route as ApiPublicWebhooksRetryRouteImport } from './routes/api.public.webhooks-retry'
 import { Route as ApiPublicShippingWebhookRouteImport } from './routes/api.public.shipping-webhook'
 import { Route as ApiPublicPaymentWebhookRouteImport } from './routes/api.public.payment-webhook'
+import { Route as AdminWebhooksIdRouteImport } from './routes/admin.webhooks.$id'
+import { Route as AdminSupportIdRouteImport } from './routes/admin.support.$id'
 import { Route as AdminProductsIdRouteImport } from './routes/admin.products.$id'
 import { Route as AdminOrdersIdRouteImport } from './routes/admin.orders.$id'
+import { Route as AdminMessagesIdRouteImport } from './routes/admin.messages.$id'
+import { Route as AdminLandingPagesIdRouteImport } from './routes/admin.landing-pages.$id'
+import { Route as AdminIntegrationsIdRouteImport } from './routes/admin.integrations.$id'
 import { Route as AdminCustomersIdRouteImport } from './routes/admin.customers.$id'
+import { Route as AdminCouponsIdRouteImport } from './routes/admin.coupons.$id'
+import { Route as AdminCampaignsIdRouteImport } from './routes/admin.campaigns.$id'
 import { Route as AccountReturnsNewRouteImport } from './routes/account.returns.new'
 
 const WishlistRoute = WishlistRouteImport.update({
@@ -454,6 +461,16 @@ const ApiPublicPaymentWebhookRoute = ApiPublicPaymentWebhookRouteImport.update({
   path: '/api/public/payment-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminWebhooksIdRoute = AdminWebhooksIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminWebhooksRoute,
+} as any)
+const AdminSupportIdRoute = AdminSupportIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminSupportRoute,
+} as any)
 const AdminProductsIdRoute = AdminProductsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -464,10 +481,35 @@ const AdminOrdersIdRoute = AdminOrdersIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AdminOrdersRoute,
 } as any)
+const AdminMessagesIdRoute = AdminMessagesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminMessagesRoute,
+} as any)
+const AdminLandingPagesIdRoute = AdminLandingPagesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminLandingPagesRoute,
+} as any)
+const AdminIntegrationsIdRoute = AdminIntegrationsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminIntegrationsRoute,
+} as any)
 const AdminCustomersIdRoute = AdminCustomersIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => AdminCustomersRoute,
+} as any)
+const AdminCouponsIdRoute = AdminCouponsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminCouponsRoute,
+} as any)
+const AdminCampaignsIdRoute = AdminCampaignsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminCampaignsRoute,
 } as any)
 const AccountReturnsNewRoute = AccountReturnsNewRouteImport.update({
   id: '/returns/new',
@@ -497,22 +539,22 @@ export interface FileRoutesByFullPath {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/audit-logins': typeof AdminAuditLoginsRoute
-  '/admin/campaigns': typeof AdminCampaignsRoute
+  '/admin/campaigns': typeof AdminCampaignsRouteWithChildren
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/conversion': typeof AdminConversionRoute
-  '/admin/coupons': typeof AdminCouponsRoute
+  '/admin/coupons': typeof AdminCouponsRouteWithChildren
   '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/errors': typeof AdminErrorsRoute
   '/admin/help': typeof AdminHelpRoute
   '/admin/home-builder': typeof AdminHomeBuilderRoute
   '/admin/incomplete': typeof AdminIncompleteRoute
-  '/admin/integrations': typeof AdminIntegrationsRoute
+  '/admin/integrations': typeof AdminIntegrationsRouteWithChildren
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/invoices': typeof AdminInvoicesRoute
-  '/admin/landing-pages': typeof AdminLandingPagesRoute
-  '/admin/messages': typeof AdminMessagesRoute
+  '/admin/landing-pages': typeof AdminLandingPagesRouteWithChildren
+  '/admin/messages': typeof AdminMessagesRouteWithChildren
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/oto': typeof AdminOtoRoute
@@ -529,9 +571,9 @@ export interface FileRoutesByFullPath {
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
   '/admin/states': typeof AdminStatesRoute
   '/admin/storefront': typeof AdminStorefrontRoute
-  '/admin/support': typeof AdminSupportRoute
+  '/admin/support': typeof AdminSupportRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
-  '/admin/webhooks': typeof AdminWebhooksRoute
+  '/admin/webhooks': typeof AdminWebhooksRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
   '/collection/$slug': typeof CollectionSlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
@@ -544,9 +586,16 @@ export interface FileRoutesByFullPath {
   '/wishlist/share': typeof WishlistShareRoute
   '/admin/': typeof AdminIndexRoute
   '/account/returns/new': typeof AccountReturnsNewRoute
+  '/admin/campaigns/$id': typeof AdminCampaignsIdRoute
+  '/admin/coupons/$id': typeof AdminCouponsIdRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
+  '/admin/integrations/$id': typeof AdminIntegrationsIdRoute
+  '/admin/landing-pages/$id': typeof AdminLandingPagesIdRoute
+  '/admin/messages/$id': typeof AdminMessagesIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
+  '/admin/support/$id': typeof AdminSupportIdRoute
+  '/admin/webhooks/$id': typeof AdminWebhooksIdRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
   '/api/public/webhooks-retry': typeof ApiPublicWebhooksRetryRoute
@@ -575,22 +624,22 @@ export interface FileRoutesByTo {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/audit-logins': typeof AdminAuditLoginsRoute
-  '/admin/campaigns': typeof AdminCampaignsRoute
+  '/admin/campaigns': typeof AdminCampaignsRouteWithChildren
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/conversion': typeof AdminConversionRoute
-  '/admin/coupons': typeof AdminCouponsRoute
+  '/admin/coupons': typeof AdminCouponsRouteWithChildren
   '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/errors': typeof AdminErrorsRoute
   '/admin/help': typeof AdminHelpRoute
   '/admin/home-builder': typeof AdminHomeBuilderRoute
   '/admin/incomplete': typeof AdminIncompleteRoute
-  '/admin/integrations': typeof AdminIntegrationsRoute
+  '/admin/integrations': typeof AdminIntegrationsRouteWithChildren
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/invoices': typeof AdminInvoicesRoute
-  '/admin/landing-pages': typeof AdminLandingPagesRoute
-  '/admin/messages': typeof AdminMessagesRoute
+  '/admin/landing-pages': typeof AdminLandingPagesRouteWithChildren
+  '/admin/messages': typeof AdminMessagesRouteWithChildren
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/oto': typeof AdminOtoRoute
@@ -607,9 +656,9 @@ export interface FileRoutesByTo {
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
   '/admin/states': typeof AdminStatesRoute
   '/admin/storefront': typeof AdminStorefrontRoute
-  '/admin/support': typeof AdminSupportRoute
+  '/admin/support': typeof AdminSupportRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
-  '/admin/webhooks': typeof AdminWebhooksRoute
+  '/admin/webhooks': typeof AdminWebhooksRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
   '/collection/$slug': typeof CollectionSlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
@@ -622,9 +671,16 @@ export interface FileRoutesByTo {
   '/wishlist/share': typeof WishlistShareRoute
   '/admin': typeof AdminIndexRoute
   '/account/returns/new': typeof AccountReturnsNewRoute
+  '/admin/campaigns/$id': typeof AdminCampaignsIdRoute
+  '/admin/coupons/$id': typeof AdminCouponsIdRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
+  '/admin/integrations/$id': typeof AdminIntegrationsIdRoute
+  '/admin/landing-pages/$id': typeof AdminLandingPagesIdRoute
+  '/admin/messages/$id': typeof AdminMessagesIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
+  '/admin/support/$id': typeof AdminSupportIdRoute
+  '/admin/webhooks/$id': typeof AdminWebhooksIdRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
   '/api/public/webhooks-retry': typeof ApiPublicWebhooksRetryRoute
@@ -655,22 +711,22 @@ export interface FileRoutesById {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/audit-logins': typeof AdminAuditLoginsRoute
-  '/admin/campaigns': typeof AdminCampaignsRoute
+  '/admin/campaigns': typeof AdminCampaignsRouteWithChildren
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/conversion': typeof AdminConversionRoute
-  '/admin/coupons': typeof AdminCouponsRoute
+  '/admin/coupons': typeof AdminCouponsRouteWithChildren
   '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/errors': typeof AdminErrorsRoute
   '/admin/help': typeof AdminHelpRoute
   '/admin/home-builder': typeof AdminHomeBuilderRoute
   '/admin/incomplete': typeof AdminIncompleteRoute
-  '/admin/integrations': typeof AdminIntegrationsRoute
+  '/admin/integrations': typeof AdminIntegrationsRouteWithChildren
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/invoices': typeof AdminInvoicesRoute
-  '/admin/landing-pages': typeof AdminLandingPagesRoute
-  '/admin/messages': typeof AdminMessagesRoute
+  '/admin/landing-pages': typeof AdminLandingPagesRouteWithChildren
+  '/admin/messages': typeof AdminMessagesRouteWithChildren
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/oto': typeof AdminOtoRoute
@@ -687,9 +743,9 @@ export interface FileRoutesById {
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
   '/admin/states': typeof AdminStatesRoute
   '/admin/storefront': typeof AdminStorefrontRoute
-  '/admin/support': typeof AdminSupportRoute
+  '/admin/support': typeof AdminSupportRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
-  '/admin/webhooks': typeof AdminWebhooksRoute
+  '/admin/webhooks': typeof AdminWebhooksRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
   '/collection/$slug': typeof CollectionSlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
@@ -702,9 +758,16 @@ export interface FileRoutesById {
   '/wishlist/share': typeof WishlistShareRoute
   '/admin/': typeof AdminIndexRoute
   '/account/returns/new': typeof AccountReturnsNewRoute
+  '/admin/campaigns/$id': typeof AdminCampaignsIdRoute
+  '/admin/coupons/$id': typeof AdminCouponsIdRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
+  '/admin/integrations/$id': typeof AdminIntegrationsIdRoute
+  '/admin/landing-pages/$id': typeof AdminLandingPagesIdRoute
+  '/admin/messages/$id': typeof AdminMessagesIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
+  '/admin/support/$id': typeof AdminSupportIdRoute
+  '/admin/webhooks/$id': typeof AdminWebhooksIdRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
   '/api/public/webhooks-retry': typeof ApiPublicWebhooksRetryRoute
@@ -783,9 +846,16 @@ export interface FileRouteTypes {
     | '/wishlist/share'
     | '/admin/'
     | '/account/returns/new'
+    | '/admin/campaigns/$id'
+    | '/admin/coupons/$id'
     | '/admin/customers/$id'
+    | '/admin/integrations/$id'
+    | '/admin/landing-pages/$id'
+    | '/admin/messages/$id'
     | '/admin/orders/$id'
     | '/admin/products/$id'
+    | '/admin/support/$id'
+    | '/admin/webhooks/$id'
     | '/api/public/payment-webhook'
     | '/api/public/shipping-webhook'
     | '/api/public/webhooks-retry'
@@ -861,9 +931,16 @@ export interface FileRouteTypes {
     | '/wishlist/share'
     | '/admin'
     | '/account/returns/new'
+    | '/admin/campaigns/$id'
+    | '/admin/coupons/$id'
     | '/admin/customers/$id'
+    | '/admin/integrations/$id'
+    | '/admin/landing-pages/$id'
+    | '/admin/messages/$id'
     | '/admin/orders/$id'
     | '/admin/products/$id'
+    | '/admin/support/$id'
+    | '/admin/webhooks/$id'
     | '/api/public/payment-webhook'
     | '/api/public/shipping-webhook'
     | '/api/public/webhooks-retry'
@@ -940,9 +1017,16 @@ export interface FileRouteTypes {
     | '/wishlist/share'
     | '/admin/'
     | '/account/returns/new'
+    | '/admin/campaigns/$id'
+    | '/admin/coupons/$id'
     | '/admin/customers/$id'
+    | '/admin/integrations/$id'
+    | '/admin/landing-pages/$id'
+    | '/admin/messages/$id'
     | '/admin/orders/$id'
     | '/admin/products/$id'
+    | '/admin/support/$id'
+    | '/admin/webhooks/$id'
     | '/api/public/payment-webhook'
     | '/api/public/shipping-webhook'
     | '/api/public/webhooks-retry'
@@ -1498,6 +1582,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/webhooks/$id': {
+      id: '/admin/webhooks/$id'
+      path: '/$id'
+      fullPath: '/admin/webhooks/$id'
+      preLoaderRoute: typeof AdminWebhooksIdRouteImport
+      parentRoute: typeof AdminWebhooksRoute
+    }
+    '/admin/support/$id': {
+      id: '/admin/support/$id'
+      path: '/$id'
+      fullPath: '/admin/support/$id'
+      preLoaderRoute: typeof AdminSupportIdRouteImport
+      parentRoute: typeof AdminSupportRoute
+    }
     '/admin/products/$id': {
       id: '/admin/products/$id'
       path: '/$id'
@@ -1512,12 +1610,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOrdersIdRouteImport
       parentRoute: typeof AdminOrdersRoute
     }
+    '/admin/messages/$id': {
+      id: '/admin/messages/$id'
+      path: '/$id'
+      fullPath: '/admin/messages/$id'
+      preLoaderRoute: typeof AdminMessagesIdRouteImport
+      parentRoute: typeof AdminMessagesRoute
+    }
+    '/admin/landing-pages/$id': {
+      id: '/admin/landing-pages/$id'
+      path: '/$id'
+      fullPath: '/admin/landing-pages/$id'
+      preLoaderRoute: typeof AdminLandingPagesIdRouteImport
+      parentRoute: typeof AdminLandingPagesRoute
+    }
+    '/admin/integrations/$id': {
+      id: '/admin/integrations/$id'
+      path: '/$id'
+      fullPath: '/admin/integrations/$id'
+      preLoaderRoute: typeof AdminIntegrationsIdRouteImport
+      parentRoute: typeof AdminIntegrationsRoute
+    }
     '/admin/customers/$id': {
       id: '/admin/customers/$id'
       path: '/$id'
       fullPath: '/admin/customers/$id'
       preLoaderRoute: typeof AdminCustomersIdRouteImport
       parentRoute: typeof AdminCustomersRoute
+    }
+    '/admin/coupons/$id': {
+      id: '/admin/coupons/$id'
+      path: '/$id'
+      fullPath: '/admin/coupons/$id'
+      preLoaderRoute: typeof AdminCouponsIdRouteImport
+      parentRoute: typeof AdminCouponsRoute
+    }
+    '/admin/campaigns/$id': {
+      id: '/admin/campaigns/$id'
+      path: '/$id'
+      fullPath: '/admin/campaigns/$id'
+      preLoaderRoute: typeof AdminCampaignsIdRouteImport
+      parentRoute: typeof AdminCampaignsRoute
     }
     '/account/returns/new': {
       id: '/account/returns/new'
@@ -1542,6 +1675,30 @@ const AccountRouteChildren: AccountRouteChildren = {
 const AccountRouteWithChildren =
   AccountRoute._addFileChildren(AccountRouteChildren)
 
+interface AdminCampaignsRouteChildren {
+  AdminCampaignsIdRoute: typeof AdminCampaignsIdRoute
+}
+
+const AdminCampaignsRouteChildren: AdminCampaignsRouteChildren = {
+  AdminCampaignsIdRoute: AdminCampaignsIdRoute,
+}
+
+const AdminCampaignsRouteWithChildren = AdminCampaignsRoute._addFileChildren(
+  AdminCampaignsRouteChildren,
+)
+
+interface AdminCouponsRouteChildren {
+  AdminCouponsIdRoute: typeof AdminCouponsIdRoute
+}
+
+const AdminCouponsRouteChildren: AdminCouponsRouteChildren = {
+  AdminCouponsIdRoute: AdminCouponsIdRoute,
+}
+
+const AdminCouponsRouteWithChildren = AdminCouponsRoute._addFileChildren(
+  AdminCouponsRouteChildren,
+)
+
 interface AdminCustomersRouteChildren {
   AdminCustomersIdRoute: typeof AdminCustomersIdRoute
 }
@@ -1552,6 +1709,40 @@ const AdminCustomersRouteChildren: AdminCustomersRouteChildren = {
 
 const AdminCustomersRouteWithChildren = AdminCustomersRoute._addFileChildren(
   AdminCustomersRouteChildren,
+)
+
+interface AdminIntegrationsRouteChildren {
+  AdminIntegrationsIdRoute: typeof AdminIntegrationsIdRoute
+}
+
+const AdminIntegrationsRouteChildren: AdminIntegrationsRouteChildren = {
+  AdminIntegrationsIdRoute: AdminIntegrationsIdRoute,
+}
+
+const AdminIntegrationsRouteWithChildren =
+  AdminIntegrationsRoute._addFileChildren(AdminIntegrationsRouteChildren)
+
+interface AdminLandingPagesRouteChildren {
+  AdminLandingPagesIdRoute: typeof AdminLandingPagesIdRoute
+}
+
+const AdminLandingPagesRouteChildren: AdminLandingPagesRouteChildren = {
+  AdminLandingPagesIdRoute: AdminLandingPagesIdRoute,
+}
+
+const AdminLandingPagesRouteWithChildren =
+  AdminLandingPagesRoute._addFileChildren(AdminLandingPagesRouteChildren)
+
+interface AdminMessagesRouteChildren {
+  AdminMessagesIdRoute: typeof AdminMessagesIdRoute
+}
+
+const AdminMessagesRouteChildren: AdminMessagesRouteChildren = {
+  AdminMessagesIdRoute: AdminMessagesIdRoute,
+}
+
+const AdminMessagesRouteWithChildren = AdminMessagesRoute._addFileChildren(
+  AdminMessagesRouteChildren,
 )
 
 interface AdminOrdersRouteChildren {
@@ -1578,27 +1769,51 @@ const AdminProductsRouteWithChildren = AdminProductsRoute._addFileChildren(
   AdminProductsRouteChildren,
 )
 
+interface AdminSupportRouteChildren {
+  AdminSupportIdRoute: typeof AdminSupportIdRoute
+}
+
+const AdminSupportRouteChildren: AdminSupportRouteChildren = {
+  AdminSupportIdRoute: AdminSupportIdRoute,
+}
+
+const AdminSupportRouteWithChildren = AdminSupportRoute._addFileChildren(
+  AdminSupportRouteChildren,
+)
+
+interface AdminWebhooksRouteChildren {
+  AdminWebhooksIdRoute: typeof AdminWebhooksIdRoute
+}
+
+const AdminWebhooksRouteChildren: AdminWebhooksRouteChildren = {
+  AdminWebhooksIdRoute: AdminWebhooksIdRoute,
+}
+
+const AdminWebhooksRouteWithChildren = AdminWebhooksRoute._addFileChildren(
+  AdminWebhooksRouteChildren,
+)
+
 interface AdminRouteChildren {
   AdminAbandonedRoute: typeof AdminAbandonedRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminAuditRoute: typeof AdminAuditRoute
   AdminAuditLoginsRoute: typeof AdminAuditLoginsRoute
-  AdminCampaignsRoute: typeof AdminCampaignsRoute
+  AdminCampaignsRoute: typeof AdminCampaignsRouteWithChildren
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminContentRoute: typeof AdminContentRoute
   AdminConversionRoute: typeof AdminConversionRoute
-  AdminCouponsRoute: typeof AdminCouponsRoute
+  AdminCouponsRoute: typeof AdminCouponsRouteWithChildren
   AdminCreateOrderRoute: typeof AdminCreateOrderRoute
   AdminCustomersRoute: typeof AdminCustomersRouteWithChildren
   AdminErrorsRoute: typeof AdminErrorsRoute
   AdminHelpRoute: typeof AdminHelpRoute
   AdminHomeBuilderRoute: typeof AdminHomeBuilderRoute
   AdminIncompleteRoute: typeof AdminIncompleteRoute
-  AdminIntegrationsRoute: typeof AdminIntegrationsRoute
+  AdminIntegrationsRoute: typeof AdminIntegrationsRouteWithChildren
   AdminInventoryRoute: typeof AdminInventoryRoute
   AdminInvoicesRoute: typeof AdminInvoicesRoute
-  AdminLandingPagesRoute: typeof AdminLandingPagesRoute
-  AdminMessagesRoute: typeof AdminMessagesRoute
+  AdminLandingPagesRoute: typeof AdminLandingPagesRouteWithChildren
+  AdminMessagesRoute: typeof AdminMessagesRouteWithChildren
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminOrdersRoute: typeof AdminOrdersRouteWithChildren
   AdminOtoRoute: typeof AdminOtoRoute
@@ -1615,9 +1830,9 @@ interface AdminRouteChildren {
   AdminSiteAnalyticsRoute: typeof AdminSiteAnalyticsRoute
   AdminStatesRoute: typeof AdminStatesRoute
   AdminStorefrontRoute: typeof AdminStorefrontRoute
-  AdminSupportRoute: typeof AdminSupportRoute
+  AdminSupportRoute: typeof AdminSupportRouteWithChildren
   AdminUsersRoute: typeof AdminUsersRoute
-  AdminWebhooksRoute: typeof AdminWebhooksRoute
+  AdminWebhooksRoute: typeof AdminWebhooksRouteWithChildren
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -1626,22 +1841,22 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminAuditRoute: AdminAuditRoute,
   AdminAuditLoginsRoute: AdminAuditLoginsRoute,
-  AdminCampaignsRoute: AdminCampaignsRoute,
+  AdminCampaignsRoute: AdminCampaignsRouteWithChildren,
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminContentRoute: AdminContentRoute,
   AdminConversionRoute: AdminConversionRoute,
-  AdminCouponsRoute: AdminCouponsRoute,
+  AdminCouponsRoute: AdminCouponsRouteWithChildren,
   AdminCreateOrderRoute: AdminCreateOrderRoute,
   AdminCustomersRoute: AdminCustomersRouteWithChildren,
   AdminErrorsRoute: AdminErrorsRoute,
   AdminHelpRoute: AdminHelpRoute,
   AdminHomeBuilderRoute: AdminHomeBuilderRoute,
   AdminIncompleteRoute: AdminIncompleteRoute,
-  AdminIntegrationsRoute: AdminIntegrationsRoute,
+  AdminIntegrationsRoute: AdminIntegrationsRouteWithChildren,
   AdminInventoryRoute: AdminInventoryRoute,
   AdminInvoicesRoute: AdminInvoicesRoute,
-  AdminLandingPagesRoute: AdminLandingPagesRoute,
-  AdminMessagesRoute: AdminMessagesRoute,
+  AdminLandingPagesRoute: AdminLandingPagesRouteWithChildren,
+  AdminMessagesRoute: AdminMessagesRouteWithChildren,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminOrdersRoute: AdminOrdersRouteWithChildren,
   AdminOtoRoute: AdminOtoRoute,
@@ -1658,9 +1873,9 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSiteAnalyticsRoute: AdminSiteAnalyticsRoute,
   AdminStatesRoute: AdminStatesRoute,
   AdminStorefrontRoute: AdminStorefrontRoute,
-  AdminSupportRoute: AdminSupportRoute,
+  AdminSupportRoute: AdminSupportRouteWithChildren,
   AdminUsersRoute: AdminUsersRoute,
-  AdminWebhooksRoute: AdminWebhooksRoute,
+  AdminWebhooksRoute: AdminWebhooksRouteWithChildren,
   AdminIndexRoute: AdminIndexRoute,
 }
 

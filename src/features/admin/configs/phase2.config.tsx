@@ -212,3 +212,6 @@ export const reportsConfig: AdminPageConfig = {
   ],
   actions: { export: true },
 };
+
+// Add row navigation to detail pages
+couponsConfig.rowHref = (row: any) => `/admin/coupons/${row.id}`;
