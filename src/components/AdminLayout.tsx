@@ -37,7 +37,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useRef } from "react";
-import { ADMIN_AR_TO_EN } from "@/i18n/adminDict";
+import { ADMIN_AR_TO_EN, ADMIN_EN_TO_AR } from "@/i18n/adminDict";
 
 const ADMIN_DYNAMIC_PATTERNS: Array<[(text: string) => boolean, (text: string) => string]> = [
   [(text) => /^منذ\s+\d+\s+د$/.test(text), (text) => text.replace(/^منذ\s+(\d+)\s+د$/, "$1m ago")],
@@ -130,16 +130,70 @@ const ADMIN_PRESENTATION_REPLACEMENTS: Array<[RegExp, string]> = [
   [/،/g, ","],
 ];
 
+const ADMIN_PRESENTATION_REPLACEMENTS_REV: Array<[RegExp, string]> = [
+  [/January/g, "يناير"],
+  [/February/g, "فبراير"],
+  [/March/g, "مارس"],
+  [/April/g, "أبريل"],
+  [/May/g, "مايو"],
+  [/June/g, "يونيو"],
+  [/July/g, "يوليو"],
+  [/August/g, "أغسطس"],
+  [/September/g, "سبتمبر"],
+  [/October/g, "أكتوبر"],
+  [/November/g, "نوفمبر"],
+  [/December/g, "ديسمبر"],
+  [/Sunday/g, "الأحد"],
+  [/Monday/g, "الاثنين"],
+  [/Tuesday/g, "الثلاثاء"],
+  [/Wednesday/g, "الأربعاء"],
+  [/Thursday/g, "الخميس"],
+  [/Friday/g, "الجمعة"],
+  [/Saturday/g, "السبت"],
+  [/\bAM\b/g, "ص"],
+  [/\bPM\b/g, "م"],
+  [/\bat\b/g, "في"],
+];
+
 function normalizeAdminPresentation(text: string) {
   return ADMIN_PRESENTATION_REPLACEMENTS.reduce((acc, [pattern, value]) => acc.replace(pattern, value), text);
+}
+
+function normalizeAdminPresentationReverse(text: string) {
+  return ADMIN_PRESENTATION_REPLACEMENTS_REV.reduce((acc, [pattern, value]) => acc.replace(pattern, value), text);
 }
 
 function translateAdminFragments(text: string) {
   return ADMIN_FRAGMENT_TO_EN.reduce((acc, [ar, en]) => acc.replaceAll(ar, en), text);
 }
 
+function translateAdminFragmentsReverse(text: string) {
+  return ADMIN_FRAGMENT_TO_EN.reduce((acc, [ar, en]) => acc.replaceAll(en, ar), text);
+}
+
 function translateAdminDynamicText(text: string) {
   for (const [test, replace] of ADMIN_DYNAMIC_PATTERNS) {
+    if (test(text)) return replace(text);
+  }
+  return text;
+}
+
+function translateAdminDynamicTextReverse(text: string) {
+  const patterns: Array<[(text: string) => boolean, (text: string) => string]> = [
+    [(value) => /^\d+m ago$/.test(value), (value) => value.replace(/^(\d+)m ago$/, "منذ $1 د")],
+    [(value) => /^\d+h ago$/.test(value), (value) => value.replace(/^(\d+)h ago$/, "منذ $1 س")],
+    [(value) => /^\d+d ago$/.test(value), (value) => value.replace(/^(\d+)d ago$/, "منذ $1 ي")],
+    [(value) => /^\d+m remaining$/.test(value), (value) => value.replace(/^(\d+)m remaining$/, "$1 د متبقية")],
+    [(value) => /^\d+h remaining$/.test(value), (value) => value.replace(/^(\d+)h remaining$/, "$1 س متبقية")],
+    [(value) => /^\d+d remaining$/.test(value), (value) => value.replace(/^(\d+)d remaining$/, "$1 ي متبقية")],
+    [(value) => /^Products \((\d+)\)$/.test(value), (value) => value.replace(/^Products \((\d+)\)$/, "المنتجات ($1)")],
+    [(value) => /^Previous orders \((\d+)\)$/.test(value), (value) => value.replace(/^Previous orders \((\d+)\)$/, "طلبات سابقة ($1)")],
+    [(value) => /^Notes \((\d+)\)$/.test(value), (value) => value.replace(/^Notes \((\d+)\)$/, "ملاحظات ($1)")],
+    [(value) => /^Type:\s+(.+)$/.test(value), (value) => value.replace(/^Type:\s+(.+)$/, "النوع: $1")],
+    [(value) => /^Staff:\s+(.+)$/.test(value), (value) => value.replace(/^Staff:\s+(.+)$/, "الموظف: $1")],
+  ];
+
+  for (const [test, replace] of patterns) {
     if (test(text)) return replace(text);
   }
   return text;
@@ -154,7 +208,7 @@ function translateAdminDynamicText(text: string) {
  * Skips: <script>, <style>, <input>, <textarea>, elements with [data-no-translate]
  * or [contenteditable]. Does NOT mutate input values.
  */
-function AdminTranslateScope({ enabled, children, scopeKey }: { enabled: boolean; children: ReactNode; scopeKey: string }) {
+function AdminTranslateScope({ enabled, toLang, children, scopeKey }: { enabled: boolean; toLang: "ar" | "en"; children: ReactNode; scopeKey: string }) {
   const ref = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -182,17 +236,21 @@ function AdminTranslateScope({ enabled, children, scopeKey }: { enabled: boolean
       const trimmed = raw.trim();
       if (!trimmed) return null;
 
-      const exact = ADMIN_AR_TO_EN[trimmed];
-      const dynamic = translateAdminDynamicText(trimmed);
-      const fragments = translateAdminFragments(dynamic === trimmed ? trimmed : dynamic);
-      const normalized = normalizeAdminPresentation(fragments);
-      const en = normalizeAdminPresentation(exact ?? normalized);
+      const exact = toLang === "en" ? ADMIN_AR_TO_EN[trimmed] : ADMIN_EN_TO_AR[trimmed];
+      const dynamic = toLang === "en" ? translateAdminDynamicText(trimmed) : translateAdminDynamicTextReverse(trimmed);
+      const fragments = toLang === "en"
+        ? translateAdminFragments(dynamic === trimmed ? trimmed : dynamic)
+        : translateAdminFragmentsReverse(dynamic === trimmed ? trimmed : dynamic);
+      const normalized = toLang === "en"
+        ? normalizeAdminPresentation(fragments)
+        : normalizeAdminPresentationReverse(fragments);
+      const translated = exact ?? normalized;
 
-      if (!en || en === trimmed) return null;
+      if (!translated || translated === trimmed) return null;
       // Preserve surrounding whitespace.
       const lead = raw.match(/^\s*/)?.[0] ?? "";
       const tail = raw.match(/\s*$/)?.[0] ?? "";
-      return lead + en + tail;
+      return lead + translated + tail;
     }
 
     function walk(node: Node) {
@@ -625,7 +683,7 @@ export function AdminShell({ children }: { children?: ReactNode }) {
         </header>
 
         <main className="flex-1 overflow-x-auto p-4 lg:p-6">
-          <AdminTranslateScope enabled={lang === "en"} scopeKey={`${lang}:${location.pathname}`}>
+          <AdminTranslateScope enabled toLang={lang} scopeKey={`${lang}:${location.pathname}`}>
             {children ?? <Outlet />}
           </AdminTranslateScope>
         </main>
