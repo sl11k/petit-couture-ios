@@ -386,6 +386,73 @@ function FilterSortBar({
           {ar ? `عرض ${count} منتج` : `Showing ${count} styles`}
         </p>
       )}
+
+      {openFilter && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setOpenFilter(false)} aria-hidden />
+          <div className="fixed inset-x-0 bottom-0 z-50 bg-background rounded-t-2xl border-t border-border p-5 max-w-[600px] mx-auto animate-in slide-in-from-bottom duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold">{ar ? "تصفية" : "Filter"}</h3>
+              <button onClick={() => setOpenFilter(false)} className="text-sm text-primary">
+                {ar ? "تم" : "Done"}
+              </button>
+            </div>
+
+            <div className="space-y-5">
+              <div>
+                <div className="flex justify-between text-[13px] mb-2">
+                  <span>{ar ? "أقصى سعر" : "Max price"}</span>
+                  <span className="text-primary font-medium">{priceMax} {ar ? "ر.س" : "SAR"}</span>
+                </div>
+                <input
+                  type="range"
+                  min={priceBounds[0]}
+                  max={priceBounds[1]}
+                  value={priceMax}
+                  onChange={(e) => onPriceMaxChange(Number(e.target.value))}
+                  className="w-full accent-primary"
+                />
+                <div className="flex justify-between text-[11px] text-muted-foreground mt-1">
+                  <span>{priceBounds[0]}</span>
+                  <span>{priceBounds[1]}</span>
+                </div>
+              </div>
+
+              <label className="flex items-center justify-between py-2 cursor-pointer">
+                <span className="text-[14px]">{ar ? "متوفر فقط" : "In stock only"}</span>
+                <input
+                  type="checkbox"
+                  checked={inStockOnly}
+                  onChange={(e) => onInStockChange(e.target.checked)}
+                  className="h-4 w-4 accent-primary"
+                />
+              </label>
+
+              <label className="flex items-center justify-between py-2 cursor-pointer">
+                <span className="text-[14px]">{ar ? "العروض فقط" : "On sale only"}</span>
+                <input
+                  type="checkbox"
+                  checked={onSaleOnly}
+                  onChange={(e) => onOnSaleChange(e.target.checked)}
+                  className="h-4 w-4 accent-primary"
+                />
+              </label>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onPriceMaxChange(priceBounds[1]);
+                  onInStockChange(false);
+                  onOnSaleChange(false);
+                }}
+                className="w-full h-11 rounded-lg border border-border text-[13px] text-foreground hover:bg-muted transition"
+              >
+                {ar ? "إعادة ضبط" : "Reset filters"}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
