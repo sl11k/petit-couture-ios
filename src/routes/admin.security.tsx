@@ -33,7 +33,7 @@ function SecurityPage() {
   const save = async () => {
     if (!s) return;
     setSaving(true);
-    const { error } = await supabase.from("security_settings").update(s).eq("id", true);
+    const { error } = await supabase.from("security_settings").update(s as any).eq("id", true);
     setSaving(false);
     if (error) toast.error(error.message);
     else toast.success(ar ? "تم الحفظ" : "Saved");
