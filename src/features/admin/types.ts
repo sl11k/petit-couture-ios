@@ -93,3 +93,63 @@ export type AdminPageConfig<T = any> = {
   /** Click row navigates to */
   rowHref?: (row: T) => string;
 };
+
+export type DetailFieldType =
+  | "text" | "longtext" | "number" | "currency" | "date" | "datetime"
+  | "badge" | "boolean" | "image" | "url" | "email" | "tel" | "json" | "address";
+
+export type DetailFieldDef<T = any> = {
+  key: string;
+  label: Bilingual;
+  type?: DetailFieldType;
+  /** Custom renderer */
+  render?: (value: any, row: T) => ReactNode;
+  /** Hide field if value is empty */
+  hideIfEmpty?: boolean;
+  /** Span columns inside its section */
+  span?: 1 | 2 | 3;
+};
+
+export type DetailSectionDef<T = any> = {
+  title: Bilingual;
+  fields: DetailFieldDef<T>[];
+  /** Number of columns inside this section (sm+) */
+  columns?: 1 | 2 | 3;
+  /** Place section in the sidebar instead of main column */
+  sidebar?: boolean;
+};
+
+export type RelatedTableDef<T = any> = {
+  title: Bilingual;
+  table: string;
+  /** Foreign key column on the related table */
+  foreignKey: string;
+  /** How to compute the FK value from the main row (default: row.id) */
+  foreignKeyValue?: (row: T) => string | undefined;
+  orderBy?: { column: string; ascending?: boolean };
+  limit?: number;
+  columns: ColumnDef[];
+  select?: string;
+  rowHref?: (row: any) => string;
+  /** Footer renderer (e.g. totals) */
+  footer?: (rows: any[], main: T) => ReactNode;
+  /** Empty state */
+  emptyMessage?: Bilingual;
+};
+
+export type AdminDetailConfig<T = any> = {
+  /** Supabase table for the main entity */
+  table: string;
+  /** Path back to the listing */
+  backTo: string;
+  backLabel: Bilingual;
+  title: (row: T) => Bilingual | string;
+  description?: (row: T) => Bilingual | string;
+  /** Custom select for main row (default "*") */
+  select?: string;
+  /** Sections (sidebar:true sections render in side column) */
+  sections: DetailSectionDef<T>[];
+  related?: RelatedTableDef<T>[];
+  /** Optional inline edit using FormDialog */
+  editForm?: FormFieldDef[];
+};
