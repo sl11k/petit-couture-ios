@@ -87,15 +87,8 @@ function IncomingWebhooksPage() {
   const { lang } = useLanguage();
   const ar = lang === "ar";
 
-  const baseUrl = useMemo(() => {
-    if (typeof window === "undefined") return "";
-    const host = window.location.hostname;
-    // Prefer the published/custom domain over preview/lovableproject
-    if (host.includes("lovableproject.com") || host.includes("lovable.app")) {
-      return "https://golden-boutique-ios.lovable.app";
-    }
-    return window.location.origin;
-  }, []);
+  // Always use the production custom domain for webhook URLs given to providers
+  const baseUrl = "https://lppme.trendify.sa";
 
   const curlExample = (ep: Endpoint) =>
     `curl -X POST '${baseUrl}${ep.path}' \\
