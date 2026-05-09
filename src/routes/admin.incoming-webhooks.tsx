@@ -1,16 +1,22 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useServerFn } from "@tanstack/react-router";
 import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { PageHeader } from "@/features/admin/components/PageHeader";
-import { Webhook, Copy, Check, Shield, Code2, Info } from "lucide-react";
+import { Webhook, Copy, Check, Shield, Code2, Info, Send, Eye, EyeOff, Loader2, Lock } from "lucide-react";
 import { toast } from "sonner";
+import {
+  sendTestIncomingWebhook,
+  revealIncomingWebhookSecret,
+} from "@/lib/incoming-webhooks.functions";
 
 export const Route = createFileRoute("/admin/incoming-webhooks")({
   component: IncomingWebhooksPage,
 });
 
+type Kind = "shipping" | "payment";
+
 type Endpoint = {
-  key: string;
+  key: Kind;
   title: { ar: string; en: string };
   description: { ar: string; en: string };
   path: string;
@@ -65,7 +71,7 @@ const ENDPOINTS: Endpoint[] = [
   },
 ];
 
-function CopyBtn({ text }: { text: string }) {
+function CopyBtn({ text, label = "نسخ" }: { text: string; label?: string }) {
   const [done, setDone] = useState(false);
   return (
     <button
@@ -78,8 +84,149 @@ function CopyBtn({ text }: { text: string }) {
       className="flex shrink-0 items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-[11px] hover:bg-muted"
     >
       {done ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
-      نسخ
+      {label}
     </button>
+  );
+}
+
+function SecretReveal({ kind, ar }: { kind: Kind; ar: boolean }) {
+  const reveal = useServerFn(revealIncomingWebhookSecret);
+  const [open, setOpen] = useState(false);
+  const [password, setPassword] = useState("");
+  const [secret, setSecret] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [hidden, setHidden] = useState(true);
+
+  const handleReveal = async () => {
+    if (!password) {
+      toast.error(ar ? "أدخل كلمة المرور" : "Enter your password");
+      return;
+    }
+    setLoading(true);
+    try {
+      const r: any = await reveal({ data: { kind, password } });
+      setSecret(r.secret);
+      setHidden(false);
+      setPassword("");
+      toast.success(ar ? "تم الكشف عن السر" : "Secret revealed");
+    } catch (e: any) {
+      toast.error(e?.message || (ar ? "فشل التحقق" : "Verification failed"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const reset = () => {
+    setSecret(null);
+    setOpen(false);
+    setPassword("");
+    setHidden(true);
+  };
+
+  if (secret) {
+    const display = hidden ? "•".repeat(Math.min(secret.length, 32)) : secret;
+    return (
+      <div className="rounded-md border border-emerald-500/30 bg-emerald-500/5 p-2 space-y-2">
+        <div className="flex items-center gap-2">
+          <code className="flex-1 truncate font-mono text-[12px]" dir="ltr">{display}</code>
+          <button
+            onClick={() => setHidden((h) => !h)}
+            className="rounded-md border border-border bg-background p-1.5 hover:bg-muted"
+            title={hidden ? (ar ? "إظهار" : "Show") : (ar ? "إخفاء" : "Hide")}
+          >
+            {hidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+          </button>
+          <CopyBtn text={secret} label={ar ? "نسخ السر" : "Copy"} />
+        </div>
+        <button onClick={reset} className="text-[11px] text-muted-foreground hover:text-foreground underline">
+          {ar ? "إخفاء وإلغاء الكشف" : "Hide & lock again"}
+        </button>
+      </div>
+    );
+  }
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1.5 text-[12px] hover:bg-muted"
+      >
+        <Eye className="h-3.5 w-3.5" />
+        {ar ? "إظهار قيمة السر" : "Reveal secret value"}
+      </button>
+    );
+  }
+
+  return (
+    <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2 space-y-2">
+      <div className="flex items-center gap-1 text-[11px] text-amber-700 dark:text-amber-400">
+        <Lock className="h-3 w-3" />
+        {ar ? "أدخل كلمة مرور حسابك للتأكيد" : "Enter your account password to confirm"}
+      </div>
+      <div className="flex items-center gap-2">
+        <input
+          type="password"
+          autoFocus
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleReveal()}
+          placeholder={ar ? "كلمة المرور" : "Password"}
+          className="flex-1 rounded-md border border-border bg-background px-2 py-1 text-[12px]"
+        />
+        <button
+          disabled={loading}
+          onClick={handleReveal}
+          className="flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-[12px] text-primary-foreground hover:opacity-90 disabled:opacity-50"
+        >
+          {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+          {ar ? "تأكيد" : "Confirm"}
+        </button>
+        <button onClick={reset} className="text-[11px] text-muted-foreground hover:text-foreground">
+          {ar ? "إلغاء" : "Cancel"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function TestButton({ kind, ar }: { kind: Kind; ar: boolean }) {
+  const send = useServerFn(sendTestIncomingWebhook);
+  const [loading, setLoading] = useState(false);
+  const [last, setLast] = useState<{ ok: boolean; httpStatus: number | null; deliveryId: string | null; errorMessage: string | null } | null>(null);
+
+  const handle = async () => {
+    setLoading(true);
+    try {
+      const r: any = await send({ data: { kind } });
+      setLast(r);
+      if (r.ok) toast.success(ar ? `نجح الاختبار (HTTP ${r.httpStatus})` : `Test succeeded (HTTP ${r.httpStatus})`);
+      else toast.error(ar ? `فشل الاختبار: ${r.errorMessage || r.httpStatus}` : `Test failed: ${r.errorMessage || r.httpStatus}`);
+    } catch (e: any) {
+      toast.error(e?.message || "Error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <button
+        onClick={handle}
+        disabled={loading}
+        className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-[12px] font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+      >
+        {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+        {ar ? "إرسال اختبار" : "Send test"}
+      </button>
+      {last && (
+        <div className="text-[11px] text-muted-foreground">
+          {last.ok ? "✓" : "✕"} HTTP {last.httpStatus ?? "—"}{" · "}
+          <Link to="/admin/webhooks-deliveries" className="underline hover:text-foreground">
+            {ar ? "افتح سجل التسليمات" : "Open deliveries log"}
+          </Link>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -87,7 +234,6 @@ function IncomingWebhooksPage() {
   const { lang } = useLanguage();
   const ar = lang === "ar";
 
-  // Always use the production custom domain for webhook URLs given to providers
   const baseUrl = "https://lppme.trendify.sa";
 
   const curlExample = (ep: Endpoint) =>
@@ -114,8 +260,8 @@ function IncomingWebhooksPage() {
           </p>
           <p className="text-muted-foreground">
             {ar
-              ? "1) انسخ رابط الويبهوك المناسب. 2) ألصقه في لوحة تحكم المزود (مثلاً OTO). 3) أعطِ المزود السر (Secret) الموافق ليوقّع كل طلب بـ HMAC-SHA256."
-              : "1) Copy the matching webhook URL. 2) Paste it in your provider dashboard (e.g. OTO). 3) Share the matching secret so the provider signs every request with HMAC-SHA256."}
+              ? "1) انسخ رابط الويبهوك المناسب. 2) ألصقه في لوحة تحكم المزود (مثلاً OTO). 3) أعطِ المزود السر (Secret) الموافق ليوقّع كل طلب بـ HMAC-SHA256. يمكنك الضغط على «إرسال اختبار» لتجربة الرابط فوراً وستجد النتيجة في صفحة «سجل التسليمات»."
+              : "1) Copy the matching webhook URL. 2) Paste it in your provider dashboard. 3) Share the matching secret so the provider signs every request with HMAC-SHA256. Use \"Send test\" to ping the endpoint and view results on the deliveries page."}
           </p>
         </div>
       </div>
@@ -135,9 +281,12 @@ function IncomingWebhooksPage() {
                     {ar ? ep.description.ar : ep.description.en}
                   </p>
                 </div>
-                <span className="rounded bg-emerald-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
-                  {ep.method}
-                </span>
+                <div className="flex items-start gap-2">
+                  <span className="rounded bg-emerald-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
+                    {ep.method}
+                  </span>
+                  <TestButton kind={ep.key} ar={ar} />
+                </div>
               </div>
 
               {/* URL */}
@@ -158,11 +307,12 @@ function IncomingWebhooksPage() {
                 <div>
                   <div className="mb-1 flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                     <Shield className="h-3 w-3" />
-                    {ar ? "اسم السر" : "Secret name"}
+                    {ar ? "السر (Secret)" : "Secret"}
                   </div>
-                  <div className="rounded-md border border-border bg-muted/40 px-2 py-1.5 font-mono text-[12px]">
+                  <div className="rounded-md border border-border bg-muted/40 px-2 py-1.5 font-mono text-[12px] mb-2">
                     {ep.secretName}
                   </div>
+                  <SecretReveal kind={ep.key} ar={ar} />
                 </div>
                 <div>
                   <div className="mb-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
