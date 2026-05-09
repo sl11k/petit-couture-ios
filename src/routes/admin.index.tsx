@@ -131,6 +131,23 @@ function statusBadge(status: string, ar: boolean) {
   );
 }
 
+type StatusFilter = "all" | "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";
+type PeriodFilter = "all" | "today" | "7d" | "30d" | "90d";
+
+function periodSince(p: PeriodFilter): string | null {
+  const now = Date.now();
+  const day = 24 * 60 * 60 * 1000;
+  switch (p) {
+    case "today": {
+      const d = new Date(); d.setHours(0, 0, 0, 0); return d.toISOString();
+    }
+    case "7d": return new Date(now - 7 * day).toISOString();
+    case "30d": return new Date(now - 30 * day).toISOString();
+    case "90d": return new Date(now - 90 * day).toISOString();
+    default: return null;
+  }
+}
+
 function Dashboard() {
   const { lang } = useLanguage();
   const ar = lang === "ar";
@@ -138,6 +155,9 @@ function Dashboard() {
   const [recent, setRecent] = useState<RecentOrder[]>([]);
   const [top, setTop] = useState<TopProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [recentLoading, setRecentLoading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("all");
 
   useEffect(() => {
     (async () => {
@@ -155,7 +175,6 @@ function Dashboard() {
         productsAll,
         customersTotal,
         customersNew,
-        recentRes,
         itemsRes,
       ] = await Promise.all([
         supabase.from("orders").select("id", { count: "exact", head: true }),
@@ -169,11 +188,6 @@ function Dashboard() {
         supabase.from("products").select("stock,low_stock_threshold"),
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", since30),
-        supabase
-          .from("orders")
-          .select("id,order_number,customer_name,status,total,created_at")
-          .order("created_at", { ascending: false })
-          .limit(6),
         supabase
           .from("order_items")
           .select("product_id,quantity,product_name_ar,product_name_en")
@@ -217,11 +231,29 @@ function Dashboard() {
         customersTotal: customersTotal.count ?? 0,
         customersNew30d: customersNew.count ?? 0,
       });
-      setRecent((recentRes.data as RecentOrder[]) ?? []);
       setTop(topList);
       setLoading(false);
     })();
   }, []);
+
+  // Recent orders: refetch on filter change
+  useEffect(() => {
+    (async () => {
+      setRecentLoading(true);
+      let q = supabase
+        .from("orders")
+        .select("id,order_number,customer_name,status,total,created_at")
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (statusFilter !== "all") q = q.eq("status", statusFilter as any);
+      const since = periodSince(periodFilter);
+      if (since) q = q.gte("created_at", since);
+      const { data } = await q;
+      setRecent((data as RecentOrder[]) ?? []);
+      setRecentLoading(false);
+    })();
+  }, [statusFilter, periodFilter]);
+
 
   const v = (n?: number) =>
     loading || stats == null ? "…" : fmtNum(n ?? 0, ar);
@@ -345,15 +377,60 @@ function Dashboard() {
             href="/admin/orders"
             hrefLabel={ar ? "عرض الكل" : "View all"}
           >
+            <div className="flex flex-wrap items-center gap-2 border-b border-border bg-muted/20 px-4 py-3">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+                className="h-8 rounded-md border border-border bg-background px-2 text-xs"
+              >
+                <option value="all">{ar ? "كل الحالات" : "All statuses"}</option>
+                <option value="pending">{ar ? "قيد الانتظار" : "Pending"}</option>
+                <option value="confirmed">{ar ? "مؤكد" : "Confirmed"}</option>
+                <option value="processing">{ar ? "قيد المعالجة" : "Processing"}</option>
+                <option value="shipped">{ar ? "مشحون" : "Shipped"}</option>
+                <option value="delivered">{ar ? "مُسلَّم" : "Delivered"}</option>
+                <option value="cancelled">{ar ? "ملغي" : "Cancelled"}</option>
+                <option value="refunded">{ar ? "مُرتجع" : "Refunded"}</option>
+              </select>
+              <div className="flex flex-wrap items-center gap-1">
+                {([
+                  ["all", ar ? "الكل" : "All"],
+                  ["today", ar ? "اليوم" : "Today"],
+                  ["7d", ar ? "7 أيام" : "7d"],
+                  ["30d", ar ? "30 يوم" : "30d"],
+                  ["90d", ar ? "90 يوم" : "90d"],
+                ] as [PeriodFilter, string][]).map(([p, label]) => (
+                  <button
+                    key={p}
+                    onClick={() => setPeriodFilter(p)}
+                    className={`h-8 rounded-md border px-2 text-xs transition-colors ${
+                      periodFilter === p
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-background hover:bg-muted/50"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {(statusFilter !== "all" || periodFilter !== "all") && (
+                <button
+                  onClick={() => { setStatusFilter("all"); setPeriodFilter("all"); }}
+                  className="ms-auto text-xs text-muted-foreground hover:text-foreground"
+                >
+                  {ar ? "مسح" : "Clear"}
+                </button>
+              )}
+            </div>
             <div className="divide-y divide-border">
-              {loading && (
+              {recentLoading && (
                 <div className="px-4 py-6 text-center text-sm text-muted-foreground">
                   {ar ? "جاري التحميل…" : "Loading…"}
                 </div>
               )}
-              {!loading && recent.length === 0 && (
+              {!recentLoading && recent.length === 0 && (
                 <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                  {ar ? "لا توجد طلبات بعد" : "No orders yet"}
+                  {ar ? "لا توجد طلبات مطابقة" : "No matching orders"}
                 </div>
               )}
               {recent.map((o) => (
