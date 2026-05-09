@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getOtoAccessToken, otoCreateOrder, otoFetch } from "./oto.server";
+import { getOtoAccessToken, otoFetch, createOtoShipmentForOrder } from "./oto.server";
 
 export const otoTestConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
