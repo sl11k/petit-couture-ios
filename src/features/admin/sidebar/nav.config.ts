@@ -98,6 +98,7 @@ export const ADMIN_NAV: NavGroup[] = [
     items: [
       { to: "/admin/settings", label: { ar: "الإعدادات", en: "Settings" }, icon: Settings },
       { to: "/admin/security", label: { ar: "الأمان", en: "Security" }, icon: Shield },
+      { to: "/admin/permissions", label: { ar: "الأدوار والصلاحيات", en: "Roles & Permissions" }, icon: Shield },
       { to: "/admin/audit", label: { ar: "سجل العمليات", en: "Audit log" }, icon: ScrollText },
       { to: "/admin/audit-logins", label: { ar: "محاولات الدخول", en: "Login attempts" }, icon: Shield },
       { to: "/admin/errors", label: { ar: "الأخطاء", en: "Errors" }, icon: AlertCircle },

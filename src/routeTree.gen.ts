@@ -50,6 +50,7 @@ import { Route as AdminReturnsRouteImport } from './routes/admin.returns'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
 import { Route as AdminPrivacyRouteImport } from './routes/admin.privacy'
+import { Route as AdminPermissionsRouteImport } from './routes/admin.permissions'
 import { Route as AdminPerformanceRouteImport } from './routes/admin.performance'
 import { Route as AdminPaymentsRouteImport } from './routes/admin.payments'
 import { Route as AdminOtoRouteImport } from './routes/admin.oto'
@@ -301,6 +302,11 @@ const AdminProductsRoute = AdminProductsRouteImport.update({
 const AdminPrivacyRoute = AdminPrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPermissionsRoute = AdminPermissionsRouteImport.update({
+  id: '/permissions',
+  path: '/permissions',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminPerformanceRoute = AdminPerformanceRouteImport.update({
@@ -580,6 +586,7 @@ export interface FileRoutesByFullPath {
   '/admin/oto': typeof AdminOtoRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/permissions': typeof AdminPermissionsRoute
   '/admin/privacy': typeof AdminPrivacyRoute
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/reports': typeof AdminReportsRoute
@@ -668,6 +675,7 @@ export interface FileRoutesByTo {
   '/admin/oto': typeof AdminOtoRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/permissions': typeof AdminPermissionsRoute
   '/admin/privacy': typeof AdminPrivacyRoute
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/reports': typeof AdminReportsRoute
@@ -758,6 +766,7 @@ export interface FileRoutesById {
   '/admin/oto': typeof AdminOtoRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/permissions': typeof AdminPermissionsRoute
   '/admin/privacy': typeof AdminPrivacyRoute
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/reports': typeof AdminReportsRoute
@@ -849,6 +858,7 @@ export interface FileRouteTypes {
     | '/admin/oto'
     | '/admin/payments'
     | '/admin/performance'
+    | '/admin/permissions'
     | '/admin/privacy'
     | '/admin/products'
     | '/admin/reports'
@@ -937,6 +947,7 @@ export interface FileRouteTypes {
     | '/admin/oto'
     | '/admin/payments'
     | '/admin/performance'
+    | '/admin/permissions'
     | '/admin/privacy'
     | '/admin/products'
     | '/admin/reports'
@@ -1026,6 +1037,7 @@ export interface FileRouteTypes {
     | '/admin/oto'
     | '/admin/payments'
     | '/admin/performance'
+    | '/admin/permissions'
     | '/admin/privacy'
     | '/admin/products'
     | '/admin/reports'
@@ -1394,6 +1406,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/admin/privacy'
       preLoaderRoute: typeof AdminPrivacyRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/permissions': {
+      id: '/admin/permissions'
+      path: '/permissions'
+      fullPath: '/admin/permissions'
+      preLoaderRoute: typeof AdminPermissionsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/performance': {
@@ -1891,6 +1910,7 @@ interface AdminRouteChildren {
   AdminOtoRoute: typeof AdminOtoRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
   AdminPerformanceRoute: typeof AdminPerformanceRoute
+  AdminPermissionsRoute: typeof AdminPermissionsRoute
   AdminPrivacyRoute: typeof AdminPrivacyRoute
   AdminProductsRoute: typeof AdminProductsRouteWithChildren
   AdminReportsRoute: typeof AdminReportsRoute
@@ -1935,6 +1955,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminOtoRoute: AdminOtoRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
   AdminPerformanceRoute: AdminPerformanceRoute,
+  AdminPermissionsRoute: AdminPermissionsRoute,
   AdminPrivacyRoute: AdminPrivacyRoute,
   AdminProductsRoute: AdminProductsRouteWithChildren,
   AdminReportsRoute: AdminReportsRoute,
