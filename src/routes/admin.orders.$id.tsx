@@ -12,8 +12,11 @@ import {
 import {
   ArrowRight, Printer, MessageCircle, Mail, MapPin, Copy,
   Pin, Save, Trash2, Plus, Package as PackageIcon, AlertTriangle,
-  Phone, User, Calendar, CreditCard, Truck, FileText, Clock,
+  Phone, User, Calendar, CreditCard, Truck, FileText, Clock, Send, Loader2,
 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { otoCreateShipment } from "@/lib/oto.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/orders/$id")({
   component: OrderDetail,
@@ -257,6 +260,7 @@ function OrderDetail() {
                   فتح رابط التتبع ↗
                 </a>
               )}
+              <OtoCreateShipmentButton orderId={order.id} hasTracking={!!order.tracking_number} onDone={load} />
             </Section>
           </div>
 
@@ -503,4 +507,33 @@ function describeMeta(meta: any): string {
   if (meta.tracking_number) parts.push(`رقم التتبع: ${meta.tracking_number}`);
   if (meta.to) parts.push(`→ ${ORDER_STATUS_LABEL[meta.to] ?? meta.to}`);
   return parts.join(" · ");
+}
+
+function OtoCreateShipmentButton({ orderId, hasTracking, onDone }: { orderId: string; hasTracking: boolean; onDone: () => void }) {
+  const create = useServerFn(otoCreateShipment);
+  const [loading, setLoading] = useState(false);
+  async function handleClick() {
+    if (hasTracking && !confirm("الطلب يحتوي على رقم تتبع. إنشاء شحنة جديدة عبر OTO؟")) return;
+    setLoading(true);
+    try {
+      const res: any = await create({ data: { orderId } });
+      if (res?.ok) {
+        toast.success("تم إنشاء الشحنة عبر OTO ✅");
+        onDone();
+      } else {
+        toast.error(`فشل إنشاء الشحنة: ${res?.error || "خطأ غير معروف"}`);
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "فشل الاتصال بـ OTO");
+    } finally {
+      setLoading(false);
+    }
+  }
+  return (
+    <button onClick={handleClick} disabled={loading}
+      className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60">
+      {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+      إنشاء شحنة عبر OTO
+    </button>
+  );
 }
