@@ -128,6 +128,8 @@ const HIDE_ON: string[] = [
 export function MobileBottomNav() {
   const location = useLocation();
   const bag = useBag();
+  const { isRTL } = useLanguage();
+  const ar = isRTL;
   const path = location.pathname;
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -143,11 +145,12 @@ export function MobileBottomNav() {
     count?: number;
   };
   const items: Item[] = [
-    { to: "/", icon: Home, label: "الرئيسية", exact: true },
-    { to: "/search", icon: Search, label: "البحث" },
-    { to: "/bag", icon: ShoppingBag, label: "السلة", count: bagCount },
-    { to: "/account", icon: User, label: "حسابي" },
+    { to: "/", icon: Home, label: ar ? "الرئيسية" : "Home", exact: true },
+    { to: "/search", icon: Search, label: ar ? "البحث" : "Search" },
+    { to: "/bag", icon: ShoppingBag, label: ar ? "السلة" : "Bag", count: bagCount },
+    { to: "/account", icon: User, label: ar ? "حسابي" : "Account" },
   ];
+  const menuLabel = ar ? "القائمة" : "Menu";
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? path === to : path === to || path.startsWith(to + "/");
