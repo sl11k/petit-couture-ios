@@ -264,7 +264,19 @@ function CategoryView() {
       )}
 
       {/* Filter / Sort bar */}
-      <FilterSortBar ar={ar} count={sortedProducts.length} sort={sortKey} onSortChange={setSortKey} />
+      <FilterSortBar
+        ar={ar}
+        count={sortedProducts.length}
+        sort={sortKey}
+        onSortChange={setSortKey}
+        priceMax={priceMax}
+        priceBounds={priceBounds}
+        onPriceMaxChange={setPriceMax}
+        inStockOnly={inStockOnly}
+        onInStockChange={setInStockOnly}
+        onSaleOnly={onSaleOnly}
+        onOnSaleChange={setOnSaleOnly}
+      />
 
       {/* Products grid */}
       <section className="px-4 sm:px-6 py-6 sm:py-10 max-w-[1200px] mx-auto">
