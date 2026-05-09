@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "@/features/admin/components/ComingSoon";
+import { AdminPage } from "@/features/admin/components/AdminPage";
+import { supportConfig } from "@/features/admin/configs/phase3.config";
 
 export const Route = createFileRoute("/admin/support")({
-  component: () => <ComingSoon title={{ ar: "الدعم", en: "Support" }} />,
+  component: () => <AdminPage config={supportConfig} />,
 });

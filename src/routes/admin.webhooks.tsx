@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "@/features/admin/components/ComingSoon";
+import { AdminPage } from "@/features/admin/components/AdminPage";
+import { webhooksConfig } from "@/features/admin/configs/phase3.config";
 
 export const Route = createFileRoute("/admin/webhooks")({
-  component: () => <ComingSoon title={{ ar: "Webhooks", en: "Webhooks" }} />,
+  component: () => <AdminPage config={webhooksConfig} />,
 });
