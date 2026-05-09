@@ -309,6 +309,9 @@ function Dashboard() {
       {/* Interactive trend charts */}
       <DashboardCharts />
 
+      {/* Low stock alerts */}
+      <LowStockAlerts />
+
       {/* Orders breakdown */}
       <div>
         <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
