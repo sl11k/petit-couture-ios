@@ -92,6 +92,33 @@ export const orderDetailConfig: AdminDetailConfig = {
       ],
       rowHref: (r) => r.product_id ? `/admin/products/${r.product_id}` : "",
     },
+    {
+      title: { ar: "العمليات الأخيرة", en: "Recent activity" },
+      table: "audit_logs",
+      foreignKey: "entity_id",
+      foreignKeyValue: (row) => row.id,
+      extraEq: { entity: "orders" },
+      orderBy: { column: "created_at", ascending: false },
+      limit: 25,
+      select: "id, action, actor_email, created_at, metadata",
+      emptyMessage: { ar: "لا توجد عمليات مسجلة", en: "No recorded activity" },
+      columns: [
+        { key: "created_at", label: { ar: "الوقت", en: "Time" }, type: "datetime", width: "w-44" },
+        { key: "action", label: { ar: "العملية", en: "Action" }, type: "badge" },
+        { key: "actor_email", label: { ar: "المستخدم", en: "User" }, hideOnMobile: true },
+        {
+          key: "metadata",
+          label: { ar: "تفاصيل", en: "Details" },
+          hideOnMobile: true,
+          render: (v: any) => {
+            const changed = v?.changed_fields;
+            if (!changed) return <span className="text-muted-foreground">—</span>;
+            const keys = Object.keys(changed).slice(0, 3);
+            return <span className="text-xs text-muted-foreground">{keys.join(", ")}{Object.keys(changed).length > 3 ? "…" : ""}</span>;
+          },
+        },
+      ],
+    },
   ],
 };
 
