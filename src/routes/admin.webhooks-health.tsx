@@ -127,7 +127,7 @@ function WebhooksHealthPage() {
     <div className="space-y-4" dir={ar ? "rtl" : "ltr"}>
       <PageHeader
         title={{ ar: "صحة الـ Webhooks", en: "Webhooks Health" }}
-        subtitle={{ ar: "حالة آخر تنفيذ، النجاح/الفشل، وزمن الاستجابة", en: "Latest run status, success/failure, response times" }}
+        description={{ ar: "حالة آخر تنفيذ، النجاح/الفشل، وزمن الاستجابة", en: "Latest run status, success/failure, response times" }}
       />
 
       <div className="flex flex-wrap items-center gap-2">

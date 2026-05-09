@@ -36,6 +36,7 @@ import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
 import { Route as DebugAnalyticsRouteImport } from './routes/debug.analytics'
 import { Route as CollectionSlugRouteImport } from './routes/collection.$slug'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as AdminWebhooksHealthRouteImport } from './routes/admin.webhooks-health'
 import { Route as AdminWebhooksRouteImport } from './routes/admin.webhooks'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminSupportRouteImport } from './routes/admin.support'
@@ -233,6 +234,11 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
   id: '/category/$slug',
   path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminWebhooksHealthRoute = AdminWebhooksHealthRouteImport.update({
+  id: '/webhooks-health',
+  path: '/webhooks-health',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminWebhooksRoute = AdminWebhooksRouteImport.update({
   id: '/webhooks',
@@ -601,6 +607,7 @@ export interface FileRoutesByFullPath {
   '/admin/support': typeof AdminSupportRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
   '/admin/webhooks': typeof AdminWebhooksRouteWithChildren
+  '/admin/webhooks-health': typeof AdminWebhooksHealthRoute
   '/category/$slug': typeof CategorySlugRoute
   '/collection/$slug': typeof CollectionSlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
@@ -690,6 +697,7 @@ export interface FileRoutesByTo {
   '/admin/support': typeof AdminSupportRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
   '/admin/webhooks': typeof AdminWebhooksRouteWithChildren
+  '/admin/webhooks-health': typeof AdminWebhooksHealthRoute
   '/category/$slug': typeof CategorySlugRoute
   '/collection/$slug': typeof CollectionSlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
@@ -781,6 +789,7 @@ export interface FileRoutesById {
   '/admin/support': typeof AdminSupportRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
   '/admin/webhooks': typeof AdminWebhooksRouteWithChildren
+  '/admin/webhooks-health': typeof AdminWebhooksHealthRoute
   '/category/$slug': typeof CategorySlugRoute
   '/collection/$slug': typeof CollectionSlugRoute
   '/debug/analytics': typeof DebugAnalyticsRoute
@@ -873,6 +882,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/users'
     | '/admin/webhooks'
+    | '/admin/webhooks-health'
     | '/category/$slug'
     | '/collection/$slug'
     | '/debug/analytics'
@@ -962,6 +972,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/users'
     | '/admin/webhooks'
+    | '/admin/webhooks-health'
     | '/category/$slug'
     | '/collection/$slug'
     | '/debug/analytics'
@@ -1052,6 +1063,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/users'
     | '/admin/webhooks'
+    | '/admin/webhooks-health'
     | '/category/$slug'
     | '/collection/$slug'
     | '/debug/analytics'
@@ -1309,6 +1321,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/category/$slug'
       preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/webhooks-health': {
+      id: '/admin/webhooks-health'
+      path: '/webhooks-health'
+      fullPath: '/admin/webhooks-health'
+      preLoaderRoute: typeof AdminWebhooksHealthRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/webhooks': {
       id: '/admin/webhooks'
@@ -1925,6 +1944,7 @@ interface AdminRouteChildren {
   AdminSupportRoute: typeof AdminSupportRouteWithChildren
   AdminUsersRoute: typeof AdminUsersRoute
   AdminWebhooksRoute: typeof AdminWebhooksRouteWithChildren
+  AdminWebhooksHealthRoute: typeof AdminWebhooksHealthRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -1970,6 +1990,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSupportRoute: AdminSupportRouteWithChildren,
   AdminUsersRoute: AdminUsersRoute,
   AdminWebhooksRoute: AdminWebhooksRouteWithChildren,
+  AdminWebhooksHealthRoute: AdminWebhooksHealthRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
