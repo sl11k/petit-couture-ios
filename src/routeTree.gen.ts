@@ -55,6 +55,7 @@ import { Route as AdminPaymentsRouteImport } from './routes/admin.payments'
 import { Route as AdminOtoRouteImport } from './routes/admin.oto'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
+import { Route as AdminMetricsRouteImport } from './routes/admin.metrics'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminLandingPagesRouteImport } from './routes/admin.landing-pages'
 import { Route as AdminInvoicesRouteImport } from './routes/admin.invoices'
@@ -327,6 +328,11 @@ const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminMetricsRoute = AdminMetricsRouteImport.update({
+  id: '/metrics',
+  path: '/metrics',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminMessagesRoute = AdminMessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
@@ -568,6 +574,7 @@ export interface FileRoutesByFullPath {
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/landing-pages': typeof AdminLandingPagesRouteWithChildren
   '/admin/messages': typeof AdminMessagesRouteWithChildren
+  '/admin/metrics': typeof AdminMetricsRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/oto': typeof AdminOtoRoute
@@ -655,6 +662,7 @@ export interface FileRoutesByTo {
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/landing-pages': typeof AdminLandingPagesRouteWithChildren
   '/admin/messages': typeof AdminMessagesRouteWithChildren
+  '/admin/metrics': typeof AdminMetricsRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/oto': typeof AdminOtoRoute
@@ -744,6 +752,7 @@ export interface FileRoutesById {
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/landing-pages': typeof AdminLandingPagesRouteWithChildren
   '/admin/messages': typeof AdminMessagesRouteWithChildren
+  '/admin/metrics': typeof AdminMetricsRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/oto': typeof AdminOtoRoute
@@ -834,6 +843,7 @@ export interface FileRouteTypes {
     | '/admin/invoices'
     | '/admin/landing-pages'
     | '/admin/messages'
+    | '/admin/metrics'
     | '/admin/notifications'
     | '/admin/orders'
     | '/admin/oto'
@@ -921,6 +931,7 @@ export interface FileRouteTypes {
     | '/admin/invoices'
     | '/admin/landing-pages'
     | '/admin/messages'
+    | '/admin/metrics'
     | '/admin/notifications'
     | '/admin/orders'
     | '/admin/oto'
@@ -1009,6 +1020,7 @@ export interface FileRouteTypes {
     | '/admin/invoices'
     | '/admin/landing-pages'
     | '/admin/messages'
+    | '/admin/metrics'
     | '/admin/notifications'
     | '/admin/orders'
     | '/admin/oto'
@@ -1417,6 +1429,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/admin/notifications'
       preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/metrics': {
+      id: '/admin/metrics'
+      path: '/metrics'
+      fullPath: '/admin/metrics'
+      preLoaderRoute: typeof AdminMetricsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/messages': {
@@ -1866,6 +1885,7 @@ interface AdminRouteChildren {
   AdminInvoicesRoute: typeof AdminInvoicesRoute
   AdminLandingPagesRoute: typeof AdminLandingPagesRouteWithChildren
   AdminMessagesRoute: typeof AdminMessagesRouteWithChildren
+  AdminMetricsRoute: typeof AdminMetricsRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminOrdersRoute: typeof AdminOrdersRouteWithChildren
   AdminOtoRoute: typeof AdminOtoRoute
@@ -1909,6 +1929,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminInvoicesRoute: AdminInvoicesRoute,
   AdminLandingPagesRoute: AdminLandingPagesRouteWithChildren,
   AdminMessagesRoute: AdminMessagesRouteWithChildren,
+  AdminMetricsRoute: AdminMetricsRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminOrdersRoute: AdminOrdersRouteWithChildren,
   AdminOtoRoute: AdminOtoRoute,
