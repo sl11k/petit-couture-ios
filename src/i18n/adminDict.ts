@@ -917,7 +917,6 @@ export const ADMIN_AR_TO_EN: Record<string, string> = {
   "أضف أول endpoint من الأعلى": "Add the first endpoint above",
   "أضف منتجات لإكمال طلبك.": "Add products to complete your order.",
   "إجمالي البحث": "Total searches",
-  "إجمالي السجلات (الصفحة": "Total records (page",
   "إجمالي السلات": "Total carts",
   "إجمالي المحصّل": "Total collected",
   "إدارة الجلسات": "Session management",
