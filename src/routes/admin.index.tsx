@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { PageHeader } from "@/features/admin/components/PageHeader";
 import { DashboardCharts } from "@/features/admin/components/DashboardCharts";
+import { AdminQuickSearch } from "@/features/admin/components/AdminQuickSearch";
 import {
   ShoppingBag,
   Package,
