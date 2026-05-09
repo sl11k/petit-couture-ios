@@ -29,7 +29,7 @@ export const ADMIN_NAV: NavGroup[] = [
     label: { ar: "نظرة عامة", en: "Overview" },
     items: [
       { to: "/admin", label: { ar: "لوحة التحكم", en: "Dashboard" }, icon: LayoutDashboard },
-      { to: "/admin/analytics", label: { ar: "التحليلات", en: "Analytics" }, icon: BarChart3, comingSoon: true },
+      { to: "/admin/analytics", label: { ar: "التحليلات", en: "Analytics" }, icon: BarChart3 },
     ],
   },
   {
@@ -39,9 +39,9 @@ export const ADMIN_NAV: NavGroup[] = [
       { to: "/admin/create-order", label: { ar: "إنشاء طلب", en: "Create order" }, icon: Plus, comingSoon: true },
       { to: "/admin/abandoned", label: { ar: "السلال المتروكة", en: "Abandoned carts" }, icon: ShoppingCart, comingSoon: true },
       { to: "/admin/incomplete", label: { ar: "غير مكتملة", en: "Incomplete" }, icon: AlertCircle, comingSoon: true },
-      { to: "/admin/invoices", label: { ar: "الفواتير", en: "Invoices" }, icon: FileSpreadsheet, comingSoon: true },
-      { to: "/admin/payments", label: { ar: "المدفوعات", en: "Payments" }, icon: CreditCard, comingSoon: true },
-      { to: "/admin/returns", label: { ar: "المرتجعات", en: "Returns" }, icon: Undo2, comingSoon: true },
+      { to: "/admin/invoices", label: { ar: "الفواتير", en: "Invoices" }, icon: FileSpreadsheet },
+      { to: "/admin/payments", label: { ar: "المدفوعات", en: "Payments" }, icon: CreditCard },
+      { to: "/admin/returns", label: { ar: "المرتجعات", en: "Returns" }, icon: Undo2 },
     ],
   },
   {
@@ -49,8 +49,8 @@ export const ADMIN_NAV: NavGroup[] = [
     items: [
       { to: "/admin/products", label: { ar: "المنتجات", en: "Products" }, icon: Package },
       { to: "/admin/categories", label: { ar: "التصنيفات", en: "Categories" }, icon: FolderTree },
-      { to: "/admin/inventory", label: { ar: "المخزون", en: "Inventory" }, icon: Boxes, comingSoon: true },
-      { to: "/admin/coupons", label: { ar: "الكوبونات", en: "Coupons" }, icon: Ticket, comingSoon: true },
+      { to: "/admin/inventory", label: { ar: "المخزون", en: "Inventory" }, icon: Boxes },
+      { to: "/admin/coupons", label: { ar: "الكوبونات", en: "Coupons" }, icon: Ticket },
     ],
   },
   {
@@ -83,11 +83,11 @@ export const ADMIN_NAV: NavGroup[] = [
   {
     label: { ar: "العمليات", en: "Operations" },
     items: [
-      { to: "/admin/shipping", label: { ar: "الشحن", en: "Shipping" }, icon: Truck, comingSoon: true },
+      { to: "/admin/shipping", label: { ar: "الشحن", en: "Shipping" }, icon: Truck },
       { to: "/admin/integrations", label: { ar: "التكاملات", en: "Integrations" }, icon: Plug, comingSoon: true },
       { to: "/admin/webhooks", label: { ar: "Webhooks", en: "Webhooks" }, icon: Webhook, comingSoon: true },
       { to: "/admin/oto", label: { ar: "OTO", en: "OTO" }, icon: Truck, comingSoon: true },
-      { to: "/admin/reports", label: { ar: "التقارير", en: "Reports" }, icon: FileSpreadsheet, comingSoon: true },
+      { to: "/admin/reports", label: { ar: "التقارير", en: "Reports" }, icon: FileSpreadsheet },
       { to: "/admin/site-analytics", label: { ar: "تحليلات الموقع", en: "Site analytics" }, icon: Eye, comingSoon: true },
       { to: "/admin/performance", label: { ar: "الأداء", en: "Performance" }, icon: Activity, comingSoon: true },
     ],
