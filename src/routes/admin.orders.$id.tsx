@@ -37,15 +37,24 @@ function OrderDetail() {
 
   async function load() {
     setLoading(true);
-    const [oRes, iRes, eRes] = await Promise.all([
-      supabase.from("orders").select("*").eq("id", id).maybeSingle(),
-      supabase.from("order_items").select("*").eq("order_id", id),
-      supabase.from("audit_logs").select("*").eq("entity", "order").eq("entity_id", id).order("created_at", { ascending: false }),
-    ]);
-    setOrder(oRes.data);
-    setItems(iRes.data ?? []);
-    setEvents(eRes.data ?? []);
-    setLoading(false);
+    try {
+      const [oRes, iRes, eRes] = await Promise.all([
+        supabase.from("orders").select("*").eq("id", id).maybeSingle(),
+        supabase.from("order_items").select("*").eq("order_id", id),
+        supabase.from("audit_logs").select("*").eq("entity", "order").eq("entity_id", id).order("created_at", { ascending: false }),
+      ]);
+      if (oRes.error) console.error("[order detail] order load error:", oRes.error);
+      if (iRes.error) console.error("[order detail] items load error:", iRes.error);
+      if (eRes.error) console.error("[order detail] events load error:", eRes.error);
+      setOrder(oRes.data ?? null);
+      setItems(iRes.data ?? []);
+      setEvents(eRes.data ?? []);
+    } catch (e) {
+      console.error("[order detail] load failed:", e);
+      setOrder(null);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { void load(); }, [id]);
