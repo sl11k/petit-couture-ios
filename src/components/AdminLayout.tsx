@@ -36,6 +36,112 @@ import {
   Plus,
   AlertCircle,
 } from "lucide-react";
+import { useRef } from "react";
+import { ADMIN_AR_TO_EN } from "@/i18n/adminDict";
+
+/**
+ * Runtime DOM translation overlay for the admin area.
+ * When `enabled`, walks all text nodes inside its subtree and replaces any
+ * text whose trimmed value matches a key in ADMIN_AR_TO_EN. Uses a
+ * MutationObserver so dynamically rendered content is also translated.
+ *
+ * Skips: <script>, <style>, <input>, <textarea>, elements with [data-no-translate]
+ * or [contenteditable]. Does NOT mutate input values.
+ */
+function AdminTranslateScope({ enabled, children }: { enabled: boolean; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!enabled) return;
+    const root = ref.current;
+    if (!root) return;
+
+    const SKIP_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "INPUT", "TEXTAREA", "SVG"]);
+
+    function shouldSkip(node: Node): boolean {
+      let el: Node | null = node;
+      while (el && el !== root) {
+        if (el.nodeType === 1) {
+          const e = el as HTMLElement;
+          if (SKIP_TAGS.has(e.tagName)) return true;
+          if (e.hasAttribute?.("data-no-translate")) return true;
+          if (e.getAttribute?.("contenteditable") === "true") return true;
+        }
+        el = (el as Node).parentNode;
+      }
+      return false;
+    }
+
+    function translateText(raw: string): string | null {
+      const trimmed = raw.trim();
+      if (!trimmed) return null;
+      const en = ADMIN_AR_TO_EN[trimmed];
+      if (!en || en === trimmed) return null;
+      // Preserve surrounding whitespace.
+      const lead = raw.match(/^\s*/)?.[0] ?? "";
+      const tail = raw.match(/\s*$/)?.[0] ?? "";
+      return lead + en + tail;
+    }
+
+    function walk(node: Node) {
+      if (shouldSkip(node)) return;
+      if (node.nodeType === 3) {
+        const t = (node as Text).nodeValue ?? "";
+        const next = translateText(t);
+        if (next !== null) (node as Text).nodeValue = next;
+        return;
+      }
+      // Also translate placeholder + title + aria-label on element nodes.
+      if (node.nodeType === 1) {
+        const el = node as HTMLElement;
+        for (const attr of ["placeholder", "title", "aria-label"]) {
+          const v = el.getAttribute?.(attr);
+          if (v) {
+            const next = translateText(v);
+            if (next !== null) el.setAttribute(attr, next);
+          }
+        }
+        node.childNodes.forEach(walk);
+      }
+    }
+
+    walk(root);
+
+    const obs = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        if (m.type === "characterData" && m.target.nodeType === 3) {
+          if (!shouldSkip(m.target)) {
+            const t = (m.target as Text).nodeValue ?? "";
+            const next = translateText(t);
+            if (next !== null) (m.target as Text).nodeValue = next;
+          }
+        } else if (m.type === "childList") {
+          m.addedNodes.forEach((n) => walk(n));
+        } else if (m.type === "attributes" && m.target.nodeType === 1) {
+          const el = m.target as HTMLElement;
+          const name = m.attributeName;
+          if (name && ["placeholder", "title", "aria-label"].includes(name)) {
+            const v = el.getAttribute(name);
+            if (v) {
+              const next = translateText(v);
+              if (next !== null) el.setAttribute(name, next);
+            }
+          }
+        }
+      }
+    });
+    obs.observe(root, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ["placeholder", "title", "aria-label"],
+    });
+    return () => obs.disconnect();
+  }, [enabled]);
+
+  return <div ref={ref} className="contents">{children}</div>;
+}
 
 type NavItem = {
   to: string;
@@ -396,7 +502,9 @@ export function AdminShell({ children }: { children?: ReactNode }) {
         </header>
 
         <main className="flex-1 overflow-x-auto p-4 lg:p-6">
-          {children ?? <Outlet />}
+          <AdminTranslateScope enabled={lang === "en"}>
+            {children ?? <Outlet />}
+          </AdminTranslateScope>
         </main>
       </div>
     </div>
