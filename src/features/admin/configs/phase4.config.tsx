@@ -227,14 +227,14 @@ export const incompleteConfig: AdminPageConfig = {
 export const helpConfig: AdminPageConfig = {
   title: { ar: "المساعدة والمقالات", en: "Help Articles" },
   table: "admin_help_articles",
-  orderBy: { column: "created_at", ascending: false },
+  orderBy: { column: "sort_order" },
   columns: [
     { key: "title_ar", label: { ar: "العنوان", en: "Title" } },
-    { key: "slug", label: { ar: "الرابط", en: "Slug" }, hideOnMobile: true },
     { key: "category", label: { ar: "الفئة", en: "Category" }, type: "badge", hideOnMobile: true },
     { key: "is_published", label: { ar: "منشور", en: "Published" }, type: "boolean" },
+    { key: "sort_order", label: { ar: "الترتيب", en: "Order" }, type: "number", hideOnMobile: true },
   ],
   filters: [
-    { key: "search", type: "search", columns: ["title_ar", "title_en", "slug"] },
+    { key: "search", type: "search", columns: ["title_ar", "title_en"] },
   ],
 };
