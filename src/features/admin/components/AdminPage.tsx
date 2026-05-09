@@ -60,13 +60,31 @@ export function AdminPage<T extends Record<string, any>>({ config }: { config: A
         }
         actions={
           <div className="flex items-center gap-2">
-            {config.actions?.export && (
-              <button
-                onClick={() => exportCSV(rows, config.table)}
-                className="flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted"
-              >
-                <Download className="h-3 w-3" /> {ar ? "تصدير CSV" : "Export CSV"}
-              </button>
+            {config.actions?.export !== false && (
+              <>
+                <button
+                  onClick={() => exportTableToCSV(rows, config.columns, config.table, ar ? "ar" : "en")}
+                  disabled={!rows.length}
+                  className="flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted disabled:opacity-50"
+                >
+                  <Download className="h-3 w-3" /> {ar ? "تصدير CSV" : "Export CSV"}
+                </button>
+                <button
+                  onClick={() =>
+                    exportTableToPDF(
+                      rows,
+                      config.columns,
+                      config.table,
+                      (config.title as any)?.[ar ? "ar" : "en"] ?? config.table,
+                      ar ? "ar" : "en",
+                    ).catch((e) => toast.error(e?.message || "PDF export failed"))
+                  }
+                  disabled={!rows.length}
+                  className="flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted disabled:opacity-50"
+                >
+                  <FileText className="h-3 w-3" /> {ar ? "تصدير PDF" : "Export PDF"}
+                </button>
+              </>
             )}
             {canCreate && (
               <button
