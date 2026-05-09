@@ -130,6 +130,8 @@ export type RelatedTableDef<T = any> = {
   limit?: number;
   columns: ColumnDef[];
   select?: string;
+  /** Additional equality filters applied to the related query */
+  extraEq?: Record<string, any>;
   rowHref?: (row: any) => string;
   /** Footer renderer (e.g. totals) */
   footer?: (rows: any[], main: T) => ReactNode;
