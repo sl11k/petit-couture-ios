@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
-  revealIncomingWebhookSecretServer,
+  getIncomingWebhookSecretServer,
   sendTestIncomingWebhookServer,
 } from "@/lib/incoming-webhooks.server";
 
@@ -33,15 +33,13 @@ export const revealIncomingWebhookSecret = createServerFn({ method: "POST" })
     z
       .object({
         kind: KIND,
-        password: z.string().min(1, "Password required"),
       })
       .parse(d)
   )
   .handler(async ({ data, context }) => {
     const { userId, claims } = context as any;
-    return revealIncomingWebhookSecretServer({
+    return getIncomingWebhookSecretServer({
       kind: data.kind,
-      password: data.password,
       userId,
       claimedEmail: claims?.email,
     });

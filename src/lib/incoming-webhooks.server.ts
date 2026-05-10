@@ -1,4 +1,3 @@
-import { createClient } from "@supabase/supabase-js";
 import { createHmac, randomUUID } from "crypto";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { Database, Json } from "@/integrations/supabase/types";
@@ -165,46 +164,20 @@ export async function sendTestIncomingWebhookServer(input: {
   };
 }
 
-export async function revealIncomingWebhookSecretServer(input: {
+export async function getIncomingWebhookSecretServer(input: {
   kind: IncomingWebhookKind;
-  password: string;
   userId: string;
   claimedEmail?: string;
 }) {
   await assertAdmin(input.userId);
 
   const email = await resolveAdminEmail(input.userId, input.claimedEmail);
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabasePublishableKey = process.env.SUPABASE_PUBLISHABLE_KEY;
-
-  if (!supabaseUrl || !supabasePublishableKey) {
-    throw new Error("إعدادات التحقق غير مكتملة على الخادم");
-  }
-
-  const verifier = createClient(supabaseUrl, supabasePublishableKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-
-  const { error: signInError } = await verifier.auth.signInWithPassword({
-    email,
-    password: input.password,
-  });
-
-  if (signInError) {
-    console.error("[incoming-webhooks] password verification failed", {
-      kind: input.kind,
-      userId: input.userId,
-      message: signInError.message,
-    });
-    throw new Error("كلمة المرور غير صحيحة");
-  }
-
   const { cfg, secret } = getWebhookSecret(input.kind);
 
   const { error: auditError } = await supabaseAdmin.from("audit_logs").insert({
     actor_id: input.userId,
     actor_email: email,
-    action: "secret.reveal",
+    action: "secret.view",
     entity: "incoming_webhook_secret",
     entity_id: cfg.secretEnv,
     metadata: { kind: input.kind },
