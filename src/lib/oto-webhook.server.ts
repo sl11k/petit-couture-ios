@@ -53,6 +53,22 @@ export async function registerOtoWebhookServer(input: RegisterInput) {
     return { ok: false, error: msg };
   }
 
+  let token: string;
+  try {
+    token = await getOtoAccessToken();
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Failed to obtain OTO token";
+    await supabaseAdmin.from("oto_webhook_registrations").insert({
+      webhook_type: input.webhookType,
+      endpoint_url: input.endpointUrl,
+      status: "error",
+      request_body: body as never,
+      error_message: msg,
+      created_by: input.userId ?? null,
+    } as never);
+    return { ok: false as const, error: msg };
+  }
+
   let res: Response;
   try {
     res = await fetch(`${OTO_BASE}/webhook`, {
