@@ -26,7 +26,7 @@ export interface RegisterOutput {
   ok: boolean;
   httpStatus: number | null;
   otoWebhookId: string | null;
-  response: Record<string, unknown> | null;
+  response: Record<string, any> | null;
   error: string | null;
 }
 
@@ -45,7 +45,7 @@ export async function registerOtoWebhookServer(input: RegisterInput): Promise<Re
     authorizationKey,
   });
 
-  const insertReg = (row: Record<string, unknown>) =>
+  const insertReg = (row: Record<string, any>) =>
     supabaseAdmin.from("oto_webhook_registrations").insert(row as never);
 
   let token: string;
@@ -88,9 +88,9 @@ export async function registerOtoWebhookServer(input: RegisterInput): Promise<Re
   }
 
   const text = await res.text();
-  let response: Record<string, unknown> | null = null;
+  let response: Record<string, any> | null = null;
   try {
-    response = text ? (JSON.parse(text) as Record<string, unknown>) : null;
+    response = text ? (JSON.parse(text) as Record<string, any>) : null;
   } catch {
     response = { raw: text.slice(0, 2000) };
   }
@@ -182,7 +182,7 @@ export interface LocalTestOutput {
   responseText: string;
   errorMessage: string | null;
   elapsedMs: number;
-  sentBody: Record<string, unknown>;
+  sentBody: Record<string, any>;
 }
 
 export async function sendLocalOtoTestServer(input: {
@@ -191,13 +191,13 @@ export async function sendLocalOtoTestServer(input: {
 }): Promise<LocalTestOutput> {
   const ts = new Date().toISOString();
   const orderId = `TEST-${Date.now()}`;
-  const base: Record<string, unknown> =
+  const base: Record<string, any> =
     input.kind === "orderStatus"
       ? { orderId, status: "inTransit", timestamp: ts, trackingNumber: `OTO-${orderId}` }
       : { orderId, errorCode: "DC_NOT_AVAILABLE", errorMessage: "Test error", timestamp: ts };
 
   const secretKey = process.env.OTO_WEBHOOK_SECRET_KEY;
-  let body: Record<string, unknown> = { ...base };
+  let body: Record<string, any> = { ...base };
   if (secretKey) {
     const normalized = normalizeOtoPayload(body);
     const sigBase = buildOtoSignatureBase(normalized);
