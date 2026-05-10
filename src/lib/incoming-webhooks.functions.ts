@@ -138,17 +138,23 @@ export const revealIncomingWebhookSecret = createServerFn({ method: "POST" })
       .parse(d)
   )
   .handler(async ({ data, context }) => {
-    const { userId } = context as any;
+    const { userId, claims } = context as any;
     await assertAdmin(userId);
 
-    // Get the user's email
-    const { data: u, error: uErr } = await supabaseAdmin.auth.admin.getUserById(userId);
-    if (uErr || !u?.user?.email) throw new Error("Could not resolve admin email");
-    const email = u.user.email;
+    // Prefer email from JWT claims; fall back to admin.getUserById
+    let email: string | undefined = claims?.email;
+    if (!email) {
+      const { data: u } = await supabaseAdmin.auth.admin.getUserById(userId);
+      email = u?.user?.email ?? undefined;
+    }
+    if (!email) throw new Error("تعذّر تحديد بريد المسؤول");
 
     // Verify password by attempting a fresh sign-in with publishable key
     const SUPABASE_URL = process.env.SUPABASE_URL!;
     const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY!;
+    if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+      throw new Error("إعدادات السيرفر ناقصة (SUPABASE_URL/PUBLISHABLE_KEY)");
+    }
     const verifier = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
@@ -156,7 +162,10 @@ export const revealIncomingWebhookSecret = createServerFn({ method: "POST" })
       email,
       password: data.password,
     });
-    if (signErr) throw new Error("كلمة المرور غير صحيحة");
+    if (signErr) {
+      console.error("[reveal] password verify failed:", signErr.message);
+      throw new Error("كلمة المرور غير صحيحة");
+    }
 
     const cfg = ENDPOINT_MAP[data.kind];
     const secret = process.env[cfg.secretEnv];

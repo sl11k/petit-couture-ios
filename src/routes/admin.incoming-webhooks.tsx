@@ -97,21 +97,29 @@ function SecretReveal({ kind, ar }: { kind: Kind; ar: boolean }) {
   const [secret, setSecret] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [hidden, setHidden] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
 
   const handleReveal = async () => {
+    setErr(null);
     if (!password) {
-      toast.error(ar ? "أدخل كلمة المرور" : "Enter your password");
+      setErr(ar ? "أدخل كلمة المرور" : "Enter your password");
       return;
     }
     setLoading(true);
     try {
+      console.log("[reveal] sending request for", kind);
       const r: any = await reveal({ data: { kind, password } });
+      console.log("[reveal] got response", { hasSecret: !!r?.secret });
+      if (!r?.secret) throw new Error(ar ? "لم يتم إرجاع قيمة السر" : "No secret returned");
       setSecret(r.secret);
       setHidden(false);
       setPassword("");
       toast.success(ar ? "تم الكشف عن السر" : "Secret revealed");
     } catch (e: any) {
-      toast.error(e?.message || (ar ? "فشل التحقق" : "Verification failed"));
+      const msg = e?.message || (ar ? "فشل التحقق" : "Verification failed");
+      console.error("[reveal] failed:", e);
+      setErr(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -122,20 +130,24 @@ function SecretReveal({ kind, ar }: { kind: Kind; ar: boolean }) {
     setOpen(false);
     setPassword("");
     setHidden(true);
+    setErr(null);
   };
 
   if (secret) {
     const display = hidden ? "•".repeat(Math.min(secret.length, 32)) : secret;
     return (
-      <div className="rounded-md border border-emerald-500/30 bg-emerald-500/5 p-2 space-y-2">
+      <div className="rounded-md border-2 border-emerald-500/40 bg-emerald-500/10 p-3 space-y-2">
+        <div className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+          {ar ? "قيمة السر (Secret value)" : "Secret value"}
+        </div>
         <div className="flex items-center gap-2">
-          <code className="flex-1 truncate font-mono text-[12px]" dir="ltr">{display}</code>
+          <code className="flex-1 break-all font-mono text-[13px] bg-background rounded px-2 py-1.5 border border-border" dir="ltr">{display}</code>
           <button
             onClick={() => setHidden((h) => !h)}
             className="rounded-md border border-border bg-background p-1.5 hover:bg-muted"
             title={hidden ? (ar ? "إظهار" : "Show") : (ar ? "إخفاء" : "Hide")}
           >
-            {hidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+            {hidden ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
           </button>
           <CopyBtn text={secret} label={ar ? "نسخ السر" : "Copy"} />
         </div>
@@ -175,6 +187,7 @@ function SecretReveal({ kind, ar }: { kind: Kind; ar: boolean }) {
           className="flex-1 rounded-md border border-border bg-background px-2 py-1 text-[12px]"
         />
         <button
+          type="button"
           disabled={loading}
           onClick={handleReveal}
           className="flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-[12px] text-primary-foreground hover:opacity-90 disabled:opacity-50"
@@ -182,10 +195,15 @@ function SecretReveal({ kind, ar }: { kind: Kind; ar: boolean }) {
           {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
           {ar ? "تأكيد" : "Confirm"}
         </button>
-        <button onClick={reset} className="text-[11px] text-muted-foreground hover:text-foreground">
+        <button type="button" onClick={reset} className="text-[11px] text-muted-foreground hover:text-foreground">
           {ar ? "إلغاء" : "Cancel"}
         </button>
       </div>
+      {err && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1 text-[11px] text-destructive">
+          {err}
+        </div>
+      )}
     </div>
   );
 }
