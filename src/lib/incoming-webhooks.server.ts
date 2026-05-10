@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { createHmac, randomUUID } from "crypto";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { Database } from "@/integrations/supabase/types";
 
 export type IncomingWebhookKind = "shipping" | "payment";
 
@@ -122,21 +123,23 @@ export async function sendTestIncomingWebhookServer(input: {
 
   const elapsed = Date.now() - startedAt;
 
+  const deliveryRow: Database["public"]["Tables"]["webhook_deliveries"]["Insert"] = {
+    endpoint_id: null,
+    event_type: cfg.eventType,
+    event_id: randomUUID(),
+    payload: { url, request: payload, elapsed_ms: elapsed, triggered_by: input.userId },
+    attempt: 1,
+    max_attempts: 1,
+    status,
+    http_status: httpStatus,
+    response_body: responseBody,
+    error_message: errorMessage,
+    delivered_at: status === "success" ? new Date().toISOString() : null,
+  };
+
   const { data: row, error: insertError } = await supabaseAdmin
     .from("webhook_deliveries")
-    .insert({
-      endpoint_id: null,
-      event_type: cfg.eventType,
-      event_id: randomUUID(),
-      payload: { url, request: payload, elapsed_ms: elapsed, triggered_by: input.userId },
-      attempt: 1,
-      max_attempts: 1,
-      status,
-      http_status: httpStatus,
-      response_body: responseBody,
-      error_message: errorMessage,
-      delivered_at: status === "success" ? new Date().toISOString() : null,
-    })
+    .insert(deliveryRow)
     .select()
     .single();
 
