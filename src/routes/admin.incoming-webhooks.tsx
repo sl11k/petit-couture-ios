@@ -107,7 +107,7 @@ function SecretReveal({ kind, ar }: { kind: Kind; ar: boolean }) {
     setErr(null);
     setLoading(true);
     try {
-      const r: any = await reveal({ data: { kind } });
+      const r: any = await reveal({ data: { kind }, headers: await authHeaders() });
       if (!r?.secret) throw new Error(ar ? "لم يتم إرجاع قيمة السر" : "No secret returned");
       setSecret(r.secret);
     } catch (e: any) {
