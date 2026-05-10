@@ -127,7 +127,8 @@ function SecretReveal({ kind, ar }: { kind: Kind; ar: boolean }) {
           {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
           {ar ? "عرض" : "Load"}
         </button>
-        {secret ? <CopyBtn text={secret} label={ar ? "نسخ السر" : "Copy
+        {secret ? <CopyBtn text={secret} label={ar ? "نسخ السر" : "Copy"} /> : null}
+      </div>
       {err && (
         <div className="rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1 text-[11px] text-destructive">
           {err}
