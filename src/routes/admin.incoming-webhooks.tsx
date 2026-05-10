@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { PageHeader } from "@/features/admin/components/PageHeader";
 import { Webhook, Copy, Check, Shield, Code2, Info, Send, Loader2 } from "lucide-react";
@@ -96,7 +96,7 @@ function SecretReveal({ kind, ar }: { kind: Kind; ar: boolean }) {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const handleReveal = async () => {
+  const loadSecret = async () => {
     setErr(null);
     setLoading(true);
     try {
@@ -112,6 +112,10 @@ function SecretReveal({ kind, ar }: { kind: Kind; ar: boolean }) {
     }
   };
 
+  useEffect(() => {
+    void loadSecret();
+  }, [kind]);
+
   return (
     <div className="rounded-md border border-border bg-background p-2 space-y-2">
       <div className="flex items-center gap-2">
@@ -121,11 +125,11 @@ function SecretReveal({ kind, ar }: { kind: Kind; ar: boolean }) {
         <button
           type="button"
           disabled={loading}
-          onClick={handleReveal}
+          onClick={loadSecret}
           className="flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-[12px] text-primary-foreground hover:opacity-90 disabled:opacity-50"
         >
           {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
-          {ar ? "عرض" : "Load"}
+          {ar ? "تحديث" : "Refresh"}
         </button>
         {secret ? <CopyBtn text={secret} label={ar ? "نسخ السر" : "Copy"} /> : null}
       </div>
