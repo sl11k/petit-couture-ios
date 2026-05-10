@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { PageHeader } from "@/features/admin/components/PageHeader";
-import { Webhook, Copy, Check, Shield, Code2, Info, Send, Eye, EyeOff, Loader2, Lock } from "lucide-react";
+import { Webhook, Copy, Check, Shield, Code2, Info, Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   sendTestIncomingWebhook,
@@ -92,32 +92,19 @@ function CopyBtn({ text, label = "نسخ" }: { text: string; label?: string }) {
 
 function SecretReveal({ kind, ar }: { kind: Kind; ar: boolean }) {
   const reveal = useServerFn(revealIncomingWebhookSecret);
-  const [open, setOpen] = useState(false);
-  const [password, setPassword] = useState("");
   const [secret, setSecret] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [hidden, setHidden] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
   const handleReveal = async () => {
     setErr(null);
-    if (!password) {
-      setErr(ar ? "أدخل كلمة المرور" : "Enter your password");
-      return;
-    }
     setLoading(true);
     try {
-      console.log("[reveal] sending request for", kind);
-      const r: any = await reveal({ data: { kind, password } });
-      console.log("[reveal] got response", { hasSecret: !!r?.secret });
+      const r: any = await reveal({ data: { kind } });
       if (!r?.secret) throw new Error(ar ? "لم يتم إرجاع قيمة السر" : "No secret returned");
       setSecret(r.secret);
-      setHidden(false);
-      setPassword("");
-      toast.success(ar ? "تم الكشف عن السر" : "Secret revealed");
     } catch (e: any) {
       const msg = e?.message || (ar ? "فشل التحقق" : "Verification failed");
-      console.error("[reveal] failed:", e);
       setErr(msg);
       toast.error(msg);
     } finally {
@@ -125,67 +112,12 @@ function SecretReveal({ kind, ar }: { kind: Kind; ar: boolean }) {
     }
   };
 
-  const reset = () => {
-    setSecret(null);
-    setOpen(false);
-    setPassword("");
-    setHidden(true);
-    setErr(null);
-  };
-
-  if (secret) {
-    const display = hidden ? "•".repeat(Math.min(secret.length, 32)) : secret;
-    return (
-      <div className="rounded-md border-2 border-emerald-500/40 bg-emerald-500/10 p-3 space-y-2">
-        <div className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
-          {ar ? "قيمة السر (Secret value)" : "Secret value"}
-        </div>
-        <div className="flex items-center gap-2">
-          <code className="flex-1 break-all font-mono text-[13px] bg-background rounded px-2 py-1.5 border border-border" dir="ltr">{display}</code>
-          <button
-            onClick={() => setHidden((h) => !h)}
-            className="rounded-md border border-border bg-background p-1.5 hover:bg-muted"
-            title={hidden ? (ar ? "إظهار" : "Show") : (ar ? "إخفاء" : "Hide")}
-          >
-            {hidden ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-          </button>
-          <CopyBtn text={secret} label={ar ? "نسخ السر" : "Copy"} />
-        </div>
-        <button onClick={reset} className="text-[11px] text-muted-foreground hover:text-foreground underline">
-          {ar ? "إخفاء وإلغاء الكشف" : "Hide & lock again"}
-        </button>
-      </div>
-    );
-  }
-
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1.5 text-[12px] hover:bg-muted"
-      >
-        <Eye className="h-3.5 w-3.5" />
-        {ar ? "إظهار قيمة السر" : "Reveal secret value"}
-      </button>
-    );
-  }
-
   return (
-    <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2 space-y-2">
-      <div className="flex items-center gap-1 text-[11px] text-amber-700 dark:text-amber-400">
-        <Lock className="h-3 w-3" />
-        {ar ? "أدخل كلمة مرور حسابك للتأكيد" : "Enter your account password to confirm"}
-      </div>
+    <div className="rounded-md border border-border bg-background p-2 space-y-2">
       <div className="flex items-center gap-2">
-        <input
-          type="password"
-          autoFocus
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleReveal()}
-          placeholder={ar ? "كلمة المرور" : "Password"}
-          className="flex-1 rounded-md border border-border bg-background px-2 py-1 text-[12px]"
-        />
+        <code className="flex-1 break-all rounded border border-border bg-muted/40 px-2 py-1.5 font-mono text-[13px]" dir="ltr">
+          {secret ?? (loading ? (ar ? "جارِ تحميل السر..." : "Loading secret...") : "—")}
+        </code>
         <button
           type="button"
           disabled={loading}
@@ -193,12 +125,9 @@ function SecretReveal({ kind, ar }: { kind: Kind; ar: boolean }) {
           className="flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-[12px] text-primary-foreground hover:opacity-90 disabled:opacity-50"
         >
           {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
-          {ar ? "تأكيد" : "Confirm"}
+          {ar ? "عرض" : "Load"}
         </button>
-        <button type="button" onClick={reset} className="text-[11px] text-muted-foreground hover:text-foreground">
-          {ar ? "إلغاء" : "Cancel"}
-        </button>
-      </div>
+        {secret ? <CopyBtn text={secret} label={ar ? "نسخ السر" : "Copy
       {err && (
         <div className="rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1 text-[11px] text-destructive">
           {err}
