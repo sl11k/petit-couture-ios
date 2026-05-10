@@ -157,7 +157,7 @@ function TestButton({ kind, ar }: { kind: Kind; ar: boolean }) {
   const handle = async () => {
     setLoading(true);
     try {
-      const r: any = await send({ data: { kind } });
+      const r: any = await send({ data: { kind }, headers: await authHeaders() });
       setLast(r);
       if (r.ok) toast.success(ar ? `نجح الاختبار (HTTP ${r.httpStatus})` : `Test succeeded (HTTP ${r.httpStatus})`);
       else toast.error(ar ? `فشل الاختبار: ${r.errorMessage || r.httpStatus}` : `Test failed: ${r.errorMessage || r.httpStatus}`);
