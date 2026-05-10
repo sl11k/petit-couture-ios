@@ -212,6 +212,9 @@ function IncomingWebhooksPage() {
         }}
       />
 
+      <OtoEnvCard ar={ar} />
+
+
       <div className="mb-4 flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs">
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <div className="space-y-1">
