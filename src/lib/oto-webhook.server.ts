@@ -22,7 +22,15 @@ export interface RegisterInput {
   userId?: string | null;
 }
 
-export async function registerOtoWebhookServer(input: RegisterInput) {
+export interface RegisterOutput {
+  ok: boolean;
+  httpStatus: number | null;
+  otoWebhookId: string | null;
+  response: Record<string, unknown> | null;
+  error: string | null;
+}
+
+export async function registerOtoWebhookServer(input: RegisterInput): Promise<RegisterOutput> {
   const secretKey = input.useSecret ? process.env.OTO_WEBHOOK_SECRET_KEY : undefined;
   const authorizationKey = input.useAuth
     ? process.env.OTO_WEBHOOK_AUTHORIZATION_KEY
@@ -37,12 +45,15 @@ export async function registerOtoWebhookServer(input: RegisterInput) {
     authorizationKey,
   });
 
+  const insertReg = (row: Record<string, unknown>) =>
+    supabaseAdmin.from("oto_webhook_registrations").insert(row as never);
+
   let token: string;
   try {
     token = await getOtoAccessToken();
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Failed to obtain OTO token";
-    await supabaseAdmin.from("oto_webhook_registrations").insert({
+    await insertReg({
       webhook_type: input.webhookType,
       endpoint_url: input.endpointUrl,
       status: "error",
@@ -50,23 +61,7 @@ export async function registerOtoWebhookServer(input: RegisterInput) {
       error_message: msg,
       created_by: input.userId ?? null,
     });
-    return { ok: false, error: msg };
-  }
-
-  let token: string;
-  try {
-    token = await getOtoAccessToken();
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : "Failed to obtain OTO token";
-    await supabaseAdmin.from("oto_webhook_registrations").insert({
-      webhook_type: input.webhookType,
-      endpoint_url: input.endpointUrl,
-      status: "error",
-      request_body: body as never,
-      error_message: msg,
-      created_by: input.userId ?? null,
-    } as never);
-    return { ok: false as const, error: msg };
+    return { ok: false, httpStatus: null, otoWebhookId: null, response: null, error: msg };
   }
 
   let res: Response;
@@ -81,7 +76,7 @@ export async function registerOtoWebhookServer(input: RegisterInput) {
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Network error";
-    await supabaseAdmin.from("oto_webhook_registrations").insert({
+    await insertReg({
       webhook_type: input.webhookType,
       endpoint_url: input.endpointUrl,
       status: "error",
@@ -89,31 +84,32 @@ export async function registerOtoWebhookServer(input: RegisterInput) {
       error_message: msg,
       created_by: input.userId ?? null,
     });
-    return { ok: false, error: msg };
+    return { ok: false, httpStatus: null, otoWebhookId: null, response: null, error: msg };
   }
 
   const text = await res.text();
-  let response: unknown = null;
+  let response: Record<string, unknown> | null = null;
   try {
-    response = text ? JSON.parse(text) : null;
+    response = text ? (JSON.parse(text) as Record<string, unknown>) : null;
   } catch {
     response = { raw: text.slice(0, 2000) };
   }
 
   const ok = res.ok;
+  const r = response ?? {};
   const otoWebhookId =
-    (response as { id?: string; webhook_id?: string; webhookId?: string } | null)?.id ||
-    (response as { webhook_id?: string } | null)?.webhook_id ||
-    (response as { webhookId?: string } | null)?.webhookId ||
+    (r.id as string | undefined) ||
+    (r.webhook_id as string | undefined) ||
+    (r.webhookId as string | undefined) ||
     null;
 
-  await supabaseAdmin.from("oto_webhook_registrations").insert({
+  await insertReg({
     webhook_type: input.webhookType,
     endpoint_url: input.endpointUrl,
     oto_webhook_id: otoWebhookId,
     status: ok ? "registered" : "error",
     request_body: body,
-    response: response as never,
+    response,
     error_message: ok ? null : `HTTP ${res.status}`,
     created_by: input.userId ?? null,
     last_registered_at: ok ? new Date().toISOString() : null,
@@ -180,15 +176,22 @@ export function readSecretsStatus(): SecretsStatus {
   };
 }
 
-// Build a sample OTO-shaped payload, sign it if a secret is configured, and
-// POST to our own /api/public/oto/webhook so the founder can verify wiring.
+export interface LocalTestOutput {
+  ok: boolean;
+  httpStatus: number | null;
+  responseText: string;
+  errorMessage: string | null;
+  elapsedMs: number;
+  sentBody: Record<string, unknown>;
+}
+
 export async function sendLocalOtoTestServer(input: {
   kind: "orderStatus" | "shipmentError";
   endpointUrl: string;
-}) {
+}): Promise<LocalTestOutput> {
   const ts = new Date().toISOString();
   const orderId = `TEST-${Date.now()}`;
-  const base =
+  const base: Record<string, unknown> =
     input.kind === "orderStatus"
       ? { orderId, status: "inTransit", timestamp: ts, trackingNumber: `OTO-${orderId}` }
       : { orderId, errorCode: "DC_NOT_AVAILABLE", errorMessage: "Test error", timestamp: ts };
