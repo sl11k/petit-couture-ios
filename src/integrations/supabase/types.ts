@@ -2540,6 +2540,105 @@ export type Database = {
         }
         Relationships: []
       }
+      oto_webhook_deliveries: {
+        Row: {
+          auth_present: boolean
+          auth_valid: boolean
+          error_code: string | null
+          http_status: number | null
+          id: string
+          ip_address: string | null
+          order_id: string | null
+          processed: boolean
+          processing_error: string | null
+          raw: Json
+          received_at: string
+          signature_present: boolean
+          signature_valid: boolean
+          status_value: string | null
+          tracking_number: string | null
+          webhook_type: string
+        }
+        Insert: {
+          auth_present?: boolean
+          auth_valid?: boolean
+          error_code?: string | null
+          http_status?: number | null
+          id?: string
+          ip_address?: string | null
+          order_id?: string | null
+          processed?: boolean
+          processing_error?: string | null
+          raw: Json
+          received_at?: string
+          signature_present?: boolean
+          signature_valid?: boolean
+          status_value?: string | null
+          tracking_number?: string | null
+          webhook_type?: string
+        }
+        Update: {
+          auth_present?: boolean
+          auth_valid?: boolean
+          error_code?: string | null
+          http_status?: number | null
+          id?: string
+          ip_address?: string | null
+          order_id?: string | null
+          processed?: boolean
+          processing_error?: string | null
+          raw?: Json
+          received_at?: string
+          signature_present?: boolean
+          signature_valid?: boolean
+          status_value?: string | null
+          tracking_number?: string | null
+          webhook_type?: string
+        }
+        Relationships: []
+      }
+      oto_webhook_registrations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          endpoint_url: string
+          error_message: string | null
+          id: string
+          last_registered_at: string | null
+          oto_webhook_id: string | null
+          request_body: Json | null
+          response: Json | null
+          status: string
+          webhook_type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          endpoint_url: string
+          error_message?: string | null
+          id?: string
+          last_registered_at?: string | null
+          oto_webhook_id?: string | null
+          request_body?: Json | null
+          response?: Json | null
+          status?: string
+          webhook_type: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          endpoint_url?: string
+          error_message?: string | null
+          id?: string
+          last_registered_at?: string | null
+          oto_webhook_id?: string | null
+          request_body?: Json | null
+          response?: Json | null
+          status?: string
+          webhook_type?: string
+        }
+        Relationships: []
+      }
       password_history: {
         Row: {
           created_at: string
