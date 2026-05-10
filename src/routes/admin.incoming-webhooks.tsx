@@ -9,6 +9,13 @@ import {
   sendTestIncomingWebhook,
   revealIncomingWebhookSecret,
 } from "@/lib/incoming-webhooks.functions";
+import { supabase } from "@/integrations/supabase/client";
+
+async function authHeaders(): Promise<Record<string, string>> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  return token ? { authorization: `Bearer ${token}` } : {};
+}
 
 export const Route = createFileRoute("/admin/incoming-webhooks")({
   component: IncomingWebhooksPage,
@@ -100,7 +107,7 @@ function SecretReveal({ kind, ar }: { kind: Kind; ar: boolean }) {
     setErr(null);
     setLoading(true);
     try {
-      const r: any = await reveal({ data: { kind } });
+      const r: any = await reveal({ data: { kind }, headers: await authHeaders() });
       if (!r?.secret) throw new Error(ar ? "لم يتم إرجاع قيمة السر" : "No secret returned");
       setSecret(r.secret);
     } catch (e: any) {
@@ -150,7 +157,7 @@ function TestButton({ kind, ar }: { kind: Kind; ar: boolean }) {
   const handle = async () => {
     setLoading(true);
     try {
-      const r: any = await send({ data: { kind } });
+      const r: any = await send({ data: { kind }, headers: await authHeaders() });
       setLast(r);
       if (r.ok) toast.success(ar ? `نجح الاختبار (HTTP ${r.httpStatus})` : `Test succeeded (HTTP ${r.httpStatus})`);
       else toast.error(ar ? `فشل الاختبار: ${r.errorMessage || r.httpStatus}` : `Test failed: ${r.errorMessage || r.httpStatus}`);
