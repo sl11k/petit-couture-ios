@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { PageHeader } from "@/features/admin/components/PageHeader";
-import { Webhook, Copy, Check, Shield, Code2, Info, Send, Loader2 } from "lucide-react";
+import { Webhook, Copy, Check, Shield, Code2, Info, Send, Loader2, KeyRound, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import {
   sendTestIncomingWebhook,
