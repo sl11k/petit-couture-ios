@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { createHmac, randomUUID } from "crypto";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/integrations/supabase/types";
 
 export type IncomingWebhookKind = "shipping" | "payment";
 
@@ -123,11 +123,18 @@ export async function sendTestIncomingWebhookServer(input: {
 
   const elapsed = Date.now() - startedAt;
 
+  const deliveryPayload: Json = {
+    url,
+    request: JSON.parse(body) as Json,
+    elapsed_ms: elapsed,
+    triggered_by: input.userId,
+  };
+
   const deliveryRow: Database["public"]["Tables"]["webhook_deliveries"]["Insert"] = {
     endpoint_id: null,
     event_type: cfg.eventType,
     event_id: randomUUID(),
-    payload: { url, request: payload, elapsed_ms: elapsed, triggered_by: input.userId },
+    payload: deliveryPayload,
     attempt: 1,
     max_attempts: 1,
     status,
