@@ -211,7 +211,7 @@ export function FormDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {visibleFields.map((f) => {
-              const isFull = f.fullWidth ?? (f.type === "textarea" || f.type === "json");
+              const isFull = f.fullWidth ?? (f.type === "textarea" || f.type === "json" || f.type === "gallery" || f.type === "image" || f.type === "video");
               const lbl = ar ? f.label.ar : f.label.en;
               const ph = f.placeholder ? (ar ? f.placeholder.ar : f.placeholder.en) : undefined;
               const help = f.helpText ? (ar ? f.helpText.ar : f.helpText.en) : undefined;
@@ -221,7 +221,23 @@ export function FormDialog({
                   <Label htmlFor={f.key} className="text-xs">
                     {lbl} {f.required && <span className="text-destructive">*</span>}
                   </Label>
-                  {f.type === "textarea" || f.type === "json" ? (
+                  {f.type === "image" || f.type === "video" ? (
+                    <MediaUploader
+                      value={values[f.key] ?? ""}
+                      onChange={(url) => setVal(f.key, url ?? "")}
+                      bucket={f.bucket || (f.type === "video" ? "product-media" : "content-media")}
+                      folder={f.folder}
+                      kind={f.type}
+                    />
+                  ) : f.type === "gallery" ? (
+                    <ProductMediaGallery
+                      value={Array.isArray(values[f.key]) ? values[f.key] : []}
+                      onChange={(urls) => setVal(f.key, urls)}
+                      bucket={f.bucket || "product-media"}
+                      folder={f.folder || "gallery"}
+                      max={f.maxItems ?? 20}
+                    />
+                  ) : f.type === "textarea" || f.type === "json" ? (
                     <Textarea
                       id={f.key}
                       rows={f.rows ?? (f.type === "json" ? 6 : 4)}
@@ -265,7 +281,7 @@ export function FormDialog({
                         : f.type === "color" ? "color"
                         : f.type === "tel" ? "tel"
                         : f.type === "email" ? "email"
-                        : f.type === "url" || f.type === "image" ? "url"
+                        : f.type === "url" ? "url"
                         : "text"
                       }
                       value={values[f.key] ?? ""}
