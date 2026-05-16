@@ -1,11 +1,12 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/state/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Menu, LogOut, Globe } from "lucide-react";
+import { Menu, LogOut, Globe, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminSidebar } from "../sidebar/AdminSidebar";
+import { AdminTour, hasCompletedAdminTour } from "../tour/AdminTour";
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const { user, ready } = useAuth();
@@ -14,6 +15,16 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const ar = lang === "ar";
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
+
+  // Auto-start the tour on first admin visit.
+  useEffect(() => {
+    if (!ready || loading || !canAccessAdmin) return;
+    if (!hasCompletedAdminTour()) {
+      const t = setTimeout(() => setTourOpen(true), 600);
+      return () => clearTimeout(t);
+    }
+  }, [ready, loading, canAccessAdmin]);
 
   if (!ready || loading) {
     return (
@@ -57,6 +68,15 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <div className="flex-1" />
           <div className="flex items-center gap-2">
             <button
+              data-tour="tour-restart"
+              onClick={() => setTourOpen(true)}
+              className="flex items-center gap-1.5 rounded-md border border-amber-500/40 bg-amber-500/5 px-2.5 py-1 text-xs text-amber-700 hover:bg-amber-500/10 dark:text-amber-400"
+              title={ar ? "بدء الجولة التعريفية" : "Start guided tour"}
+            >
+              <Sparkles className="h-3 w-3" />
+              <span className="hidden sm:inline">{ar ? "بدء الجولة" : "Start tour"}</span>
+            </button>
+            <button
               onClick={() => setLang(ar ? "en" : "ar")}
               className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs hover:bg-muted"
             >
@@ -77,6 +97,12 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
         <main className="flex-1 overflow-x-auto p-4 sm:p-6">{children}</main>
       </div>
+
+      <AdminTour
+        open={tourOpen}
+        onClose={() => setTourOpen(false)}
+        ensureSidebarOpen={() => setSidebarOpen(true)}
+      />
     </div>
   );
 }
