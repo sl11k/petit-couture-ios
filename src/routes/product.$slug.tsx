@@ -861,7 +861,7 @@ function ProductDetails() {
                     <img src={p.images[0]} alt={p.name} width={400} height={500} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   </div>
                   <p className="mt-2 text-[12px] text-foreground/85 line-clamp-1">{p.category}</p>
-                  <p className="text-[12px] text-muted-foreground">{fmt(p.price)} {p.currency}</p>
+                  <p className="text-[12px] text-muted-foreground">{fmtPrice(p.price)}</p>
                 </Link>
               ))}
             </div>
