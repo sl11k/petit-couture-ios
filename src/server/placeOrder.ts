@@ -195,6 +195,31 @@ export const placeOrder = createServerFn({ method: "POST" })
       console.error("[placeOrder] finalize_order_stock threw:", e?.message || e);
     }
 
+    // 3c. Record coupon redemption + bump used_count (best-effort).
+    if (coupon_id) {
+      try {
+        await supabaseAdmin.from("coupon_redemptions").insert({
+          coupon_id,
+          order_id: order.id,
+          user_id: data.user_id ?? null,
+          customer_email: data.address.email,
+          customer_phone: data.address.phone,
+          discount_amount,
+          order_total: finalTotal,
+        });
+        await (supabaseAdmin as any).rpc("exec_sql", {}).catch(() => null);
+        await (supabaseAdmin as any)
+          .from("coupons")
+          .update({
+            used_count: (await supabaseAdmin.from("coupons").select("used_count").eq("id", coupon_id).single()).data?.used_count + 1 || 1,
+            discount_total: undefined,
+          })
+          .eq("id", coupon_id);
+      } catch (e: any) {
+        console.error("[placeOrder] coupon redemption:", e?.message || e);
+      }
+    }
+
     // 4. Mark abandoned cart converted (best-effort).
     await supabaseAdmin
       .from("abandoned_carts")
