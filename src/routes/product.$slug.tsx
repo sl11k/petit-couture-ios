@@ -26,6 +26,7 @@ import {
   Zap,
 } from "lucide-react";
 import { getProductForCategory, categories, productsByCategory } from "@/data/categories";
+import { useDbProductBySlug } from "@/hooks/useDbProducts";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useBag } from "@/state/BagContext";
@@ -101,13 +102,24 @@ type TabKey = "description" | "specs" | "care" | "shipping";
 function ProductDetails() {
   const { slug } = Route.useParams();
   const router = useRouter();
-  const product = getProductForCategory(slug);
+  const { product } = useDbProductBySlug(slug);
   const { isRTL, lang } = useLanguage();
   const ar = isRTL;
 
   const [activeImg, setActiveImg] = useState(0);
-  const [size, setSize] = useState(product.sizes[2]);
-  const [color, setColor] = useState(product.colors[0].name);
+  const [size, setSize] = useState<string>(product.sizes[2] ?? product.sizes[0] ?? "");
+  const [color, setColor] = useState<string>(product.colors[0]?.name ?? "");
+
+  // Re-sync selection if the loaded product no longer contains the picks.
+  useEffect(() => {
+    if (size && !product.sizes.includes(size)) {
+      setSize(product.sizes[2] ?? product.sizes[0] ?? "");
+    }
+    if (color && !product.colors.some((c) => c.name === color)) {
+      setColor(product.colors[0]?.name ?? "");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.sizes.join("|"), product.colors.map((c) => c.name).join("|")]);
   const [qty, setQty] = useState(1);
   const [giftWrap, setGiftWrap] = useState(false);
   const [selectedUpsells, setSelectedUpsells] = useState<string[]>([]);
