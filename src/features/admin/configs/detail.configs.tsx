@@ -153,7 +153,7 @@ const landingForm: FormFieldDef[] = [
   { key: "slug", label: { ar: "المسار", en: "Slug" }, type: "text", required: true, pattern: "^[a-z0-9-]+$" },
   { key: "subtitle", label: { ar: "العنوان الفرعي", en: "Subtitle" }, type: "text" },
   { key: "description", label: { ar: "الوصف", en: "Description" }, type: "textarea", rows: 3 },
-  { key: "hero_image", label: { ar: "صورة الغلاف", en: "Hero image" }, type: "url" },
+  { key: "hero_image", label: { ar: "صورة الغلاف", en: "Hero image" }, type: "image", bucket: "banner-media", folder: "landing" },
   { key: "cta_text", label: { ar: "نص الزر", en: "CTA text" }, type: "text" },
   { key: "cta_url", label: { ar: "رابط الزر", en: "CTA URL" }, type: "url" },
   { key: "coupon_code", label: { ar: "كوبون", en: "Coupon code" }, type: "text" },
