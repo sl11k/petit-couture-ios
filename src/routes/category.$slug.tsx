@@ -467,6 +467,15 @@ function EmptyState({
   slug: string;
   showFallback: boolean;
 }) {
+  const fmt = usePriceFormatter();
+  ar,
+  slug,
+  showFallback,
+}: {
+  ar: boolean;
+  slug: string;
+  showFallback: boolean;
+}) {
   if (!showFallback) {
     return (
       <div className="text-center py-16">
