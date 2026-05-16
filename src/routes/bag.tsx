@@ -382,12 +382,12 @@ function BagPage() {
                 <div className="rounded-[20px] border border-border bg-background p-5 space-y-3">
                   <div className="flex items-center justify-between text-[13.5px] text-foreground/80">
                     <span>{tt.subtotal}</span>
-                    <span className="tabular-nums">{fmt(subtotal)} {bag.currency}</span>
+                    <span className="tabular-nums">{fmtPrice(subtotal)}</span>
                   </div>
                   {discount > 0 && (
                     <div className="flex items-center justify-between text-[13.5px] text-emerald-700">
                       <span>{tt.discount}</span>
-                      <span className="tabular-nums">−{fmt(discount)} {bag.currency}</span>
+                      <span className="tabular-nums">−{fmtPrice(discount)}</span>
                     </div>
                   )}
                   <div className="flex items-center justify-between text-[13.5px] text-foreground/80">
@@ -395,19 +395,19 @@ function BagPage() {
                     {shipping === 0 ? (
                       <span className="text-gold-deep tracking-soft">{tt.free}</span>
                     ) : (
-                      <span className="tabular-nums">{fmt(shipping)} {bag.currency}</span>
+                      <span className="tabular-nums">{fmtPrice(shipping)}</span>
                     )}
                   </div>
                   <div className="flex items-center justify-between text-[13.5px] text-foreground/80">
                     <span>{tt.tax}</span>
-                    <span className="tabular-nums">{fmt(tax)} {bag.currency}</span>
+                    <span className="tabular-nums">{fmtPrice(tax)}</span>
                   </div>
                   <div className="h-px bg-border" />
                   <div className="flex items-baseline justify-between">
                     <span className="text-[12px] tracking-luxury text-muted-foreground">
                       {lang === "en" ? tt.total.toUpperCase() : tt.total}
                     </span>
-                    <span className="font-serif text-[24px] text-foreground tabular-nums">{fmt(total)} {bag.currency}</span>
+                    <span className="font-serif text-[24px] text-foreground tabular-nums">{fmtPrice(total)}</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground tracking-soft pt-1">{tt.shippingNote}</p>
                 </div>
