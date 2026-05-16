@@ -190,6 +190,7 @@ function WishlistPage() {
   }, [wishlist.items, t.hero, wishlistProductsBySlug]);
 
   const fmt = (n: number) => n.toLocaleString(lang === "ar" ? "ar-EG" : "en-US");
+  const fmtPrice = usePriceFormatter();
 
   // ─── Sort ────────────────────────────────────────────────────────────────
   // Persist the chosen sort across visits. The wishlist's underlying `items`
