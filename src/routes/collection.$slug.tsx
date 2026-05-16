@@ -204,6 +204,7 @@ function CollectionView() {
 }
 
 function ProductCard({ p, ar }: { p: Product; ar: boolean }) {
+  const fmt = usePriceFormatter();
   const name = ar ? (p.name_ar ?? p.name_en) : (p.name_en ?? p.name_ar);
   const href = p.slug ? `/product/${p.slug}` : "#";
   return (
