@@ -268,7 +268,7 @@ campaignsConfig.form = [
   { key: "starts_at", label: { ar: "يبدأ", en: "Starts at" }, type: "datetime" },
   { key: "ends_at", label: { ar: "ينتهي", en: "Ends at" }, type: "datetime" },
   { key: "coupon_code", label: { ar: "كود الكوبون", en: "Coupon code" }, type: "text" },
-  { key: "banner_image_url", label: { ar: "صورة البانر", en: "Banner image URL" }, type: "url" },
+  { key: "banner_image_url", label: { ar: "صورة البانر", en: "Banner image" }, type: "image", bucket: "banner-media", folder: "campaigns" },
   { key: "banner_link_url", label: { ar: "رابط البانر", en: "Banner link" }, type: "url" },
   { key: "email_subject", label: { ar: "موضوع الإيميل", en: "Email subject" }, type: "text" },
   { key: "description", label: { ar: "الوصف", en: "Description" }, type: "textarea", rows: 3 },
