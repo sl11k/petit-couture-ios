@@ -86,11 +86,53 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       setCurrencyState(stored);
       return;
     }
-    // First-visit auto-detect from browser locale.
-    const guess = guessCurrencyFromLocale(
+    // First-visit auto-detect: try IP geolocation first, fallback to browser locale.
+    const localeGuess = guessCurrencyFromLocale(
       typeof navigator !== "undefined" ? navigator.language : undefined,
     );
-    setCurrencyState(guess);
+    setCurrencyState(localeGuess);
+
+    // Try free IP geolocation services (no key required).
+    (async () => {
+      const endpoints = [
+        "https://ipapi.co/json/",
+        "https://ipwho.is/",
+      ];
+      for (const url of endpoints) {
+        try {
+          const res = await fetch(url, { cache: "no-store" });
+          if (!res.ok) continue;
+          const j: any = await res.json();
+          const code: string | undefined =
+            (typeof j?.currency === "string" && j.currency) ||
+            (typeof j?.currency?.code === "string" && j.currency.code) ||
+            undefined;
+          if (code && code in CURRENCY_MAP) {
+            // Only apply if user hasn't picked one in the meantime.
+            if (!readStoredCurrency()) setCurrencyState(code as CurrencyCode);
+            return;
+          }
+          const country: string | undefined =
+            (typeof j?.country_code === "string" && j.country_code) ||
+            (typeof j?.country_code_iso3 === "string" && j.country_code_iso3) ||
+            (typeof j?.country === "string" && j.country?.length === 2 ? j.country : undefined);
+          if (country) {
+            const byCountry: Record<string, CurrencyCode> = {
+              SA: "SAR", AE: "AED", KW: "KWD", BH: "BHD", QA: "QAR", OM: "OMR",
+              EG: "EGP", JO: "JOD", TR: "TRY", IN: "INR", PK: "PKR",
+              US: "USD", GB: "GBP", CA: "CAD", AU: "AUD", JP: "JPY", CN: "CNY",
+              FR: "EUR", DE: "EUR", IT: "EUR", ES: "EUR", NL: "EUR", IE: "EUR",
+              PT: "EUR", BE: "EUR", AT: "EUR", FI: "EUR", GR: "EUR",
+            };
+            const mapped = byCountry[country.toUpperCase()];
+            if (mapped && !readStoredCurrency()) {
+              setCurrencyState(mapped);
+              return;
+            }
+          }
+        } catch { /* try next */ }
+      }
+    })();
   }, []);
 
   // Hydrate rates: cache first, then refresh in background.
