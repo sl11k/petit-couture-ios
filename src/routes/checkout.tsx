@@ -851,6 +851,13 @@ function CheckoutPage() {
                   }
                 />
               </div>
+              {displayCurrency !== "SAR" && (
+                <p className="text-[11.5px] text-muted-foreground tracking-soft px-1">
+                  {isRTL
+                    ? `سيتم الخصم بالريال السعودي (${fmt(pricing.total)} ر.س) — ما يعادل تقريبًا ${fmtDisplay(pricing.total)}.`
+                    : `Payment will be charged in SAR (${fmt(pricing.total)} SAR) — approximately ${fmtDisplay(pricing.total)}.`}
+                </p>
+              )}
 
               {/* Terms */}
               <label className="flex items-start gap-3 p-3 rounded-[14px] bg-cream-warm/40 border border-border cursor-pointer">
