@@ -1,11 +1,12 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/state/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Menu, LogOut, Globe } from "lucide-react";
+import { Menu, LogOut, Globe, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminSidebar } from "../sidebar/AdminSidebar";
+import { AdminTour, hasCompletedAdminTour } from "../tour/AdminTour";
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const { user, ready } = useAuth();
