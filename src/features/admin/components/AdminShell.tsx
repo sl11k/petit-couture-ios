@@ -15,6 +15,16 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const ar = lang === "ar";
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
+
+  // Auto-start the tour on first admin visit.
+  useEffect(() => {
+    if (!ready || loading || !canAccessAdmin) return;
+    if (!hasCompletedAdminTour()) {
+      const t = setTimeout(() => setTourOpen(true), 600);
+      return () => clearTimeout(t);
+    }
+  }, [ready, loading, canAccessAdmin]);
 
   if (!ready || loading) {
     return (
