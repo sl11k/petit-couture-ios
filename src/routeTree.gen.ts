@@ -52,6 +52,7 @@ import { Route as AdminReturnsRouteImport } from './routes/admin.returns'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
 import { Route as AdminPrivacyRouteImport } from './routes/admin.privacy'
+import { Route as AdminPopularPicksRouteImport } from './routes/admin.popular-picks'
 import { Route as AdminPermissionsRouteImport } from './routes/admin.permissions'
 import { Route as AdminPerformanceRouteImport } from './routes/admin.performance'
 import { Route as AdminPaymentsRouteImport } from './routes/admin.payments'
@@ -319,6 +320,11 @@ const AdminProductsRoute = AdminProductsRouteImport.update({
 const AdminPrivacyRoute = AdminPrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPopularPicksRoute = AdminPopularPicksRouteImport.update({
+  id: '/popular-picks',
+  path: '/popular-picks',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminPermissionsRoute = AdminPermissionsRouteImport.update({
@@ -631,6 +637,7 @@ export interface FileRoutesByFullPath {
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/permissions': typeof AdminPermissionsRoute
+  '/admin/popular-picks': typeof AdminPopularPicksRoute
   '/admin/privacy': typeof AdminPrivacyRoute
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/reports': typeof AdminReportsRoute
@@ -727,6 +734,7 @@ export interface FileRoutesByTo {
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/permissions': typeof AdminPermissionsRoute
+  '/admin/popular-picks': typeof AdminPopularPicksRoute
   '/admin/privacy': typeof AdminPrivacyRoute
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/reports': typeof AdminReportsRoute
@@ -825,6 +833,7 @@ export interface FileRoutesById {
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/permissions': typeof AdminPermissionsRoute
+  '/admin/popular-picks': typeof AdminPopularPicksRoute
   '/admin/privacy': typeof AdminPrivacyRoute
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/reports': typeof AdminReportsRoute
@@ -924,6 +933,7 @@ export interface FileRouteTypes {
     | '/admin/payments'
     | '/admin/performance'
     | '/admin/permissions'
+    | '/admin/popular-picks'
     | '/admin/privacy'
     | '/admin/products'
     | '/admin/reports'
@@ -1020,6 +1030,7 @@ export interface FileRouteTypes {
     | '/admin/payments'
     | '/admin/performance'
     | '/admin/permissions'
+    | '/admin/popular-picks'
     | '/admin/privacy'
     | '/admin/products'
     | '/admin/reports'
@@ -1117,6 +1128,7 @@ export interface FileRouteTypes {
     | '/admin/payments'
     | '/admin/performance'
     | '/admin/permissions'
+    | '/admin/popular-picks'
     | '/admin/privacy'
     | '/admin/products'
     | '/admin/reports'
@@ -1507,6 +1519,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/admin/privacy'
       preLoaderRoute: typeof AdminPrivacyRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/popular-picks': {
+      id: '/admin/popular-picks'
+      path: '/popular-picks'
+      fullPath: '/admin/popular-picks'
+      preLoaderRoute: typeof AdminPopularPicksRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/permissions': {
@@ -2049,6 +2068,7 @@ interface AdminRouteChildren {
   AdminPaymentsRoute: typeof AdminPaymentsRoute
   AdminPerformanceRoute: typeof AdminPerformanceRoute
   AdminPermissionsRoute: typeof AdminPermissionsRoute
+  AdminPopularPicksRoute: typeof AdminPopularPicksRoute
   AdminPrivacyRoute: typeof AdminPrivacyRoute
   AdminProductsRoute: typeof AdminProductsRouteWithChildren
   AdminReportsRoute: typeof AdminReportsRoute
@@ -2098,6 +2118,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminPaymentsRoute: AdminPaymentsRoute,
   AdminPerformanceRoute: AdminPerformanceRoute,
   AdminPermissionsRoute: AdminPermissionsRoute,
+  AdminPopularPicksRoute: AdminPopularPicksRoute,
   AdminPrivacyRoute: AdminPrivacyRoute,
   AdminProductsRoute: AdminProductsRouteWithChildren,
   AdminReportsRoute: AdminReportsRoute,
