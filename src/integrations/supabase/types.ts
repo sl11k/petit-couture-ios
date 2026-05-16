@@ -5526,7 +5526,13 @@ export type Database = {
         | "partially_refunded"
         | "fraud"
         | "pending_customer"
-      payment_method: "cod" | "card" | "apple_pay" | "bank_transfer" | "tabby"
+      payment_method:
+        | "cod"
+        | "card"
+        | "apple_pay"
+        | "bank_transfer"
+        | "tabby"
+        | "tamara"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5687,7 +5693,14 @@ export const Constants = {
         "fraud",
         "pending_customer",
       ],
-      payment_method: ["cod", "card", "apple_pay", "bank_transfer", "tabby"],
+      payment_method: [
+        "cod",
+        "card",
+        "apple_pay",
+        "bank_transfer",
+        "tabby",
+        "tamara",
+      ],
     },
   },
 } as const
