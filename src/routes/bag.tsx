@@ -291,11 +291,11 @@ function BagPage() {
                           </div>
                           <div className="text-end">
                             <div className="text-[14px] text-foreground tracking-tight tabular-nums">
-                              {fmt(it.price * it.qty)} {it.currency}
+                              {fmtPrice(it.price * it.qty)}
                             </div>
                             {it.qty > 1 && (
                               <div className="text-[10.5px] text-muted-foreground tabular-nums">
-                                {fmt(it.price)} × {fmt(it.qty)}
+                                {fmtPrice(it.price)} × {fmt(it.qty)}
                               </div>
                             )}
                           </div>
