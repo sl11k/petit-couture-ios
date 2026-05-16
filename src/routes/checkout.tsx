@@ -29,6 +29,7 @@ import { db } from "@/lib/db";
 import { trackServerEvent, getCurrentSessionId } from "@/lib/serverAnalytics";
 import { supabase } from "@/integrations/supabase/client";
 import { placeOrder } from "@/server/placeOrder";
+import { validateCoupon } from "@/lib/coupons.functions";
 
 // Map only loads on the client when entering step 2.
 const LocationPicker = lazy(
@@ -114,6 +115,12 @@ function CheckoutPage() {
   const [placing, setPlacing] = useState(false);
   const placedRef = useRef(false);
 
+  // Coupon state
+  const [couponInput, setCouponInput] = useState("");
+  const [coupon, setCoupon] = useState<{ code: string; discount: number } | null>(null);
+  const [couponBusy, setCouponBusy] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+
   // Redirect if bag empty
   const arrivedEmptyRef = useRef<boolean>(bagEmpty);
   useEffect(() => {
@@ -131,9 +138,64 @@ function CheckoutPage() {
     const subtotal = bag.subtotal;
     const shipping_fee = shipping.fee;
     const tax = Math.round(subtotal * TAX_RATE * 100) / 100;
-    const total = subtotal + shipping_fee + tax;
-    return { subtotal, shipping_fee, tax, total };
-  }, [bag.subtotal, shipping.fee]);
+    const discount = coupon ? Math.min(coupon.discount, subtotal) : 0;
+    const total = Math.max(0, Math.round((subtotal + shipping_fee + tax - discount) * 100) / 100);
+    return { subtotal, shipping_fee, tax, discount, total };
+  }, [bag.subtotal, shipping.fee, coupon]);
+
+  // Re-validate coupon when subtotal/email changes (silent; drops if no longer valid).
+  useEffect(() => {
+    if (!coupon) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await validateCoupon({
+          data: {
+            code: coupon.code,
+            subtotal: bag.subtotal,
+            user_id: null,
+            customer_email: contact.email || null,
+          },
+        });
+        if (cancelled) return;
+        if (res.ok) setCoupon({ code: res.code, discount: res.discount_amount });
+        else { setCoupon(null); setCouponError(isRTL ? res.message_ar : res.message_en); }
+      } catch { /* keep current */ }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bag.subtotal]);
+
+  const applyCoupon = async () => {
+    const code = couponInput.trim();
+    if (!code) return;
+    setCouponBusy(true);
+    setCouponError(null);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const res = await validateCoupon({
+        data: {
+          code,
+          subtotal: bag.subtotal,
+          user_id: auth.user?.id ?? null,
+          customer_email: contact.email || auth.user?.email || null,
+        },
+      });
+      if (res.ok) {
+        setCoupon({ code: res.code, discount: res.discount_amount });
+        toast.success(isRTL ? "تم تطبيق الكوبون" : "Coupon applied");
+      } else {
+        setCoupon(null);
+        setCouponError(isRTL ? res.message_ar : res.message_en);
+      }
+    } catch {
+      setCouponError(isRTL ? "تعذّر التحقق من الكوبون" : "Could not validate coupon");
+    } finally {
+      setCouponBusy(false);
+    }
+  };
+
+  const removeCoupon = () => { setCoupon(null); setCouponInput(""); setCouponError(null); };
 
   // ───── Validation per step ─────
   const errs = useMemo(() => {
@@ -284,8 +346,12 @@ function CheckoutPage() {
           address: fullAddress as Record<string, unknown> as never,
           currency: bag.currency,
           payment_method: payment,
+          coupon_code: coupon?.code ?? null,
           pricing: {
-            ...pricing,
+            subtotal: pricing.subtotal,
+            shipping_fee: pricing.shipping_fee,
+            tax: pricing.tax,
+            total: pricing.total,
             shipping_method: shipping.id,
           },
         },
@@ -836,11 +902,65 @@ function CheckoutPage() {
                 </div>
               </ReviewBlock>
 
+              {/* Coupon */}
+              <div className="rounded-[16px] border border-border bg-background p-4">
+                <h3 className="text-[10.5px] tracking-luxury text-muted-foreground mb-3">
+                  {isRTL ? "كوبون الخصم" : "Discount coupon"}
+                </h3>
+                {coupon ? (
+                  <div className="flex items-center justify-between gap-3 p-3 rounded-[12px] bg-gold/5 border border-gold/40">
+                    <div className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-gold" />
+                      <span className="text-[13px] font-medium text-foreground tracking-soft">{coupon.code}</span>
+                      <span className="text-[11.5px] text-muted-foreground">
+                        −{fmt(coupon.discount)} {isRTL ? "ر.س" : "SAR"}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={removeCoupon}
+                      className="text-[11px] text-foreground/60 hover:text-foreground transition"
+                    >
+                      {isRTL ? "إزالة" : "Remove"}
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex gap-2">
+                      <input
+                        className={fieldClass(false) + " flex-1 uppercase"}
+                        value={couponInput}
+                        onChange={(e) => { setCouponInput(e.target.value); setCouponError(null); }}
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void applyCoupon(); } }}
+                        placeholder={isRTL ? "أدخل كود الكوبون" : "Enter coupon code"}
+                        dir="ltr"
+                        autoCapitalize="characters"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => void applyCoupon()}
+                        disabled={couponBusy || !couponInput.trim()}
+                        className="h-[52px] px-5 rounded-[16px] bg-foreground text-background text-[13px] tracking-soft transition active:scale-[0.98] disabled:opacity-50"
+                      >
+                        {couponBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : (isRTL ? "تطبيق" : "Apply")}
+                      </button>
+                    </div>
+                    {couponError && <p className="mt-2 text-[11.5px] text-destructive">{couponError}</p>}
+                  </>
+                )}
+              </div>
+
               {/* Pricing breakdown */}
               <div className="rounded-[16px] border border-border bg-cream-warm/30 p-4 space-y-2">
                 <Row label={isRTL ? "المجموع الفرعي" : "Subtotal"} value={`${fmt(pricing.subtotal)} ${isRTL ? "ر.س" : "SAR"}`} />
                 <Row label={isRTL ? "الشحن" : "Shipping"} value={pricing.shipping_fee === 0 ? (isRTL ? "مجاني" : "FREE") : `${fmt(pricing.shipping_fee)} ${isRTL ? "ر.س" : "SAR"}`} />
                 <Row label={isRTL ? "ضريبة القيمة المضافة (15%)" : "VAT (15%)"} value={`${fmt(pricing.tax)} ${isRTL ? "ر.س" : "SAR"}`} />
+                {pricing.discount > 0 && (
+                  <Row
+                    label={<span className="text-gold">{isRTL ? `خصم (${coupon?.code})` : `Discount (${coupon?.code})`}</span>}
+                    value={<span className="text-gold">−{fmt(pricing.discount)} {isRTL ? "ر.س" : "SAR"}</span>}
+                  />
+                )}
                 <div className="h-px bg-border my-2" />
                 <Row
                   label={<span className="font-medium text-foreground">{isRTL ? "الإجمالي" : "Total"}</span>}
