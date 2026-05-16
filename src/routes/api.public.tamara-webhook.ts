@@ -42,6 +42,13 @@ export const Route = createFileRoute("/api/public/tamara-webhook")({
           "";
         const notificationSecret = process.env.TAMARA_NOTIFICATION_TOKEN;
 
+        // Optional extra header check
+        const headerSecret = process.env.TAMARA_WEBHOOK_HEADER_SECRET;
+        const incomingHeaderSecret = request.headers.get("x-webhook-secret") || "";
+        const headerCheckValid = headerSecret
+          ? incomingHeaderSecret === headerSecret
+          : true;
+
         let signatureValid = false;
         if (notificationSecret && token) {
           signatureValid = verifyHs256(token, notificationSecret);
@@ -75,6 +82,10 @@ export const Route = createFileRoute("/api/public/tamara-webhook")({
             () => {},
             () => {},
           );
+
+        if (!headerCheckValid) {
+          return new Response("Invalid header secret", { status: 401 });
+        }
 
         if (!signatureValid && notificationSecret) {
           return new Response("Invalid signature", { status: 401 });
