@@ -76,8 +76,11 @@ export const ADMIN_NAV: NavGroup[] = [
   {
     label: { ar: "المحتوى", en: "Content" },
     items: [
-      { to: "/admin/storefront", label: { ar: "المتجر", en: "Storefront" }, icon: Layout },
+      { to: "/admin/storefront", label: { ar: "بانرات المتجر", en: "Storefront banners" }, icon: Layout },
       { to: "/admin/home-builder", label: { ar: "محرر الرئيسية", en: "Home builder" }, icon: Layout },
+      { to: "/admin/featured-categories", label: { ar: "أقسام مميزة", en: "Featured categories" }, icon: FolderTree },
+      { to: "/admin/popular-picks", label: { ar: "الأكثر رواجاً", en: "Popular picks" }, icon: Activity },
+      { to: "/admin/announcements", label: { ar: "الشريط الإعلاني", en: "Announcement bar" }, icon: Bell },
       { to: "/admin/content", label: { ar: "صفحات", en: "Pages" }, icon: FileText },
     ],
   },

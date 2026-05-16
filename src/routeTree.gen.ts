@@ -80,6 +80,7 @@ import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
 import { Route as AdminCampaignsRouteImport } from './routes/admin.campaigns'
 import { Route as AdminAuditLoginsRouteImport } from './routes/admin.audit-logins'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
+import { Route as AdminAnnouncementsRouteImport } from './routes/admin.announcements'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAbandonedRouteImport } from './routes/admin.abandoned'
 import { Route as AccountPrivacyRouteImport } from './routes/account.privacy'
@@ -462,6 +463,11 @@ const AdminAuditRoute = AdminAuditRouteImport.update({
   path: '/audit',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAnnouncementsRoute = AdminAnnouncementsRouteImport.update({
+  id: '/announcements',
+  path: '/announcements',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -610,6 +616,7 @@ export interface FileRoutesByFullPath {
   '/account/privacy': typeof AccountPrivacyRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/audit': typeof AdminAuditRouteWithChildren
   '/admin/audit-logins': typeof AdminAuditLoginsRoute
   '/admin/campaigns': typeof AdminCampaignsRouteWithChildren
@@ -707,6 +714,7 @@ export interface FileRoutesByTo {
   '/account/privacy': typeof AccountPrivacyRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/audit': typeof AdminAuditRouteWithChildren
   '/admin/audit-logins': typeof AdminAuditLoginsRoute
   '/admin/campaigns': typeof AdminCampaignsRouteWithChildren
@@ -806,6 +814,7 @@ export interface FileRoutesById {
   '/account/privacy': typeof AccountPrivacyRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/audit': typeof AdminAuditRouteWithChildren
   '/admin/audit-logins': typeof AdminAuditLoginsRoute
   '/admin/campaigns': typeof AdminCampaignsRouteWithChildren
@@ -906,6 +915,7 @@ export interface FileRouteTypes {
     | '/account/privacy'
     | '/admin/abandoned'
     | '/admin/analytics'
+    | '/admin/announcements'
     | '/admin/audit'
     | '/admin/audit-logins'
     | '/admin/campaigns'
@@ -1003,6 +1013,7 @@ export interface FileRouteTypes {
     | '/account/privacy'
     | '/admin/abandoned'
     | '/admin/analytics'
+    | '/admin/announcements'
     | '/admin/audit'
     | '/admin/audit-logins'
     | '/admin/campaigns'
@@ -1101,6 +1112,7 @@ export interface FileRouteTypes {
     | '/account/privacy'
     | '/admin/abandoned'
     | '/admin/analytics'
+    | '/admin/announcements'
     | '/admin/audit'
     | '/admin/audit-logins'
     | '/admin/campaigns'
@@ -1717,6 +1729,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAuditRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/announcements': {
+      id: '/admin/announcements'
+      path: '/announcements'
+      fullPath: '/admin/announcements'
+      preLoaderRoute: typeof AdminAnnouncementsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/analytics': {
       id: '/admin/analytics'
       path: '/analytics'
@@ -2041,6 +2060,7 @@ const AdminWebhooksRouteWithChildren = AdminWebhooksRoute._addFileChildren(
 interface AdminRouteChildren {
   AdminAbandonedRoute: typeof AdminAbandonedRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
+  AdminAnnouncementsRoute: typeof AdminAnnouncementsRoute
   AdminAuditRoute: typeof AdminAuditRouteWithChildren
   AdminAuditLoginsRoute: typeof AdminAuditLoginsRoute
   AdminCampaignsRoute: typeof AdminCampaignsRouteWithChildren
@@ -2091,6 +2111,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAbandonedRoute: AdminAbandonedRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
+  AdminAnnouncementsRoute: AdminAnnouncementsRoute,
   AdminAuditRoute: AdminAuditRouteWithChildren,
   AdminAuditLoginsRoute: AdminAuditLoginsRoute,
   AdminCampaignsRoute: AdminCampaignsRouteWithChildren,
