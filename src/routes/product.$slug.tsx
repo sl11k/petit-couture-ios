@@ -902,7 +902,7 @@ function ProductDetails() {
             </div>
           )}
           <div className="px-5 pb-3 -mt-3 text-center">
-            <span className="text-[10.5px] text-muted-foreground">{ar ? "الإجمالي: " : "Total: "}{fmt(lineTotal)} {product.currency}</span>
+            <span className="text-[10.5px] text-muted-foreground">{ar ? "الإجمالي: " : "Total: "}{fmtPrice(lineTotal)}</span>
           </div>
         </div>
       </div>
