@@ -520,6 +520,7 @@ function BestSellersSection({ ar }: { ar: boolean }) {
 }
 
 function DynamicSection({ section, products, ar }: { section: HomeSection; products: ResolvedProduct[]; ar: boolean }) {
+  const fmt = usePriceFormatter();
   const title = ar ? section.title_ar : section.title_en;
   const eyebrow = ar ? section.eyebrow_ar : section.eyebrow_en;
 
