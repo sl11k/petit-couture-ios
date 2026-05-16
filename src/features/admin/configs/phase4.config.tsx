@@ -280,7 +280,7 @@ landingPagesConfig.form = [
   { key: "title", label: { ar: "العنوان", en: "Title" }, type: "text", required: true, maxLength: 200 },
   { key: "slug", label: { ar: "Slug", en: "Slug" }, type: "text", required: true, pattern: "^[a-z0-9-]+$" },
   { key: "subtitle", label: { ar: "العنوان الفرعي", en: "Subtitle" }, type: "text" },
-  { key: "hero_image", label: { ar: "صورة الهيرو", en: "Hero image URL" }, type: "url" },
+  { key: "hero_image", label: { ar: "صورة الهيرو", en: "Hero image" }, type: "image", bucket: "banner-media", folder: "landing" },
   { key: "cta_text", label: { ar: "نص الزر", en: "CTA text" }, type: "text" },
   { key: "cta_url", label: { ar: "رابط الزر", en: "CTA URL" }, type: "url" },
   { key: "coupon_code", label: { ar: "كود الكوبون", en: "Coupon code" }, type: "text" },
