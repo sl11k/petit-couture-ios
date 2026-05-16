@@ -102,7 +102,7 @@ type TabKey = "description" | "specs" | "care" | "shipping";
 function ProductDetails() {
   const { slug } = Route.useParams();
   const router = useRouter();
-  const product = getProductForCategory(slug);
+  const { product } = useDbProductBySlug(slug);
   const { isRTL, lang } = useLanguage();
   const ar = isRTL;
 
