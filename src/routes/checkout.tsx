@@ -902,11 +902,65 @@ function CheckoutPage() {
                 </div>
               </ReviewBlock>
 
+              {/* Coupon */}
+              <div className="rounded-[16px] border border-border bg-background p-4">
+                <h3 className="text-[10.5px] tracking-luxury text-muted-foreground mb-3">
+                  {isRTL ? "كوبون الخصم" : "Discount coupon"}
+                </h3>
+                {coupon ? (
+                  <div className="flex items-center justify-between gap-3 p-3 rounded-[12px] bg-gold/5 border border-gold/40">
+                    <div className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-gold" />
+                      <span className="text-[13px] font-medium text-foreground tracking-soft">{coupon.code}</span>
+                      <span className="text-[11.5px] text-muted-foreground">
+                        −{fmt(coupon.discount)} {isRTL ? "ر.س" : "SAR"}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={removeCoupon}
+                      className="text-[11px] text-foreground/60 hover:text-foreground transition"
+                    >
+                      {isRTL ? "إزالة" : "Remove"}
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex gap-2">
+                      <input
+                        className={fieldClass(false) + " flex-1 uppercase"}
+                        value={couponInput}
+                        onChange={(e) => { setCouponInput(e.target.value); setCouponError(null); }}
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void applyCoupon(); } }}
+                        placeholder={isRTL ? "أدخل كود الكوبون" : "Enter coupon code"}
+                        dir="ltr"
+                        autoCapitalize="characters"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => void applyCoupon()}
+                        disabled={couponBusy || !couponInput.trim()}
+                        className="h-[52px] px-5 rounded-[16px] bg-foreground text-background text-[13px] tracking-soft transition active:scale-[0.98] disabled:opacity-50"
+                      >
+                        {couponBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : (isRTL ? "تطبيق" : "Apply")}
+                      </button>
+                    </div>
+                    {couponError && <p className="mt-2 text-[11.5px] text-destructive">{couponError}</p>}
+                  </>
+                )}
+              </div>
+
               {/* Pricing breakdown */}
               <div className="rounded-[16px] border border-border bg-cream-warm/30 p-4 space-y-2">
                 <Row label={isRTL ? "المجموع الفرعي" : "Subtotal"} value={`${fmt(pricing.subtotal)} ${isRTL ? "ر.س" : "SAR"}`} />
                 <Row label={isRTL ? "الشحن" : "Shipping"} value={pricing.shipping_fee === 0 ? (isRTL ? "مجاني" : "FREE") : `${fmt(pricing.shipping_fee)} ${isRTL ? "ر.س" : "SAR"}`} />
                 <Row label={isRTL ? "ضريبة القيمة المضافة (15%)" : "VAT (15%)"} value={`${fmt(pricing.tax)} ${isRTL ? "ر.س" : "SAR"}`} />
+                {pricing.discount > 0 && (
+                  <Row
+                    label={<span className="text-gold">{isRTL ? `خصم (${coupon?.code})` : `Discount (${coupon?.code})`}</span>}
+                    value={<span className="text-gold">−{fmt(pricing.discount)} {isRTL ? "ر.س" : "SAR"}</span>}
+                  />
+                )}
                 <div className="h-px bg-border my-2" />
                 <Row
                   label={<span className="font-medium text-foreground">{isRTL ? "الإجمالي" : "Total"}</span>}
