@@ -497,7 +497,7 @@ function EmptyState({
           <div className="mt-2.5">
             <p className="text-sm text-foreground line-clamp-1">{seedProduct.name}</p>
             <p className="text-[13px] text-gold-deep mt-0.5">
-              {seedProduct.price.toFixed(2)} {ar ? "ر.س" : "SAR"}
+              {fmt(seedProduct.price)}
             </p>
           </div>
         </Link>
