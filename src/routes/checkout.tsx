@@ -22,6 +22,7 @@ import {
   Apple,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useCurrency } from "@/state/CurrencyContext";
 import { useBag } from "@/state/BagContext";
 import { useAddress, type Address } from "@/state/AddressContext";
 import { db } from "@/lib/db";
