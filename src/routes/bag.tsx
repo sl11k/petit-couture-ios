@@ -424,7 +424,7 @@ function BagPage() {
                           <img src={p.images[0]} alt={p.category} className="w-full h-full object-cover" loading="lazy" />
                         </div>
                         <p className="mt-2 text-[12px] text-foreground/85 line-clamp-1">{p.category}</p>
-                        <p className="text-[12px] text-muted-foreground tabular-nums">{fmt(p.price)} {p.currency}</p>
+                        <p className="text-[12px] text-muted-foreground tabular-nums">{fmtPrice(p.price)}</p>
                       </Link>
                     ))}
                   </div>
