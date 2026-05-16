@@ -37,7 +37,7 @@ const InputSchema = z.object({
   items: z.array(ItemSchema).min(1).max(100),
   address: AddressSchema,
   currency: z.string().min(3).max(8),
-  payment_method: z.enum(["cod", "card", "apple_pay", "bank_transfer"]).default("cod"),
+  payment_method: z.enum(["cod", "card", "apple_pay", "bank_transfer", "tabby"]).default("cod"),
   pricing: z.object({
     subtotal: z.number().min(0),
     shipping_fee: z.number().min(0),

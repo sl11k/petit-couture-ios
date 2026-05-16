@@ -49,7 +49,7 @@ export const Route = createFileRoute("/checkout")({
 const phoneRegex = /^(?:\+9665\d{8}|009665\d{8}|05\d{8})$/;
 
 type Step = 1 | 2 | 3 | 4;
-type PayMethod = "card" | "apple_pay" | "bank_transfer" | "cod";
+type PayMethod = "card" | "apple_pay" | "bank_transfer" | "cod" | "tabby";
 
 const SHIPPING_METHODS: Array<{
   id: string;
@@ -302,6 +302,37 @@ function CheckoutPage() {
       }
 
       placedRef.current = true;
+
+      // Tabby: create session and redirect to hosted checkout
+      if (payment === "tabby") {
+        try {
+          const { createTabbyCheckout } = await import("@/lib/tabby.functions");
+          const origin = window.location.origin;
+          const result = await createTabbyCheckout({
+            data: {
+              order_id: order.id,
+              success_url: `${origin}/order-confirmation/${order.order_number}?tabby=success`,
+              cancel_url: `${origin}/checkout?tabby=cancel`,
+              failure_url: `${origin}/checkout?tabby=failure`,
+              lang: isRTL ? "ar" : "en",
+            },
+          });
+          if (result.ok) {
+            bag.clear();
+            window.location.href = result.web_url;
+            return;
+          }
+          toast.error(result.message);
+          setPlacing(false);
+          return;
+        } catch (err) {
+          console.error("Tabby checkout error", err);
+          toast.error(isRTL ? "تعذّر بدء دفع تابي" : "Could not start Tabby checkout");
+          setPlacing(false);
+          return;
+        }
+      }
+
       bag.clear();
       navigate({
         to: "/order-confirmation/$orderNumber",
@@ -620,7 +651,22 @@ function CheckoutPage() {
                     label={isRTL ? "الدفع عند الاستلام" : "Cash on delivery"}
                     sub={isRTL ? "ادفع للمندوب" : "Pay the courier"}
                   />
+                  <PayOption
+                    active={payment === "tabby"}
+                    onClick={() => setPayment("tabby")}
+                    icon={<span className="text-[11px] font-bold tracking-wide">tabby</span>}
+                    label={isRTL ? "قسّمها على 4 — تابي" : "Split in 4 — Tabby"}
+                    sub={isRTL ? "بدون فوائد ولا رسوم" : "0% interest, no fees"}
+                  />
                 </div>
+
+                {payment === "tabby" && (
+                  <div className="mt-3 p-3 rounded-[12px] bg-cream-warm/40 border border-border text-[12px] text-foreground/80 leading-relaxed">
+                    {isRTL
+                      ? "ستُحوَّل لبوابة تابي لإتمام الدفع على 4 دفعات بدون فوائد."
+                      : "You'll be redirected to Tabby to pay in 4 interest-free installments."}
+                  </div>
+                )}
 
                 {payment === "bank_transfer" && (
                   <div className="mt-3 p-3 rounded-[12px] bg-cream-warm/40 border border-border text-[12px] text-foreground/80 leading-relaxed">
@@ -729,11 +775,13 @@ function CheckoutPage() {
                   {payment === "apple_pay" && <Apple className="h-4 w-4 text-gold" />}
                   {payment === "bank_transfer" && <Landmark className="h-4 w-4 text-gold" />}
                   {payment === "cod" && <Wallet className="h-4 w-4 text-gold" />}
+                  {payment === "tabby" && <span className="text-[10px] font-bold text-gold">tabby</span>}
                   <span className="text-foreground">
                     {payment === "card" && (isRTL ? "بطاقة ائتمان" : "Credit card")}
                     {payment === "apple_pay" && "Apple Pay"}
                     {payment === "bank_transfer" && (isRTL ? "تحويل بنكي" : "Bank transfer")}
                     {payment === "cod" && (isRTL ? "الدفع عند الاستلام" : "Cash on delivery")}
+                    {payment === "tabby" && (isRTL ? "تابي — 4 دفعات" : "Tabby — 4 installments")}
                   </span>
                 </div>
               </ReviewBlock>
