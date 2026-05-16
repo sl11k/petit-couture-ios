@@ -58,6 +58,7 @@ function BagPage() {
   const BackIcon = ar ? ChevronRight : ChevronLeft;
   const locale = lang === "ar" ? "ar-EG" : "en-US";
   const fmt = (n: number) => Math.round(n).toLocaleString(locale);
+  const fmtPrice = usePriceFormatter();
 
   const [code, setCode] = useState("");
   const [appliedCode, setAppliedCode] = useState<string | null>(null);
