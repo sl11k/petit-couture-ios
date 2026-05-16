@@ -6,6 +6,7 @@ import { useWishlist } from "@/state/WishlistContext";
 import { useBag } from "@/state/BagContext";
 import { categories } from "@/data/categories";
 import { BrandLogo } from "@/components/Logo";
+import { CurrencySelector } from "@/components/CurrencySelector";
 
 /**
  * Wide luxury header shown only on desktop (lg+). The mobile experience keeps
