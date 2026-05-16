@@ -18,6 +18,7 @@ export function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => 
       {open && <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={onClose} />}
 
       <aside
+        data-tour="sidebar"
         className={cn(
           "fixed inset-y-0 z-50 flex w-64 flex-col border-border bg-card transition-transform lg:static lg:translate-x-0",
           ar ? "right-0 border-l" : "left-0 border-r",
