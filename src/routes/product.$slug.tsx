@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { getProductForCategory, categories, productsByCategory } from "@/data/categories";
 import { useDbProductBySlug } from "@/hooks/useDbProducts";
+import { useProductExtras } from "@/hooks/useProductExtras";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useBag } from "@/state/BagContext";
