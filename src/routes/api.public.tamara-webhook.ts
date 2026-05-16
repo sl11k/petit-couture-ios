@@ -183,8 +183,7 @@ export const Route = createFileRoute("/api/public/tamara-webhook")({
             updated_at: new Date().toISOString(),
           };
           if (newOrderStatus) update.status = newOrderStatus;
-          await supabaseAdmin
-            .from("orders")
+          await (supabaseAdmin.from("orders") as any)
             .update(update)
             .eq("order_number", orderNumber);
         }
