@@ -213,32 +213,34 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* Featured categories */}
-      <section className="px-4 py-8 max-w-5xl mx-auto">
-        <h2 className="text-xl font-medium mb-4">من الحملة</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {featured.map((c) => (
-            <Link
-              key={c.slug}
-              to="/category/$slug"
-              params={{ slug: c.slug }}
-              className="group block"
-            >
-              <LazyImage
-                src={c.img}
-                alt={c.name}
-                width={400}
-                height={400}
-                aspect="1/1"
-                className="aspect-square w-full object-cover rounded-lg"
-              />
-              <p className="mt-2 text-sm text-center group-hover:text-primary">
-                {c.name}
-              </p>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {/* Featured categories — hidden when the DB-backed landing has no static category mapping */}
+      {featured.length > 0 && (
+        <section className="px-4 py-8 max-w-5xl mx-auto">
+          <h2 className="text-xl font-medium mb-4">من الحملة</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {featured.map((c) => (
+              <Link
+                key={c.slug}
+                to="/category/$slug"
+                params={{ slug: c.slug }}
+                className="group block"
+              >
+                <LazyImage
+                  src={c.img}
+                  alt={c.name}
+                  width={400}
+                  height={400}
+                  aspect="1/1"
+                  className="aspect-square w-full object-cover rounded-lg"
+                />
+                <p className="mt-2 text-sm text-center group-hover:text-primary">
+                  {c.name}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }
