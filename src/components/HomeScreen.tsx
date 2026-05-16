@@ -494,11 +494,11 @@ function BestSellersSection({ ar }: { ar: boolean }) {
             </span>
             <div className="mt-1 flex items-baseline gap-2">
               <span className="text-[13px] text-primary font-semibold">
-                {p.price.toFixed(0)} {ar ? "ر.س" : "SAR"}
+                {fmt(p.price)}
               </span>
               {p.compareAt && (
                 <span className="text-[11.5px] text-muted-foreground line-through">
-                  {p.compareAt.toFixed(0)}
+                  {fmt(p.compareAt)}
                 </span>
               )}
             </div>
