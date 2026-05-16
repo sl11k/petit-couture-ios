@@ -515,6 +515,7 @@ function ProductCard({
   ar: boolean;
   wishlist: ReturnType<typeof useWishlist>;
 }) {
+  const fmt = usePriceFormatter();
   const name = ar ? (p.name_ar ?? p.name_en) : (p.name_en ?? p.name_ar);
   const wishId = `product:${p.slug ?? p.id}`;
   const wished = wishlist.has(wishId);
