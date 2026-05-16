@@ -49,7 +49,7 @@ export const Route = createFileRoute("/checkout")({
 const phoneRegex = /^(?:\+9665\d{8}|009665\d{8}|05\d{8})$/;
 
 type Step = 1 | 2 | 3 | 4;
-type PayMethod = "card" | "apple_pay" | "bank_transfer" | "cod";
+type PayMethod = "card" | "apple_pay" | "bank_transfer" | "cod" | "tabby";
 
 const SHIPPING_METHODS: Array<{
   id: string;
