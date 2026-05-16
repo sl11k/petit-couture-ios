@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useBag } from "@/state/BagContext";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { CurrencySelector } from "@/components/CurrencySelector";
 import { cn } from "@/lib/utils";
 import {
   Sheet,
