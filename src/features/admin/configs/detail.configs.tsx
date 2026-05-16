@@ -86,7 +86,7 @@ const campaignForm: FormFieldDef[] = [
   { key: "ends_at", label: { ar: "ينتهي", en: "Ends at" }, type: "datetime" },
   { key: "email_subject", label: { ar: "موضوع البريد", en: "Email subject" }, type: "text" },
   { key: "email_body", label: { ar: "نص الرسالة", en: "Body" }, type: "textarea", rows: 6 },
-  { key: "banner_image_url", label: { ar: "صورة البانر", en: "Banner image" }, type: "url" },
+  { key: "banner_image_url", label: { ar: "صورة البانر", en: "Banner image" }, type: "image", bucket: "banner-media", folder: "campaigns" },
   { key: "banner_link_url", label: { ar: "رابط البانر", en: "Banner link" }, type: "url" },
 ];
 
