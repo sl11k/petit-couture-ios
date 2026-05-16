@@ -407,6 +407,7 @@ export function HomeScreen() {
 }
 
 function BestSellersSection({ ar }: { ar: boolean }) {
+  const fmt = usePriceFormatter();
   const [items, setItems] = useState<Array<{
     id: string;
     name_ar: string | null;
