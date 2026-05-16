@@ -6,7 +6,7 @@ import { LazyImage } from "@/components/LazyImage";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { categories as seedCategories, productsByCategory } from "@/data/categories";
-import { usePriceFormatter, useCurrency } from "@/state/CurrencyContext";
+import { usePriceFormatter } from "@/state/CurrencyContext";
 import { buildMeta, breadcrumbJsonLd, collectionJsonLd, canonical } from "@/lib/seo";
 
 type DbCategory = {
