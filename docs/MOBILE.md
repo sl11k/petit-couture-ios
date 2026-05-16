@@ -4,13 +4,13 @@
 
 ## نظام التنقل
 
-| العنصر               | المكوّن                               | الظهور           |
-| -------------------- | ------------------------------------- | ---------------- |
-| Header موبايل        | `<MobileHeader title showBack />`     | `< lg`           |
-| Header ديسكتوب       | `<DesktopHeader />` (تلقائي في root)  | `≥ lg`           |
-| Bottom Navigation    | `<MobileBottomNav />` (تلقائي في root)| `< lg`           |
-| WhatsApp عائم        | `<WhatsAppButton />` (تلقائي في root) | الكل             |
-| Apple Pay شارة/زر    | `<ApplePayBadge variant="button">`    | حسب الجهاز       |
+| العنصر            | المكوّن                                | الظهور     |
+| ----------------- | -------------------------------------- | ---------- |
+| Header موبايل     | `<MobileHeader title showBack />`      | `< lg`     |
+| Header ديسكتوب    | `<DesktopHeader />` (تلقائي في root)   | `≥ lg`     |
+| Bottom Navigation | `<MobileBottomNav />` (تلقائي في root) | `< lg`     |
+| WhatsApp عائم     | `<WhatsAppButton />` (تلقائي في root)  | الكل       |
+| Apple Pay شارة/زر | `<ApplePayBadge variant="button">`     | حسب الجهاز |
 
 `MobileBottomNav` يُخفى تلقائيًا في `/checkout`, `/login`, `/admin`, `/order-confirmation` لتقليل التشتيت.
 
@@ -62,5 +62,6 @@ const supports = useApplePayAvailable();
 ```
 
 ## معاينة
+
 - `/admin/states` — كل حالات الشاشة.
 - صغّر نافذة المتصفح إلى 375px لمعاينة سلوك الموبايل، أو استعمل أيقونة الجهاز فوق المعاينة.
