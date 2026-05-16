@@ -537,7 +537,7 @@ function WishlistPage() {
 
                         {it.price !== null ? (
                           <p className="mt-1 text-[13.5px] text-foreground/85 tabular-nums">
-                            {fmt(it.price)} {it.currency}
+                            {fmtPrice(it.price)}
                           </p>
                         ) : (
                           <p className="mt-1 inline-flex items-center gap-1 text-[12px] text-gold-deep tracking-soft">
