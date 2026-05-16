@@ -66,7 +66,7 @@ export function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => 
                         : "text-foreground hover:bg-muted",
                   );
                   return (
-                    <li key={item.to}>
+                    <li key={item.to} data-tour={`nav:${item.to}`}>
                       {item.comingSoon ? (
                         <div className={className} title={ar ? "قيد التطوير" : "Coming soon"}>
                           {content}
