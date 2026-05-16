@@ -41,14 +41,17 @@ export function DesktopHeader() {
         <div className="mx-auto max-w-[1480px] px-10 h-9 flex items-center justify-between text-[11px] tracking-soft text-foreground/75">
           <span className="tracking-luxury text-gold-deep">{t.brandTagline}</span>
           <span>{t.announcements[0]}</span>
-          <button
-            type="button"
-            onClick={toggle}
-            className="tracking-luxury text-foreground/75 hover:text-foreground transition"
-            aria-label={isRTL ? "تبديل اللغة" : "Toggle language"}
-          >
-            {lang === "en" ? "عربي" : "EN"}
-          </button>
+          <div className="flex items-center gap-4">
+            <CurrencySelector />
+            <button
+              type="button"
+              onClick={toggle}
+              className="tracking-luxury text-foreground/75 hover:text-foreground transition"
+              aria-label={isRTL ? "تبديل اللغة" : "Toggle language"}
+            >
+              {lang === "en" ? "عربي" : "EN"}
+            </button>
+          </div>
         </div>
       </div>
 
