@@ -108,8 +108,7 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
           if (newPaymentStatus === "failed") {
             update.payment_failure_reason = payload?.rejection_reason || "tabby_rejected";
           }
-          await supabaseAdmin
-            .from("orders")
+          await (supabaseAdmin.from("orders") as any)
             .update(update)
             .eq("order_number", orderNumber);
         }
