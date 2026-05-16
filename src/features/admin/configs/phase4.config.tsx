@@ -290,7 +290,7 @@ landingPagesConfig.form = [
 
 storefrontConfig.actions = { ...storefrontConfig.actions, create: true, edit: true, delete: true };
 storefrontConfig.form = [
-  { key: "image_url", label: { ar: "رابط الصورة", en: "Image URL" }, type: "url", required: true },
+  { key: "image_url", label: { ar: "صورة البانر/الشريحة", en: "Banner / slide image" }, type: "image", required: true, bucket: "banner-media", folder: "storefront" },
   { key: "title_ar", label: { ar: "العنوان (AR)", en: "Title (AR)" }, type: "text" },
   { key: "title_en", label: { ar: "العنوان (EN)", en: "Title (EN)" }, type: "text" },
   { key: "subtitle_ar", label: { ar: "العنوان الفرعي (AR)", en: "Subtitle (AR)" }, type: "text" },
