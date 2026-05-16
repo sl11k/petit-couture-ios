@@ -72,6 +72,7 @@ function CheckoutPage() {
   const router = useRouter();
   const navigate = useNavigate();
   const { isRTL, lang } = useLanguage();
+  const { currency: displayCurrency, format: fmtDisplay } = useCurrency();
   const bag = useBag();
   const { address, save } = useAddress();
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
