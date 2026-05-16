@@ -102,9 +102,11 @@ function coerceForDb(fields: FormFieldDef[], values: Record<string, any>) {
   const out: Record<string, any> = {};
   for (const f of fields) {
     let v = values[f.key];
+    if (f.type === "gallery") {
+      out[f.key] = Array.isArray(v) ? v : [];
+      continue;
+    }
     if (v === "" || v === undefined) {
-      // Fallback to defaultValue when the field is empty (prevents NOT NULL violations
-      // for fields like JSON config that have a sane default such as {}).
       if (f.defaultValue !== undefined && f.defaultValue !== null && f.defaultValue !== "") {
         out[f.key] = f.defaultValue;
       } else {
@@ -124,6 +126,10 @@ function defaultsFrom(fields: FormFieldDef[], initial?: Record<string, any>) {
   const out: Record<string, any> = {};
   for (const f of fields) {
     let v = initial?.[f.key] ?? f.defaultValue;
+    if (f.type === "gallery") {
+      out[f.key] = Array.isArray(v) ? v : [];
+      continue;
+    }
     if (f.type === "json" && v && typeof v !== "string") v = JSON.stringify(v, null, 2);
     if (f.type === "boolean") v = Boolean(v);
     if (v === undefined || v === null) v = f.type === "boolean" ? false : "";
