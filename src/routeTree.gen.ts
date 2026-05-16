@@ -52,6 +52,7 @@ import { Route as AdminReturnsRouteImport } from './routes/admin.returns'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
 import { Route as AdminPrivacyRouteImport } from './routes/admin.privacy'
+import { Route as AdminPopularPicksRouteImport } from './routes/admin.popular-picks'
 import { Route as AdminPermissionsRouteImport } from './routes/admin.permissions'
 import { Route as AdminPerformanceRouteImport } from './routes/admin.performance'
 import { Route as AdminPaymentsRouteImport } from './routes/admin.payments'
@@ -68,6 +69,7 @@ import { Route as AdminIncompleteRouteImport } from './routes/admin.incomplete'
 import { Route as AdminIncomingWebhooksRouteImport } from './routes/admin.incoming-webhooks'
 import { Route as AdminHomeBuilderRouteImport } from './routes/admin.home-builder'
 import { Route as AdminHelpRouteImport } from './routes/admin.help'
+import { Route as AdminFeaturedCategoriesRouteImport } from './routes/admin.featured-categories'
 import { Route as AdminErrorsRouteImport } from './routes/admin.errors'
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
 import { Route as AdminCreateOrderRouteImport } from './routes/admin.create-order'
@@ -78,6 +80,7 @@ import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
 import { Route as AdminCampaignsRouteImport } from './routes/admin.campaigns'
 import { Route as AdminAuditLoginsRouteImport } from './routes/admin.audit-logins'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
+import { Route as AdminAnnouncementsRouteImport } from './routes/admin.announcements'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAbandonedRouteImport } from './routes/admin.abandoned'
 import { Route as AccountPrivacyRouteImport } from './routes/account.privacy'
@@ -320,6 +323,11 @@ const AdminPrivacyRoute = AdminPrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPopularPicksRoute = AdminPopularPicksRouteImport.update({
+  id: '/popular-picks',
+  path: '/popular-picks',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPermissionsRoute = AdminPermissionsRouteImport.update({
   id: '/permissions',
   path: '/permissions',
@@ -400,6 +408,11 @@ const AdminHelpRoute = AdminHelpRouteImport.update({
   path: '/help',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFeaturedCategoriesRoute = AdminFeaturedCategoriesRouteImport.update({
+  id: '/featured-categories',
+  path: '/featured-categories',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminErrorsRoute = AdminErrorsRouteImport.update({
   id: '/errors',
   path: '/errors',
@@ -448,6 +461,11 @@ const AdminAuditLoginsRoute = AdminAuditLoginsRouteImport.update({
 const AdminAuditRoute = AdminAuditRouteImport.update({
   id: '/audit',
   path: '/audit',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnnouncementsRoute = AdminAnnouncementsRouteImport.update({
+  id: '/announcements',
+  path: '/announcements',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
@@ -598,6 +616,7 @@ export interface FileRoutesByFullPath {
   '/account/privacy': typeof AccountPrivacyRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/audit': typeof AdminAuditRouteWithChildren
   '/admin/audit-logins': typeof AdminAuditLoginsRoute
   '/admin/campaigns': typeof AdminCampaignsRouteWithChildren
@@ -608,6 +627,7 @@ export interface FileRoutesByFullPath {
   '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/errors': typeof AdminErrorsRoute
+  '/admin/featured-categories': typeof AdminFeaturedCategoriesRoute
   '/admin/help': typeof AdminHelpRoute
   '/admin/home-builder': typeof AdminHomeBuilderRoute
   '/admin/incoming-webhooks': typeof AdminIncomingWebhooksRoute
@@ -624,6 +644,7 @@ export interface FileRoutesByFullPath {
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/permissions': typeof AdminPermissionsRoute
+  '/admin/popular-picks': typeof AdminPopularPicksRoute
   '/admin/privacy': typeof AdminPrivacyRoute
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/reports': typeof AdminReportsRoute
@@ -693,6 +714,7 @@ export interface FileRoutesByTo {
   '/account/privacy': typeof AccountPrivacyRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/audit': typeof AdminAuditRouteWithChildren
   '/admin/audit-logins': typeof AdminAuditLoginsRoute
   '/admin/campaigns': typeof AdminCampaignsRouteWithChildren
@@ -703,6 +725,7 @@ export interface FileRoutesByTo {
   '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/errors': typeof AdminErrorsRoute
+  '/admin/featured-categories': typeof AdminFeaturedCategoriesRoute
   '/admin/help': typeof AdminHelpRoute
   '/admin/home-builder': typeof AdminHomeBuilderRoute
   '/admin/incoming-webhooks': typeof AdminIncomingWebhooksRoute
@@ -719,6 +742,7 @@ export interface FileRoutesByTo {
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/permissions': typeof AdminPermissionsRoute
+  '/admin/popular-picks': typeof AdminPopularPicksRoute
   '/admin/privacy': typeof AdminPrivacyRoute
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/reports': typeof AdminReportsRoute
@@ -790,6 +814,7 @@ export interface FileRoutesById {
   '/account/privacy': typeof AccountPrivacyRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/audit': typeof AdminAuditRouteWithChildren
   '/admin/audit-logins': typeof AdminAuditLoginsRoute
   '/admin/campaigns': typeof AdminCampaignsRouteWithChildren
@@ -800,6 +825,7 @@ export interface FileRoutesById {
   '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/errors': typeof AdminErrorsRoute
+  '/admin/featured-categories': typeof AdminFeaturedCategoriesRoute
   '/admin/help': typeof AdminHelpRoute
   '/admin/home-builder': typeof AdminHomeBuilderRoute
   '/admin/incoming-webhooks': typeof AdminIncomingWebhooksRoute
@@ -816,6 +842,7 @@ export interface FileRoutesById {
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/permissions': typeof AdminPermissionsRoute
+  '/admin/popular-picks': typeof AdminPopularPicksRoute
   '/admin/privacy': typeof AdminPrivacyRoute
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/reports': typeof AdminReportsRoute
@@ -888,6 +915,7 @@ export interface FileRouteTypes {
     | '/account/privacy'
     | '/admin/abandoned'
     | '/admin/analytics'
+    | '/admin/announcements'
     | '/admin/audit'
     | '/admin/audit-logins'
     | '/admin/campaigns'
@@ -898,6 +926,7 @@ export interface FileRouteTypes {
     | '/admin/create-order'
     | '/admin/customers'
     | '/admin/errors'
+    | '/admin/featured-categories'
     | '/admin/help'
     | '/admin/home-builder'
     | '/admin/incoming-webhooks'
@@ -914,6 +943,7 @@ export interface FileRouteTypes {
     | '/admin/payments'
     | '/admin/performance'
     | '/admin/permissions'
+    | '/admin/popular-picks'
     | '/admin/privacy'
     | '/admin/products'
     | '/admin/reports'
@@ -983,6 +1013,7 @@ export interface FileRouteTypes {
     | '/account/privacy'
     | '/admin/abandoned'
     | '/admin/analytics'
+    | '/admin/announcements'
     | '/admin/audit'
     | '/admin/audit-logins'
     | '/admin/campaigns'
@@ -993,6 +1024,7 @@ export interface FileRouteTypes {
     | '/admin/create-order'
     | '/admin/customers'
     | '/admin/errors'
+    | '/admin/featured-categories'
     | '/admin/help'
     | '/admin/home-builder'
     | '/admin/incoming-webhooks'
@@ -1009,6 +1041,7 @@ export interface FileRouteTypes {
     | '/admin/payments'
     | '/admin/performance'
     | '/admin/permissions'
+    | '/admin/popular-picks'
     | '/admin/privacy'
     | '/admin/products'
     | '/admin/reports'
@@ -1079,6 +1112,7 @@ export interface FileRouteTypes {
     | '/account/privacy'
     | '/admin/abandoned'
     | '/admin/analytics'
+    | '/admin/announcements'
     | '/admin/audit'
     | '/admin/audit-logins'
     | '/admin/campaigns'
@@ -1089,6 +1123,7 @@ export interface FileRouteTypes {
     | '/admin/create-order'
     | '/admin/customers'
     | '/admin/errors'
+    | '/admin/featured-categories'
     | '/admin/help'
     | '/admin/home-builder'
     | '/admin/incoming-webhooks'
@@ -1105,6 +1140,7 @@ export interface FileRouteTypes {
     | '/admin/payments'
     | '/admin/performance'
     | '/admin/permissions'
+    | '/admin/popular-picks'
     | '/admin/privacy'
     | '/admin/products'
     | '/admin/reports'
@@ -1497,6 +1533,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPrivacyRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/popular-picks': {
+      id: '/admin/popular-picks'
+      path: '/popular-picks'
+      fullPath: '/admin/popular-picks'
+      preLoaderRoute: typeof AdminPopularPicksRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/permissions': {
       id: '/admin/permissions'
       path: '/permissions'
@@ -1609,6 +1652,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminHelpRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/featured-categories': {
+      id: '/admin/featured-categories'
+      path: '/featured-categories'
+      fullPath: '/admin/featured-categories'
+      preLoaderRoute: typeof AdminFeaturedCategoriesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/errors': {
       id: '/admin/errors'
       path: '/errors'
@@ -1677,6 +1727,13 @@ declare module '@tanstack/react-router' {
       path: '/audit'
       fullPath: '/admin/audit'
       preLoaderRoute: typeof AdminAuditRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/announcements': {
+      id: '/admin/announcements'
+      path: '/announcements'
+      fullPath: '/admin/announcements'
+      preLoaderRoute: typeof AdminAnnouncementsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/analytics': {
@@ -2003,6 +2060,7 @@ const AdminWebhooksRouteWithChildren = AdminWebhooksRoute._addFileChildren(
 interface AdminRouteChildren {
   AdminAbandonedRoute: typeof AdminAbandonedRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
+  AdminAnnouncementsRoute: typeof AdminAnnouncementsRoute
   AdminAuditRoute: typeof AdminAuditRouteWithChildren
   AdminAuditLoginsRoute: typeof AdminAuditLoginsRoute
   AdminCampaignsRoute: typeof AdminCampaignsRouteWithChildren
@@ -2013,6 +2071,7 @@ interface AdminRouteChildren {
   AdminCreateOrderRoute: typeof AdminCreateOrderRoute
   AdminCustomersRoute: typeof AdminCustomersRouteWithChildren
   AdminErrorsRoute: typeof AdminErrorsRoute
+  AdminFeaturedCategoriesRoute: typeof AdminFeaturedCategoriesRoute
   AdminHelpRoute: typeof AdminHelpRoute
   AdminHomeBuilderRoute: typeof AdminHomeBuilderRoute
   AdminIncomingWebhooksRoute: typeof AdminIncomingWebhooksRoute
@@ -2029,6 +2088,7 @@ interface AdminRouteChildren {
   AdminPaymentsRoute: typeof AdminPaymentsRoute
   AdminPerformanceRoute: typeof AdminPerformanceRoute
   AdminPermissionsRoute: typeof AdminPermissionsRoute
+  AdminPopularPicksRoute: typeof AdminPopularPicksRoute
   AdminPrivacyRoute: typeof AdminPrivacyRoute
   AdminProductsRoute: typeof AdminProductsRouteWithChildren
   AdminReportsRoute: typeof AdminReportsRoute
@@ -2051,6 +2111,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAbandonedRoute: AdminAbandonedRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
+  AdminAnnouncementsRoute: AdminAnnouncementsRoute,
   AdminAuditRoute: AdminAuditRouteWithChildren,
   AdminAuditLoginsRoute: AdminAuditLoginsRoute,
   AdminCampaignsRoute: AdminCampaignsRouteWithChildren,
@@ -2061,6 +2122,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCreateOrderRoute: AdminCreateOrderRoute,
   AdminCustomersRoute: AdminCustomersRouteWithChildren,
   AdminErrorsRoute: AdminErrorsRoute,
+  AdminFeaturedCategoriesRoute: AdminFeaturedCategoriesRoute,
   AdminHelpRoute: AdminHelpRoute,
   AdminHomeBuilderRoute: AdminHomeBuilderRoute,
   AdminIncomingWebhooksRoute: AdminIncomingWebhooksRoute,
@@ -2077,6 +2139,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminPaymentsRoute: AdminPaymentsRoute,
   AdminPerformanceRoute: AdminPerformanceRoute,
   AdminPermissionsRoute: AdminPermissionsRoute,
+  AdminPopularPicksRoute: AdminPopularPicksRoute,
   AdminPrivacyRoute: AdminPrivacyRoute,
   AdminProductsRoute: AdminProductsRouteWithChildren,
   AdminReportsRoute: AdminReportsRoute,

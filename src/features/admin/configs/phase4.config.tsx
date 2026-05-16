@@ -371,3 +371,78 @@ errorLogsConfig.form = [
     { value: "critical", label: { ar: "حرج", en: "Critical" } },
   ]},
 ];
+
+/* ============================================================
+   Storefront content surfaces previously unmanageable from admin
+   ============================================================ */
+
+export const featuredCategoriesConfig: AdminPageConfig = {
+  title: { ar: "أقسام مميزة (الصفحة الرئيسية)", en: "Featured Categories (Home)" },
+  description: { ar: "البطاقات المعروضة في شريط الأقسام المميزة على الصفحة الرئيسية", en: "Tiles shown in the featured categories strip on the homepage" },
+  table: "featured_categories",
+  orderBy: { column: "sort_order", ascending: true },
+  columns: [
+    { key: "image_url", label: { ar: "الصورة", en: "Image" }, type: "image", width: "w-16" },
+    { key: "label_ar", label: { ar: "الاسم (AR)", en: "Label (AR)" } },
+    { key: "label_en", label: { ar: "الاسم (EN)", en: "Label (EN)" }, hideOnMobile: true },
+    { key: "link_url", label: { ar: "الرابط", en: "Link" }, hideOnMobile: true },
+    { key: "sort_order", label: { ar: "الترتيب", en: "Order" }, type: "number" },
+    { key: "is_active", label: { ar: "نشط", en: "Active" }, type: "boolean" },
+  ],
+  filters: [{ key: "search", type: "search", columns: ["label_ar", "label_en"] }],
+};
+featuredCategoriesConfig.actions = { create: true, edit: true, delete: true, export: true };
+featuredCategoriesConfig.form = [
+  { key: "label_ar", label: { ar: "الاسم (AR)", en: "Label (AR)" }, type: "text", required: true },
+  { key: "label_en", label: { ar: "الاسم (EN)", en: "Label (EN)" }, type: "text", required: true },
+  { key: "image_url", label: { ar: "الصورة", en: "Image" }, type: "image", bucket: "category-media", folder: "featured" },
+  { key: "link_url", label: { ar: "الرابط (مثلاً /category/dresses)", en: "Link URL (e.g. /category/dresses)" }, type: "text", required: true },
+  { key: "sort_order", label: { ar: "الترتيب", en: "Sort order" }, type: "number", min: 0, defaultValue: 0 },
+  { key: "is_active", label: { ar: "نشط", en: "Active" }, type: "boolean", defaultValue: true },
+];
+
+export const popularPicksConfig: AdminPageConfig = {
+  title: { ar: "الأكثر رواجاً (الصفحة الرئيسية)", en: "Popular Picks (Home)" },
+  description: { ar: "البطاقات المعروضة في شريط الأكثر رواجاً على الصفحة الرئيسية", en: "Tiles shown in the Popular Picks strip on the homepage" },
+  table: "popular_picks",
+  orderBy: { column: "sort_order", ascending: true },
+  columns: [
+    { key: "image_url", label: { ar: "الصورة", en: "Image" }, type: "image", width: "w-16" },
+    { key: "label_ar", label: { ar: "الاسم (AR)", en: "Label (AR)" } },
+    { key: "label_en", label: { ar: "الاسم (EN)", en: "Label (EN)" }, hideOnMobile: true },
+    { key: "link_url", label: { ar: "الرابط", en: "Link" }, hideOnMobile: true },
+    { key: "sort_order", label: { ar: "الترتيب", en: "Order" }, type: "number" },
+    { key: "is_active", label: { ar: "نشط", en: "Active" }, type: "boolean" },
+  ],
+  filters: [{ key: "search", type: "search", columns: ["label_ar", "label_en"] }],
+};
+popularPicksConfig.actions = { create: true, edit: true, delete: true, export: true };
+popularPicksConfig.form = [
+  { key: "label_ar", label: { ar: "الاسم (AR)", en: "Label (AR)" }, type: "text", required: true },
+  { key: "label_en", label: { ar: "الاسم (EN)", en: "Label (EN)" }, type: "text", required: true },
+  { key: "image_url", label: { ar: "الصورة", en: "Image" }, type: "image", required: true, bucket: "category-media", folder: "popular" },
+  { key: "link_url", label: { ar: "الرابط", en: "Link URL" }, type: "text", required: true },
+  { key: "sort_order", label: { ar: "الترتيب", en: "Sort order" }, type: "number", min: 0, defaultValue: 0 },
+  { key: "is_active", label: { ar: "نشط", en: "Active" }, type: "boolean", defaultValue: true },
+];
+
+export const announcementsConfig: AdminPageConfig = {
+  title: { ar: "الشريط الإعلاني", en: "Announcement Bar" },
+  description: { ar: "الرسائل التي تتنقّل في الشريط العلوي للمتجر", en: "Messages that rotate in the storefront top bar" },
+  table: "announcement_messages",
+  orderBy: { column: "sort_order", ascending: true },
+  columns: [
+    { key: "message_ar", label: { ar: "الرسالة (AR)", en: "Message (AR)" } },
+    { key: "message_en", label: { ar: "الرسالة (EN)", en: "Message (EN)" }, hideOnMobile: true },
+    { key: "sort_order", label: { ar: "الترتيب", en: "Order" }, type: "number" },
+    { key: "is_active", label: { ar: "نشط", en: "Active" }, type: "boolean" },
+  ],
+  filters: [{ key: "search", type: "search", columns: ["message_ar", "message_en"] }],
+};
+announcementsConfig.actions = { create: true, edit: true, delete: true, export: true };
+announcementsConfig.form = [
+  { key: "message_ar", label: { ar: "الرسالة (AR)", en: "Message (AR)" }, type: "text", required: true, maxLength: 200 },
+  { key: "message_en", label: { ar: "الرسالة (EN)", en: "Message (EN)" }, type: "text", required: true, maxLength: 200 },
+  { key: "sort_order", label: { ar: "الترتيب", en: "Sort order" }, type: "number", min: 0, defaultValue: 0 },
+  { key: "is_active", label: { ar: "نشط", en: "Active" }, type: "boolean", defaultValue: true },
+];
