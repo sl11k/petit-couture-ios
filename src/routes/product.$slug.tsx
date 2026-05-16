@@ -511,16 +511,16 @@ function ProductDetails() {
 
             {/* Price */}
             <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-              <span className="text-[22px] text-foreground tracking-tight font-medium">{fmt(product.price)} {product.currency}</span>
+              <span className="text-[22px] text-foreground tracking-tight font-medium">{fmtPrice(product.price)}</span>
               {product.compareAtPrice && (
-                <span className="text-[14px] text-muted-foreground line-through">{fmt(product.compareAtPrice)}</span>
+                <span className="text-[14px] text-muted-foreground line-through">{fmtPrice(product.compareAtPrice)}</span>
               )}
               {discountPct > 0 && (
                 <span className="text-[12px] text-emerald-700 font-medium">{ar ? `وفّر ${discountPct}%` : `Save ${discountPct}%`}</span>
               )}
             </div>
             <p className="text-[12px] text-muted-foreground mt-1">
-              {ar ? `أو 4 دفعات بدون فوائد ${fmt(Math.round(product.price / 4))} ر.س عبر تمارا` : `Or 4 interest-free of ${fmt(Math.round(product.price / 4))} ${product.currency} with Tamara`}
+              {ar ? `أو 4 دفعات بدون فوائد ${fmtPrice(product.price / 4)} عبر تمارا` : `Or 4 interest-free of ${fmtPrice(product.price / 4)} with Tamara`}
             </p>
           </section>
 
