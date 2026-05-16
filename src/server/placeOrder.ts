@@ -155,6 +155,17 @@ export const placeOrder = createServerFn({ method: "POST" })
       .insert(items);
     if (itemsErr) throw new Error(itemsErr.message);
 
+    // 3b. Link product_id on order_items + decrement stock atomically.
+    try {
+      const { error: finalizeErr } = await (supabaseAdmin as any).rpc(
+        "finalize_order_stock",
+        { _order_id: order.id },
+      );
+      if (finalizeErr) console.error("[placeOrder] finalize_order_stock:", finalizeErr.message);
+    } catch (e: any) {
+      console.error("[placeOrder] finalize_order_stock threw:", e?.message || e);
+    }
+
     // 4. Mark abandoned cart converted (best-effort).
     await supabaseAdmin
       .from("abandoned_carts")
