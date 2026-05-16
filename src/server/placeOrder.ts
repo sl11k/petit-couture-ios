@@ -207,12 +207,17 @@ export const placeOrder = createServerFn({ method: "POST" })
           discount_amount,
           order_total: finalTotal,
         });
-        await (supabaseAdmin as any).rpc("exec_sql", {}).catch(() => null);
+        const { data: cRow } = await supabaseAdmin
+          .from("coupons")
+          .select("used_count, discount_total, revenue_total")
+          .eq("id", coupon_id)
+          .single();
         await (supabaseAdmin as any)
           .from("coupons")
           .update({
-            used_count: (await supabaseAdmin.from("coupons").select("used_count").eq("id", coupon_id).single()).data?.used_count + 1 || 1,
-            discount_total: undefined,
+            used_count: (cRow?.used_count ?? 0) + 1,
+            discount_total: Number(cRow?.discount_total ?? 0) + discount_amount,
+            revenue_total: Number(cRow?.revenue_total ?? 0) + finalTotal,
           })
           .eq("id", coupon_id);
       } catch (e: any) {
