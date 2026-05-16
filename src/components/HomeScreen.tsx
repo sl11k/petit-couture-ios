@@ -555,7 +555,7 @@ function DynamicSection({ section, products, ar }: { section: HomeSection; produ
                 )}
               </div>
               <span className="mt-3 text-[14px] text-foreground/85 font-medium tracking-tight text-center">{name}</span>
-              {p.price != null && <span className="mt-1 text-[12.5px] text-gold-deep">{p.price.toFixed(2)} {ar ? "ر.س" : "SAR"}</span>}
+              {p.price != null && <span className="mt-1 text-[12.5px] text-gold-deep">{fmt(p.price)}</span>}
             </a>
           );
         })}
