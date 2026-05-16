@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { getProductForCategory, categories, productsByCategory } from "@/data/categories";
 import { useDbProductBySlug } from "@/hooks/useDbProducts";
+import { useProductExtras } from "@/hooks/useProductExtras";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useBag } from "@/state/BagContext";
@@ -104,6 +105,7 @@ function ProductDetails() {
   const { slug } = Route.useParams();
   const router = useRouter();
   const { product } = useDbProductBySlug(slug);
+  const { reviews: dbReviews, bundles: dbBundles, offers: dbOffers } = useProductExtras(slug);
   const { isRTL, lang } = useLanguage();
   const ar = isRTL;
 
@@ -303,15 +305,31 @@ function ProductDetails() {
     ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
     : 0;
 
-  const filteredReviews = reviewFilter
-    ? product.reviews.filter((r) => r.rating === reviewFilter)
+  const effectiveReviews = dbReviews.length
+    ? dbReviews.map((r) => ({
+        id: r.id,
+        name: r.customer_name || (ar ? "عميل" : "Customer"),
+        rating: r.rating,
+        title: r.title || "",
+        body: r.body || "",
+        verified: !!r.verified_purchase,
+        date: new Date(r.created_at).toLocaleDateString(lang === "ar" ? "ar-EG" : "en-US"),
+      }))
     : product.reviews;
+  const effectiveReviewsCount = dbReviews.length || product.reviewsCount;
+  const effectiveRating = dbReviews.length
+    ? dbReviews.reduce((s, r) => s + r.rating, 0) / dbReviews.length
+    : product.rating;
+
+  const filteredReviews = reviewFilter
+    ? effectiveReviews.filter((r) => r.rating === reviewFilter)
+    : effectiveReviews;
 
   const ratingBreakdown = [5, 4, 3, 2, 1].map((star) => ({
     star,
-    count: product.reviews.filter((r) => r.rating === star).length,
-    pct: product.reviews.length
-      ? (product.reviews.filter((r) => r.rating === star).length / product.reviews.length) * 100
+    count: effectiveReviews.filter((r) => r.rating === star).length,
+    pct: effectiveReviews.length
+      ? (effectiveReviews.filter((r) => r.rating === star).length / effectiveReviews.length) * 100
       : 0,
   }));
 
@@ -497,13 +515,13 @@ function ProductDetails() {
             <div className="mt-2 flex items-center gap-3 text-[12px] text-muted-foreground">
               <div className="flex items-center gap-1">
                 {[1,2,3,4,5].map((i) => (
-                  <Star key={i} className={`h-[13px] w-[13px] ${i <= Math.round(product.rating) ? "text-gold-deep fill-gold-deep" : "text-border"}`} />
+                  <Star key={i} className={`h-[13px] w-[13px] ${i <= Math.round(effectiveRating) ? "text-gold-deep fill-gold-deep" : "text-border"}`} />
                 ))}
-                <span className="ms-1 text-foreground/80">{product.rating.toFixed(1)}</span>
+                <span className="ms-1 text-foreground/80">{effectiveRating.toFixed(1)}</span>
               </div>
               <span>·</span>
               <button onClick={() => document.getElementById("reviews")?.scrollIntoView({ behavior: "smooth" })} className="hover:text-foreground underline-offset-4 hover:underline">
-                {t.reviews(product.reviewsCount)}
+                {t.reviews(effectiveReviewsCount)}
               </button>
               <span>·</span>
               <span className="truncate">{t.sku}: {product.sku}</span>
@@ -778,20 +796,66 @@ function ProductDetails() {
             </button>
           </section>
 
+          {dbOffers.length > 0 && (
+            <section className="px-5 mt-6">
+              <h2 className="font-serif text-[18px] text-foreground mb-2">{ar ? "عروض خاصة" : "Special offers"}</h2>
+              <ul className="space-y-2">
+                {dbOffers.map((o) => (
+                  <li key={o.id} className="rounded-[14px] border border-gold-deep/30 bg-gold-deep/5 p-3 text-[13px] text-foreground/85 flex items-start gap-2">
+                    <Gift className="h-4 w-4 text-gold-deep mt-0.5 shrink-0" />
+                    <div>
+                      <p className="font-medium">
+                        {ar ? (o.config?.title_ar || o.config?.title || (ar ? "عرض" : "Offer")) : (o.config?.title_en || o.config?.title || "Offer")}
+                      </p>
+                      {(o.config?.description_ar || o.config?.description_en || o.config?.description) && (
+                        <p className="text-[12px] text-muted-foreground mt-0.5">
+                          {ar ? (o.config.description_ar || o.config.description) : (o.config.description_en || o.config.description)}
+                        </p>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {dbBundles.length > 0 && (
+            <section className="px-5 mt-6">
+              <h2 className="font-serif text-[18px] text-foreground mb-2">{ar ? "اشترِ ضمن باقة ووفّر" : "Save with a bundle"}</h2>
+              <ul className="space-y-2">
+                {dbBundles.map((b) => (
+                  <li key={b.id} className="rounded-[14px] border border-border p-3 text-[13px] text-foreground/85">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-medium">{b.name}</p>
+                      {b.bundle_price != null && (
+                        <span className="text-gold-deep font-semibold whitespace-nowrap">{fmtPrice(Number(b.bundle_price))}</span>
+                      )}
+                      {b.bundle_price == null && b.discount_percent != null && (
+                        <span className="text-gold-deep font-semibold whitespace-nowrap">-{b.discount_percent}%</span>
+                      )}
+                    </div>
+                    {b.description && <p className="text-[12px] text-muted-foreground mt-1">{b.description}</p>}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           {/* Reviews */}
           <section id="reviews" className="px-5 mt-9">
             <div className="flex items-center justify-between">
               <h2 className="font-serif text-[20px] text-foreground">{t.customerReviews}</h2>
-              <span className="text-[12px] text-muted-foreground">{t.reviews(product.reviewsCount)}</span>
+              <span className="text-[12px] text-muted-foreground">{t.reviews(effectiveReviewsCount)}</span>
             </div>
+
 
             {/* Rating breakdown */}
             <div className="mt-4 flex items-center gap-5">
               <div className="text-center">
-                <div className="text-[34px] font-serif text-foreground leading-none">{product.rating.toFixed(1)}</div>
+                <div className="text-[34px] font-serif text-foreground leading-none">{effectiveRating.toFixed(1)}</div>
                 <div className="flex items-center justify-center gap-0.5 mt-1">
                   {[1,2,3,4,5].map((i) => (
-                    <Star key={i} className={`h-[12px] w-[12px] ${i <= Math.round(product.rating) ? "text-gold-deep fill-gold-deep" : "text-border"}`} />
+                    <Star key={i} className={`h-[12px] w-[12px] ${i <= Math.round(effectiveRating) ? "text-gold-deep fill-gold-deep" : "text-border"}`} />
                   ))}
                 </div>
               </div>
