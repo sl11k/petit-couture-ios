@@ -302,6 +302,37 @@ function CheckoutPage() {
       }
 
       placedRef.current = true;
+
+      // Tabby: create session and redirect to hosted checkout
+      if (payment === "tabby") {
+        try {
+          const { createTabbyCheckout } = await import("@/lib/tabby.functions");
+          const origin = window.location.origin;
+          const result = await createTabbyCheckout({
+            data: {
+              order_id: order.id,
+              success_url: `${origin}/order-confirmation/${order.order_number}?tabby=success`,
+              cancel_url: `${origin}/checkout?tabby=cancel`,
+              failure_url: `${origin}/checkout?tabby=failure`,
+              lang: isRTL ? "ar" : "en",
+            },
+          });
+          if (result.ok) {
+            bag.clear();
+            window.location.href = result.web_url;
+            return;
+          }
+          toast.error(result.message);
+          setPlacing(false);
+          return;
+        } catch (err) {
+          console.error("Tabby checkout error", err);
+          toast.error(isRTL ? "تعذّر بدء دفع تابي" : "Could not start Tabby checkout");
+          setPlacing(false);
+          return;
+        }
+      }
+
       bag.clear();
       navigate({
         to: "/order-confirmation/$orderNumber",
