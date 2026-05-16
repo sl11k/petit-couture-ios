@@ -545,10 +545,7 @@ function SearchPage() {
                       {isRTL ? p.name_ar : p.name_en}
                     </div>
                     <div className="mt-2.5 font-serif text-[17px] text-foreground tabular-nums">
-                      {fmtNum(p.price)}
-                      <span className="text-[11px] text-muted-foreground ms-1 tracking-soft">
-                        {p.currency || (isRTL ? "ر.س" : "SAR")}
-                      </span>
+                      {fmtPrice(p.price)}
                     </div>
                   </div>
                 </Link>
