@@ -16,6 +16,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { MediaUploader } from "./MediaUploader";
+import { ProductMediaGallery } from "./ProductMediaGallery";
 import type { Bilingual, FormFieldDef } from "../types";
 import { cn } from "@/lib/utils";
 
@@ -59,6 +61,14 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
       case "url":
         s = z.string().url(ar ? "رابط غير صحيح" : "Invalid URL");
         break;
+      case "image":
+      case "video":
+        // Storage public URL — accept any non-empty string
+        s = z.string();
+        break;
+      case "gallery":
+        s = z.array(z.string()).default([]);
+        break;
       case "json":
         s = z.string().refine(
           (v) => {
@@ -76,8 +86,11 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
         if (f.maxLength) s = (s as z.ZodString).max(f.maxLength);
         if (f.pattern) s = (s as z.ZodString).regex(new RegExp(f.pattern), ar ? "صيغة غير صحيحة" : "Invalid format");
     }
-    if (!f.required) s = s.optional().or(z.literal("")).or(z.null());
-    else if (f.type === "text" || f.type === "textarea" || f.type === "select" || f.type === "url" || f.type === "email") {
+    if (f.type === "gallery") {
+      // arrays are always present (possibly empty)
+    } else if (!f.required) {
+      s = s.optional().or(z.literal("")).or(z.null());
+    } else if (f.type === "text" || f.type === "textarea" || f.type === "select" || f.type === "url" || f.type === "email" || f.type === "image" || f.type === "video") {
       s = (s as z.ZodString).min(1, ar ? "حقل مطلوب" : "Required");
     }
     shape[f.key] = s;
@@ -89,9 +102,11 @@ function coerceForDb(fields: FormFieldDef[], values: Record<string, any>) {
   const out: Record<string, any> = {};
   for (const f of fields) {
     let v = values[f.key];
+    if (f.type === "gallery") {
+      out[f.key] = Array.isArray(v) ? v : [];
+      continue;
+    }
     if (v === "" || v === undefined) {
-      // Fallback to defaultValue when the field is empty (prevents NOT NULL violations
-      // for fields like JSON config that have a sane default such as {}).
       if (f.defaultValue !== undefined && f.defaultValue !== null && f.defaultValue !== "") {
         out[f.key] = f.defaultValue;
       } else {
@@ -111,6 +126,10 @@ function defaultsFrom(fields: FormFieldDef[], initial?: Record<string, any>) {
   const out: Record<string, any> = {};
   for (const f of fields) {
     let v = initial?.[f.key] ?? f.defaultValue;
+    if (f.type === "gallery") {
+      out[f.key] = Array.isArray(v) ? v : [];
+      continue;
+    }
     if (f.type === "json" && v && typeof v !== "string") v = JSON.stringify(v, null, 2);
     if (f.type === "boolean") v = Boolean(v);
     if (v === undefined || v === null) v = f.type === "boolean" ? false : "";
@@ -192,7 +211,7 @@ export function FormDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {visibleFields.map((f) => {
-              const isFull = f.fullWidth ?? (f.type === "textarea" || f.type === "json");
+              const isFull = f.fullWidth ?? (f.type === "textarea" || f.type === "json" || f.type === "gallery" || f.type === "image" || f.type === "video");
               const lbl = ar ? f.label.ar : f.label.en;
               const ph = f.placeholder ? (ar ? f.placeholder.ar : f.placeholder.en) : undefined;
               const help = f.helpText ? (ar ? f.helpText.ar : f.helpText.en) : undefined;
@@ -202,7 +221,23 @@ export function FormDialog({
                   <Label htmlFor={f.key} className="text-xs">
                     {lbl} {f.required && <span className="text-destructive">*</span>}
                   </Label>
-                  {f.type === "textarea" || f.type === "json" ? (
+                  {f.type === "image" || f.type === "video" ? (
+                    <MediaUploader
+                      value={values[f.key] ?? ""}
+                      onChange={(url) => setVal(f.key, url ?? "")}
+                      bucket={f.bucket || (f.type === "video" ? "product-media" : "content-media")}
+                      folder={f.folder}
+                      kind={f.type}
+                    />
+                  ) : f.type === "gallery" ? (
+                    <ProductMediaGallery
+                      value={Array.isArray(values[f.key]) ? values[f.key] : []}
+                      onChange={(urls) => setVal(f.key, urls)}
+                      bucket={f.bucket || "product-media"}
+                      folder={f.folder || "gallery"}
+                      max={f.maxItems ?? 20}
+                    />
+                  ) : f.type === "textarea" || f.type === "json" ? (
                     <Textarea
                       id={f.key}
                       rows={f.rows ?? (f.type === "json" ? 6 : 4)}
@@ -246,7 +281,7 @@ export function FormDialog({
                         : f.type === "color" ? "color"
                         : f.type === "tel" ? "tel"
                         : f.type === "email" ? "email"
-                        : f.type === "url" || f.type === "image" ? "url"
+                        : f.type === "url" ? "url"
                         : "text"
                       }
                       value={values[f.key] ?? ""}

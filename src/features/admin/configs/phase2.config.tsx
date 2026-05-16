@@ -278,7 +278,7 @@ shippingConfig.form = [
     { value: "international", label: { ar: "دولي", en: "International" } },
     { value: "express", label: { ar: "سريع", en: "Express" } },
   ]},
-  { key: "logo_url", label: { ar: "رابط الشعار", en: "Logo URL" }, type: "url" },
+  { key: "logo_url", label: { ar: "شعار الناقل", en: "Carrier logo" }, type: "image", bucket: "content-media", folder: "carriers" },
   { key: "api_endpoint", label: { ar: "API Endpoint", en: "API endpoint" }, type: "url" },
   { key: "default_delivery_days_min", label: { ar: "أقل أيام تسليم", en: "Min delivery days" }, type: "number", min: 0, defaultValue: 1 },
   { key: "default_delivery_days_max", label: { ar: "أكثر أيام تسليم", en: "Max delivery days" }, type: "number", min: 0, defaultValue: 5 },

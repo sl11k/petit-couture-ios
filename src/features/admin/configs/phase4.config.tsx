@@ -268,7 +268,7 @@ campaignsConfig.form = [
   { key: "starts_at", label: { ar: "يبدأ", en: "Starts at" }, type: "datetime" },
   { key: "ends_at", label: { ar: "ينتهي", en: "Ends at" }, type: "datetime" },
   { key: "coupon_code", label: { ar: "كود الكوبون", en: "Coupon code" }, type: "text" },
-  { key: "banner_image_url", label: { ar: "صورة البانر", en: "Banner image URL" }, type: "url" },
+  { key: "banner_image_url", label: { ar: "صورة البانر", en: "Banner image" }, type: "image", bucket: "banner-media", folder: "campaigns" },
   { key: "banner_link_url", label: { ar: "رابط البانر", en: "Banner link" }, type: "url" },
   { key: "email_subject", label: { ar: "موضوع الإيميل", en: "Email subject" }, type: "text" },
   { key: "description", label: { ar: "الوصف", en: "Description" }, type: "textarea", rows: 3 },
@@ -280,7 +280,7 @@ landingPagesConfig.form = [
   { key: "title", label: { ar: "العنوان", en: "Title" }, type: "text", required: true, maxLength: 200 },
   { key: "slug", label: { ar: "Slug", en: "Slug" }, type: "text", required: true, pattern: "^[a-z0-9-]+$" },
   { key: "subtitle", label: { ar: "العنوان الفرعي", en: "Subtitle" }, type: "text" },
-  { key: "hero_image", label: { ar: "صورة الهيرو", en: "Hero image URL" }, type: "url" },
+  { key: "hero_image", label: { ar: "صورة الهيرو", en: "Hero image" }, type: "image", bucket: "banner-media", folder: "landing" },
   { key: "cta_text", label: { ar: "نص الزر", en: "CTA text" }, type: "text" },
   { key: "cta_url", label: { ar: "رابط الزر", en: "CTA URL" }, type: "url" },
   { key: "coupon_code", label: { ar: "كود الكوبون", en: "Coupon code" }, type: "text" },
@@ -290,7 +290,7 @@ landingPagesConfig.form = [
 
 storefrontConfig.actions = { ...storefrontConfig.actions, create: true, edit: true, delete: true };
 storefrontConfig.form = [
-  { key: "image_url", label: { ar: "رابط الصورة", en: "Image URL" }, type: "url", required: true },
+  { key: "image_url", label: { ar: "صورة البانر/الشريحة", en: "Banner / slide image" }, type: "image", required: true, bucket: "banner-media", folder: "storefront" },
   { key: "title_ar", label: { ar: "العنوان (AR)", en: "Title (AR)" }, type: "text" },
   { key: "title_en", label: { ar: "العنوان (EN)", en: "Title (EN)" }, type: "text" },
   { key: "subtitle_ar", label: { ar: "العنوان الفرعي (AR)", en: "Subtitle (AR)" }, type: "text" },
@@ -353,7 +353,7 @@ helpConfig.form = [
   ]},
   { key: "title_ar", label: { ar: "العنوان (AR)", en: "Title (AR)" }, type: "text", required: true },
   { key: "title_en", label: { ar: "العنوان (EN)", en: "Title (EN)" }, type: "text", required: true },
-  { key: "video_url", label: { ar: "رابط الفيديو", en: "Video URL" }, type: "url" },
+  { key: "video_url", label: { ar: "الفيديو", en: "Video" }, type: "video", bucket: "content-media", folder: "help" },
   { key: "external_url", label: { ar: "رابط خارجي", en: "External URL" }, type: "url" },
   { key: "sort_order", label: { ar: "الترتيب", en: "Sort order" }, type: "number", min: 0, defaultValue: 0 },
   { key: "is_published", label: { ar: "منشور", en: "Published" }, type: "boolean", defaultValue: true },

@@ -86,7 +86,7 @@ const campaignForm: FormFieldDef[] = [
   { key: "ends_at", label: { ar: "ينتهي", en: "Ends at" }, type: "datetime" },
   { key: "email_subject", label: { ar: "موضوع البريد", en: "Email subject" }, type: "text" },
   { key: "email_body", label: { ar: "نص الرسالة", en: "Body" }, type: "textarea", rows: 6 },
-  { key: "banner_image_url", label: { ar: "صورة البانر", en: "Banner image" }, type: "url" },
+  { key: "banner_image_url", label: { ar: "صورة البانر", en: "Banner image" }, type: "image", bucket: "banner-media", folder: "campaigns" },
   { key: "banner_link_url", label: { ar: "رابط البانر", en: "Banner link" }, type: "url" },
 ];
 
@@ -153,7 +153,7 @@ const landingForm: FormFieldDef[] = [
   { key: "slug", label: { ar: "المسار", en: "Slug" }, type: "text", required: true, pattern: "^[a-z0-9-]+$" },
   { key: "subtitle", label: { ar: "العنوان الفرعي", en: "Subtitle" }, type: "text" },
   { key: "description", label: { ar: "الوصف", en: "Description" }, type: "textarea", rows: 3 },
-  { key: "hero_image", label: { ar: "صورة الغلاف", en: "Hero image" }, type: "url" },
+  { key: "hero_image", label: { ar: "صورة الغلاف", en: "Hero image" }, type: "image", bucket: "banner-media", folder: "landing" },
   { key: "cta_text", label: { ar: "نص الزر", en: "CTA text" }, type: "text" },
   { key: "cta_url", label: { ar: "رابط الزر", en: "CTA URL" }, type: "url" },
   { key: "coupon_code", label: { ar: "كوبون", en: "Coupon code" }, type: "text" },
