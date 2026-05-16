@@ -5,6 +5,7 @@ import { LazyImage } from "@/components/LazyImage";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { buildMeta, breadcrumbJsonLd, collectionJsonLd, canonical } from "@/lib/seo";
+import { usePriceFormatter } from "@/state/CurrencyContext";
 
 type SortMode = "manual" | "newest" | "best_sellers" | "price_asc" | "price_desc";
 
