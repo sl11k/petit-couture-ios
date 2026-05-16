@@ -38,7 +38,7 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
         }
 
         // Log for audit
-        await supabaseAdmin.from("payment_webhooks_log").insert({
+        await (supabaseAdmin.from("payment_webhooks_log") as any).insert({
           gateway: "tabby",
           event_type: payload?.status || "unknown",
           order_number: payload?.order?.reference_id || null,
