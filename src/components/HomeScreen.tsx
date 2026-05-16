@@ -11,6 +11,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useImpression } from "@/hooks/useImpression";
 import { BrandLogo } from "@/components/Logo";
+import { usePriceFormatter } from "@/state/CurrencyContext";
 
 import {
   fetchAnnouncements,
@@ -406,6 +407,7 @@ export function HomeScreen() {
 }
 
 function BestSellersSection({ ar }: { ar: boolean }) {
+  const fmt = usePriceFormatter();
   const [items, setItems] = useState<Array<{
     id: string;
     name_ar: string | null;
@@ -492,11 +494,11 @@ function BestSellersSection({ ar }: { ar: boolean }) {
             </span>
             <div className="mt-1 flex items-baseline gap-2">
               <span className="text-[13px] text-primary font-semibold">
-                {p.price.toFixed(0)} {ar ? "ر.س" : "SAR"}
+                {fmt(p.price)}
               </span>
               {p.compareAt && (
                 <span className="text-[11.5px] text-muted-foreground line-through">
-                  {p.compareAt.toFixed(0)}
+                  {fmt(p.compareAt)}
                 </span>
               )}
             </div>
@@ -518,6 +520,7 @@ function BestSellersSection({ ar }: { ar: boolean }) {
 }
 
 function DynamicSection({ section, products, ar }: { section: HomeSection; products: ResolvedProduct[]; ar: boolean }) {
+  const fmt = usePriceFormatter();
   const title = ar ? section.title_ar : section.title_en;
   const eyebrow = ar ? section.eyebrow_ar : section.eyebrow_en;
 
@@ -552,7 +555,7 @@ function DynamicSection({ section, products, ar }: { section: HomeSection; produ
                 )}
               </div>
               <span className="mt-3 text-[14px] text-foreground/85 font-medium tracking-tight text-center">{name}</span>
-              {p.price != null && <span className="mt-1 text-[12.5px] text-gold-deep">{p.price.toFixed(2)} {ar ? "ر.س" : "SAR"}</span>}
+              {p.price != null && <span className="mt-1 text-[12.5px] text-gold-deep">{fmt(p.price)}</span>}
             </a>
           );
         })}

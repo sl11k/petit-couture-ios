@@ -5,6 +5,7 @@ import { LazyImage } from "@/components/LazyImage";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { buildMeta, breadcrumbJsonLd, collectionJsonLd, canonical } from "@/lib/seo";
+import { usePriceFormatter } from "@/state/CurrencyContext";
 
 type SortMode = "manual" | "newest" | "best_sellers" | "price_asc" | "price_desc";
 
@@ -203,6 +204,7 @@ function CollectionView() {
 }
 
 function ProductCard({ p, ar }: { p: Product; ar: boolean }) {
+  const fmt = usePriceFormatter();
   const name = ar ? (p.name_ar ?? p.name_en) : (p.name_en ?? p.name_ar);
   const href = p.slug ? `/product/${p.slug}` : "#";
   return (
@@ -222,7 +224,7 @@ function ProductCard({ p, ar }: { p: Product; ar: boolean }) {
       <div className="mt-2.5">
         <p className="text-sm text-foreground line-clamp-1">{name}</p>
         {p.price != null && (
-          <p className="text-[13px] text-gold-deep mt-0.5">{p.price.toFixed(2)} {ar ? "ر.س" : "SAR"}</p>
+          <p className="text-[13px] text-gold-deep mt-0.5">{fmt(p.price)}</p>
         )}
       </div>
     </a>

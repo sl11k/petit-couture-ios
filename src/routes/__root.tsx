@@ -4,6 +4,7 @@ import { AuthProvider } from "@/state/AuthContext";
 import { WishlistProvider } from "@/state/WishlistContext";
 import { BagProvider } from "@/state/BagContext";
 import { AddressProvider } from "@/state/AddressContext";
+import { CurrencyProvider } from "@/state/CurrencyContext";
 import { Toaster } from "@/components/ui/sonner";
 import { WishlistBanner } from "@/components/WishlistBanner";
 import { DesktopHeader } from "@/components/DesktopHeader";
@@ -130,19 +131,21 @@ function RootComponent() {
   return (
     <GlobalErrorBoundary>
       <LanguageProvider>
-        <AuthProvider>
-          <WishlistProvider>
-            <BagProvider>
-              <AddressProvider>
-                <StorefrontShell
-                  showStoreChrome={showStoreChrome}
-                  hideFooter={hideFooter}
-                  isAdmin={isAdmin}
-                />
-              </AddressProvider>
-            </BagProvider>
-          </WishlistProvider>
-        </AuthProvider>
+        <CurrencyProvider>
+          <AuthProvider>
+            <WishlistProvider>
+              <BagProvider>
+                <AddressProvider>
+                  <StorefrontShell
+                    showStoreChrome={showStoreChrome}
+                    hideFooter={hideFooter}
+                    isAdmin={isAdmin}
+                  />
+                </AddressProvider>
+              </BagProvider>
+            </WishlistProvider>
+          </AuthProvider>
+        </CurrencyProvider>
       </LanguageProvider>
     </GlobalErrorBoundary>
   );

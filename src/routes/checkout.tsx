@@ -22,6 +22,7 @@ import {
   Apple,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useCurrency } from "@/state/CurrencyContext";
 import { useBag } from "@/state/BagContext";
 import { useAddress, type Address } from "@/state/AddressContext";
 import { db } from "@/lib/db";
@@ -71,6 +72,7 @@ function CheckoutPage() {
   const router = useRouter();
   const navigate = useNavigate();
   const { isRTL, lang } = useLanguage();
+  const { currency: displayCurrency, format: fmtDisplay } = useCurrency();
   const bag = useBag();
   const { address, save } = useAddress();
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
@@ -849,6 +851,13 @@ function CheckoutPage() {
                   }
                 />
               </div>
+              {displayCurrency !== "SAR" && (
+                <p className="text-[11.5px] text-muted-foreground tracking-soft px-1">
+                  {isRTL
+                    ? `سيتم الخصم بالريال السعودي (${fmt(pricing.total)} ر.س) — ما يعادل تقريبًا ${fmtDisplay(pricing.total)}.`
+                    : `Payment will be charged in SAR (${fmt(pricing.total)} SAR) — approximately ${fmtDisplay(pricing.total)}.`}
+                </p>
+              )}
 
               {/* Terms */}
               <label className="flex items-start gap-3 p-3 rounded-[14px] bg-cream-warm/40 border border-border cursor-pointer">

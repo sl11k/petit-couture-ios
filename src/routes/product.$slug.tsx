@@ -30,6 +30,7 @@ import { useDbProductBySlug } from "@/hooks/useDbProducts";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useBag } from "@/state/BagContext";
+import { usePriceFormatter } from "@/state/CurrencyContext";
 import { trackEvent } from "@/lib/analytics";
 import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
 
@@ -297,6 +298,7 @@ function ProductDetails() {
 
   const BackIcon = ar ? ChevronRight : ChevronLeft;
   const fmt = (n: number) => n.toLocaleString(lang === "ar" ? "ar-EG" : "en-US");
+  const fmtPrice = usePriceFormatter();
   const discountPct = product.compareAtPrice
     ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
     : 0;
@@ -509,16 +511,16 @@ function ProductDetails() {
 
             {/* Price */}
             <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-              <span className="text-[22px] text-foreground tracking-tight font-medium">{fmt(product.price)} {product.currency}</span>
+              <span className="text-[22px] text-foreground tracking-tight font-medium">{fmtPrice(product.price)}</span>
               {product.compareAtPrice && (
-                <span className="text-[14px] text-muted-foreground line-through">{fmt(product.compareAtPrice)}</span>
+                <span className="text-[14px] text-muted-foreground line-through">{fmtPrice(product.compareAtPrice)}</span>
               )}
               {discountPct > 0 && (
                 <span className="text-[12px] text-emerald-700 font-medium">{ar ? `وفّر ${discountPct}%` : `Save ${discountPct}%`}</span>
               )}
             </div>
             <p className="text-[12px] text-muted-foreground mt-1">
-              {ar ? `أو 4 دفعات بدون فوائد ${fmt(Math.round(product.price / 4))} ر.س عبر تمارا` : `Or 4 interest-free of ${fmt(Math.round(product.price / 4))} ${product.currency} with Tamara`}
+              {ar ? `أو 4 دفعات بدون فوائد ${fmtPrice(product.price / 4)} عبر تمارا` : `Or 4 interest-free of ${fmtPrice(product.price / 4)} with Tamara`}
             </p>
           </section>
 
@@ -627,7 +629,7 @@ function ProductDetails() {
                       <img src={u.image} alt={u.name} width={56} height={56} loading="lazy" decoding="async" className="h-14 w-14 rounded-[10px] object-cover" />
                       <div className="flex-1">
                         <p className="text-[13.5px] text-foreground/90">{u.name}</p>
-                        <p className="text-[12px] text-muted-foreground">{fmt(u.price)} {product.currency}</p>
+                        <p className="text-[12px] text-muted-foreground">{fmtPrice(u.price)}</p>
                       </div>
                     </label>
                   );
@@ -859,7 +861,7 @@ function ProductDetails() {
                     <img src={p.images[0]} alt={p.name} width={400} height={500} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   </div>
                   <p className="mt-2 text-[12px] text-foreground/85 line-clamp-1">{p.category}</p>
-                  <p className="text-[12px] text-muted-foreground">{fmt(p.price)} {p.currency}</p>
+                  <p className="text-[12px] text-muted-foreground">{fmtPrice(p.price)}</p>
                 </Link>
               ))}
             </div>
@@ -900,7 +902,7 @@ function ProductDetails() {
             </div>
           )}
           <div className="px-5 pb-3 -mt-3 text-center">
-            <span className="text-[10.5px] text-muted-foreground">{ar ? "الإجمالي: " : "Total: "}{fmt(lineTotal)} {product.currency}</span>
+            <span className="text-[10.5px] text-muted-foreground">{ar ? "الإجمالي: " : "Total: "}{fmtPrice(lineTotal)}</span>
           </div>
         </div>
       </div>

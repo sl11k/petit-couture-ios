@@ -8,6 +8,7 @@ import { useWishlist } from "@/state/WishlistContext";
 import { useAuth } from "@/state/AuthContext";
 import { categories, getProductForCategory } from "@/data/categories";
 import { useDbProductsBySlugs } from "@/hooks/useDbProducts";
+import { usePriceFormatter } from "@/state/CurrencyContext";
 import { trackEvent, type WishlistSortKey } from "@/lib/analytics";
 import { clearLastImport, readLastImport } from "@/lib/lastImport";
 import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
@@ -189,6 +190,7 @@ function WishlistPage() {
   }, [wishlist.items, t.hero, wishlistProductsBySlug]);
 
   const fmt = (n: number) => n.toLocaleString(lang === "ar" ? "ar-EG" : "en-US");
+  const fmtPrice = usePriceFormatter();
 
   // ─── Sort ────────────────────────────────────────────────────────────────
   // Persist the chosen sort across visits. The wishlist's underlying `items`
@@ -535,7 +537,7 @@ function WishlistPage() {
 
                         {it.price !== null ? (
                           <p className="mt-1 text-[13.5px] text-foreground/85 tabular-nums">
-                            {fmt(it.price)} {it.currency}
+                            {fmtPrice(it.price)}
                           </p>
                         ) : (
                           <p className="mt-1 inline-flex items-center gap-1 text-[12px] text-gold-deep tracking-soft">

@@ -6,6 +6,7 @@ import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import { SlidersHorizontal, Star, X, Search as SearchIcon } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { usePriceFormatter } from "@/state/CurrencyContext";
 import {
   searchProducts,
   fetchFacets,
@@ -194,6 +195,7 @@ function SearchPage() {
 
   const locale = lang === "ar" ? "ar-EG" : "en-US";
   const fmtNum = (n: number) => n.toLocaleString(locale);
+  const fmtPrice = usePriceFormatter();
 
   const Sidebar = (
     <aside className="space-y-6 text-sm" dir={isRTL ? "rtl" : "ltr"}>
@@ -543,10 +545,7 @@ function SearchPage() {
                       {isRTL ? p.name_ar : p.name_en}
                     </div>
                     <div className="mt-2.5 font-serif text-[17px] text-foreground tabular-nums">
-                      {fmtNum(p.price)}
-                      <span className="text-[11px] text-muted-foreground ms-1 tracking-soft">
-                        {p.currency || (isRTL ? "ر.س" : "SAR")}
-                      </span>
+                      {fmtPrice(p.price)}
                     </div>
                   </div>
                 </Link>

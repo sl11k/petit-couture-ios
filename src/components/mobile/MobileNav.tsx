@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useBag } from "@/state/BagContext";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { CurrencySelector } from "@/components/CurrencySelector";
 import { cn } from "@/lib/utils";
 import {
   Sheet,
@@ -169,6 +170,10 @@ export function MobileBottomNav() {
                 {menuLabel}
               </SheetTitle>
             </SheetHeader>
+            <div className="px-5 py-3 border-b flex items-center justify-between text-[12px] text-foreground/75">
+              <span className="tracking-luxury">{ar ? "العملة" : "CURRENCY"}</span>
+              <CurrencySelector />
+            </div>
             <CategoryMenu onNavigate={() => setMenuOpen(false)} ar={ar} />
           </SheetContent>
         </Sheet>

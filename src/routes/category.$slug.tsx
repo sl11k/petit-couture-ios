@@ -6,6 +6,7 @@ import { LazyImage } from "@/components/LazyImage";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { categories as seedCategories, productsByCategory } from "@/data/categories";
+import { usePriceFormatter } from "@/state/CurrencyContext";
 import { buildMeta, breadcrumbJsonLd, collectionJsonLd, canonical } from "@/lib/seo";
 
 type DbCategory = {
@@ -466,6 +467,7 @@ function EmptyState({
   slug: string;
   showFallback: boolean;
 }) {
+  const fmt = usePriceFormatter();
   if (!showFallback) {
     return (
       <div className="text-center py-16">
@@ -495,7 +497,7 @@ function EmptyState({
           <div className="mt-2.5">
             <p className="text-sm text-foreground line-clamp-1">{seedProduct.name}</p>
             <p className="text-[13px] text-gold-deep mt-0.5">
-              {seedProduct.price.toFixed(2)} {ar ? "ر.س" : "SAR"}
+              {fmt(seedProduct.price)}
             </p>
           </div>
         </Link>
@@ -513,6 +515,7 @@ function ProductCard({
   ar: boolean;
   wishlist: ReturnType<typeof useWishlist>;
 }) {
+  const fmt = usePriceFormatter();
   const name = ar ? (p.name_ar ?? p.name_en) : (p.name_en ?? p.name_ar);
   const wishId = `product:${p.slug ?? p.id}`;
   const wished = wishlist.has(wishId);
@@ -540,12 +543,12 @@ function ProductCard({
           <div className="flex items-baseline gap-2 mt-0.5">
             {p.price != null && (
               <p className="text-[13px] text-gold-deep">
-                {p.price.toFixed(2)} {ar ? "ر.س" : "SAR"}
+                {fmt(p.price)}
               </p>
             )}
             {p.compare_at_price != null && p.price != null && p.compare_at_price > p.price && (
               <p className="text-[12px] text-muted-foreground line-through">
-                {p.compare_at_price.toFixed(2)}
+                {fmt(p.compare_at_price)}
               </p>
             )}
           </div>

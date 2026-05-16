@@ -22,6 +22,7 @@ import { useBag } from "@/state/BagContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { getProductForCategory, categories, productsByCategory } from "@/data/categories";
 import { useDbProductsBySlugs } from "@/hooks/useDbProducts";
+import { usePriceFormatter } from "@/state/CurrencyContext";
 import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
 
 export const Route = createFileRoute("/bag")({
@@ -57,6 +58,7 @@ function BagPage() {
   const BackIcon = ar ? ChevronRight : ChevronLeft;
   const locale = lang === "ar" ? "ar-EG" : "en-US";
   const fmt = (n: number) => Math.round(n).toLocaleString(locale);
+  const fmtPrice = usePriceFormatter();
 
   const [code, setCode] = useState("");
   const [appliedCode, setAppliedCode] = useState<string | null>(null);
@@ -289,11 +291,11 @@ function BagPage() {
                           </div>
                           <div className="text-end">
                             <div className="text-[14px] text-foreground tracking-tight tabular-nums">
-                              {fmt(it.price * it.qty)} {it.currency}
+                              {fmtPrice(it.price * it.qty)}
                             </div>
                             {it.qty > 1 && (
                               <div className="text-[10.5px] text-muted-foreground tabular-nums">
-                                {fmt(it.price)} × {fmt(it.qty)}
+                                {fmtPrice(it.price)} × {fmt(it.qty)}
                               </div>
                             )}
                           </div>
@@ -307,7 +309,7 @@ function BagPage() {
                         {priceChanged && (
                           <div className="flex items-center gap-2 text-[11.5px] text-amber-700 bg-amber-50 rounded-lg px-2.5 py-1.5">
                             <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                            <span>{tt.priceChanged}: {fmt(currentPrice)} {it.currency}</span>
+                            <span>{tt.priceChanged}: {fmtPrice(currentPrice)}</span>
                           </div>
                         )}
                         {overStock && (
@@ -380,12 +382,12 @@ function BagPage() {
                 <div className="rounded-[20px] border border-border bg-background p-5 space-y-3">
                   <div className="flex items-center justify-between text-[13.5px] text-foreground/80">
                     <span>{tt.subtotal}</span>
-                    <span className="tabular-nums">{fmt(subtotal)} {bag.currency}</span>
+                    <span className="tabular-nums">{fmtPrice(subtotal)}</span>
                   </div>
                   {discount > 0 && (
                     <div className="flex items-center justify-between text-[13.5px] text-emerald-700">
                       <span>{tt.discount}</span>
-                      <span className="tabular-nums">−{fmt(discount)} {bag.currency}</span>
+                      <span className="tabular-nums">−{fmtPrice(discount)}</span>
                     </div>
                   )}
                   <div className="flex items-center justify-between text-[13.5px] text-foreground/80">
@@ -393,19 +395,19 @@ function BagPage() {
                     {shipping === 0 ? (
                       <span className="text-gold-deep tracking-soft">{tt.free}</span>
                     ) : (
-                      <span className="tabular-nums">{fmt(shipping)} {bag.currency}</span>
+                      <span className="tabular-nums">{fmtPrice(shipping)}</span>
                     )}
                   </div>
                   <div className="flex items-center justify-between text-[13.5px] text-foreground/80">
                     <span>{tt.tax}</span>
-                    <span className="tabular-nums">{fmt(tax)} {bag.currency}</span>
+                    <span className="tabular-nums">{fmtPrice(tax)}</span>
                   </div>
                   <div className="h-px bg-border" />
                   <div className="flex items-baseline justify-between">
                     <span className="text-[12px] tracking-luxury text-muted-foreground">
                       {lang === "en" ? tt.total.toUpperCase() : tt.total}
                     </span>
-                    <span className="font-serif text-[24px] text-foreground tabular-nums">{fmt(total)} {bag.currency}</span>
+                    <span className="font-serif text-[24px] text-foreground tabular-nums">{fmtPrice(total)}</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground tracking-soft pt-1">{tt.shippingNote}</p>
                 </div>
@@ -422,7 +424,7 @@ function BagPage() {
                           <img src={p.images[0]} alt={p.category} className="w-full h-full object-cover" loading="lazy" />
                         </div>
                         <p className="mt-2 text-[12px] text-foreground/85 line-clamp-1">{p.category}</p>
-                        <p className="text-[12px] text-muted-foreground tabular-nums">{fmt(p.price)} {p.currency}</p>
+                        <p className="text-[12px] text-muted-foreground tabular-nums">{fmtPrice(p.price)}</p>
                       </Link>
                     ))}
                   </div>
@@ -448,7 +450,7 @@ function BagPage() {
             <div className="px-5 pt-4 pb-6">
               <button onClick={() => navigate({ to: "/checkout" })} className="w-full h-[56px] rounded-full bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft">
                 <Lock className="h-[15px] w-[15px]" strokeWidth={1.7} />
-                {tt.checkout} · {fmt(total)} {bag.currency}
+                {tt.checkout} · {fmtPrice(total)}
               </button>
               <p className="mt-2 text-center text-[10.5px] text-muted-foreground tracking-soft">{tt.secure}</p>
             </div>
