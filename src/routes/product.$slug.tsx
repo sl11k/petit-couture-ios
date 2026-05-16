@@ -305,15 +305,31 @@ function ProductDetails() {
     ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
     : 0;
 
-  const filteredReviews = reviewFilter
-    ? product.reviews.filter((r) => r.rating === reviewFilter)
+  const effectiveReviews = dbReviews.length
+    ? dbReviews.map((r) => ({
+        id: r.id,
+        name: r.customer_name || (ar ? "عميل" : "Customer"),
+        rating: r.rating,
+        title: r.title || "",
+        body: r.body || "",
+        verified: !!r.verified_purchase,
+        date: new Date(r.created_at).toLocaleDateString(lang === "ar" ? "ar-EG" : "en-US"),
+      }))
     : product.reviews;
+  const effectiveReviewsCount = dbReviews.length || product.reviewsCount;
+  const effectiveRating = dbReviews.length
+    ? dbReviews.reduce((s, r) => s + r.rating, 0) / dbReviews.length
+    : product.rating;
+
+  const filteredReviews = reviewFilter
+    ? effectiveReviews.filter((r) => r.rating === reviewFilter)
+    : effectiveReviews;
 
   const ratingBreakdown = [5, 4, 3, 2, 1].map((star) => ({
     star,
-    count: product.reviews.filter((r) => r.rating === star).length,
-    pct: product.reviews.length
-      ? (product.reviews.filter((r) => r.rating === star).length / product.reviews.length) * 100
+    count: effectiveReviews.filter((r) => r.rating === star).length,
+    pct: effectiveReviews.length
+      ? (effectiveReviews.filter((r) => r.rating === star).length / effectiveReviews.length) * 100
       : 0,
   }));
 
