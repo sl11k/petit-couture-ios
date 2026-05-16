@@ -775,11 +775,13 @@ function CheckoutPage() {
                   {payment === "apple_pay" && <Apple className="h-4 w-4 text-gold" />}
                   {payment === "bank_transfer" && <Landmark className="h-4 w-4 text-gold" />}
                   {payment === "cod" && <Wallet className="h-4 w-4 text-gold" />}
+                  {payment === "tabby" && <span className="text-[10px] font-bold text-gold">tabby</span>}
                   <span className="text-foreground">
                     {payment === "card" && (isRTL ? "بطاقة ائتمان" : "Credit card")}
                     {payment === "apple_pay" && "Apple Pay"}
                     {payment === "bank_transfer" && (isRTL ? "تحويل بنكي" : "Bank transfer")}
                     {payment === "cod" && (isRTL ? "الدفع عند الاستلام" : "Cash on delivery")}
+                    {payment === "tabby" && (isRTL ? "تابي — 4 دفعات" : "Tabby — 4 installments")}
                   </span>
                 </div>
               </ReviewBlock>
