@@ -86,6 +86,7 @@ export function MobileHeader({
 
         {rightSlot ?? (
           <div className="flex items-center gap-1">
+            <CurrencySelector className="px-1.5" />
             <Link
               to="/search"
               aria-label="Search"
