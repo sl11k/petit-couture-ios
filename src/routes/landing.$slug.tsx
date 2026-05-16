@@ -105,10 +105,34 @@ const CAMPAIGNS: Campaign[] = [
 ];
 
 export const Route = createFileRoute("/landing/$slug")({
-  loader: ({ params }) => {
+  loader: async ({ params }) => {
+    // 1) Static campaign (legacy hard-coded)
     const c = CAMPAIGNS.find((x) => x.slug === params.slug);
-    if (!c) throw notFound();
-    return { campaign: c };
+    if (c) return { campaign: c };
+
+    // 2) DB-backed landing page authored from the admin panel
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data: page } = await supabase
+      .from("landing_pages")
+      .select("slug, title, description, hero_image, cta_text, cta_url, product_ids")
+      .eq("slug", params.slug)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (!page) throw notFound();
+    // Map landing_pages row → Campaign shape so the component renders unchanged
+    const ctaHref = (page as any).cta_url || "/";
+    return {
+      campaign: {
+        slug: (page as any).slug,
+        title: (page as any).title || params.slug,
+        description: (page as any).description || "",
+        hero: (page as any).hero_image || "/og-default.jpg",
+        ctaLabel: (page as any).cta_text || "تسوّق الآن",
+        ctaHref,
+        // No featured-category mapping for DB landings; component handles empty array safely
+        featuredCategorySlugs: [] as string[],
+      } satisfies Campaign,
+    };
   },
   head: ({ loaderData, params }) => {
     const c = loaderData?.campaign;
