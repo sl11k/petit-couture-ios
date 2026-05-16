@@ -2461,12 +2461,15 @@ export type Database = {
           bank_transfer_reference: string | null
           bank_transfer_reviewed_at: string | null
           captured_amount: number | null
+          coupon_code: string | null
+          coupon_id: string | null
           created_at: string
           created_by_admin: boolean
           currency: string
           customer_email: string
           customer_name: string
           customer_phone: string
+          discount_amount: number
           expires_at: string | null
           id: string
           idempotency_key: string | null
@@ -2510,12 +2513,15 @@ export type Database = {
           bank_transfer_reference?: string | null
           bank_transfer_reviewed_at?: string | null
           captured_amount?: number | null
+          coupon_code?: string | null
+          coupon_id?: string | null
           created_at?: string
           created_by_admin?: boolean
           currency?: string
           customer_email: string
           customer_name: string
           customer_phone: string
+          discount_amount?: number
           expires_at?: string | null
           id?: string
           idempotency_key?: string | null
@@ -2559,12 +2565,15 @@ export type Database = {
           bank_transfer_reference?: string | null
           bank_transfer_reviewed_at?: string | null
           captured_amount?: number | null
+          coupon_code?: string | null
+          coupon_id?: string | null
           created_at?: string
           created_by_admin?: boolean
           currency?: string
           customer_email?: string
           customer_name?: string
           customer_phone?: string
+          discount_amount?: number
           expires_at?: string | null
           id?: string
           idempotency_key?: string | null
@@ -2601,7 +2610,15 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       oto_webhook_deliveries: {
         Row: {
@@ -5557,6 +5574,23 @@ export type Database = {
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       unaccent: { Args: { "": string }; Returns: string }
+      validate_coupon: {
+        Args: {
+          _code: string
+          _customer_email?: string
+          _subtotal: number
+          _user_id?: string
+        }
+        Returns: {
+          code: string
+          coupon_id: string
+          discount_amount: number
+          discount_type: string
+          discount_value: number
+          reason: string
+          valid: boolean
+        }[]
+      }
     }
     Enums: {
       app_role:
