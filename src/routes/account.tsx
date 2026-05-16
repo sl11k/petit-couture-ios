@@ -1,11 +1,13 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { buildMeta } from "@/lib/seo";
-import { ChevronLeft, ChevronRight, Heart, LogOut, Mail, Lock } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { ChevronLeft, ChevronRight, Heart, LogOut, Mail, Lock, Package, MapPin, RotateCcw, Plus, Trash2, Pencil, Check, X } from "lucide-react";
+import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/state/AuthContext";
 import { useWishlist } from "@/state/WishlistContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/account")({
   head: () =>
