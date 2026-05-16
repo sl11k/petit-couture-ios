@@ -403,7 +403,7 @@ function FilterSortBar({
               <div>
                 <div className="flex justify-between text-[13px] mb-2">
                   <span>{ar ? "أقصى سعر" : "Max price"}</span>
-                  <span className="text-primary font-medium">{priceMax} {ar ? "ر.س" : "SAR"}</span>
+                  <span className="text-primary font-medium"><PriceMaxLabel value={priceMax} /></span>
                 </div>
                 <input
                   type="range"
