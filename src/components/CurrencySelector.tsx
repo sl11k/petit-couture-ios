@@ -34,7 +34,8 @@ export function CurrencySelector({ className = "" }: { className?: string }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align={isRTL ? "start" : "end"}
-        className="max-h-[60vh] overflow-y-auto w-56"
+        sideOffset={8}
+        className="z-[80] max-h-[60vh] overflow-y-auto w-56"
       >
         <DropdownMenuLabel className="text-[10.5px] tracking-luxury text-muted-foreground">
           {ar ? "العملة" : "Currency"}
