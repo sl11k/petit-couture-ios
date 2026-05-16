@@ -141,6 +141,15 @@ function WishlistPage() {
     });
   }, [wishlist.items, t.wishlist, isRTL]);
 
+  const wishlistSlugs = useMemo(
+    () =>
+      wishlist.items
+        .filter((id) => id.startsWith("product:") || id.startsWith("category:"))
+        .map((id) => id.split(":")[1]),
+    [wishlist.items],
+  );
+  const { bySlug: wishlistProductsBySlug } = useDbProductsBySlugs(wishlistSlugs);
+
   const resolved = useMemo<ResolvedItem[]>(() => {
     return wishlist.items
       .map((id): ResolvedItem | null => {
@@ -148,7 +157,7 @@ function WishlistPage() {
           const slug = id.split(":")[1];
           const cat = categories.find((c) => c.slug === slug);
           if (!cat) return null;
-          const product = getProductForCategory(slug);
+          const product = wishlistProductsBySlug[slug] ?? getProductForCategory(slug);
           return {
             id,
             kind: id.startsWith("product:") ? "product" : "category",
@@ -177,7 +186,7 @@ function WishlistPage() {
         return null;
       })
       .filter((x): x is ResolvedItem => x !== null);
-  }, [wishlist.items, t.hero]);
+  }, [wishlist.items, t.hero, wishlistProductsBySlug]);
 
   const fmt = (n: number) => n.toLocaleString(lang === "ar" ? "ar-EG" : "en-US");
 
