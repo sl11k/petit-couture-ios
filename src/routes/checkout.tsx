@@ -29,6 +29,7 @@ import { db } from "@/lib/db";
 import { trackServerEvent, getCurrentSessionId } from "@/lib/serverAnalytics";
 import { supabase } from "@/integrations/supabase/client";
 import { placeOrder } from "@/server/placeOrder";
+import { validateCoupon } from "@/lib/coupons.functions";
 
 // Map only loads on the client when entering step 2.
 const LocationPicker = lazy(
@@ -114,6 +115,12 @@ function CheckoutPage() {
   const [placing, setPlacing] = useState(false);
   const placedRef = useRef(false);
 
+  // Coupon state
+  const [couponInput, setCouponInput] = useState("");
+  const [coupon, setCoupon] = useState<{ code: string; discount: number } | null>(null);
+  const [couponBusy, setCouponBusy] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+
   // Redirect if bag empty
   const arrivedEmptyRef = useRef<boolean>(bagEmpty);
   useEffect(() => {
@@ -131,9 +138,64 @@ function CheckoutPage() {
     const subtotal = bag.subtotal;
     const shipping_fee = shipping.fee;
     const tax = Math.round(subtotal * TAX_RATE * 100) / 100;
-    const total = subtotal + shipping_fee + tax;
-    return { subtotal, shipping_fee, tax, total };
-  }, [bag.subtotal, shipping.fee]);
+    const discount = coupon ? Math.min(coupon.discount, subtotal) : 0;
+    const total = Math.max(0, Math.round((subtotal + shipping_fee + tax - discount) * 100) / 100);
+    return { subtotal, shipping_fee, tax, discount, total };
+  }, [bag.subtotal, shipping.fee, coupon]);
+
+  // Re-validate coupon when subtotal/email changes (silent; drops if no longer valid).
+  useEffect(() => {
+    if (!coupon) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await validateCoupon({
+          data: {
+            code: coupon.code,
+            subtotal: bag.subtotal,
+            user_id: null,
+            customer_email: contact.email || null,
+          },
+        });
+        if (cancelled) return;
+        if (res.ok) setCoupon({ code: res.code, discount: res.discount_amount });
+        else { setCoupon(null); setCouponError(isRTL ? res.message_ar : res.message_en); }
+      } catch { /* keep current */ }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bag.subtotal]);
+
+  const applyCoupon = async () => {
+    const code = couponInput.trim();
+    if (!code) return;
+    setCouponBusy(true);
+    setCouponError(null);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const res = await validateCoupon({
+        data: {
+          code,
+          subtotal: bag.subtotal,
+          user_id: auth.user?.id ?? null,
+          customer_email: contact.email || auth.user?.email || null,
+        },
+      });
+      if (res.ok) {
+        setCoupon({ code: res.code, discount: res.discount_amount });
+        toast.success(isRTL ? "تم تطبيق الكوبون" : "Coupon applied");
+      } else {
+        setCoupon(null);
+        setCouponError(isRTL ? res.message_ar : res.message_en);
+      }
+    } catch {
+      setCouponError(isRTL ? "تعذّر التحقق من الكوبون" : "Could not validate coupon");
+    } finally {
+      setCouponBusy(false);
+    }
+  };
+
+  const removeCoupon = () => { setCoupon(null); setCouponInput(""); setCouponError(null); };
 
   // ───── Validation per step ─────
   const errs = useMemo(() => {
