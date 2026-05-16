@@ -61,6 +61,14 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
       case "url":
         s = z.string().url(ar ? "رابط غير صحيح" : "Invalid URL");
         break;
+      case "image":
+      case "video":
+        // Storage public URL — accept any non-empty string
+        s = z.string();
+        break;
+      case "gallery":
+        s = z.array(z.string()).default([]);
+        break;
       case "json":
         s = z.string().refine(
           (v) => {
@@ -78,8 +86,11 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
         if (f.maxLength) s = (s as z.ZodString).max(f.maxLength);
         if (f.pattern) s = (s as z.ZodString).regex(new RegExp(f.pattern), ar ? "صيغة غير صحيحة" : "Invalid format");
     }
-    if (!f.required) s = s.optional().or(z.literal("")).or(z.null());
-    else if (f.type === "text" || f.type === "textarea" || f.type === "select" || f.type === "url" || f.type === "email") {
+    if (f.type === "gallery") {
+      // arrays are always present (possibly empty)
+    } else if (!f.required) {
+      s = s.optional().or(z.literal("")).or(z.null());
+    } else if (f.type === "text" || f.type === "textarea" || f.type === "select" || f.type === "url" || f.type === "email" || f.type === "image" || f.type === "video") {
       s = (s as z.ZodString).min(1, ar ? "حقل مطلوب" : "Required");
     }
     shape[f.key] = s;
