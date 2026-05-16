@@ -796,9 +796,54 @@ function ProductDetails() {
             </button>
           </section>
 
+          {dbOffers.length > 0 && (
+            <section className="px-5 mt-6">
+              <h2 className="font-serif text-[18px] text-foreground mb-2">{ar ? "عروض خاصة" : "Special offers"}</h2>
+              <ul className="space-y-2">
+                {dbOffers.map((o) => (
+                  <li key={o.id} className="rounded-[14px] border border-gold-deep/30 bg-gold-deep/5 p-3 text-[13px] text-foreground/85 flex items-start gap-2">
+                    <Gift className="h-4 w-4 text-gold-deep mt-0.5 shrink-0" />
+                    <div>
+                      <p className="font-medium">
+                        {ar ? (o.config?.title_ar || o.config?.title || (ar ? "عرض" : "Offer")) : (o.config?.title_en || o.config?.title || "Offer")}
+                      </p>
+                      {(o.config?.description_ar || o.config?.description_en || o.config?.description) && (
+                        <p className="text-[12px] text-muted-foreground mt-0.5">
+                          {ar ? (o.config.description_ar || o.config.description) : (o.config.description_en || o.config.description)}
+                        </p>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {dbBundles.length > 0 && (
+            <section className="px-5 mt-6">
+              <h2 className="font-serif text-[18px] text-foreground mb-2">{ar ? "اشترِ ضمن باقة ووفّر" : "Save with a bundle"}</h2>
+              <ul className="space-y-2">
+                {dbBundles.map((b) => (
+                  <li key={b.id} className="rounded-[14px] border border-border p-3 text-[13px] text-foreground/85">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-medium">{b.name}</p>
+                      {b.bundle_price != null && (
+                        <span className="text-gold-deep font-semibold whitespace-nowrap">{fmtPrice(Number(b.bundle_price))}</span>
+                      )}
+                      {b.bundle_price == null && b.discount_percent != null && (
+                        <span className="text-gold-deep font-semibold whitespace-nowrap">-{b.discount_percent}%</span>
+                      )}
+                    </div>
+                    {b.description && <p className="text-[12px] text-muted-foreground mt-1">{b.description}</p>}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           {/* Reviews */}
           <section id="reviews" className="px-5 mt-9">
-            <div className="flex items-center justify-between">
+
               <h2 className="font-serif text-[20px] text-foreground">{t.customerReviews}</h2>
               <span className="text-[12px] text-muted-foreground">{t.reviews(effectiveReviewsCount)}</span>
             </div>
