@@ -515,13 +515,13 @@ function ProductDetails() {
             <div className="mt-2 flex items-center gap-3 text-[12px] text-muted-foreground">
               <div className="flex items-center gap-1">
                 {[1,2,3,4,5].map((i) => (
-                  <Star key={i} className={`h-[13px] w-[13px] ${i <= Math.round(product.rating) ? "text-gold-deep fill-gold-deep" : "text-border"}`} />
+                  <Star key={i} className={`h-[13px] w-[13px] ${i <= Math.round(effectiveRating) ? "text-gold-deep fill-gold-deep" : "text-border"}`} />
                 ))}
-                <span className="ms-1 text-foreground/80">{product.rating.toFixed(1)}</span>
+                <span className="ms-1 text-foreground/80">{effectiveRating.toFixed(1)}</span>
               </div>
               <span>·</span>
               <button onClick={() => document.getElementById("reviews")?.scrollIntoView({ behavior: "smooth" })} className="hover:text-foreground underline-offset-4 hover:underline">
-                {t.reviews(product.reviewsCount)}
+                {t.reviews(effectiveReviewsCount)}
               </button>
               <span>·</span>
               <span className="truncate">{t.sku}: {product.sku}</span>
@@ -800,16 +800,16 @@ function ProductDetails() {
           <section id="reviews" className="px-5 mt-9">
             <div className="flex items-center justify-between">
               <h2 className="font-serif text-[20px] text-foreground">{t.customerReviews}</h2>
-              <span className="text-[12px] text-muted-foreground">{t.reviews(product.reviewsCount)}</span>
+              <span className="text-[12px] text-muted-foreground">{t.reviews(effectiveReviewsCount)}</span>
             </div>
 
             {/* Rating breakdown */}
             <div className="mt-4 flex items-center gap-5">
               <div className="text-center">
-                <div className="text-[34px] font-serif text-foreground leading-none">{product.rating.toFixed(1)}</div>
+                <div className="text-[34px] font-serif text-foreground leading-none">{effectiveRating.toFixed(1)}</div>
                 <div className="flex items-center justify-center gap-0.5 mt-1">
                   {[1,2,3,4,5].map((i) => (
-                    <Star key={i} className={`h-[12px] w-[12px] ${i <= Math.round(product.rating) ? "text-gold-deep fill-gold-deep" : "text-border"}`} />
+                    <Star key={i} className={`h-[12px] w-[12px] ${i <= Math.round(effectiveRating) ? "text-gold-deep fill-gold-deep" : "text-border"}`} />
                   ))}
                 </div>
               </div>
