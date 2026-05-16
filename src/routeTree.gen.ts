@@ -40,17 +40,25 @@ import { Route as AdminWebhooksHealthRouteImport } from './routes/admin.webhooks
 import { Route as AdminWebhooksDeliveriesRouteImport } from './routes/admin.webhooks-deliveries'
 import { Route as AdminWebhooksRouteImport } from './routes/admin.webhooks'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminThemesRouteImport } from './routes/admin.themes'
 import { Route as AdminSupportRouteImport } from './routes/admin.support'
 import { Route as AdminStorefrontRouteImport } from './routes/admin.storefront'
 import { Route as AdminStatesRouteImport } from './routes/admin.states'
 import { Route as AdminSiteAnalyticsRouteImport } from './routes/admin.site-analytics'
+import { Route as AdminShippingZonesRouteImport } from './routes/admin.shipping-zones'
+import { Route as AdminShippingRatesRouteImport } from './routes/admin.shipping-rates'
+import { Route as AdminShippingCarriersRouteImport } from './routes/admin.shipping-carriers'
 import { Route as AdminShippingRouteImport } from './routes/admin.shipping'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminSecurityRouteImport } from './routes/admin.security'
 import { Route as AdminSearchRouteImport } from './routes/admin.search'
+import { Route as AdminReviewsRouteImport } from './routes/admin.reviews'
 import { Route as AdminReturnsRouteImport } from './routes/admin.returns'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
+import { Route as AdminReferralsRouteImport } from './routes/admin.referrals'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
+import { Route as AdminProductRelationsRouteImport } from './routes/admin.product-relations'
+import { Route as AdminProductOffersRouteImport } from './routes/admin.product-offers'
 import { Route as AdminPrivacyRouteImport } from './routes/admin.privacy'
 import { Route as AdminPopularPicksRouteImport } from './routes/admin.popular-picks'
 import { Route as AdminPermissionsRouteImport } from './routes/admin.permissions'
@@ -59,8 +67,12 @@ import { Route as AdminPaymentsRouteImport } from './routes/admin.payments'
 import { Route as AdminOtoRouteImport } from './routes/admin.oto'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
+import { Route as AdminNotificationTemplatesRouteImport } from './routes/admin.notification-templates'
+import { Route as AdminNotificationRulesRouteImport } from './routes/admin.notification-rules'
 import { Route as AdminMetricsRouteImport } from './routes/admin.metrics'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
+import { Route as AdminLoyaltyTransactionsRouteImport } from './routes/admin.loyalty-transactions'
+import { Route as AdminLoyaltyRouteImport } from './routes/admin.loyalty'
 import { Route as AdminLandingPagesRouteImport } from './routes/admin.landing-pages'
 import { Route as AdminInvoicesRouteImport } from './routes/admin.invoices'
 import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
@@ -70,6 +82,7 @@ import { Route as AdminIncomingWebhooksRouteImport } from './routes/admin.incomi
 import { Route as AdminHomeBuilderRouteImport } from './routes/admin.home-builder'
 import { Route as AdminHelpRouteImport } from './routes/admin.help'
 import { Route as AdminFeaturedCategoriesRouteImport } from './routes/admin.featured-categories'
+import { Route as AdminFaqRouteImport } from './routes/admin.faq'
 import { Route as AdminErrorsRouteImport } from './routes/admin.errors'
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
 import { Route as AdminCreateOrderRouteImport } from './routes/admin.create-order'
@@ -78,11 +91,13 @@ import { Route as AdminConversionRouteImport } from './routes/admin.conversion'
 import { Route as AdminContentRouteImport } from './routes/admin.content'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
 import { Route as AdminCampaignsRouteImport } from './routes/admin.campaigns'
+import { Route as AdminBundlesRouteImport } from './routes/admin.bundles'
 import { Route as AdminAuditLoginsRouteImport } from './routes/admin.audit-logins'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminAnnouncementsRouteImport } from './routes/admin.announcements'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAbandonedRouteImport } from './routes/admin.abandoned'
+import { Route as AdminAbTestsRouteImport } from './routes/admin.ab-tests'
 import { Route as AccountPrivacyRouteImport } from './routes/account.privacy'
 import { Route as ApiV1ProductsRouteImport } from './routes/api.v1.products'
 import { Route as ApiV1OrdersRouteImport } from './routes/api.v1.orders'
@@ -263,6 +278,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminThemesRoute = AdminThemesRouteImport.update({
+  id: '/themes',
+  path: '/themes',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSupportRoute = AdminSupportRouteImport.update({
   id: '/support',
   path: '/support',
@@ -281,6 +301,21 @@ const AdminStatesRoute = AdminStatesRouteImport.update({
 const AdminSiteAnalyticsRoute = AdminSiteAnalyticsRouteImport.update({
   id: '/site-analytics',
   path: '/site-analytics',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminShippingZonesRoute = AdminShippingZonesRouteImport.update({
+  id: '/shipping-zones',
+  path: '/shipping-zones',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminShippingRatesRoute = AdminShippingRatesRouteImport.update({
+  id: '/shipping-rates',
+  path: '/shipping-rates',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminShippingCarriersRoute = AdminShippingCarriersRouteImport.update({
+  id: '/shipping-carriers',
+  path: '/shipping-carriers',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminShippingRoute = AdminShippingRouteImport.update({
@@ -303,6 +338,11 @@ const AdminSearchRoute = AdminSearchRouteImport.update({
   path: '/search',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminReviewsRoute = AdminReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminReturnsRoute = AdminReturnsRouteImport.update({
   id: '/returns',
   path: '/returns',
@@ -313,9 +353,24 @@ const AdminReportsRoute = AdminReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminReferralsRoute = AdminReferralsRouteImport.update({
+  id: '/referrals',
+  path: '/referrals',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminProductsRoute = AdminProductsRouteImport.update({
   id: '/products',
   path: '/products',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProductRelationsRoute = AdminProductRelationsRouteImport.update({
+  id: '/product-relations',
+  path: '/product-relations',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProductOffersRoute = AdminProductOffersRouteImport.update({
+  id: '/product-offers',
+  path: '/product-offers',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminPrivacyRoute = AdminPrivacyRouteImport.update({
@@ -358,6 +413,17 @@ const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminNotificationTemplatesRoute =
+  AdminNotificationTemplatesRouteImport.update({
+    id: '/notification-templates',
+    path: '/notification-templates',
+    getParentRoute: () => AdminRoute,
+  } as any)
+const AdminNotificationRulesRoute = AdminNotificationRulesRouteImport.update({
+  id: '/notification-rules',
+  path: '/notification-rules',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminMetricsRoute = AdminMetricsRouteImport.update({
   id: '/metrics',
   path: '/metrics',
@@ -366,6 +432,17 @@ const AdminMetricsRoute = AdminMetricsRouteImport.update({
 const AdminMessagesRoute = AdminMessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLoyaltyTransactionsRoute =
+  AdminLoyaltyTransactionsRouteImport.update({
+    id: '/loyalty-transactions',
+    path: '/loyalty-transactions',
+    getParentRoute: () => AdminRoute,
+  } as any)
+const AdminLoyaltyRoute = AdminLoyaltyRouteImport.update({
+  id: '/loyalty',
+  path: '/loyalty',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminLandingPagesRoute = AdminLandingPagesRouteImport.update({
@@ -413,6 +490,11 @@ const AdminFeaturedCategoriesRoute = AdminFeaturedCategoriesRouteImport.update({
   path: '/featured-categories',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFaqRoute = AdminFaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminErrorsRoute = AdminErrorsRouteImport.update({
   id: '/errors',
   path: '/errors',
@@ -453,6 +535,11 @@ const AdminCampaignsRoute = AdminCampaignsRouteImport.update({
   path: '/campaigns',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminBundlesRoute = AdminBundlesRouteImport.update({
+  id: '/bundles',
+  path: '/bundles',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAuditLoginsRoute = AdminAuditLoginsRouteImport.update({
   id: '/audit-logins',
   path: '/audit-logins',
@@ -476,6 +563,11 @@ const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
 const AdminAbandonedRoute = AdminAbandonedRouteImport.update({
   id: '/abandoned',
   path: '/abandoned',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAbTestsRoute = AdminAbTestsRouteImport.update({
+  id: '/ab-tests',
+  path: '/ab-tests',
   getParentRoute: () => AdminRoute,
 } as any)
 const AccountPrivacyRoute = AccountPrivacyRouteImport.update({
@@ -614,11 +706,13 @@ export interface FileRoutesByFullPath {
   '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRouteWithChildren
   '/account/privacy': typeof AccountPrivacyRoute
+  '/admin/ab-tests': typeof AdminAbTestsRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/audit': typeof AdminAuditRouteWithChildren
   '/admin/audit-logins': typeof AdminAuditLoginsRoute
+  '/admin/bundles': typeof AdminBundlesRoute
   '/admin/campaigns': typeof AdminCampaignsRouteWithChildren
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/content': typeof AdminContentRoute
@@ -627,6 +721,7 @@ export interface FileRoutesByFullPath {
   '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/errors': typeof AdminErrorsRoute
+  '/admin/faq': typeof AdminFaqRoute
   '/admin/featured-categories': typeof AdminFeaturedCategoriesRoute
   '/admin/help': typeof AdminHelpRoute
   '/admin/home-builder': typeof AdminHomeBuilderRoute
@@ -636,8 +731,12 @@ export interface FileRoutesByFullPath {
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/landing-pages': typeof AdminLandingPagesRouteWithChildren
+  '/admin/loyalty': typeof AdminLoyaltyRoute
+  '/admin/loyalty-transactions': typeof AdminLoyaltyTransactionsRoute
   '/admin/messages': typeof AdminMessagesRouteWithChildren
   '/admin/metrics': typeof AdminMetricsRoute
+  '/admin/notification-rules': typeof AdminNotificationRulesRoute
+  '/admin/notification-templates': typeof AdminNotificationTemplatesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/oto': typeof AdminOtoRoute
@@ -646,17 +745,25 @@ export interface FileRoutesByFullPath {
   '/admin/permissions': typeof AdminPermissionsRoute
   '/admin/popular-picks': typeof AdminPopularPicksRoute
   '/admin/privacy': typeof AdminPrivacyRoute
+  '/admin/product-offers': typeof AdminProductOffersRoute
+  '/admin/product-relations': typeof AdminProductRelationsRoute
   '/admin/products': typeof AdminProductsRouteWithChildren
+  '/admin/referrals': typeof AdminReferralsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
+  '/admin/reviews': typeof AdminReviewsRoute
   '/admin/search': typeof AdminSearchRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/shipping': typeof AdminShippingRoute
+  '/admin/shipping-carriers': typeof AdminShippingCarriersRoute
+  '/admin/shipping-rates': typeof AdminShippingRatesRoute
+  '/admin/shipping-zones': typeof AdminShippingZonesRoute
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
   '/admin/states': typeof AdminStatesRoute
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/support': typeof AdminSupportRouteWithChildren
+  '/admin/themes': typeof AdminThemesRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/webhooks': typeof AdminWebhooksRouteWithChildren
   '/admin/webhooks-deliveries': typeof AdminWebhooksDeliveriesRoute
@@ -712,11 +819,13 @@ export interface FileRoutesByTo {
   '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRouteWithChildren
   '/account/privacy': typeof AccountPrivacyRoute
+  '/admin/ab-tests': typeof AdminAbTestsRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/audit': typeof AdminAuditRouteWithChildren
   '/admin/audit-logins': typeof AdminAuditLoginsRoute
+  '/admin/bundles': typeof AdminBundlesRoute
   '/admin/campaigns': typeof AdminCampaignsRouteWithChildren
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/content': typeof AdminContentRoute
@@ -725,6 +834,7 @@ export interface FileRoutesByTo {
   '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/errors': typeof AdminErrorsRoute
+  '/admin/faq': typeof AdminFaqRoute
   '/admin/featured-categories': typeof AdminFeaturedCategoriesRoute
   '/admin/help': typeof AdminHelpRoute
   '/admin/home-builder': typeof AdminHomeBuilderRoute
@@ -734,8 +844,12 @@ export interface FileRoutesByTo {
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/landing-pages': typeof AdminLandingPagesRouteWithChildren
+  '/admin/loyalty': typeof AdminLoyaltyRoute
+  '/admin/loyalty-transactions': typeof AdminLoyaltyTransactionsRoute
   '/admin/messages': typeof AdminMessagesRouteWithChildren
   '/admin/metrics': typeof AdminMetricsRoute
+  '/admin/notification-rules': typeof AdminNotificationRulesRoute
+  '/admin/notification-templates': typeof AdminNotificationTemplatesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/oto': typeof AdminOtoRoute
@@ -744,17 +858,25 @@ export interface FileRoutesByTo {
   '/admin/permissions': typeof AdminPermissionsRoute
   '/admin/popular-picks': typeof AdminPopularPicksRoute
   '/admin/privacy': typeof AdminPrivacyRoute
+  '/admin/product-offers': typeof AdminProductOffersRoute
+  '/admin/product-relations': typeof AdminProductRelationsRoute
   '/admin/products': typeof AdminProductsRouteWithChildren
+  '/admin/referrals': typeof AdminReferralsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
+  '/admin/reviews': typeof AdminReviewsRoute
   '/admin/search': typeof AdminSearchRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/shipping': typeof AdminShippingRoute
+  '/admin/shipping-carriers': typeof AdminShippingCarriersRoute
+  '/admin/shipping-rates': typeof AdminShippingRatesRoute
+  '/admin/shipping-zones': typeof AdminShippingZonesRoute
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
   '/admin/states': typeof AdminStatesRoute
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/support': typeof AdminSupportRouteWithChildren
+  '/admin/themes': typeof AdminThemesRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/webhooks': typeof AdminWebhooksRouteWithChildren
   '/admin/webhooks-deliveries': typeof AdminWebhooksDeliveriesRoute
@@ -812,11 +934,13 @@ export interface FileRoutesById {
   '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRouteWithChildren
   '/account/privacy': typeof AccountPrivacyRoute
+  '/admin/ab-tests': typeof AdminAbTestsRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/audit': typeof AdminAuditRouteWithChildren
   '/admin/audit-logins': typeof AdminAuditLoginsRoute
+  '/admin/bundles': typeof AdminBundlesRoute
   '/admin/campaigns': typeof AdminCampaignsRouteWithChildren
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/content': typeof AdminContentRoute
@@ -825,6 +949,7 @@ export interface FileRoutesById {
   '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/errors': typeof AdminErrorsRoute
+  '/admin/faq': typeof AdminFaqRoute
   '/admin/featured-categories': typeof AdminFeaturedCategoriesRoute
   '/admin/help': typeof AdminHelpRoute
   '/admin/home-builder': typeof AdminHomeBuilderRoute
@@ -834,8 +959,12 @@ export interface FileRoutesById {
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/landing-pages': typeof AdminLandingPagesRouteWithChildren
+  '/admin/loyalty': typeof AdminLoyaltyRoute
+  '/admin/loyalty-transactions': typeof AdminLoyaltyTransactionsRoute
   '/admin/messages': typeof AdminMessagesRouteWithChildren
   '/admin/metrics': typeof AdminMetricsRoute
+  '/admin/notification-rules': typeof AdminNotificationRulesRoute
+  '/admin/notification-templates': typeof AdminNotificationTemplatesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/oto': typeof AdminOtoRoute
@@ -844,17 +973,25 @@ export interface FileRoutesById {
   '/admin/permissions': typeof AdminPermissionsRoute
   '/admin/popular-picks': typeof AdminPopularPicksRoute
   '/admin/privacy': typeof AdminPrivacyRoute
+  '/admin/product-offers': typeof AdminProductOffersRoute
+  '/admin/product-relations': typeof AdminProductRelationsRoute
   '/admin/products': typeof AdminProductsRouteWithChildren
+  '/admin/referrals': typeof AdminReferralsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
+  '/admin/reviews': typeof AdminReviewsRoute
   '/admin/search': typeof AdminSearchRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/shipping': typeof AdminShippingRoute
+  '/admin/shipping-carriers': typeof AdminShippingCarriersRoute
+  '/admin/shipping-rates': typeof AdminShippingRatesRoute
+  '/admin/shipping-zones': typeof AdminShippingZonesRoute
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
   '/admin/states': typeof AdminStatesRoute
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/support': typeof AdminSupportRouteWithChildren
+  '/admin/themes': typeof AdminThemesRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/webhooks': typeof AdminWebhooksRouteWithChildren
   '/admin/webhooks-deliveries': typeof AdminWebhooksDeliveriesRoute
@@ -913,11 +1050,13 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/wishlist'
     | '/account/privacy'
+    | '/admin/ab-tests'
     | '/admin/abandoned'
     | '/admin/analytics'
     | '/admin/announcements'
     | '/admin/audit'
     | '/admin/audit-logins'
+    | '/admin/bundles'
     | '/admin/campaigns'
     | '/admin/categories'
     | '/admin/content'
@@ -926,6 +1065,7 @@ export interface FileRouteTypes {
     | '/admin/create-order'
     | '/admin/customers'
     | '/admin/errors'
+    | '/admin/faq'
     | '/admin/featured-categories'
     | '/admin/help'
     | '/admin/home-builder'
@@ -935,8 +1075,12 @@ export interface FileRouteTypes {
     | '/admin/inventory'
     | '/admin/invoices'
     | '/admin/landing-pages'
+    | '/admin/loyalty'
+    | '/admin/loyalty-transactions'
     | '/admin/messages'
     | '/admin/metrics'
+    | '/admin/notification-rules'
+    | '/admin/notification-templates'
     | '/admin/notifications'
     | '/admin/orders'
     | '/admin/oto'
@@ -945,17 +1089,25 @@ export interface FileRouteTypes {
     | '/admin/permissions'
     | '/admin/popular-picks'
     | '/admin/privacy'
+    | '/admin/product-offers'
+    | '/admin/product-relations'
     | '/admin/products'
+    | '/admin/referrals'
     | '/admin/reports'
     | '/admin/returns'
+    | '/admin/reviews'
     | '/admin/search'
     | '/admin/security'
     | '/admin/settings'
     | '/admin/shipping'
+    | '/admin/shipping-carriers'
+    | '/admin/shipping-rates'
+    | '/admin/shipping-zones'
     | '/admin/site-analytics'
     | '/admin/states'
     | '/admin/storefront'
     | '/admin/support'
+    | '/admin/themes'
     | '/admin/users'
     | '/admin/webhooks'
     | '/admin/webhooks-deliveries'
@@ -1011,11 +1163,13 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/wishlist'
     | '/account/privacy'
+    | '/admin/ab-tests'
     | '/admin/abandoned'
     | '/admin/analytics'
     | '/admin/announcements'
     | '/admin/audit'
     | '/admin/audit-logins'
+    | '/admin/bundles'
     | '/admin/campaigns'
     | '/admin/categories'
     | '/admin/content'
@@ -1024,6 +1178,7 @@ export interface FileRouteTypes {
     | '/admin/create-order'
     | '/admin/customers'
     | '/admin/errors'
+    | '/admin/faq'
     | '/admin/featured-categories'
     | '/admin/help'
     | '/admin/home-builder'
@@ -1033,8 +1188,12 @@ export interface FileRouteTypes {
     | '/admin/inventory'
     | '/admin/invoices'
     | '/admin/landing-pages'
+    | '/admin/loyalty'
+    | '/admin/loyalty-transactions'
     | '/admin/messages'
     | '/admin/metrics'
+    | '/admin/notification-rules'
+    | '/admin/notification-templates'
     | '/admin/notifications'
     | '/admin/orders'
     | '/admin/oto'
@@ -1043,17 +1202,25 @@ export interface FileRouteTypes {
     | '/admin/permissions'
     | '/admin/popular-picks'
     | '/admin/privacy'
+    | '/admin/product-offers'
+    | '/admin/product-relations'
     | '/admin/products'
+    | '/admin/referrals'
     | '/admin/reports'
     | '/admin/returns'
+    | '/admin/reviews'
     | '/admin/search'
     | '/admin/security'
     | '/admin/settings'
     | '/admin/shipping'
+    | '/admin/shipping-carriers'
+    | '/admin/shipping-rates'
+    | '/admin/shipping-zones'
     | '/admin/site-analytics'
     | '/admin/states'
     | '/admin/storefront'
     | '/admin/support'
+    | '/admin/themes'
     | '/admin/users'
     | '/admin/webhooks'
     | '/admin/webhooks-deliveries'
@@ -1110,11 +1277,13 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/wishlist'
     | '/account/privacy'
+    | '/admin/ab-tests'
     | '/admin/abandoned'
     | '/admin/analytics'
     | '/admin/announcements'
     | '/admin/audit'
     | '/admin/audit-logins'
+    | '/admin/bundles'
     | '/admin/campaigns'
     | '/admin/categories'
     | '/admin/content'
@@ -1123,6 +1292,7 @@ export interface FileRouteTypes {
     | '/admin/create-order'
     | '/admin/customers'
     | '/admin/errors'
+    | '/admin/faq'
     | '/admin/featured-categories'
     | '/admin/help'
     | '/admin/home-builder'
@@ -1132,8 +1302,12 @@ export interface FileRouteTypes {
     | '/admin/inventory'
     | '/admin/invoices'
     | '/admin/landing-pages'
+    | '/admin/loyalty'
+    | '/admin/loyalty-transactions'
     | '/admin/messages'
     | '/admin/metrics'
+    | '/admin/notification-rules'
+    | '/admin/notification-templates'
     | '/admin/notifications'
     | '/admin/orders'
     | '/admin/oto'
@@ -1142,17 +1316,25 @@ export interface FileRouteTypes {
     | '/admin/permissions'
     | '/admin/popular-picks'
     | '/admin/privacy'
+    | '/admin/product-offers'
+    | '/admin/product-relations'
     | '/admin/products'
+    | '/admin/referrals'
     | '/admin/reports'
     | '/admin/returns'
+    | '/admin/reviews'
     | '/admin/search'
     | '/admin/security'
     | '/admin/settings'
     | '/admin/shipping'
+    | '/admin/shipping-carriers'
+    | '/admin/shipping-rates'
+    | '/admin/shipping-zones'
     | '/admin/site-analytics'
     | '/admin/states'
     | '/admin/storefront'
     | '/admin/support'
+    | '/admin/themes'
     | '/admin/users'
     | '/admin/webhooks'
     | '/admin/webhooks-deliveries'
@@ -1449,6 +1631,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/themes': {
+      id: '/admin/themes'
+      path: '/themes'
+      fullPath: '/admin/themes'
+      preLoaderRoute: typeof AdminThemesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/support': {
       id: '/admin/support'
       path: '/support'
@@ -1475,6 +1664,27 @@ declare module '@tanstack/react-router' {
       path: '/site-analytics'
       fullPath: '/admin/site-analytics'
       preLoaderRoute: typeof AdminSiteAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/shipping-zones': {
+      id: '/admin/shipping-zones'
+      path: '/shipping-zones'
+      fullPath: '/admin/shipping-zones'
+      preLoaderRoute: typeof AdminShippingZonesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/shipping-rates': {
+      id: '/admin/shipping-rates'
+      path: '/shipping-rates'
+      fullPath: '/admin/shipping-rates'
+      preLoaderRoute: typeof AdminShippingRatesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/shipping-carriers': {
+      id: '/admin/shipping-carriers'
+      path: '/shipping-carriers'
+      fullPath: '/admin/shipping-carriers'
+      preLoaderRoute: typeof AdminShippingCarriersRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/shipping': {
@@ -1505,6 +1715,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSearchRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/reviews': {
+      id: '/admin/reviews'
+      path: '/reviews'
+      fullPath: '/admin/reviews'
+      preLoaderRoute: typeof AdminReviewsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/returns': {
       id: '/admin/returns'
       path: '/returns'
@@ -1519,11 +1736,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminReportsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/referrals': {
+      id: '/admin/referrals'
+      path: '/referrals'
+      fullPath: '/admin/referrals'
+      preLoaderRoute: typeof AdminReferralsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/products': {
       id: '/admin/products'
       path: '/products'
       fullPath: '/admin/products'
       preLoaderRoute: typeof AdminProductsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/product-relations': {
+      id: '/admin/product-relations'
+      path: '/product-relations'
+      fullPath: '/admin/product-relations'
+      preLoaderRoute: typeof AdminProductRelationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/product-offers': {
+      id: '/admin/product-offers'
+      path: '/product-offers'
+      fullPath: '/admin/product-offers'
+      preLoaderRoute: typeof AdminProductOffersRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/privacy': {
@@ -1582,6 +1820,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminNotificationsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/notification-templates': {
+      id: '/admin/notification-templates'
+      path: '/notification-templates'
+      fullPath: '/admin/notification-templates'
+      preLoaderRoute: typeof AdminNotificationTemplatesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notification-rules': {
+      id: '/admin/notification-rules'
+      path: '/notification-rules'
+      fullPath: '/admin/notification-rules'
+      preLoaderRoute: typeof AdminNotificationRulesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/metrics': {
       id: '/admin/metrics'
       path: '/metrics'
@@ -1594,6 +1846,20 @@ declare module '@tanstack/react-router' {
       path: '/messages'
       fullPath: '/admin/messages'
       preLoaderRoute: typeof AdminMessagesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/loyalty-transactions': {
+      id: '/admin/loyalty-transactions'
+      path: '/loyalty-transactions'
+      fullPath: '/admin/loyalty-transactions'
+      preLoaderRoute: typeof AdminLoyaltyTransactionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/loyalty': {
+      id: '/admin/loyalty'
+      path: '/loyalty'
+      fullPath: '/admin/loyalty'
+      preLoaderRoute: typeof AdminLoyaltyRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/landing-pages': {
@@ -1659,6 +1925,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFeaturedCategoriesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/faq': {
+      id: '/admin/faq'
+      path: '/faq'
+      fullPath: '/admin/faq'
+      preLoaderRoute: typeof AdminFaqRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/errors': {
       id: '/admin/errors'
       path: '/errors'
@@ -1715,6 +1988,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCampaignsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/bundles': {
+      id: '/admin/bundles'
+      path: '/bundles'
+      fullPath: '/admin/bundles'
+      preLoaderRoute: typeof AdminBundlesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/audit-logins': {
       id: '/admin/audit-logins'
       path: '/audit-logins'
@@ -1748,6 +2028,13 @@ declare module '@tanstack/react-router' {
       path: '/abandoned'
       fullPath: '/admin/abandoned'
       preLoaderRoute: typeof AdminAbandonedRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/ab-tests': {
+      id: '/admin/ab-tests'
+      path: '/ab-tests'
+      fullPath: '/admin/ab-tests'
+      preLoaderRoute: typeof AdminAbTestsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/account/privacy': {
@@ -2058,11 +2345,13 @@ const AdminWebhooksRouteWithChildren = AdminWebhooksRoute._addFileChildren(
 )
 
 interface AdminRouteChildren {
+  AdminAbTestsRoute: typeof AdminAbTestsRoute
   AdminAbandonedRoute: typeof AdminAbandonedRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminAnnouncementsRoute: typeof AdminAnnouncementsRoute
   AdminAuditRoute: typeof AdminAuditRouteWithChildren
   AdminAuditLoginsRoute: typeof AdminAuditLoginsRoute
+  AdminBundlesRoute: typeof AdminBundlesRoute
   AdminCampaignsRoute: typeof AdminCampaignsRouteWithChildren
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminContentRoute: typeof AdminContentRoute
@@ -2071,6 +2360,7 @@ interface AdminRouteChildren {
   AdminCreateOrderRoute: typeof AdminCreateOrderRoute
   AdminCustomersRoute: typeof AdminCustomersRouteWithChildren
   AdminErrorsRoute: typeof AdminErrorsRoute
+  AdminFaqRoute: typeof AdminFaqRoute
   AdminFeaturedCategoriesRoute: typeof AdminFeaturedCategoriesRoute
   AdminHelpRoute: typeof AdminHelpRoute
   AdminHomeBuilderRoute: typeof AdminHomeBuilderRoute
@@ -2080,8 +2370,12 @@ interface AdminRouteChildren {
   AdminInventoryRoute: typeof AdminInventoryRoute
   AdminInvoicesRoute: typeof AdminInvoicesRoute
   AdminLandingPagesRoute: typeof AdminLandingPagesRouteWithChildren
+  AdminLoyaltyRoute: typeof AdminLoyaltyRoute
+  AdminLoyaltyTransactionsRoute: typeof AdminLoyaltyTransactionsRoute
   AdminMessagesRoute: typeof AdminMessagesRouteWithChildren
   AdminMetricsRoute: typeof AdminMetricsRoute
+  AdminNotificationRulesRoute: typeof AdminNotificationRulesRoute
+  AdminNotificationTemplatesRoute: typeof AdminNotificationTemplatesRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminOrdersRoute: typeof AdminOrdersRouteWithChildren
   AdminOtoRoute: typeof AdminOtoRoute
@@ -2090,17 +2384,25 @@ interface AdminRouteChildren {
   AdminPermissionsRoute: typeof AdminPermissionsRoute
   AdminPopularPicksRoute: typeof AdminPopularPicksRoute
   AdminPrivacyRoute: typeof AdminPrivacyRoute
+  AdminProductOffersRoute: typeof AdminProductOffersRoute
+  AdminProductRelationsRoute: typeof AdminProductRelationsRoute
   AdminProductsRoute: typeof AdminProductsRouteWithChildren
+  AdminReferralsRoute: typeof AdminReferralsRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminReturnsRoute: typeof AdminReturnsRoute
+  AdminReviewsRoute: typeof AdminReviewsRoute
   AdminSearchRoute: typeof AdminSearchRoute
   AdminSecurityRoute: typeof AdminSecurityRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminShippingRoute: typeof AdminShippingRoute
+  AdminShippingCarriersRoute: typeof AdminShippingCarriersRoute
+  AdminShippingRatesRoute: typeof AdminShippingRatesRoute
+  AdminShippingZonesRoute: typeof AdminShippingZonesRoute
   AdminSiteAnalyticsRoute: typeof AdminSiteAnalyticsRoute
   AdminStatesRoute: typeof AdminStatesRoute
   AdminStorefrontRoute: typeof AdminStorefrontRoute
   AdminSupportRoute: typeof AdminSupportRouteWithChildren
+  AdminThemesRoute: typeof AdminThemesRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminWebhooksRoute: typeof AdminWebhooksRouteWithChildren
   AdminWebhooksDeliveriesRoute: typeof AdminWebhooksDeliveriesRoute
@@ -2109,11 +2411,13 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAbTestsRoute: AdminAbTestsRoute,
   AdminAbandonedRoute: AdminAbandonedRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminAnnouncementsRoute: AdminAnnouncementsRoute,
   AdminAuditRoute: AdminAuditRouteWithChildren,
   AdminAuditLoginsRoute: AdminAuditLoginsRoute,
+  AdminBundlesRoute: AdminBundlesRoute,
   AdminCampaignsRoute: AdminCampaignsRouteWithChildren,
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminContentRoute: AdminContentRoute,
@@ -2122,6 +2426,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCreateOrderRoute: AdminCreateOrderRoute,
   AdminCustomersRoute: AdminCustomersRouteWithChildren,
   AdminErrorsRoute: AdminErrorsRoute,
+  AdminFaqRoute: AdminFaqRoute,
   AdminFeaturedCategoriesRoute: AdminFeaturedCategoriesRoute,
   AdminHelpRoute: AdminHelpRoute,
   AdminHomeBuilderRoute: AdminHomeBuilderRoute,
@@ -2131,8 +2436,12 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminInventoryRoute: AdminInventoryRoute,
   AdminInvoicesRoute: AdminInvoicesRoute,
   AdminLandingPagesRoute: AdminLandingPagesRouteWithChildren,
+  AdminLoyaltyRoute: AdminLoyaltyRoute,
+  AdminLoyaltyTransactionsRoute: AdminLoyaltyTransactionsRoute,
   AdminMessagesRoute: AdminMessagesRouteWithChildren,
   AdminMetricsRoute: AdminMetricsRoute,
+  AdminNotificationRulesRoute: AdminNotificationRulesRoute,
+  AdminNotificationTemplatesRoute: AdminNotificationTemplatesRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminOrdersRoute: AdminOrdersRouteWithChildren,
   AdminOtoRoute: AdminOtoRoute,
@@ -2141,17 +2450,25 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminPermissionsRoute: AdminPermissionsRoute,
   AdminPopularPicksRoute: AdminPopularPicksRoute,
   AdminPrivacyRoute: AdminPrivacyRoute,
+  AdminProductOffersRoute: AdminProductOffersRoute,
+  AdminProductRelationsRoute: AdminProductRelationsRoute,
   AdminProductsRoute: AdminProductsRouteWithChildren,
+  AdminReferralsRoute: AdminReferralsRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminReturnsRoute: AdminReturnsRoute,
+  AdminReviewsRoute: AdminReviewsRoute,
   AdminSearchRoute: AdminSearchRoute,
   AdminSecurityRoute: AdminSecurityRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminShippingRoute: AdminShippingRoute,
+  AdminShippingCarriersRoute: AdminShippingCarriersRoute,
+  AdminShippingRatesRoute: AdminShippingRatesRoute,
+  AdminShippingZonesRoute: AdminShippingZonesRoute,
   AdminSiteAnalyticsRoute: AdminSiteAnalyticsRoute,
   AdminStatesRoute: AdminStatesRoute,
   AdminStorefrontRoute: AdminStorefrontRoute,
   AdminSupportRoute: AdminSupportRouteWithChildren,
+  AdminThemesRoute: AdminThemesRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminWebhooksRoute: AdminWebhooksRouteWithChildren,
   AdminWebhooksDeliveriesRoute: AdminWebhooksDeliveriesRoute,
