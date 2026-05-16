@@ -31,6 +31,8 @@ export type FormFieldType =
   | "date"
   | "datetime"
   | "image"
+  | "video"
+  | "gallery"
   | "url"
   | "email"
   | "tel"
