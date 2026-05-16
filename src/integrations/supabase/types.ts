@@ -1068,6 +1068,69 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_addresses: {
+        Row: {
+          additional_number: string | null
+          building_number: string | null
+          city: string
+          created_at: string
+          district: string | null
+          full_name: string
+          geo_address: string | null
+          id: string
+          is_default: boolean
+          label: string | null
+          lat: number | null
+          lng: number | null
+          notes: string | null
+          phone: string
+          postal_code: string | null
+          street: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          additional_number?: string | null
+          building_number?: string | null
+          city: string
+          created_at?: string
+          district?: string | null
+          full_name: string
+          geo_address?: string | null
+          id?: string
+          is_default?: boolean
+          label?: string | null
+          lat?: number | null
+          lng?: number | null
+          notes?: string | null
+          phone: string
+          postal_code?: string | null
+          street?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          additional_number?: string | null
+          building_number?: string | null
+          city?: string
+          created_at?: string
+          district?: string | null
+          full_name?: string
+          geo_address?: string | null
+          id?: string
+          is_default?: boolean
+          label?: string | null
+          lat?: number | null
+          lng?: number | null
+          notes?: string | null
+          phone?: string
+          postal_code?: string | null
+          street?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       customer_communications: {
         Row: {
           actor_email: string | null
@@ -5418,6 +5481,7 @@ export type Database = {
         Args: { _event_type: string; _payload: Json }
         Returns: string
       }
+      finalize_order_stock: { Args: { _order_id: string }; Returns: undefined }
       get_profile_safe: {
         Args: { _user_id: string }
         Returns: {

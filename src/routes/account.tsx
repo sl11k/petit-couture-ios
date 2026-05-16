@@ -1,11 +1,13 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { buildMeta } from "@/lib/seo";
-import { ChevronLeft, ChevronRight, Heart, LogOut, Mail, Lock } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { ChevronLeft, ChevronRight, Heart, LogOut, Mail, Lock, Package, MapPin, RotateCcw, Plus, Trash2, Pencil, Check, X } from "lucide-react";
+import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/state/AuthContext";
 import { useWishlist } from "@/state/WishlistContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/account")({
   head: () =>
@@ -255,23 +257,57 @@ function SignedIn({
   signOutLabel: string;
   onSignOut: () => void;
 }) {
+  const { isRTL } = useLanguage();
+  const [tab, setTab] = useState<"overview" | "orders" | "addresses" | "returns">("overview");
+
+  const tabs: { key: typeof tab; ar: string; en: string; Icon: typeof Package }[] = [
+    { key: "orders", ar: "طلباتي", en: "Orders", Icon: Package },
+    { key: "addresses", ar: "عناويني", en: "Addresses", Icon: MapPin },
+    { key: "returns", ar: "إرجاعاتي", en: "Returns", Icon: RotateCcw },
+  ];
+
   return (
     <section className="mt-8 space-y-4">
       <div className="rounded-[22px] border border-border bg-cream-warm/40 p-5 text-center">
         <p className="text-[10.5px] tracking-luxury text-gold-deep">{signedInAs}</p>
-        <p className="mt-2 font-serif text-[20px] text-foreground break-all">
-          {email}
-        </p>
+        <p className="mt-2 font-serif text-[20px] text-foreground break-all">{email}</p>
         <p className="mt-3 text-[12px] text-muted-foreground tracking-soft">
           {welcome} · {syncedCountLabel}
         </p>
       </div>
 
+      {/* Tab strip */}
+      <div className="grid grid-cols-3 gap-2">
+        {tabs.map((tb) => {
+          const active = tab === tb.key;
+          return (
+            <button
+              key={tb.key}
+              type="button"
+              onClick={() => setTab(active ? "overview" : tb.key)}
+              className={[
+                "h-[68px] rounded-[18px] border flex flex-col items-center justify-center gap-1 text-[11px] tracking-soft transition active:scale-[0.97]",
+                active
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-cream-warm/40 text-foreground border-border",
+              ].join(" ")}
+            >
+              <tb.Icon className="h-[16px] w-[16px]" strokeWidth={1.6} />
+              <span>{isRTL ? tb.ar : tb.en}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {tab === "orders" && <OrdersPanel />}
+      {tab === "addresses" && <AddressesPanel />}
+      {tab === "returns" && <ReturnsPanel />}
+
       <Link
         to="/wishlist"
         className="w-full h-[52px] rounded-full bg-foreground text-background text-[13px] tracking-soft font-medium grid place-items-center active:scale-[0.97] transition shadow-soft"
       >
-        View wishlist
+        {isRTL ? "قائمة الرغبات" : "View wishlist"}
       </Link>
 
       <button
@@ -283,5 +319,324 @@ function SignedIn({
         {signOutLabel}
       </button>
     </section>
+  );
+}
+
+// ============= Orders Panel =============
+type OrderRow = {
+  id: string;
+  order_number: string;
+  status: string;
+  payment_status: string;
+  total: number;
+  currency: string;
+  created_at: string;
+};
+
+function OrdersPanel() {
+  const { isRTL } = useLanguage();
+  const [rows, setRows] = useState<OrderRow[] | null>(null);
+
+  useEffect(() => {
+    void (async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("id, order_number, status, payment_status, total, currency, created_at")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) {
+        console.error(error);
+        setRows([]);
+        return;
+      }
+      setRows((data as OrderRow[]) ?? []);
+    })();
+  }, []);
+
+  if (rows === null) {
+    return <p className="text-center text-[12px] text-muted-foreground py-6">{isRTL ? "جاري التحميل…" : "Loading…"}</p>;
+  }
+  if (rows.length === 0) {
+    return (
+      <div className="rounded-[18px] border border-border bg-cream-warm/30 p-6 text-center">
+        <Package className="h-[28px] w-[28px] text-muted-foreground mx-auto" strokeWidth={1.4} />
+        <p className="mt-3 text-[13px] text-foreground tracking-soft">{isRTL ? "لا توجد طلبات بعد" : "No orders yet"}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {rows.map((o) => (
+        <Link
+          key={o.id}
+          to="/order-confirmation/$orderNumber"
+          params={{ orderNumber: o.order_number }}
+          className="block rounded-[18px] border border-border bg-cream-warm/30 px-4 py-3 active:scale-[0.99] transition"
+        >
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[12px] text-foreground">{o.order_number}</span>
+            <span className="text-[11px] tracking-luxury text-gold-deep uppercase">{o.status}</span>
+          </div>
+          <div className="mt-1 flex items-center justify-between text-[12px] text-muted-foreground">
+            <span>{new Date(o.created_at).toLocaleDateString(isRTL ? "ar-SA" : "en-US")}</span>
+            <span className="text-foreground font-medium">{Number(o.total).toFixed(2)} {o.currency}</span>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+// ============= Addresses Panel =============
+type AddressRow = {
+  id: string;
+  label: string | null;
+  full_name: string;
+  phone: string;
+  city: string;
+  district: string | null;
+  street: string | null;
+  postal_code: string | null;
+  is_default: boolean;
+};
+
+function AddressesPanel() {
+  const { isRTL } = useLanguage();
+  const { user } = useAuth();
+  const [rows, setRows] = useState<AddressRow[] | null>(null);
+  const [editing, setEditing] = useState<AddressRow | null>(null);
+  const [showForm, setShowForm] = useState(false);
+
+  const load = async () => {
+    const { data, error } = await supabase
+      .from("customer_addresses")
+      .select("id, label, full_name, phone, city, district, street, postal_code, is_default")
+      .order("is_default", { ascending: false })
+      .order("created_at", { ascending: false });
+    if (error) { console.error(error); setRows([]); return; }
+    setRows((data as AddressRow[]) ?? []);
+  };
+  useEffect(() => { void load(); }, []);
+
+  const del = async (id: string) => {
+    const { error } = await supabase.from("customer_addresses").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success(isRTL ? "تم الحذف" : "Deleted");
+    void load();
+  };
+
+  const makeDefault = async (id: string) => {
+    const { error } = await supabase.from("customer_addresses").update({ is_default: true }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    void load();
+  };
+
+  if (rows === null) {
+    return <p className="text-center text-[12px] text-muted-foreground py-6">{isRTL ? "جاري التحميل…" : "Loading…"}</p>;
+  }
+
+  return (
+    <div className="space-y-2">
+      {rows.map((a) => (
+        <div key={a.id} className="rounded-[18px] border border-border bg-cream-warm/30 p-4">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-[13px] font-medium text-foreground">{a.label || a.full_name}</span>
+                {a.is_default && (
+                  <span className="text-[9.5px] tracking-luxury text-gold-deep border border-gold-soft px-2 py-0.5 rounded-full">
+                    {isRTL ? "افتراضي" : "DEFAULT"}
+                  </span>
+                )}
+              </div>
+              <p className="mt-1 text-[12px] text-muted-foreground">{a.full_name} · {a.phone}</p>
+              <p className="mt-0.5 text-[12px] text-muted-foreground truncate">
+                {[a.street, a.district, a.city, a.postal_code].filter(Boolean).join("، ")}
+              </p>
+            </div>
+            <div className="flex flex-col gap-1">
+              {!a.is_default && (
+                <button onClick={() => void makeDefault(a.id)} title={isRTL ? "اجعله افتراضي" : "Set default"} className="h-8 w-8 grid place-items-center rounded-full border border-border active:scale-95">
+                  <Check className="h-[14px] w-[14px]" strokeWidth={1.6} />
+                </button>
+              )}
+              <button onClick={() => { setEditing(a); setShowForm(true); }} className="h-8 w-8 grid place-items-center rounded-full border border-border active:scale-95">
+                <Pencil className="h-[13px] w-[13px]" strokeWidth={1.6} />
+              </button>
+              <button onClick={() => void del(a.id)} className="h-8 w-8 grid place-items-center rounded-full border border-border text-destructive active:scale-95">
+                <Trash2 className="h-[13px] w-[13px]" strokeWidth={1.6} />
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {rows.length === 0 && !showForm && (
+        <div className="rounded-[18px] border border-border bg-cream-warm/30 p-6 text-center">
+          <MapPin className="h-[28px] w-[28px] text-muted-foreground mx-auto" strokeWidth={1.4} />
+          <p className="mt-3 text-[13px] text-foreground tracking-soft">{isRTL ? "لا توجد عناوين محفوظة" : "No saved addresses"}</p>
+        </div>
+      )}
+
+      {!showForm ? (
+        <button
+          type="button"
+          onClick={() => { setEditing(null); setShowForm(true); }}
+          className="w-full h-[48px] rounded-full border border-dashed border-gold-soft text-gold-deep text-[12px] tracking-luxury inline-flex items-center justify-center gap-2 active:scale-[0.98]"
+        >
+          <Plus className="h-[14px] w-[14px]" strokeWidth={1.6} />
+          {isRTL ? "إضافة عنوان" : "Add address"}
+        </button>
+      ) : (
+        <AddressForm
+          userId={user?.id ?? ""}
+          initial={editing}
+          onCancel={() => { setShowForm(false); setEditing(null); }}
+          onSaved={() => { setShowForm(false); setEditing(null); void load(); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function AddressForm({
+  userId,
+  initial,
+  onCancel,
+  onSaved,
+}: {
+  userId: string;
+  initial: AddressRow | null;
+  onCancel: () => void;
+  onSaved: () => void;
+}) {
+  const { isRTL } = useLanguage();
+  const [form, setForm] = useState({
+    label: initial?.label ?? "",
+    full_name: initial?.full_name ?? "",
+    phone: initial?.phone ?? "",
+    city: initial?.city ?? "",
+    district: initial?.district ?? "",
+    street: initial?.street ?? "",
+    postal_code: initial?.postal_code ?? "",
+    is_default: initial?.is_default ?? false,
+  });
+  const [saving, setSaving] = useState(false);
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!form.full_name.trim() || !form.phone.trim() || !form.city.trim()) {
+      toast.error(isRTL ? "أكمل الحقول المطلوبة" : "Complete required fields");
+      return;
+    }
+    setSaving(true);
+    try {
+      if (initial) {
+        const { error } = await supabase.from("customer_addresses").update(form).eq("id", initial.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("customer_addresses").insert({ ...form, user_id: userId });
+        if (error) throw error;
+      }
+      toast.success(isRTL ? "تم الحفظ" : "Saved");
+      onSaved();
+    } catch (err: any) {
+      toast.error(err?.message ?? "Error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const input = "w-full h-[44px] rounded-[14px] bg-cream-warm/40 border border-border px-3 text-[13px] focus:outline-none focus:border-gold-soft";
+
+  return (
+    <form onSubmit={submit} className="rounded-[18px] border border-border bg-background p-4 space-y-2">
+      <div className="flex items-center justify-between">
+        <h3 className="text-[13px] font-medium">{initial ? (isRTL ? "تعديل العنوان" : "Edit address") : (isRTL ? "عنوان جديد" : "New address")}</h3>
+        <button type="button" onClick={onCancel} className="h-8 w-8 grid place-items-center rounded-full border border-border">
+          <X className="h-[14px] w-[14px]" strokeWidth={1.6} />
+        </button>
+      </div>
+      <input className={input} placeholder={isRTL ? "تسمية (مثل: المنزل)" : "Label (e.g. Home)"} value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} />
+      <input className={input} placeholder={isRTL ? "الاسم الكامل *" : "Full name *"} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} required />
+      <input className={input} placeholder={isRTL ? "الهاتف *" : "Phone *"} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
+      <input className={input} placeholder={isRTL ? "المدينة *" : "City *"} value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} required />
+      <input className={input} placeholder={isRTL ? "الحي" : "District"} value={form.district} onChange={(e) => setForm({ ...form, district: e.target.value })} />
+      <input className={input} placeholder={isRTL ? "الشارع" : "Street"} value={form.street} onChange={(e) => setForm({ ...form, street: e.target.value })} />
+      <input className={input} placeholder={isRTL ? "الرمز البريدي" : "Postal code"} value={form.postal_code} onChange={(e) => setForm({ ...form, postal_code: e.target.value })} />
+      <label className="flex items-center gap-2 text-[12px] text-muted-foreground pt-1">
+        <input type="checkbox" checked={form.is_default} onChange={(e) => setForm({ ...form, is_default: e.target.checked })} className="accent-foreground" />
+        {isRTL ? "اجعله العنوان الافتراضي" : "Set as default"}
+      </label>
+      <button type="submit" disabled={saving} className="mt-2 w-full h-[44px] rounded-full bg-foreground text-background text-[12px] tracking-luxury disabled:opacity-60 active:scale-[0.97]">
+        {saving ? (isRTL ? "جاري الحفظ…" : "Saving…") : (isRTL ? "حفظ" : "Save")}
+      </button>
+    </form>
+  );
+}
+
+// ============= Returns Panel =============
+type ReturnRow = {
+  id: string;
+  return_number: string;
+  order_number: string | null;
+  status: string;
+  reason: string;
+  refund_amount: number | null;
+  created_at: string;
+};
+
+function ReturnsPanel() {
+  const { isRTL } = useLanguage();
+  const [rows, setRows] = useState<ReturnRow[] | null>(null);
+
+  useEffect(() => {
+    void (async () => {
+      const { data, error } = await supabase
+        .from("return_requests")
+        .select("id, return_number, order_number, status, reason, refund_amount, created_at")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) { console.error(error); setRows([]); return; }
+      setRows((data as ReturnRow[]) ?? []);
+    })();
+  }, []);
+
+  if (rows === null) {
+    return <p className="text-center text-[12px] text-muted-foreground py-6">{isRTL ? "جاري التحميل…" : "Loading…"}</p>;
+  }
+  if (rows.length === 0) {
+    return (
+      <div className="rounded-[18px] border border-border bg-cream-warm/30 p-6 text-center">
+        <RotateCcw className="h-[28px] w-[28px] text-muted-foreground mx-auto" strokeWidth={1.4} />
+        <p className="mt-3 text-[13px] text-foreground tracking-soft">{isRTL ? "لا توجد طلبات إرجاع" : "No return requests"}</p>
+        <Link to="/account/returns/new" className="mt-3 inline-block text-[11px] tracking-luxury text-gold-deep">
+          {isRTL ? "طلب إرجاع جديد" : "REQUEST A RETURN"}
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {rows.map((r) => (
+        <div key={r.id} className="rounded-[18px] border border-border bg-cream-warm/30 p-4">
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[12px] text-foreground">{r.return_number}</span>
+            <span className="text-[11px] tracking-luxury text-gold-deep uppercase">{r.status}</span>
+          </div>
+          <p className="mt-1 text-[12px] text-muted-foreground">
+            {isRTL ? "الطلب:" : "Order:"} {r.order_number ?? "—"}
+          </p>
+          <p className="mt-0.5 text-[12px] text-muted-foreground truncate">{r.reason}</p>
+          {r.refund_amount != null && Number(r.refund_amount) > 0 && (
+            <p className="mt-1 text-[12px] text-foreground font-medium">
+              {isRTL ? "المسترد:" : "Refund:"} {Number(r.refund_amount).toFixed(2)}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
   );
 }
