@@ -224,7 +224,7 @@ function ProductCard({ p, ar }: { p: Product; ar: boolean }) {
       <div className="mt-2.5">
         <p className="text-sm text-foreground line-clamp-1">{name}</p>
         {p.price != null && (
-          <p className="text-[13px] text-gold-deep mt-0.5">{p.price.toFixed(2)} {ar ? "ر.س" : "SAR"}</p>
+          <p className="text-[13px] text-gold-deep mt-0.5">{fmt(p.price)}</p>
         )}
       </div>
     </a>
