@@ -131,19 +131,21 @@ function RootComponent() {
   return (
     <GlobalErrorBoundary>
       <LanguageProvider>
-        <AuthProvider>
-          <WishlistProvider>
-            <BagProvider>
-              <AddressProvider>
-                <StorefrontShell
-                  showStoreChrome={showStoreChrome}
-                  hideFooter={hideFooter}
-                  isAdmin={isAdmin}
-                />
-              </AddressProvider>
-            </BagProvider>
-          </WishlistProvider>
-        </AuthProvider>
+        <CurrencyProvider>
+          <AuthProvider>
+            <WishlistProvider>
+              <BagProvider>
+                <AddressProvider>
+                  <StorefrontShell
+                    showStoreChrome={showStoreChrome}
+                    hideFooter={hideFooter}
+                    isAdmin={isAdmin}
+                  />
+                </AddressProvider>
+              </BagProvider>
+            </WishlistProvider>
+          </AuthProvider>
+        </CurrencyProvider>
       </LanguageProvider>
     </GlobalErrorBoundary>
   );
