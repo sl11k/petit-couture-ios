@@ -58,8 +58,14 @@ export type FormFieldDef = {
   createOnly?: boolean;
   /** Show field only when editing */
   editOnly?: boolean;
-  /** Take full row width (default true for textarea/json) */
+  /** Take full row width (default true for textarea/json/gallery) */
   fullWidth?: boolean;
+  /** Storage bucket for image/video/gallery types */
+  bucket?: string;
+  /** Folder inside bucket */
+  folder?: string;
+  /** Max items for gallery type */
+  maxItems?: number;
 };
 
 export type RowAction<T = any> = {
