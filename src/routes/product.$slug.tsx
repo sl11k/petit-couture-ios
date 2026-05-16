@@ -843,10 +843,11 @@ function ProductDetails() {
 
           {/* Reviews */}
           <section id="reviews" className="px-5 mt-9">
-
+            <div className="flex items-center justify-between">
               <h2 className="font-serif text-[20px] text-foreground">{t.customerReviews}</h2>
               <span className="text-[12px] text-muted-foreground">{t.reviews(effectiveReviewsCount)}</span>
             </div>
+
 
             {/* Rating breakdown */}
             <div className="mt-4 flex items-center gap-5">
