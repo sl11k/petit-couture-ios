@@ -30,6 +30,7 @@ import { useDbProductBySlug } from "@/hooks/useDbProducts";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useBag } from "@/state/BagContext";
+import { usePriceFormatter } from "@/state/CurrencyContext";
 import { trackEvent } from "@/lib/analytics";
 import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
 
