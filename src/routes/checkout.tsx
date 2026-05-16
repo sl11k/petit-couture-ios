@@ -346,8 +346,12 @@ function CheckoutPage() {
           address: fullAddress as Record<string, unknown> as never,
           currency: bag.currency,
           payment_method: payment,
+          coupon_code: coupon?.code ?? null,
           pricing: {
-            ...pricing,
+            subtotal: pricing.subtotal,
+            shipping_fee: pricing.shipping_fee,
+            tax: pricing.tax,
+            total: pricing.total,
             shipping_method: shipping.id,
           },
         },
