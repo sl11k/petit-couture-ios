@@ -21,6 +21,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useBag } from "@/state/BagContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { getProductForCategory, categories, productsByCategory } from "@/data/categories";
+import { useDbProductsBySlugs } from "@/hooks/useDbProducts";
 import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
 
 export const Route = createFileRoute("/bag")({
