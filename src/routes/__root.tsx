@@ -4,6 +4,7 @@ import { AuthProvider } from "@/state/AuthContext";
 import { WishlistProvider } from "@/state/WishlistContext";
 import { BagProvider } from "@/state/BagContext";
 import { AddressProvider } from "@/state/AddressContext";
+import { CurrencyProvider } from "@/state/CurrencyContext";
 import { Toaster } from "@/components/ui/sonner";
 import { WishlistBanner } from "@/components/WishlistBanner";
 import { DesktopHeader } from "@/components/DesktopHeader";
