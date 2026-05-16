@@ -8,6 +8,7 @@ import { useWishlist } from "@/state/WishlistContext";
 import { useAuth } from "@/state/AuthContext";
 import { categories, getProductForCategory } from "@/data/categories";
 import { useDbProductsBySlugs } from "@/hooks/useDbProducts";
+import { usePriceFormatter } from "@/state/CurrencyContext";
 import { trackEvent, type WishlistSortKey } from "@/lib/analytics";
 import { clearLastImport, readLastImport } from "@/lib/lastImport";
 import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
