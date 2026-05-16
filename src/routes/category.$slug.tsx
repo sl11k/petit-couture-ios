@@ -543,12 +543,12 @@ function ProductCard({
           <div className="flex items-baseline gap-2 mt-0.5">
             {p.price != null && (
               <p className="text-[13px] text-gold-deep">
-                {p.price.toFixed(2)} {ar ? "ر.س" : "SAR"}
+                {fmt(p.price)}
               </p>
             )}
             {p.compare_at_price != null && p.price != null && p.compare_at_price > p.price && (
               <p className="text-[12px] text-muted-foreground line-through">
-                {p.compare_at_price.toFixed(2)}
+                {fmt(p.compare_at_price)}
               </p>
             )}
           </div>
