@@ -309,7 +309,7 @@ function BagPage() {
                         {priceChanged && (
                           <div className="flex items-center gap-2 text-[11.5px] text-amber-700 bg-amber-50 rounded-lg px-2.5 py-1.5">
                             <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                            <span>{tt.priceChanged}: {fmt(currentPrice)} {it.currency}</span>
+                            <span>{tt.priceChanged}: {fmtPrice(currentPrice)}</span>
                           </div>
                         )}
                         {overStock && (
