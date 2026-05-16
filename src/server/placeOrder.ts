@@ -38,6 +38,7 @@ const InputSchema = z.object({
   address: AddressSchema,
   currency: z.string().min(3).max(8),
   payment_method: z.enum(["cod", "card", "apple_pay", "bank_transfer", "tabby", "tamara"]).default("cod"),
+  coupon_code: z.string().min(1).max(64).nullable().optional(),
   pricing: z.object({
     subtotal: z.number().min(0),
     shipping_fee: z.number().min(0),
@@ -82,6 +83,31 @@ export const placeOrder = createServerFn({ method: "POST" })
     const cartHash = await hashCart(data);
     const idempotencyKey = `${data.session_id}:${cartHash}`;
 
+    // ── Re-validate coupon server-side and recompute total. Never trust client.
+    let discount_amount = 0;
+    let coupon_id: string | null = null;
+    let coupon_code: string | null = null;
+    if (data.coupon_code) {
+      const { data: rows, error: cErr } = await (supabaseAdmin as any).rpc("validate_coupon", {
+        _code: data.coupon_code,
+        _subtotal: data.pricing.subtotal,
+        _user_id: data.user_id ?? null,
+        _customer_email: data.address.email,
+      });
+      if (cErr) throw new Error(`Coupon validation failed: ${cErr.message}`);
+      const row = Array.isArray(rows) ? rows[0] : rows;
+      if (!row || !row.valid) {
+        throw new Error(`Coupon invalid: ${row?.reason ?? "unknown"}`);
+      }
+      discount_amount = Math.min(Number(row.discount_amount) || 0, data.pricing.subtotal);
+      coupon_id = row.coupon_id;
+      coupon_code = row.code;
+    }
+    const finalTotal = Math.max(
+      0,
+      Number((data.pricing.subtotal + data.pricing.shipping_fee + data.pricing.tax - discount_amount).toFixed(2)),
+    );
+
     // 1. If an order with this key already exists, return it (idempotent replay).
     const existing = await supabaseAdmin
       .from("orders")
@@ -108,7 +134,10 @@ export const placeOrder = createServerFn({ method: "POST" })
         subtotal: data.pricing.subtotal,
         shipping_fee: data.pricing.shipping_fee,
         tax: data.pricing.tax,
-        total: data.pricing.total,
+        discount_amount,
+        coupon_id,
+        coupon_code,
+        total: finalTotal,
         currency: data.currency,
         shipping_address: data.address,
         shipping_lat: (data.address as any).lat ?? null,
