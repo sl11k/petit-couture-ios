@@ -450,7 +450,7 @@ function BagPage() {
             <div className="px-5 pt-4 pb-6">
               <button onClick={() => navigate({ to: "/checkout" })} className="w-full h-[56px] rounded-full bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft">
                 <Lock className="h-[15px] w-[15px]" strokeWidth={1.7} />
-                {tt.checkout} · {fmt(total)} {bag.currency}
+                {tt.checkout} · {fmtPrice(total)}
               </button>
               <p className="mt-2 text-center text-[10.5px] text-muted-foreground tracking-soft">{tt.secure}</p>
             </div>
