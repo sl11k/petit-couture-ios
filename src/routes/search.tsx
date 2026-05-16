@@ -6,6 +6,7 @@ import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import { SlidersHorizontal, Star, X, Search as SearchIcon } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { usePriceFormatter } from "@/state/CurrencyContext";
 import {
   searchProducts,
   fetchFacets,
