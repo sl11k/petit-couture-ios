@@ -629,7 +629,7 @@ function ProductDetails() {
                       <img src={u.image} alt={u.name} width={56} height={56} loading="lazy" decoding="async" className="h-14 w-14 rounded-[10px] object-cover" />
                       <div className="flex-1">
                         <p className="text-[13.5px] text-foreground/90">{u.name}</p>
-                        <p className="text-[12px] text-muted-foreground">{fmt(u.price)} {product.currency}</p>
+                        <p className="text-[12px] text-muted-foreground">{fmtPrice(u.price)}</p>
                       </div>
                     </label>
                   );
