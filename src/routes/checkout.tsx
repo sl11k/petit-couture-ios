@@ -651,7 +651,22 @@ function CheckoutPage() {
                     label={isRTL ? "الدفع عند الاستلام" : "Cash on delivery"}
                     sub={isRTL ? "ادفع للمندوب" : "Pay the courier"}
                   />
+                  <PayOption
+                    active={payment === "tabby"}
+                    onClick={() => setPayment("tabby")}
+                    icon={<span className="text-[11px] font-bold tracking-wide">tabby</span>}
+                    label={isRTL ? "قسّمها على 4 — تابي" : "Split in 4 — Tabby"}
+                    sub={isRTL ? "بدون فوائد ولا رسوم" : "0% interest, no fees"}
+                  />
                 </div>
+
+                {payment === "tabby" && (
+                  <div className="mt-3 p-3 rounded-[12px] bg-cream-warm/40 border border-border text-[12px] text-foreground/80 leading-relaxed">
+                    {isRTL
+                      ? "ستُحوَّل لبوابة تابي لإتمام الدفع على 4 دفعات بدون فوائد."
+                      : "You'll be redirected to Tabby to pay in 4 interest-free installments."}
+                  </div>
+                )}
 
                 {payment === "bank_transfer" && (
                   <div className="mt-3 p-3 rounded-[12px] bg-cream-warm/40 border border-border text-[12px] text-foreground/80 leading-relaxed">
