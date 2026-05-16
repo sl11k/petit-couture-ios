@@ -68,6 +68,7 @@ import { Route as AdminIncompleteRouteImport } from './routes/admin.incomplete'
 import { Route as AdminIncomingWebhooksRouteImport } from './routes/admin.incoming-webhooks'
 import { Route as AdminHomeBuilderRouteImport } from './routes/admin.home-builder'
 import { Route as AdminHelpRouteImport } from './routes/admin.help'
+import { Route as AdminFeaturedCategoriesRouteImport } from './routes/admin.featured-categories'
 import { Route as AdminErrorsRouteImport } from './routes/admin.errors'
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
 import { Route as AdminCreateOrderRouteImport } from './routes/admin.create-order'
@@ -400,6 +401,11 @@ const AdminHelpRoute = AdminHelpRouteImport.update({
   path: '/help',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFeaturedCategoriesRoute = AdminFeaturedCategoriesRouteImport.update({
+  id: '/featured-categories',
+  path: '/featured-categories',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminErrorsRoute = AdminErrorsRouteImport.update({
   id: '/errors',
   path: '/errors',
@@ -608,6 +614,7 @@ export interface FileRoutesByFullPath {
   '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/errors': typeof AdminErrorsRoute
+  '/admin/featured-categories': typeof AdminFeaturedCategoriesRoute
   '/admin/help': typeof AdminHelpRoute
   '/admin/home-builder': typeof AdminHomeBuilderRoute
   '/admin/incoming-webhooks': typeof AdminIncomingWebhooksRoute
@@ -703,6 +710,7 @@ export interface FileRoutesByTo {
   '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/errors': typeof AdminErrorsRoute
+  '/admin/featured-categories': typeof AdminFeaturedCategoriesRoute
   '/admin/help': typeof AdminHelpRoute
   '/admin/home-builder': typeof AdminHomeBuilderRoute
   '/admin/incoming-webhooks': typeof AdminIncomingWebhooksRoute
@@ -800,6 +808,7 @@ export interface FileRoutesById {
   '/admin/create-order': typeof AdminCreateOrderRoute
   '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/errors': typeof AdminErrorsRoute
+  '/admin/featured-categories': typeof AdminFeaturedCategoriesRoute
   '/admin/help': typeof AdminHelpRoute
   '/admin/home-builder': typeof AdminHomeBuilderRoute
   '/admin/incoming-webhooks': typeof AdminIncomingWebhooksRoute
@@ -898,6 +907,7 @@ export interface FileRouteTypes {
     | '/admin/create-order'
     | '/admin/customers'
     | '/admin/errors'
+    | '/admin/featured-categories'
     | '/admin/help'
     | '/admin/home-builder'
     | '/admin/incoming-webhooks'
@@ -993,6 +1003,7 @@ export interface FileRouteTypes {
     | '/admin/create-order'
     | '/admin/customers'
     | '/admin/errors'
+    | '/admin/featured-categories'
     | '/admin/help'
     | '/admin/home-builder'
     | '/admin/incoming-webhooks'
@@ -1089,6 +1100,7 @@ export interface FileRouteTypes {
     | '/admin/create-order'
     | '/admin/customers'
     | '/admin/errors'
+    | '/admin/featured-categories'
     | '/admin/help'
     | '/admin/home-builder'
     | '/admin/incoming-webhooks'
@@ -1609,6 +1621,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminHelpRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/featured-categories': {
+      id: '/admin/featured-categories'
+      path: '/featured-categories'
+      fullPath: '/admin/featured-categories'
+      preLoaderRoute: typeof AdminFeaturedCategoriesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/errors': {
       id: '/admin/errors'
       path: '/errors'
@@ -2013,6 +2032,7 @@ interface AdminRouteChildren {
   AdminCreateOrderRoute: typeof AdminCreateOrderRoute
   AdminCustomersRoute: typeof AdminCustomersRouteWithChildren
   AdminErrorsRoute: typeof AdminErrorsRoute
+  AdminFeaturedCategoriesRoute: typeof AdminFeaturedCategoriesRoute
   AdminHelpRoute: typeof AdminHelpRoute
   AdminHomeBuilderRoute: typeof AdminHomeBuilderRoute
   AdminIncomingWebhooksRoute: typeof AdminIncomingWebhooksRoute
@@ -2061,6 +2081,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCreateOrderRoute: AdminCreateOrderRoute,
   AdminCustomersRoute: AdminCustomersRouteWithChildren,
   AdminErrorsRoute: AdminErrorsRoute,
+  AdminFeaturedCategoriesRoute: AdminFeaturedCategoriesRoute,
   AdminHelpRoute: AdminHelpRoute,
   AdminHomeBuilderRoute: AdminHomeBuilderRoute,
   AdminIncomingWebhooksRoute: AdminIncomingWebhooksRoute,
