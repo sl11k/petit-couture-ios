@@ -298,6 +298,7 @@ function ProductDetails() {
 
   const BackIcon = ar ? ChevronRight : ChevronLeft;
   const fmt = (n: number) => n.toLocaleString(lang === "ar" ? "ar-EG" : "en-US");
+  const fmtPrice = usePriceFormatter();
   const discountPct = product.compareAtPrice
     ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
     : 0;
