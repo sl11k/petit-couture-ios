@@ -353,7 +353,7 @@ helpConfig.form = [
   ]},
   { key: "title_ar", label: { ar: "العنوان (AR)", en: "Title (AR)" }, type: "text", required: true },
   { key: "title_en", label: { ar: "العنوان (EN)", en: "Title (EN)" }, type: "text", required: true },
-  { key: "video_url", label: { ar: "رابط الفيديو", en: "Video URL" }, type: "url" },
+  { key: "video_url", label: { ar: "الفيديو", en: "Video" }, type: "video", bucket: "content-media", folder: "help" },
   { key: "external_url", label: { ar: "رابط خارجي", en: "External URL" }, type: "url" },
   { key: "sort_order", label: { ar: "الترتيب", en: "Sort order" }, type: "number", min: 0, defaultValue: 0 },
   { key: "is_published", label: { ar: "منشور", en: "Published" }, type: "boolean", defaultValue: true },
