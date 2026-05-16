@@ -64,10 +64,15 @@ function BagPage() {
   const [confirmClear, setConfirmClear] = useState(false);
   const [sharePayload, setSharePayload] = useState<ShareSheetPayload | null>(null);
 
+  // Resolve current product info from DB (fallback to static categories) for each bag item.
+  const { bySlug: bagProductsBySlug } = useDbProductsBySlugs(
+    useMemo(() => bag.items.map((i) => i.slug), [bag.items]),
+  );
+
   // Compute item meta (stock, price-changed) from product source
   const itemsMeta = useMemo(() => {
     return bag.items.map((it) => {
-      const product = getProductForCategory(it.slug);
+      const product = bagProductsBySlug[it.slug] ?? getProductForCategory(it.slug);
       const currentPrice = product.price;
       const priceChanged = currentPrice !== it.price;
       const stock = product.stock;
@@ -75,7 +80,7 @@ function BagPage() {
       const lowStock = stock > 0 && stock <= 5;
       return { it, product, currentPrice, priceChanged, stock, overStock, lowStock };
     });
-  }, [bag.items]);
+  }, [bag.items, bagProductsBySlug]);
 
   const promo = appliedCode ? PROMO_CODES[appliedCode] : null;
 
