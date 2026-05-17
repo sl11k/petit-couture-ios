@@ -58,8 +58,8 @@ export const createTamaraCheckout = createServerFn({ method: "POST" })
       tax_amount: amount(Number(order.tax || 0)),
       shipping_amount: amount(Number(order.shipping_fee || 0)),
       discount: {
-        name: "discount",
-        amount: amount(0),
+        name: (order as any).coupon_code || "discount",
+        amount: amount(Number((order as any).discount_amount || 0)),
       },
       description: `Order ${order.order_number}`,
       country_code,

@@ -187,7 +187,7 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
               .from("orders")
               .update({
                 payment_status: "paid",
-                status: "paid",
+                status: "processing",
                 payment_gateway: payload.gateway,
                 last_transaction_id: txnId,
                 captured_amount: payload.amount,

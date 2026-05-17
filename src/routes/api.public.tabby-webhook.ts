@@ -82,7 +82,7 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
             );
             if (capRes.ok) {
               newPaymentStatus = "paid";
-              newOrderStatus = "confirmed";
+              newOrderStatus = "processing";
             } else {
               newPaymentStatus = "pending_review";
             }
@@ -92,7 +92,7 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
           }
         } else if (tabbyStatus === "closed") {
           newPaymentStatus = "paid";
-          newOrderStatus = "confirmed";
+          newOrderStatus = "processing";
         } else if (tabbyStatus === "rejected" || tabbyStatus === "expired") {
           newPaymentStatus = "failed";
         } else if (tabbyStatus === "refunded") {

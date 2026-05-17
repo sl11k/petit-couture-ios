@@ -154,7 +154,7 @@ export const Route = createFileRoute("/api/public/tamara-webhook")({
               });
               if (capRes.ok) {
                 newPaymentStatus = "paid";
-                newOrderStatus = "confirmed";
+                newOrderStatus = "processing";
               } else {
                 newPaymentStatus = "pending_review";
               }
@@ -169,7 +169,7 @@ export const Route = createFileRoute("/api/public/tamara-webhook")({
           eventType === "captured"
         ) {
           newPaymentStatus = "paid";
-          newOrderStatus = "confirmed";
+          newOrderStatus = "processing";
         } else if (
           eventType === "order_declined" ||
           eventType === "declined" ||
