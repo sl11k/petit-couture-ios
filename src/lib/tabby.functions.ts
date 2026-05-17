@@ -20,7 +20,6 @@ export const createTabbyCheckout = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }) => {
     const secret = process.env.TABBY_SECRET_KEY;
-    const merchantCode = process.env.TABBY_MERCHANT_CODE || "uae";
     if (!secret) throw new Error("TABBY_SECRET_KEY is not configured");
 
     // Load order + items
@@ -39,6 +38,12 @@ export const createTabbyCheckout = createServerFn({ method: "POST" })
 
     const addr = (order.shipping_address as Record<string, unknown>) || {};
     const phone = String(order.customer_phone || addr.phone || "").replace(/\s/g, "");
+    const currency = (order.currency || "SAR").toUpperCase();
+    // Tabby merchant_code per market: SAR→sa, AED→ae, KWD→kw, BHD→bh, QAR→qa
+    const merchantMap: Record<string, string> = {
+      SAR: "sa", AED: "ae", KWD: "kw", BHD: "bh", QAR: "qa",
+    };
+    const merchantCode = process.env.TABBY_MERCHANT_CODE || merchantMap[currency] || "sa";
 
     const payload = {
       payment: {
