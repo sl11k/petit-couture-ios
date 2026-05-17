@@ -58,7 +58,7 @@ export const createTabbyCheckout = createServerFn({ method: "POST" })
         order: {
           tax_amount: Number(order.tax).toFixed(2),
           shipping_amount: Number(order.shipping_fee).toFixed(2),
-          discount_amount: "0.00",
+          discount_amount: Number(order.discount_amount || 0).toFixed(2),
           updated_at: new Date().toISOString(),
           reference_id: order.order_number,
           items: (items || []).map((it) => ({
