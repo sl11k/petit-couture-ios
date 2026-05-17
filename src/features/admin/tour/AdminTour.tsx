@@ -171,33 +171,32 @@ export function AdminTour({
 
       {/* Tooltip card */}
       <div
-        className="pointer-events-auto rounded-xl border bg-card text-card-foreground shadow-2xl"
+        className="pointer-events-auto rounded-xl border bg-white shadow-2xl"
         style={{
           ...cardStyle,
           borderColor: "hsl(43 74% 49% / 0.35)",
-          background:
-            "linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--card)) 100%)",
+          background: "#ffffff",
         }}
         role="dialog"
         aria-modal="true"
       >
         <div className="px-5 pt-4 pb-3 border-b" style={{ borderColor: "hsl(43 74% 49% / 0.18)" }}>
           <div className="flex items-center justify-between gap-3">
-            <span className="text-[10px] font-medium tracking-[0.18em] uppercase text-amber-600">
+            <span className="text-[10px] font-medium tracking-[0.18em] uppercase text-black">
               {ar ? `الخطوة ${idx + 1} من ${total}` : `Step ${idx + 1} of ${total}`}
             </span>
             <button
               onClick={skip}
-              className="text-xs text-muted-foreground hover:text-foreground transition"
+              className="text-xs text-black/60 hover:text-black transition"
             >
               {ar ? "تخطّي" : "Skip"}
             </button>
           </div>
-          <h3 className="mt-2 font-serif text-base font-semibold leading-snug">
+          <h3 className="mt-2 font-serif text-base font-semibold leading-snug text-black">
             {ar ? step.title.ar : step.title.en}
           </h3>
         </div>
-        <div className="px-5 py-4 text-sm leading-relaxed text-muted-foreground">
+        <div className="px-5 py-4 text-sm leading-relaxed text-black">
           {ar ? step.body.ar : step.body.en}
         </div>
         <div className="flex items-center justify-between gap-2 px-5 pb-4">
