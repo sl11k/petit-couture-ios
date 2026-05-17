@@ -48,7 +48,7 @@ export const createTabbyCheckout = createServerFn({ method: "POST" })
     const payload = {
       payment: {
         amount: Number(order.total).toFixed(2),
-        currency: order.currency || "AED",
+        currency,
         description: `Order ${order.order_number}`,
         buyer: {
           phone,
