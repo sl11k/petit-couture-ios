@@ -511,6 +511,35 @@ function WishlistPage() {
                   const ariaLabel = isRTL
                     ? `${t.wishlist.remove}: ${it.name}`
                     : `${t.wishlist.remove} ${it.name}`;
+                  const renderLink = (
+                    className: string,
+                    children: React.ReactNode,
+                    extra?: { ariaLabel?: string },
+                  ) => {
+                    if (!linkedCard || !it.slug) return null;
+                    if (it.kind === "product") {
+                      return (
+                        <Link
+                          to="/product/$slug"
+                          params={{ slug: it.slug }}
+                          className={className}
+                          aria-label={extra?.ariaLabel}
+                        >
+                          {children}
+                        </Link>
+                      );
+                    }
+                    return (
+                      <Link
+                        to="/category/$slug"
+                        params={{ slug: it.slug }}
+                        className={className}
+                        aria-label={extra?.ariaLabel}
+                      >
+                        {children}
+                      </Link>
+                    );
+                  };
 
                   return (
                     <article
@@ -518,19 +547,16 @@ function WishlistPage() {
                       className="relative flex gap-4 rounded-[22px] border border-border bg-cream-warm/40 p-3"
                     >
                       {linkedCard && it.slug ? (
-                        <Link
-                          to="/category/$slug"
-                          params={{ slug: it.slug }}
-                          className="h-[112px] w-[92px] overflow-hidden rounded-[16px] bg-pastel-peach shrink-0 active:opacity-90"
-                          aria-label={it.name}
-                        >
+                        renderLink(
+                          "h-[112px] w-[92px] overflow-hidden rounded-[16px] bg-pastel-peach shrink-0 active:opacity-90",
                           <img
                             src={it.image}
                             alt={it.name}
                             loading="lazy"
                             className="w-full h-full object-cover"
-                          />
-                        </Link>
+                          />,
+                          { ariaLabel: it.name },
+                        )
                       ) : (
                         <div className="h-[112px] w-[92px] overflow-hidden rounded-[16px] bg-pastel-peach shrink-0">
                           <img
