@@ -196,3 +196,56 @@ export function useDbProductsBySlugs(slugs: string[]): {
   }
   return { bySlug, loading };
 }
+
+/**
+ * Fetch up to `limit` other active products in the same category as the
+ * product identified by `slug`. Used for "Related products" on the PDP.
+ */
+export function useDbRelatedProducts(
+  slug: string,
+  limit = 8,
+): { products: MergedProduct[]; loading: boolean } {
+  const { lang } = useLanguage();
+  const [rows, setRows] = useState<DbRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
+      const { data: current } = await supabase
+        .from("products")
+        .select("id, category_id")
+        .eq("slug", slug)
+        .maybeSingle();
+      if (cancelled) return;
+      const categoryId = (current as { category_id?: string } | null)?.category_id;
+      const currentId = (current as { id?: string } | null)?.id;
+      if (!categoryId) {
+        setRows([]);
+        setLoading(false);
+        return;
+      }
+      let q = supabase
+        .from("products")
+        .select(SELECT_COLS)
+        .eq("category_id", categoryId)
+        .eq("is_active", true)
+        .limit(limit + 1);
+      if (currentId) q = q.neq("id", currentId);
+      const { data } = await q;
+      if (cancelled) return;
+      setRows(((data ?? []) as DbRow[]).slice(0, limit));
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, limit]);
+
+  const products = rows
+    .map((r) => mergeRowOntoBase(r.slug, r, lang === "ar" ? "ar" : "en"))
+    .filter((p) => p.slug !== slug);
+  return { products, loading };
+}
+
