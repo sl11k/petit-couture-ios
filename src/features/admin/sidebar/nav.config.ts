@@ -63,16 +63,6 @@ export const ADMIN_NAV: NavGroup[] = [
     items: [
       { to: "/admin/customers", label: { ar: "العملاء", en: "Customers" }, icon: Users },
       { to: "/admin/users", label: { ar: "المستخدمون", en: "Users" }, icon: Users },
-      { to: "/admin/messages", label: { ar: "الرسائل", en: "Messages" }, icon: MessageSquare },
-      { to: "/admin/notifications", label: { ar: "الإشعارات", en: "Notifications" }, icon: Bell },
-      { to: "/admin/support", label: { ar: "الدعم", en: "Support" }, icon: Headphones },
-    ],
-  },
-  {
-    label: { ar: "العملاء", en: "Customers" },
-    items: [
-      { to: "/admin/customers", label: { ar: "العملاء", en: "Customers" }, icon: Users },
-      { to: "/admin/users", label: { ar: "المستخدمون", en: "Users" }, icon: Users },
       { to: "/admin/loyalty", label: { ar: "نقاط الولاء", en: "Loyalty" }, icon: Activity },
       { to: "/admin/loyalty-transactions", label: { ar: "حركات الولاء", en: "Loyalty txns" }, icon: ScrollText },
       { to: "/admin/referrals", label: { ar: "الإحالات", en: "Referrals" }, icon: Users },
