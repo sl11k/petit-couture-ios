@@ -190,7 +190,7 @@ export default function LocationPicker({
         <button
           type="button"
           onClick={useMyLocation}
-          className="absolute bottom-3 left-1/2 -translate-x-1/2 z-[1000] inline-flex items-center gap-2 px-4 h-10 rounded-full bg-foreground text-background text-[12px] tracking-soft shadow-md active:scale-95 transition"
+          className="absolute bottom-3 left-1/2 -translate-x-1/2 z-[1000] inline-flex items-center gap-2 px-4 h-10 rounded-xl bg-foreground text-background text-[12px] tracking-soft shadow-md active:scale-95 transition"
         >
           <Crosshair className="h-4 w-4" />
           {isRTL ? "استخدم موقعي الحالي" : "Use my current location"}

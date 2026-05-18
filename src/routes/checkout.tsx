@@ -464,7 +464,7 @@ function CheckoutPage() {
           <button
             aria-label={isRTL ? "رجوع" : "Back"}
             onClick={prev}
-            className="h-10 w-10 -ms-2 grid place-items-center rounded-full text-foreground/80 active:scale-95 transition"
+            className="h-10 w-10 -ms-2 grid place-items-center rounded-xl text-foreground/80 active:scale-95 transition"
           >
             <BackIcon className="h-[22px] w-[22px]" strokeWidth={1.6} />
           </button>

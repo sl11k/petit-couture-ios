@@ -136,7 +136,7 @@ export function HomeScreen() {
           <button
             aria-label={isRTL ? "تبديل اللغة" : "Toggle language"}
             onClick={toggle}
-            className="h-10 min-w-[52px] px-3 -ms-2 grid place-items-center rounded-full border border-gold-soft text-gold-deep text-[11px] font-medium tracking-[0.18em] active:scale-95 transition"
+            className="h-10 min-w-[52px] px-3 -ms-2 grid place-items-center rounded-xl border border-gold-soft text-gold-deep text-[11px] font-medium tracking-[0.18em] active:scale-95 transition"
           >
             {lang === "en" ? "ع AR" : "EN"}
           </button>
@@ -148,7 +148,7 @@ export function HomeScreen() {
           <Link
             to="/wishlist"
             aria-label={isRTL ? "المفضلة" : "Wishlist"}
-            className="relative h-10 w-10 -me-2 grid place-items-center rounded-full border border-gold-soft text-gold-deep active:scale-95 transition"
+            className="relative h-10 w-10 -me-2 grid place-items-center rounded-xl border border-gold-soft text-gold-deep active:scale-95 transition"
           >
             <Heart className="h-[18px] w-[18px]" strokeWidth={1.5} fill={wishlist.count > 0 ? "currentColor" : "none"} />
             {wishlist.count > 0 && (
@@ -375,7 +375,7 @@ export function HomeScreen() {
             </div>
 
             <div className="mt-10 flex justify-center">
-              <Link to="/search" className="h-[52px] px-10 rounded-full bg-background border border-border text-gold-deep text-[12px] tracking-luxury font-medium grid place-items-center active:scale-[0.97] transition">
+              <Link to="/search" className="h-[52px] px-10 rounded-xl bg-background border border-border text-gold-deep text-[12px] tracking-luxury font-medium grid place-items-center active:scale-[0.97] transition">
                 {t.shopAll}
               </Link>
             </div>
@@ -524,7 +524,7 @@ function BestSellersSection({ ar }: { ar: boolean }) {
         <Link
           to="/category/$slug"
           params={{ slug: "best-sellers" }}
-          className="h-[48px] px-9 rounded-full bg-primary text-primary-foreground text-[12px] tracking-luxury font-medium grid place-items-center active:scale-[0.97] transition shadow-soft"
+          className="h-[48px] px-9 rounded-xl bg-primary text-primary-foreground text-[12px] tracking-luxury font-medium grid place-items-center active:scale-[0.97] transition shadow-soft"
         >
           {ar ? "تسوّقي الأكثر مبيعاً" : "SHOP BEST SELLERS"}
         </Link>

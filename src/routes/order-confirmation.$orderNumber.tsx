@@ -278,7 +278,7 @@ function OrderConfirmationPage() {
         <div className="px-6 mt-8">
           <Link
             to="/"
-            className="w-full h-12 inline-flex items-center justify-center gap-2 rounded-full bg-foreground text-background text-[12px] tracking-luxury active:scale-[0.99] transition"
+            className="w-full h-12 inline-flex items-center justify-center gap-2 rounded-xl bg-foreground text-background text-[12px] tracking-luxury active:scale-[0.99] transition"
           >
             <Home className="h-4 w-4" strokeWidth={1.7} />
             {t.cta}

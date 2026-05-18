@@ -423,7 +423,7 @@ function ProductDetails() {
           <span className="text-[10.5px] tracking-luxury text-muted-foreground">
             {lang === "en" ? product.category.toUpperCase() : product.category}
           </span>
-          <button aria-label={ar ? "مشاركة" : "Share"} onClick={onShare} className="h-10 w-10 -me-2 grid place-items-center rounded-full text-foreground/70 active:scale-95 transition">
+          <button aria-label={ar ? "مشاركة" : "Share"} onClick={onShare} className="h-10 w-10 -me-2 grid place-items-center rounded-xl text-foreground/70 active:scale-95 transition">
             <Share2 className="h-[18px] w-[18px]" strokeWidth={1.5} />
           </button>
         </header>
@@ -481,7 +481,7 @@ function ProductDetails() {
                 aria-label={ar ? (wished ? "إزالة من المفضلة" : "أضف إلى المفضلة") : (wished ? "Remove from wishlist" : "Add to wishlist")}
                 aria-pressed={wished}
                 onClick={setWished}
-                className="absolute top-4 end-4 h-11 w-11 rounded-full bg-background/90 backdrop-blur grid place-items-center border border-gold-soft text-gold-deep active:scale-95 transition"
+                className="absolute top-4 end-4 h-11 w-11 rounded-xl bg-background/90 backdrop-blur grid place-items-center border border-gold-soft text-gold-deep active:scale-95 transition"
               >
                 <Heart className="h-[18px] w-[18px]" strokeWidth={1.5} fill={wished ? "currentColor" : "none"} />
               </button>
@@ -767,7 +767,7 @@ function ProductDetails() {
                     <p className="text-[12px] text-muted-foreground mb-2">{t.cityCheck}</p>
                     <div className="flex gap-2">
                       <input value={city} onChange={(e) => setCity(e.target.value)} placeholder={t.cityPlaceholder} className="flex-1 h-10 rounded-full border border-border bg-background px-4 text-[13px]" />
-                      <button className="h-10 px-4 rounded-full bg-foreground text-background text-[12.5px]">{t.check}</button>
+                      <button className="h-10 px-4 rounded-xl bg-foreground text-background text-[12.5px]">{t.check}</button>
                     </div>
                     {city && (
                       <p className="mt-2 text-[12px] text-emerald-700">
@@ -810,7 +810,7 @@ function ProductDetails() {
 
           {/* WhatsApp inquiry */}
           <section className="px-5 mt-5">
-            <button onClick={onWhatsApp} className="w-full h-12 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-800 text-[13.5px] font-medium flex items-center justify-center gap-2 active:scale-[0.98] transition">
+            <button onClick={onWhatsApp} className="w-full h-12 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-[13.5px] font-medium flex items-center justify-center gap-2 active:scale-[0.98] transition">
               <MessageCircle className="h-[16px] w-[16px]" />
               {t.askWhatsapp}
             </button>
@@ -965,21 +965,21 @@ function ProductDetails() {
               <p className="text-[12px] text-center text-muted-foreground">{isOOS ? t.outOfStock : t.comingSoon}</p>
               <div className="flex gap-2">
                 <input value={notifyEmail} onChange={(e) => setNotifyEmail(e.target.value)} placeholder="email@example.com" type="email" className="flex-1 h-12 rounded-full border border-border bg-background px-4 text-[13px]" />
-                <button className="h-12 px-5 rounded-full bg-foreground text-background text-[13px] font-medium inline-flex items-center gap-1.5">
+                <button className="h-12 px-5 rounded-xl bg-foreground text-background text-[13px] font-medium inline-flex items-center gap-1.5">
                   <Bell className="h-4 w-4" /> {t.notifyMe}
                 </button>
               </div>
             </div>
           ) : (
             <div className="px-5 pt-3 pb-6 flex items-center gap-2.5">
-              <button aria-label={ar ? "أضف إلى المفضلة" : "Add to wishlist"} onClick={setWished} className="h-[52px] w-[52px] rounded-full border border-gold-soft text-gold-deep grid place-items-center active:scale-95 transition shrink-0">
+              <button aria-label={ar ? "أضف إلى المفضلة" : "Add to wishlist"} onClick={setWished} className="h-[52px] w-[52px] rounded-xl border border-gold-soft text-gold-deep grid place-items-center active:scale-95 transition shrink-0">
                 <Heart className="h-[18px] w-[18px]" strokeWidth={1.5} fill={wished ? "currentColor" : "none"} />
               </button>
-              <button onClick={addToBag} className="flex-1 h-[52px] rounded-full border border-foreground text-foreground text-[13px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2">
+              <button onClick={addToBag} className="flex-1 h-[52px] rounded-xl border border-foreground text-foreground text-[13px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2">
                 <ShoppingBag className="h-[16px] w-[16px]" strokeWidth={1.6} />
                 {t.addToBag}
               </button>
-              <button onClick={buyNow} className="flex-1 h-[52px] rounded-full bg-foreground text-background text-[13px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-1.5 shadow-soft">
+              <button onClick={buyNow} className="flex-1 h-[52px] rounded-xl bg-foreground text-background text-[13px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-1.5 shadow-soft">
                 <Zap className="h-[15px] w-[15px]" strokeWidth={2} />
                 {t.buyNow}
               </button>

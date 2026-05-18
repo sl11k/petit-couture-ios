@@ -61,7 +61,7 @@ export function DesktopHeader() {
           <Link
             to="/search"
             aria-label={isRTL ? "بحث" : "Search"}
-            className="h-10 w-10 grid place-items-center rounded-full text-foreground/75 hover:text-foreground hover:bg-cream-warm transition"
+            className="h-10 w-10 grid place-items-center rounded-xl text-foreground/75 hover:text-foreground hover:bg-cream-warm transition"
           >
             <Search className="h-[18px] w-[18px]" strokeWidth={1.5} />
           </Link>

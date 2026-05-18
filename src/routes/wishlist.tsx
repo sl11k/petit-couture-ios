@@ -331,7 +331,7 @@ function WishlistPage() {
               <button
                 onClick={shareAll}
                 aria-label={t.wishlist.shareAll}
-                className="h-10 w-10 grid place-items-center rounded-full text-gold-deep active:scale-95 transition"
+                className="h-10 w-10 grid place-items-center rounded-xl text-gold-deep active:scale-95 transition"
               >
                 <Share2 className="h-[18px] w-[18px]" strokeWidth={1.5} />
               </button>
@@ -389,7 +389,7 @@ function WishlistPage() {
               <button
                 type="button"
                 onClick={onUndoImport}
-                className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-foreground text-background text-[10.5px] tracking-luxury active:scale-95 transition"
+                className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-foreground text-background text-[10.5px] tracking-luxury active:scale-95 transition"
               >
                 <Undo2 className="h-[11px] w-[11px]" strokeWidth={1.8} />
                 {isRTL ? "تراجع" : "UNDO"}
@@ -430,7 +430,7 @@ function WishlistPage() {
               </p>
               <Link
                 to="/"
-                className="mt-8 h-[52px] px-10 rounded-full bg-foreground text-background text-[13px] tracking-soft font-medium grid place-items-center active:scale-[0.97] transition shadow-soft"
+                className="mt-8 h-[52px] px-10 rounded-xl bg-foreground text-background text-[13px] tracking-soft font-medium grid place-items-center active:scale-[0.97] transition shadow-soft"
               >
                 {t.wishlist.emptyCta}
               </Link>

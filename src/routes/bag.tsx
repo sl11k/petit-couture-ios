@@ -160,7 +160,7 @@ function BagPage() {
             {lang === "en" ? tt.title.toUpperCase() : tt.title}
           </span>
           {bag.items.length > 0 ? (
-            <button aria-label={tt.shareBag} onClick={onShareBag} className="h-10 w-10 -me-2 grid place-items-center rounded-full text-foreground/70 active:scale-95 transition">
+            <button aria-label={tt.shareBag} onClick={onShareBag} className="h-10 w-10 -me-2 grid place-items-center rounded-xl text-foreground/70 active:scale-95 transition">
               <Share2 className="h-[18px] w-[18px]" strokeWidth={1.5} />
             </button>
           ) : (
@@ -176,7 +176,7 @@ function BagPage() {
               </div>
               <h1 className="mt-6 font-serif text-[28px] text-foreground">{tt.empty}</h1>
               <p className="mt-2 text-[13px] text-muted-foreground tracking-soft max-w-[280px]">{tt.emptyDesc}</p>
-              <Link to="/" className="mt-8 h-[52px] px-10 rounded-full bg-foreground text-background text-[13px] tracking-soft font-medium grid place-items-center active:scale-[0.97] transition shadow-soft">
+              <Link to="/" className="mt-8 h-[52px] px-10 rounded-xl bg-foreground text-background text-[13px] tracking-soft font-medium grid place-items-center active:scale-[0.97] transition shadow-soft">
                 {tt.continueShopping}
               </Link>
             </section>

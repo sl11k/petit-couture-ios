@@ -164,7 +164,7 @@ function AccountPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="mt-3 w-full h-[52px] rounded-full bg-foreground text-background text-[13px] tracking-soft font-medium grid place-items-center active:scale-[0.97] transition shadow-soft disabled:opacity-60"
+                className="mt-3 w-full h-[52px] rounded-xl bg-foreground text-background text-[13px] tracking-soft font-medium grid place-items-center active:scale-[0.97] transition shadow-soft disabled:opacity-60"
               >
                 {mode === "signin" ? t.account.signIn : t.account.signUp}
               </button>
@@ -305,7 +305,7 @@ function SignedIn({
 
       <Link
         to="/wishlist"
-        className="w-full h-[52px] rounded-full bg-foreground text-background text-[13px] tracking-soft font-medium grid place-items-center active:scale-[0.97] transition shadow-soft"
+        className="w-full h-[52px] rounded-xl bg-foreground text-background text-[13px] tracking-soft font-medium grid place-items-center active:scale-[0.97] transition shadow-soft"
       >
         {isRTL ? "قائمة الرغبات" : "View wishlist"}
       </Link>
@@ -313,7 +313,7 @@ function SignedIn({
       <button
         type="button"
         onClick={onSignOut}
-        className="w-full h-[52px] rounded-full border border-border text-foreground text-[12px] tracking-luxury active:scale-[0.97] transition inline-flex items-center justify-center gap-2"
+        className="w-full h-[52px] rounded-xl border border-border text-foreground text-[12px] tracking-luxury active:scale-[0.97] transition inline-flex items-center justify-center gap-2"
       >
         <LogOut className="h-[14px] w-[14px]" strokeWidth={1.6} />
         {signOutLabel}
@@ -554,7 +554,7 @@ function AddressForm({
     <form onSubmit={submit} className="rounded-[18px] border border-border bg-background p-4 space-y-2">
       <div className="flex items-center justify-between">
         <h3 className="text-[13px] font-medium">{initial ? (isRTL ? "تعديل العنوان" : "Edit address") : (isRTL ? "عنوان جديد" : "New address")}</h3>
-        <button type="button" onClick={onCancel} className="h-8 w-8 grid place-items-center rounded-full border border-border">
+        <button type="button" onClick={onCancel} className="h-8 w-8 grid place-items-center rounded-xl border border-border">
           <X className="h-[14px] w-[14px]" strokeWidth={1.6} />
         </button>
       </div>
@@ -569,7 +569,7 @@ function AddressForm({
         <input type="checkbox" checked={form.is_default} onChange={(e) => setForm({ ...form, is_default: e.target.checked })} className="accent-foreground" />
         {isRTL ? "اجعله العنوان الافتراضي" : "Set as default"}
       </label>
-      <button type="submit" disabled={saving} className="mt-2 w-full h-[44px] rounded-full bg-foreground text-background text-[12px] tracking-luxury disabled:opacity-60 active:scale-[0.97]">
+      <button type="submit" disabled={saving} className="mt-2 w-full h-[44px] rounded-xl bg-foreground text-background text-[12px] tracking-luxury disabled:opacity-60 active:scale-[0.97]">
         {saving ? (isRTL ? "جاري الحفظ…" : "Saving…") : (isRTL ? "حفظ" : "Save")}
       </button>
     </form>

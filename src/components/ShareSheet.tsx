@@ -170,7 +170,7 @@ export function ShareSheet({ open, onClose, payload }: Props) {
               type="button"
               onClick={onClose}
               aria-label={labels.close}
-              className="h-9 w-9 -me-2 grid place-items-center rounded-full text-foreground/70 active:scale-95 transition"
+              className="h-9 w-9 -me-2 grid place-items-center rounded-xl text-foreground/70 active:scale-95 transition"
             >
               <X className="h-[18px] w-[18px]" strokeWidth={1.6} />
             </button>

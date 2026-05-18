@@ -39,7 +39,7 @@ function NotFoundComponent() {
         <div className="mt-8">
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-full bg-foreground px-8 h-12 text-xs tracking-[0.18em] font-medium text-background hover:opacity-90 transition shadow-soft"
+            className="inline-flex items-center justify-center rounded-xl bg-foreground px-8 h-12 text-xs tracking-[0.18em] font-medium text-background hover:opacity-90 transition shadow-soft"
           >
             العودة للرئيسية / Back to home
           </Link>
