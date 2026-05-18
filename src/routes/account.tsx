@@ -457,14 +457,14 @@ function AddressesPanel() {
             </div>
             <div className="flex flex-col gap-1">
               {!a.is_default && (
-                <button onClick={() => void makeDefault(a.id)} title={isRTL ? "اجعله افتراضي" : "Set default"} className="h-8 w-8 grid place-items-center rounded-full border border-border active:scale-95">
+                <button onClick={() => void makeDefault(a.id)} title={isRTL ? "اجعله افتراضي" : "Set default"} className="h-8 w-8 grid place-items-center rounded-xl border border-border active:scale-95">
                   <Check className="h-[14px] w-[14px]" strokeWidth={1.6} />
                 </button>
               )}
-              <button onClick={() => { setEditing(a); setShowForm(true); }} className="h-8 w-8 grid place-items-center rounded-full border border-border active:scale-95">
+              <button onClick={() => { setEditing(a); setShowForm(true); }} className="h-8 w-8 grid place-items-center rounded-xl border border-border active:scale-95">
                 <Pencil className="h-[13px] w-[13px]" strokeWidth={1.6} />
               </button>
-              <button onClick={() => void del(a.id)} className="h-8 w-8 grid place-items-center rounded-full border border-border text-destructive active:scale-95">
+              <button onClick={() => void del(a.id)} className="h-8 w-8 grid place-items-center rounded-xl border border-border text-destructive active:scale-95">
                 <Trash2 className="h-[13px] w-[13px]" strokeWidth={1.6} />
               </button>
             </div>

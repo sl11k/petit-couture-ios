@@ -417,7 +417,7 @@ function ProductDetails() {
       <div className="relative w-full max-w-[440px] bg-background min-h-screen overflow-hidden shadow-soft">
         {/* Header */}
         <header className="px-5 pt-2 pb-3 flex items-center justify-between sticky top-0 z-30 bg-background/95 backdrop-blur">
-          <button aria-label={ar ? "رجوع" : "Back"} onClick={() => router.history.back()} className="h-10 w-10 -ms-2 grid place-items-center rounded-full text-foreground/80 active:scale-95 transition">
+          <button aria-label={ar ? "رجوع" : "Back"} onClick={() => router.history.back()} className="h-10 w-10 -ms-2 grid place-items-center rounded-xl text-foreground/80 active:scale-95 transition">
             <BackIcon className="h-[22px] w-[22px]" strokeWidth={1.6} />
           </button>
           <span className="text-[10.5px] tracking-luxury text-muted-foreground">
@@ -895,11 +895,11 @@ function ProductDetails() {
 
             {/* Filter chips */}
             <div className="mt-4 flex gap-2 overflow-x-auto scrollbar-none">
-              <button onClick={() => setReviewFilter(null)} className={`h-8 px-3 rounded-full text-[12px] border whitespace-nowrap ${reviewFilter === null ? "bg-foreground text-background border-foreground" : "border-border text-muted-foreground"}`}>
+              <button onClick={() => setReviewFilter(null)} className={`h-8 px-3 rounded-xl text-[12px] border whitespace-nowrap ${reviewFilter === null ? "bg-foreground text-background border-foreground" : "border-border text-muted-foreground"}`}>
                 {t.allReviews}
               </button>
               {[5,4,3,2,1].map((s) => (
-                <button key={s} onClick={() => setReviewFilter(s)} className={`h-8 px-3 rounded-full text-[12px] border whitespace-nowrap inline-flex items-center gap-1 ${reviewFilter === s ? "bg-foreground text-background border-foreground" : "border-border text-muted-foreground"}`}>
+                <button key={s} onClick={() => setReviewFilter(s)} className={`h-8 px-3 rounded-xl text-[12px] border whitespace-nowrap inline-flex items-center gap-1 ${reviewFilter === s ? "bg-foreground text-background border-foreground" : "border-border text-muted-foreground"}`}>
                   {s} <Star className="h-3 w-3 fill-current" />
                 </button>
               ))}
@@ -994,7 +994,7 @@ function ProductDetails() {
       {/* Zoom modal */}
       {zoomOpen && (
         <div className="fixed inset-0 z-50 bg-black/90 grid place-items-center" onClick={() => setZoomOpen(false)}>
-          <button aria-label={t.close} onClick={() => setZoomOpen(false)} className="absolute top-5 end-5 h-11 w-11 rounded-full bg-white/10 grid place-items-center text-white">
+          <button aria-label={t.close} onClick={() => setZoomOpen(false)} className="absolute top-5 end-5 h-11 w-11 rounded-xl bg-white/10 grid place-items-center text-white">
             <X className="h-5 w-5" />
           </button>
           <img src={product.images[activeImg]} alt={product.name} width={1280} height={1600} loading="eager" decoding="sync" className="max-w-full max-h-full object-contain" />
@@ -1007,7 +1007,7 @@ function ProductDetails() {
           <div className="w-full max-w-[440px] bg-background rounded-t-[28px] p-5 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-serif text-[20px]">{t.sizeChart}</h3>
-              <button onClick={() => setOpenSizeChart(false)} className="h-9 w-9 rounded-full bg-muted grid place-items-center"><X className="h-4 w-4" /></button>
+              <button onClick={() => setOpenSizeChart(false)} className="h-9 w-9 rounded-xl bg-muted grid place-items-center"><X className="h-4 w-4" /></button>
             </div>
             <table className="w-full text-[13px]">
               <thead>

@@ -215,7 +215,7 @@ function NewReturnRequest() {
             {photos.map((url) => (
               <div key={url} className="relative">
                 <img src={url} alt="" className="h-20 w-20 rounded object-cover" />
-                <button onClick={() => setPhotos(photos.filter((p) => p !== url))} className="absolute -top-1 -left-1 rounded-full bg-red-500 p-0.5 text-white">
+                <button onClick={() => setPhotos(photos.filter((p) => p !== url))} className="absolute -top-1 -left-1 rounded-xl bg-red-500 p-0.5 text-white">
                   <X className="h-3 w-3" />
                 </button>
               </div>

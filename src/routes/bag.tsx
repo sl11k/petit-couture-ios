@@ -153,7 +153,7 @@ function BagPage() {
       <div className="relative w-full max-w-[440px] bg-background min-h-screen overflow-hidden shadow-soft">
         {/* Header */}
         <header className="px-5 pt-2 pb-3 flex items-center justify-between sticky top-0 z-30 bg-background/95 backdrop-blur">
-          <button aria-label={ar ? "رجوع" : "Back"} onClick={() => router.history.back()} className="h-10 w-10 -ms-2 grid place-items-center rounded-full text-foreground/80 active:scale-95 transition">
+          <button aria-label={ar ? "رجوع" : "Back"} onClick={() => router.history.back()} className="h-10 w-10 -ms-2 grid place-items-center rounded-xl text-foreground/80 active:scale-95 transition">
             <BackIcon className="h-[22px] w-[22px]" strokeWidth={1.6} />
           </button>
           <span className="text-[10.5px] tracking-luxury text-muted-foreground">
@@ -364,7 +364,7 @@ function BagPage() {
         {bag.items.length > 0 && (
           <div className="fixed lg:absolute bottom-0 inset-x-0 max-w-[440px] mx-auto bg-background/95 backdrop-blur-md border-t border-border z-40">
             <div className="px-5 pt-4 pb-6">
-              <button onClick={() => navigate({ to: "/checkout" })} className="w-full h-[56px] rounded-full bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft">
+              <button onClick={() => navigate({ to: "/checkout" })} className="w-full h-[56px] rounded-xl bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft">
                 <Lock className="h-[15px] w-[15px]" strokeWidth={1.7} />
                 {tt.checkout} · {fmtPrice(total)}
               </button>
@@ -379,8 +379,8 @@ function BagPage() {
             <div className="w-full max-w-[360px] bg-background rounded-[20px] p-5" onClick={(e) => e.stopPropagation()}>
               <h3 className="font-serif text-[18px] text-foreground">{tt.confirmClear}</h3>
               <div className="mt-5 flex gap-2">
-                <button onClick={() => setConfirmClear(false)} className="flex-1 h-11 rounded-full border border-border text-[13px]">{tt.cancel}</button>
-                <button onClick={() => { bag.clear(); setConfirmClear(false); }} className="flex-1 h-11 rounded-full bg-red-600 text-white text-[13px] font-medium">{tt.confirm}</button>
+                <button onClick={() => setConfirmClear(false)} className="flex-1 h-11 rounded-xl border border-border text-[13px]">{tt.cancel}</button>
+                <button onClick={() => { bag.clear(); setConfirmClear(false); }} className="flex-1 h-11 rounded-xl bg-red-600 text-white text-[13px] font-medium">{tt.confirm}</button>
               </div>
             </div>
           </div>

@@ -213,7 +213,7 @@ export function ShareSheet({ open, onClose, payload }: Props) {
                 onClick={onClick}
                 className="flex flex-col items-center gap-2 active:scale-95 transition"
               >
-                <span className="h-14 w-14 rounded-full grid place-items-center bg-cream-warm border border-gold-soft text-gold-deep">
+                <span className="h-14 w-14 rounded-xl grid place-items-center bg-cream-warm border border-gold-soft text-gold-deep">
                   <Icon className="h-[20px] w-[20px]" strokeWidth={1.6} />
                 </span>
                 <span className="text-[11px] text-foreground/80 tracking-soft text-center leading-tight">

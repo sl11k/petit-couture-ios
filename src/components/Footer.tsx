@@ -97,9 +97,9 @@ export function Footer() {
               <li className="flex items-center gap-2"><Mail className="h-3.5 w-3.5 text-gold" /><a href={`mailto:${email}`} className="hover:text-gold">{email}</a></li>
             </ul>
             <div className="mt-4 flex items-center gap-3">
-              <a href={ig} target="_blank" rel="noopener" aria-label="Instagram" className="grid h-9 w-9 place-items-center rounded-full border border-background/20 hover:bg-background/10 transition"><Instagram className="h-4 w-4" /></a>
-              <a href={wa} target="_blank" rel="noopener" aria-label="WhatsApp" className="grid h-9 w-9 place-items-center rounded-full border border-background/20 hover:bg-background/10 transition"><MessageCircle className="h-4 w-4" /></a>
-              <a href={tiktok} target="_blank" rel="noopener" aria-label="TikTok" className="grid h-9 w-9 place-items-center rounded-full border border-background/20 hover:bg-background/10 transition">
+              <a href={ig} target="_blank" rel="noopener" aria-label="Instagram" className="grid h-9 w-9 place-items-center rounded-xl border border-background/20 hover:bg-background/10 transition"><Instagram className="h-4 w-4" /></a>
+              <a href={wa} target="_blank" rel="noopener" aria-label="WhatsApp" className="grid h-9 w-9 place-items-center rounded-xl border border-background/20 hover:bg-background/10 transition"><MessageCircle className="h-4 w-4" /></a>
+              <a href={tiktok} target="_blank" rel="noopener" aria-label="TikTok" className="grid h-9 w-9 place-items-center rounded-xl border border-background/20 hover:bg-background/10 transition">
                 <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor"><path d="M19.32 6.69a4.83 4.83 0 0 1-3.78-1.85V15.4a5.6 5.6 0 1 1-5.6-5.6c.31 0 .6.03.9.08v2.94a2.74 2.74 0 1 0 1.97 2.63V2h2.74a4.84 4.84 0 0 0 3.77 4.69z"/></svg>
               </a>
             </div>

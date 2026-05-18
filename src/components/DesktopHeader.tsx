@@ -79,7 +79,7 @@ export function DesktopHeader() {
             to="/account"
             aria-label={isRTL ? "الحساب" : "Account"}
             className={[
-              "h-10 w-10 grid place-items-center rounded-full transition",
+              "h-10 w-10 grid place-items-center rounded-xl transition",
               isActive("/account")
                 ? "text-gold-deep bg-cream-warm"
                 : "text-foreground/75 hover:text-foreground hover:bg-cream-warm",
@@ -91,7 +91,7 @@ export function DesktopHeader() {
             to="/wishlist"
             aria-label={isRTL ? "المفضلة" : "Wishlist"}
             className={[
-              "relative h-10 w-10 grid place-items-center rounded-full transition",
+              "relative h-10 w-10 grid place-items-center rounded-xl transition",
               isActive("/wishlist")
                 ? "text-gold-deep bg-cream-warm"
                 : "text-foreground/75 hover:text-foreground hover:bg-cream-warm",
@@ -112,7 +112,7 @@ export function DesktopHeader() {
             to="/bag"
             aria-label={isRTL ? "الحقيبة" : "Bag"}
             className={[
-              "relative h-10 w-10 grid place-items-center rounded-full transition",
+              "relative h-10 w-10 grid place-items-center rounded-xl transition",
               isActive("/bag")
                 ? "text-gold-deep bg-cream-warm"
                 : "text-foreground/75 hover:text-foreground hover:bg-cream-warm",
@@ -134,7 +134,7 @@ export function DesktopHeader() {
           <Link
             to="/"
             className={[
-              "px-4 h-9 inline-flex items-center rounded-full text-[11.5px] tracking-luxury transition",
+              "px-4 h-9 inline-flex items-center rounded-xl text-[11.5px] tracking-luxury transition",
               isActive("/")
                 ? "bg-foreground text-background"
                 : "text-foreground/70 hover:text-foreground hover:bg-cream-warm",
@@ -150,7 +150,7 @@ export function DesktopHeader() {
                 to="/category/$slug"
                 params={{ slug: c.slug }}
                 className={[
-                  "px-4 h-9 inline-flex items-center rounded-full text-[11.5px] tracking-luxury transition",
+                  "px-4 h-9 inline-flex items-center rounded-xl text-[11.5px] tracking-luxury transition",
                   active
                     ? "bg-foreground text-background"
                     : "text-foreground/70 hover:text-foreground hover:bg-cream-warm",
