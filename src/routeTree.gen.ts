@@ -19,6 +19,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as OurStoryRouteImport } from './routes/our-story'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HelpRouteImport } from './routes/help'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as BagRouteImport } from './routes/bag'
@@ -170,6 +171,11 @@ const LoginRoute = LoginRouteImport.update({
 const HelpRoute = HelpRouteImport.update({
   id: '/help',
   path: '/help',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -695,6 +701,7 @@ export interface FileRoutesByFullPath {
   '/bag': typeof BagRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/our-story': typeof OurStoryRoute
@@ -808,6 +815,7 @@ export interface FileRoutesByTo {
   '/bag': typeof BagRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/our-story': typeof OurStoryRoute
@@ -923,6 +931,7 @@ export interface FileRoutesById {
   '/bag': typeof BagRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/our-story': typeof OurStoryRoute
@@ -1039,6 +1048,7 @@ export interface FileRouteTypes {
     | '/bag'
     | '/checkout'
     | '/contact'
+    | '/forgot-password'
     | '/help'
     | '/login'
     | '/our-story'
@@ -1152,6 +1162,7 @@ export interface FileRouteTypes {
     | '/bag'
     | '/checkout'
     | '/contact'
+    | '/forgot-password'
     | '/help'
     | '/login'
     | '/our-story'
@@ -1266,6 +1277,7 @@ export interface FileRouteTypes {
     | '/bag'
     | '/checkout'
     | '/contact'
+    | '/forgot-password'
     | '/help'
     | '/login'
     | '/our-story'
@@ -1381,6 +1393,7 @@ export interface RootRouteChildren {
   BagRoute: typeof BagRoute
   CheckoutRoute: typeof CheckoutRoute
   ContactRoute: typeof ContactRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   HelpRoute: typeof HelpRoute
   LoginRoute: typeof LoginRoute
   OurStoryRoute: typeof OurStoryRoute
@@ -1482,6 +1495,13 @@ declare module '@tanstack/react-router' {
       path: '/help'
       fullPath: '/help'
       preLoaderRoute: typeof HelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -2497,6 +2517,7 @@ const rootRouteChildren: RootRouteChildren = {
   BagRoute: BagRoute,
   CheckoutRoute: CheckoutRoute,
   ContactRoute: ContactRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   HelpRoute: HelpRoute,
   LoginRoute: LoginRoute,
   OurStoryRoute: OurStoryRoute,
