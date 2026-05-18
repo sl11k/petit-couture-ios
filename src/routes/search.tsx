@@ -3,10 +3,11 @@ import { buildMeta } from "@/lib/seo";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { fallback, zodValidator } from "@tanstack/zod-adapter";
-import { SlidersHorizontal, Star, X, Search as SearchIcon } from "lucide-react";
+import { SlidersHorizontal, Star, X, Search as SearchIcon, Heart } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePriceFormatter } from "@/state/CurrencyContext";
+import { useWishlist } from "@/state/WishlistContext";
 import {
   searchProducts,
   fetchFacets,
