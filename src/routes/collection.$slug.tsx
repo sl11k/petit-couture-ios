@@ -1,4 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { Heart } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { LazyImage } from "@/components/LazyImage";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { buildMeta, breadcrumbJsonLd, collectionJsonLd, canonical } from "@/lib/seo";
 import { usePriceFormatter } from "@/state/CurrencyContext";
+import { useWishlist } from "@/state/WishlistContext";
 
 type SortMode = "manual" | "newest" | "best_sellers" | "price_asc" | "price_desc";
 
