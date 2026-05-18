@@ -39,12 +39,6 @@ const FREE_SHIPPING_THRESHOLD = 500;
 const SHIPPING_FEE = 25;
 const TAX_RATE = 0.15;
 
-// Demo promo codes (client-side validation only)
-const PROMO_CODES: Record<string, { type: "percent" | "fixed" | "freeship"; value: number; minSubtotal?: number }> = {
-  WELCOME10: { type: "percent", value: 10 },
-  SAVE50: { type: "fixed", value: 50, minSubtotal: 300 },
-  FREESHIP: { type: "freeship", value: 0 },
-};
 
 function BagPage() {
   const router = useRouter();
