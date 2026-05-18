@@ -920,7 +920,7 @@ function ProductDetails() {
             <h2 className="px-5 font-serif text-[20px] text-foreground">{t.relatedProducts}</h2>
             <div className="mt-3 flex gap-3 overflow-x-auto scrollbar-none px-5 pb-2">
               {related.map((p) => (
-                <Link key={p.slug} to="/category/$slug" params={{ slug: p.slug }} className="shrink-0 w-[140px]">
+                <Link key={p.slug} to="/product/$slug" params={{ slug: p.slug }} className="shrink-0 w-[140px]">
                   <div className="aspect-[4/5] rounded-[16px] overflow-hidden bg-pastel-peach">
                     <img src={p.images[0]} alt={p.name} width={400} height={500} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   </div>
