@@ -274,13 +274,13 @@ function AnalyticsDebug() {
                 aria-label={isRTL ? "تبديل إرسال الأحداث" : "Toggle analytics dispatch"}
                 onClick={toggle}
                 className={[
-                  "shrink-0 relative h-7 w-12 rounded-full transition-colors",
+                  "shrink-0 relative h-7 w-12 rounded-xl transition-colors",
                   enabled ? "bg-gold-deep" : "bg-foreground/20",
                 ].join(" ")}
               >
                 <span
                   className={[
-                    "absolute top-0.5 h-6 w-6 rounded-full bg-background shadow-soft transition-all",
+                    "absolute top-0.5 h-6 w-6 rounded-xl bg-background shadow-soft transition-all",
                     enabled ? "left-[22px]" : "left-0.5",
                   ].join(" ")}
                 />

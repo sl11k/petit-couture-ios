@@ -58,7 +58,7 @@ function HelpPage() {
 
       <div className="mb-4 flex flex-wrap gap-1.5">
         {cats.map(c => (
-          <button key={c} onClick={() => setCat(c)} className={`rounded-full px-3 py-1 text-xs ${cat===c?"bg-primary text-primary-foreground":"bg-muted text-muted-foreground"}`}>
+          <button key={c} onClick={() => setCat(c)} className={`rounded-xl px-3 py-1 text-xs ${cat===c?"bg-primary text-primary-foreground":"bg-muted text-muted-foreground"}`}>
             {c === "all" ? "الكل" : CATEGORIES[c] || c}
           </button>
         ))}
