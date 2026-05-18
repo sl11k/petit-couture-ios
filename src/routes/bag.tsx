@@ -3,7 +3,6 @@ import { buildMeta } from "@/lib/seo";
 import { useMemo, useState } from "react";
 import {
   AlertTriangle,
-  Check,
   ChevronLeft,
   ChevronRight,
   Heart,
@@ -12,11 +11,10 @@ import {
   Plus,
   Share2,
   ShoppingBag,
-  Tag,
   Trash2,
   Truck,
-  X,
 } from "lucide-react";
+
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useBag } from "@/state/BagContext";
 import { useWishlist } from "@/state/WishlistContext";
@@ -41,12 +39,6 @@ const FREE_SHIPPING_THRESHOLD = 500;
 const SHIPPING_FEE = 25;
 const TAX_RATE = 0.15;
 
-// Demo promo codes (client-side validation only)
-const PROMO_CODES: Record<string, { type: "percent" | "fixed" | "freeship"; value: number; minSubtotal?: number }> = {
-  WELCOME10: { type: "percent", value: 10 },
-  SAVE50: { type: "fixed", value: 50, minSubtotal: 300 },
-  FREESHIP: { type: "freeship", value: 0 },
-};
 
 function BagPage() {
   const router = useRouter();
@@ -60,9 +52,6 @@ function BagPage() {
   const fmt = (n: number) => Math.round(n).toLocaleString(locale);
   const fmtPrice = usePriceFormatter();
 
-  const [code, setCode] = useState("");
-  const [appliedCode, setAppliedCode] = useState<string | null>(null);
-  const [codeError, setCodeError] = useState<string | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
   const [sharePayload, setSharePayload] = useState<ShareSheetPayload | null>(null);
 
@@ -84,54 +73,19 @@ function BagPage() {
     });
   }, [bag.items, bagProductsBySlug]);
 
-  const promo = appliedCode ? PROMO_CODES[appliedCode] : null;
-
+  // Coupons are validated server-side at /checkout (validate_coupon RPC).
+  // We intentionally do NOT show fake/client-side discounts in the bag to
+  // avoid mismatches between the bag preview and the real order total.
   const subtotal = bag.subtotal;
-  const discount = useMemo(() => {
-    if (!promo) return 0;
-    if (promo.type === "percent") return Math.round((subtotal * promo.value) / 100);
-    if (promo.type === "fixed") return Math.min(promo.value, subtotal);
-    return 0;
-  }, [promo, subtotal]);
+  const qualifiesFreeShip = subtotal >= FREE_SHIPPING_THRESHOLD;
+  const shipping = bag.items.length === 0 ? 0 : (qualifiesFreeShip ? 0 : SHIPPING_FEE);
+  const tax = Math.round(subtotal * TAX_RATE);
+  const total = subtotal + shipping + tax;
 
-  const subAfterDiscount = Math.max(0, subtotal - discount);
-  const freeShippingByPromo = promo?.type === "freeship";
-  const qualifiesFreeShip = subAfterDiscount >= FREE_SHIPPING_THRESHOLD;
-  const shipping = bag.items.length === 0 ? 0 : (freeShippingByPromo || qualifiesFreeShip ? 0 : SHIPPING_FEE);
-  const tax = Math.round(subAfterDiscount * TAX_RATE);
-  const total = subAfterDiscount + shipping + tax;
+  const remainingForFreeShip = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
+  const freeShipProgress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
 
-  const remainingForFreeShip = Math.max(0, FREE_SHIPPING_THRESHOLD - subAfterDiscount);
-  const freeShipProgress = Math.min(100, (subAfterDiscount / FREE_SHIPPING_THRESHOLD) * 100);
 
-  const applyCode = () => {
-    const normalized = code.trim().toUpperCase();
-    setCodeError(null);
-    if (!normalized) {
-      setCodeError(ar ? "أدخل كود الخصم" : "Please enter a promo code");
-      return;
-    }
-    const found = PROMO_CODES[normalized];
-    if (!found) {
-      setCodeError(ar ? "الكود غير صحيح أو منتهي الصلاحية" : "Invalid or expired code");
-      return;
-    }
-    if (found.minSubtotal && subtotal < found.minSubtotal) {
-      setCodeError(
-        ar
-          ? `الحد الأدنى للطلب ${fmt(found.minSubtotal)} ر.س`
-          : `Minimum order of ${fmt(found.minSubtotal)} SAR required`,
-      );
-      return;
-    }
-    setAppliedCode(normalized);
-  };
-
-  const removeCode = () => {
-    setAppliedCode(null);
-    setCode("");
-    setCodeError(null);
-  };
 
   const moveToWishlist = (itemId: string, slug: string) => {
     wishlist.toggle(`product:${slug}`, "wishlist_screen");
@@ -259,7 +213,7 @@ function BagPage() {
                 {itemsMeta.map(({ it, currentPrice, priceChanged, stock, overStock, lowStock }) => (
                   <article key={it.id} className="rounded-[22px] border border-border bg-cream-warm/40 p-3">
                     <div className="flex gap-4">
-                      <Link to="/category/$slug" params={{ slug: it.slug }} className="h-[112px] w-[92px] overflow-hidden rounded-[16px] bg-pastel-peach shrink-0">
+                      <Link to="/product/$slug" params={{ slug: it.slug }} className="h-[112px] w-[92px] overflow-hidden rounded-[16px] bg-pastel-peach shrink-0">
                         <img src={it.image} alt={it.name} loading="lazy" className="w-full h-full object-cover" />
                       </Link>
                       <div className="flex-1 min-w-0 flex flex-col">
@@ -340,42 +294,9 @@ function BagPage() {
                 ))}
               </section>
 
-              {/* Promo code */}
-              <section className="px-5 mt-6">
-                <label className="text-[12px] tracking-luxury text-muted-foreground flex items-center gap-1.5">
-                  <Tag className="h-3.5 w-3.5" /> {tt.promoCode}
-                </label>
-                {appliedCode ? (
-                  <div className="mt-2 flex items-center justify-between rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2.5">
-                    <span className="text-[13px] text-emerald-800 inline-flex items-center gap-1.5">
-                      <Check className="h-3.5 w-3.5" /> {tt.promoApplied(appliedCode)}
-                    </span>
-                    <button onClick={removeCode} className="text-emerald-800/70 hover:text-emerald-900">
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="mt-2 flex gap-2">
-                      <input
-                        value={code}
-                        onChange={(e) => { setCode(e.target.value); setCodeError(null); }}
-                        onKeyDown={(e) => e.key === "Enter" && applyCode()}
-                        placeholder={tt.placeholderCode}
-                        className="flex-1 h-11 rounded-full border border-border bg-background px-4 text-[13px] uppercase placeholder:normal-case placeholder:text-muted-foreground"
-                      />
-                      <button onClick={applyCode} className="h-11 px-5 rounded-full bg-foreground text-background text-[13px] font-medium active:scale-95">
-                        {tt.apply}
-                      </button>
-                    </div>
-                    {codeError && (
-                      <p className="mt-2 text-[11.5px] text-red-600 flex items-center gap-1.5">
-                        <AlertTriangle className="h-3 w-3" /> {codeError}
-                      </p>
-                    )}
-                  </>
-                )}
-              </section>
+              {/* Promo codes are applied at checkout (validated against the
+                  coupons table) to avoid showing a discount here that does not
+                  match the final order total. */}
 
               {/* Totals */}
               <section className="px-5 mt-6">
@@ -384,12 +305,7 @@ function BagPage() {
                     <span>{tt.subtotal}</span>
                     <span className="tabular-nums">{fmtPrice(subtotal)}</span>
                   </div>
-                  {discount > 0 && (
-                    <div className="flex items-center justify-between text-[13.5px] text-emerald-700">
-                      <span>{tt.discount}</span>
-                      <span className="tabular-nums">−{fmtPrice(discount)}</span>
-                    </div>
-                  )}
+
                   <div className="flex items-center justify-between text-[13.5px] text-foreground/80">
                     <span>{tt.shipping}</span>
                     {shipping === 0 ? (
