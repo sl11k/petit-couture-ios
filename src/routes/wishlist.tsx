@@ -575,13 +575,10 @@ function WishlistPage() {
                           </span>
                         )}
                         {linkedCard && it.slug ? (
-                          <Link
-                            to="/category/$slug"
-                            params={{ slug: it.slug }}
-                            className="font-serif text-[16px] leading-snug text-foreground mt-0.5 truncate"
-                          >
-                            {it.name}
-                          </Link>
+                          renderLink(
+                            "font-serif text-[16px] leading-snug text-foreground mt-0.5 truncate",
+                            it.name,
+                          )
                         ) : (
                           <h2 className="font-serif text-[16px] leading-snug text-foreground mt-0.5 truncate">
                             {it.name}
@@ -600,14 +597,9 @@ function WishlistPage() {
                         )}
 
                         <div className="mt-auto pt-2 flex items-center gap-2">
-                          {linkedCard && it.slug && (
-                            <Link
-                              to="/category/$slug"
-                              params={{ slug: it.slug }}
-                              className="h-9 px-4 rounded-full bg-foreground text-background text-[12px] tracking-soft font-medium grid place-items-center active:scale-[0.97] transition"
-                            >
-                              {t.wishlist.view}
-                            </Link>
+                          {linkedCard && it.slug && renderLink(
+                            "h-9 px-4 rounded-full bg-foreground text-background text-[12px] tracking-soft font-medium grid place-items-center active:scale-[0.97] transition",
+                            t.wishlist.view,
                           )}
                           <button
                             aria-label={t.wishlist.share}
