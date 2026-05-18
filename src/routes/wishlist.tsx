@@ -153,21 +153,50 @@ function WishlistPage() {
   const resolved = useMemo<ResolvedItem[]>(() => {
     return wishlist.items
       .map((id): ResolvedItem | null => {
-        if (id.startsWith("product:") || id.startsWith("category:")) {
-          const slug = id.split(":")[1];
+        if (id.startsWith("product:")) {
+          const slug = id.slice("product:".length);
+          if (!slug) return null;
+          const dbProduct = wishlistProductsBySlug[slug];
           const cat = categories.find((c) => c.slug === slug);
-          if (!cat) return null;
-          const product = wishlistProductsBySlug[slug] ?? getProductForCategory(slug);
+          const product = dbProduct ?? (cat ? getProductForCategory(slug) : null);
+          if (product) {
+            return {
+              id,
+              kind: "product",
+              slug,
+              name: product.name,
+              brand: product.brand,
+              image: product.images[0] ?? cat?.img ?? "",
+              price: product.price,
+              currency: product.currency,
+            };
+          }
+          // DB lookup pending or product missing — render minimal placeholder.
           return {
             id,
-            kind: id.startsWith("product:") ? "product" : "category",
+            kind: "product",
+            slug,
+            name: slug,
+            brand: null,
+            image: "",
+            price: null,
+            currency: "SAR",
+          };
+        }
+        if (id.startsWith("category:")) {
+          const slug = id.slice("category:".length);
+          const cat = categories.find((c) => c.slug === slug);
+          if (!cat) return null;
+          const product = getProductForCategory(slug);
+          return {
+            id,
+            kind: "category",
             slug,
             name: product.name,
             brand: product.brand,
             image: product.images[0] ?? cat.img,
             price: product.price,
             currency: product.currency,
-            detailTo: "/category/$slug",
           };
         }
         if (id.startsWith("hero:")) {
@@ -180,7 +209,6 @@ function WishlistPage() {
             image: hero,
             price: null,
             currency: "SAR",
-            detailTo: "/",
           };
         }
         return null;
