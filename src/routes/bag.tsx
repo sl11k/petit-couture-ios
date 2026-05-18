@@ -213,7 +213,7 @@ function BagPage() {
                 {itemsMeta.map(({ it, currentPrice, priceChanged, stock, overStock, lowStock }) => (
                   <article key={it.id} className="rounded-[22px] border border-border bg-cream-warm/40 p-3">
                     <div className="flex gap-4">
-                      <Link to="/category/$slug" params={{ slug: it.slug }} className="h-[112px] w-[92px] overflow-hidden rounded-[16px] bg-pastel-peach shrink-0">
+                      <Link to="/product/$slug" params={{ slug: it.slug }} className="h-[112px] w-[92px] overflow-hidden rounded-[16px] bg-pastel-peach shrink-0">
                         <img src={it.image} alt={it.name} loading="lazy" className="w-full h-full object-cover" />
                       </Link>
                       <div className="flex-1 min-w-0 flex flex-col">
