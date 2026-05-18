@@ -66,7 +66,7 @@ export function MobileHeader({
             type="button"
             onClick={() => navigate({ to: ".." as any }).catch(() => history.back())}
             aria-label={isRTL ? "رجوع" : "Back"}
-            className="h-11 w-11 -ms-2 grid place-items-center rounded-full hover:bg-accent active:bg-accent/70"
+            className="h-11 w-11 -ms-2 grid place-items-center rounded-xl hover:bg-accent active:bg-accent/70"
           >
             <BackIcon className="h-5 w-5" />
           </button>
@@ -341,7 +341,7 @@ export function MobileSearchBar({
       }}
       className="lg:hidden px-3 py-2 bg-background"
     >
-      <label className="flex items-center gap-2 h-11 px-3 rounded-full bg-muted">
+      <label className="flex items-center gap-2 h-11 px-3 rounded-xl bg-muted">
         <Search className="h-4 w-4 text-muted-foreground shrink-0" />
         <input
           value={q}

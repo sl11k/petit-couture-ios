@@ -211,7 +211,7 @@ function SearchPage() {
             onBlur={(e) =>
               setParam("pmin", e.target.value ? Number(e.target.value) : undefined)
             }
-            className="w-1/2 h-10 px-3 rounded-full border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-gold/40"
+            className="w-1/2 h-10 px-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-gold/40"
           />
           <input
             type="number"
@@ -221,7 +221,7 @@ function SearchPage() {
             onBlur={(e) =>
               setParam("pmax", e.target.value ? Number(e.target.value) : undefined)
             }
-            className="w-1/2 h-10 px-3 rounded-full border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-gold/40"
+            className="w-1/2 h-10 px-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-gold/40"
           />
         </div>
       </FilterGroup>
@@ -278,7 +278,7 @@ function SearchPage() {
                   key={c}
                   onClick={() => toggleArrayParam("color", c)}
                   className={[
-                    "px-3.5 h-9 rounded-full border text-xs tracking-soft transition",
+                    "px-3.5 h-9 rounded-xl border text-xs tracking-soft transition",
                     active
                       ? "bg-foreground text-background border-foreground"
                       : "bg-background border-border text-foreground/80 hover:border-gold/60",
@@ -302,7 +302,7 @@ function SearchPage() {
                   key={s}
                   onClick={() => toggleArrayParam("size", s)}
                   className={[
-                    "px-3 h-9 min-w-11 rounded-full border text-xs font-medium transition",
+                    "px-3 h-9 min-w-11 rounded-xl border text-xs font-medium transition",
                     active
                       ? "bg-foreground text-background border-foreground"
                       : "bg-background border-border text-foreground/80 hover:border-gold/60",
@@ -417,7 +417,7 @@ function SearchPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setOpenFilters(true)}
-                className="lg:hidden inline-flex items-center gap-1.5 px-4 h-10 border border-border bg-background rounded-full text-xs tracking-soft text-foreground/80 active:scale-95 transition"
+                className="lg:hidden inline-flex items-center gap-1.5 px-4 h-10 border border-border bg-background rounded-xl text-xs tracking-soft text-foreground/80 active:scale-95 transition"
               >
                 <SlidersHorizontal className="h-4 w-4" />
                 {isRTL ? "فلترة" : "Filter"}
@@ -430,7 +430,7 @@ function SearchPage() {
               <select
                 value={sp.sort}
                 onChange={(e) => setParam("sort", e.target.value)}
-                className="h-10 px-3 rounded-full border border-border bg-background text-xs tracking-soft text-foreground/80 focus:outline-none focus:ring-2 focus:ring-gold/40 cursor-pointer"
+                className="h-10 px-3 rounded-xl border border-border bg-background text-xs tracking-soft text-foreground/80 focus:outline-none focus:ring-2 focus:ring-gold/40 cursor-pointer"
                 aria-label={isRTL ? "ترتيب النتائج" : "Sort results"}
               >
                 {SORT_OPTIONS.map((o) => (
@@ -500,7 +500,7 @@ function SearchPage() {
               {didYouMean && (
                 <button
                   onClick={() => setParam("q", didYouMean)}
-                  className="inline-flex items-center gap-1.5 h-10 px-5 rounded-full bg-gold text-background text-xs tracking-luxury font-medium active:scale-95 transition shadow-gold"
+                  className="inline-flex items-center gap-1.5 h-10 px-5 rounded-xl bg-gold text-background text-xs tracking-luxury font-medium active:scale-95 transition shadow-gold"
                 >
                   {isRTL ? `هل تقصد: ${didYouMean}؟` : `Did you mean: ${didYouMean}?`}
                 </button>
@@ -563,7 +563,7 @@ function SearchPage() {
                         e.stopPropagation();
                         wishlist.toggle(wishId, "search_results");
                       }}
-                      className="absolute top-2 end-2 h-9 w-9 grid place-items-center rounded-full bg-background/85 backdrop-blur border border-border hover:bg-background transition"
+                      className="absolute top-2 end-2 h-9 w-9 grid place-items-center rounded-xl bg-background/85 backdrop-blur border border-border hover:bg-background transition"
                     >
                       <Heart
                         className="h-4 w-4 text-foreground"
@@ -600,7 +600,7 @@ function SearchPage() {
               <button
                 onClick={() => setOpenFilters(false)}
                 aria-label={isRTL ? "إغلاق" : "Close"}
-                className="h-9 w-9 grid place-items-center rounded-full border border-border text-foreground active:scale-90 transition"
+                className="h-9 w-9 grid place-items-center rounded-xl border border-border text-foreground active:scale-90 transition"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -615,7 +615,7 @@ function SearchPage() {
               </button>
               <button
                 onClick={() => setOpenFilters(false)}
-                className="flex-[2] h-12 rounded-full bg-foreground text-background text-xs tracking-luxury font-medium active:scale-95 transition"
+                className="flex-[2] h-12 rounded-xl bg-foreground text-background text-xs tracking-luxury font-medium active:scale-95 transition"
               >
                 {isRTL
                   ? `عرض ${fmtNum(total)} نتيجة`

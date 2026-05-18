@@ -562,7 +562,7 @@ function ProductCard({
           e.stopPropagation();
           wishlist.toggle(wishId, "category_card");
         }}
-        className="absolute top-2 end-2 h-9 w-9 grid place-items-center rounded-full bg-background/85 backdrop-blur border border-border hover:bg-background transition"
+        className="absolute top-2 end-2 h-9 w-9 grid place-items-center rounded-xl bg-background/85 backdrop-blur border border-border hover:bg-background transition"
       >
         <Heart
           className="h-4 w-4 text-foreground"
