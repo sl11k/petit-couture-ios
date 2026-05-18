@@ -399,6 +399,8 @@ export function HomeScreen() {
 
 function BestSellersSection({ ar }: { ar: boolean }) {
   const fmt = usePriceFormatter();
+  const wishlist = useWishlist();
+  const { isRTL } = useLanguage();
   const [items, setItems] = useState<Array<{
     id: string;
     name_ar: string | null;
@@ -460,41 +462,62 @@ function BestSellersSection({ ar }: { ar: boolean }) {
       </div>
 
       <div className="grid grid-cols-2 gap-x-4 gap-y-7 mt-7">
-        {items.map((p) => (
-          <Link
-            key={p.id}
-            to="/product/$slug"
-            params={{ slug: p.slug }}
-            className="group flex flex-col text-start active:scale-[0.99] transition"
-          >
-            <div className="relative w-full overflow-hidden rounded-[18px] bg-cream-warm aspect-[4/5]">
-              <img
-                src={p.image}
-                alt={(ar ? p.name_ar : p.name_en) ?? ""}
-                loading="lazy"
-                className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04]"
-              />
-              {p.compareAt && (
-                <span className="absolute top-2 start-2 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium tracking-wide">
-                  {ar ? "خصم" : "SALE"}
+        {items.map((p) => {
+          const wishId = `product:${p.slug}`;
+          const wished = wishlist.has(wishId);
+          return (
+            <div key={p.id} className="group relative">
+              <Link
+                to="/product/$slug"
+                params={{ slug: p.slug }}
+                className="flex flex-col text-start active:scale-[0.99] transition"
+              >
+                <div className="relative w-full overflow-hidden rounded-[18px] bg-cream-warm aspect-[4/5]">
+                  <img
+                    src={p.image}
+                    alt={(ar ? p.name_ar : p.name_en) ?? ""}
+                    loading="lazy"
+                    className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04]"
+                  />
+                  {p.compareAt && (
+                    <span className="absolute top-2 start-2 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium tracking-wide">
+                      {ar ? "خصم" : "SALE"}
+                    </span>
+                  )}
+                </div>
+                <span className="mt-2.5 text-[13.5px] text-foreground font-medium line-clamp-1">
+                  {ar ? p.name_ar : p.name_en}
                 </span>
-              )}
+                <div className="mt-1 flex items-baseline gap-2">
+                  <span className="text-[13px] text-primary font-semibold">
+                    {fmt(p.price)}
+                  </span>
+                  {p.compareAt && (
+                    <span className="text-[11.5px] text-muted-foreground line-through">
+                      {fmt(p.compareAt)}
+                    </span>
+                  )}
+                </div>
+              </Link>
+              <button
+                type="button"
+                aria-label={isRTL ? "أضف للمفضلة" : "Add to wishlist"}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  wishlist.toggle(wishId, "best_sellers");
+                }}
+                className="absolute top-2 end-2 h-9 w-9 grid place-items-center rounded-full bg-background/85 backdrop-blur border border-border hover:bg-background transition"
+              >
+                <Heart
+                  className="h-4 w-4 text-foreground"
+                  strokeWidth={1.5}
+                  fill={wished ? "currentColor" : "none"}
+                />
+              </button>
             </div>
-            <span className="mt-2.5 text-[13.5px] text-foreground font-medium line-clamp-1">
-              {ar ? p.name_ar : p.name_en}
-            </span>
-            <div className="mt-1 flex items-baseline gap-2">
-              <span className="text-[13px] text-primary font-semibold">
-                {fmt(p.price)}
-              </span>
-              {p.compareAt && (
-                <span className="text-[11.5px] text-muted-foreground line-through">
-                  {fmt(p.compareAt)}
-                </span>
-              )}
-            </div>
-          </Link>
-        ))}
+          );
+        })}
       </div>
 
       <div className="mt-8 flex justify-center">
