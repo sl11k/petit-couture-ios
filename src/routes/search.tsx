@@ -197,6 +197,7 @@ function SearchPage() {
   const locale = lang === "ar" ? "ar-EG" : "en-US";
   const fmtNum = (n: number) => n.toLocaleString(locale);
   const fmtPrice = usePriceFormatter();
+  const wishlist = useWishlist();
 
   const Sidebar = (
     <aside className="space-y-6 text-sm" dir={isRTL ? "rtl" : "ltr"}>
