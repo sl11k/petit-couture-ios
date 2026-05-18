@@ -64,7 +64,6 @@ type ResolvedItem = {
   image: string;
   price: number | null;
   currency: string;
-  detailTo: "/category/$slug" | "/" ;
 };
 
 function WishlistPage() {
