@@ -207,28 +207,49 @@ function CollectionView() {
 
 function ProductCard({ p, ar }: { p: Product; ar: boolean }) {
   const fmt = usePriceFormatter();
+  const wishlist = useWishlist();
   const name = ar ? (p.name_ar ?? p.name_en) : (p.name_en ?? p.name_ar);
-  const href = p.slug ? `/product/${p.slug}` : "#";
+  const slug = p.slug ?? p.id;
+  const wishId = `product:${slug}`;
+  const wished = wishlist.has(wishId);
   return (
-    <a href={href} className="group block">
-      {p.image_url ? (
-        <LazyImage
-          src={p.image_url}
-          alt={name ?? ""}
-          width={500}
-          height={625}
-          aspect="4/5"
-          className="w-full aspect-[4/5] object-cover rounded-md group-hover:opacity-90 transition"
-        />
-      ) : (
-        <div className="aspect-[4/5] bg-muted rounded-md" />
-      )}
-      <div className="mt-2.5">
-        <p className="text-sm text-foreground line-clamp-1">{name}</p>
-        {p.price != null && (
-          <p className="text-[13px] text-gold-deep mt-0.5">{fmt(p.price)}</p>
+    <div className="group relative">
+      <a href={p.slug ? `/product/${p.slug}` : "#"} className="block">
+        {p.image_url ? (
+          <LazyImage
+            src={p.image_url}
+            alt={name ?? ""}
+            width={500}
+            height={625}
+            aspect="4/5"
+            className="w-full aspect-[4/5] object-cover rounded-md group-hover:opacity-90 transition"
+          />
+        ) : (
+          <div className="aspect-[4/5] bg-muted rounded-md" />
         )}
-      </div>
-    </a>
+        <div className="mt-2.5">
+          <p className="text-sm text-foreground line-clamp-1">{name}</p>
+          {p.price != null && (
+            <p className="text-[13px] text-gold-deep mt-0.5">{fmt(p.price)}</p>
+          )}
+        </div>
+      </a>
+      <button
+        type="button"
+        aria-label={ar ? "أضف للمفضلة" : "Add to wishlist"}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          wishlist.toggle(wishId, "collection_card");
+        }}
+        className="absolute top-2 end-2 h-9 w-9 grid place-items-center rounded-full bg-background/85 backdrop-blur border border-border hover:bg-background transition"
+      >
+        <Heart
+          className="h-4 w-4 text-foreground"
+          strokeWidth={1.5}
+          fill={wished ? "currentColor" : "none"}
+        />
+      </button>
+    </div>
   );
 }
