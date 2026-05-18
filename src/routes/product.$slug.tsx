@@ -333,11 +333,31 @@ function ProductDetails() {
       : 0,
   }));
 
-  // Related products (other categories)
-  const related = categories
-    .filter((c) => c.slug !== slug)
-    .slice(0, 6)
-    .map((c) => ({ ...productsByCategory["best-sellers"], slug: c.slug, category: c.name }));
+  // Related products from the SAME category (DB-backed). Falls back to a
+  // small list of other categories if no DB siblings exist.
+  const { products: dbRelated } = useDbRelatedProducts(slug, 8);
+  const related = dbRelated.length
+    ? dbRelated.map((p) => ({
+        slug: p.slug,
+        name: p.name,
+        category: p.brand || p.name,
+        images: p.images,
+        price: p.price,
+      }))
+    : categories
+        .filter((c) => c.slug !== slug)
+        .slice(0, 6)
+        .map((c) => {
+          const base = productsByCategory[c.slug] ?? productsByCategory["best-sellers"];
+          return {
+            slug: c.slug,
+            name: base?.name ?? c.name,
+            category: c.name,
+            images: base?.images ?? [c.img],
+            price: base?.price ?? 0,
+          };
+        });
+
 
   const t = {
     color: ar ? "اللون" : "Color",
