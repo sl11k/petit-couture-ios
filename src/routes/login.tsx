@@ -120,6 +120,14 @@ function LoginPage() {
         >
           {mode === "signin" ? t.account.switchToSignUp : t.account.switchToSignIn}
         </button>
+        {mode === "signin" && (
+          <Link
+            to="/forgot-password"
+            className="mt-2 block text-center text-xs text-primary hover:underline"
+          >
+            {ar ? "نسيت كلمة المرور؟" : "Forgot password?"}
+          </Link>
+        )}
         <Link to="/" className="mt-4 block text-center text-xs text-muted-foreground">
           {t.common.backToStore}
         </Link>
