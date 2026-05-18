@@ -294,42 +294,9 @@ function BagPage() {
                 ))}
               </section>
 
-              {/* Promo code */}
-              <section className="px-5 mt-6">
-                <label className="text-[12px] tracking-luxury text-muted-foreground flex items-center gap-1.5">
-                  <Tag className="h-3.5 w-3.5" /> {tt.promoCode}
-                </label>
-                {appliedCode ? (
-                  <div className="mt-2 flex items-center justify-between rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2.5">
-                    <span className="text-[13px] text-emerald-800 inline-flex items-center gap-1.5">
-                      <Check className="h-3.5 w-3.5" /> {tt.promoApplied(appliedCode)}
-                    </span>
-                    <button onClick={removeCode} className="text-emerald-800/70 hover:text-emerald-900">
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="mt-2 flex gap-2">
-                      <input
-                        value={code}
-                        onChange={(e) => { setCode(e.target.value); setCodeError(null); }}
-                        onKeyDown={(e) => e.key === "Enter" && applyCode()}
-                        placeholder={tt.placeholderCode}
-                        className="flex-1 h-11 rounded-full border border-border bg-background px-4 text-[13px] uppercase placeholder:normal-case placeholder:text-muted-foreground"
-                      />
-                      <button onClick={applyCode} className="h-11 px-5 rounded-full bg-foreground text-background text-[13px] font-medium active:scale-95">
-                        {tt.apply}
-                      </button>
-                    </div>
-                    {codeError && (
-                      <p className="mt-2 text-[11.5px] text-red-600 flex items-center gap-1.5">
-                        <AlertTriangle className="h-3 w-3" /> {codeError}
-                      </p>
-                    )}
-                  </>
-                )}
-              </section>
+              {/* Promo codes are applied at checkout (validated against the
+                  coupons table) to avoid showing a discount here that does not
+                  match the final order total. */}
 
               {/* Totals */}
               <section className="px-5 mt-6">
@@ -338,12 +305,7 @@ function BagPage() {
                     <span>{tt.subtotal}</span>
                     <span className="tabular-nums">{fmtPrice(subtotal)}</span>
                   </div>
-                  {discount > 0 && (
-                    <div className="flex items-center justify-between text-[13.5px] text-emerald-700">
-                      <span>{tt.discount}</span>
-                      <span className="tabular-nums">−{fmtPrice(discount)}</span>
-                    </div>
-                  )}
+
                   <div className="flex items-center justify-between text-[13.5px] text-foreground/80">
                     <span>{tt.shipping}</span>
                     {shipping === 0 ? (
