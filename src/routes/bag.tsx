@@ -3,7 +3,6 @@ import { buildMeta } from "@/lib/seo";
 import { useMemo, useState } from "react";
 import {
   AlertTriangle,
-  Check,
   ChevronLeft,
   ChevronRight,
   Heart,
@@ -12,11 +11,10 @@ import {
   Plus,
   Share2,
   ShoppingBag,
-  Tag,
   Trash2,
   Truck,
-  X,
 } from "lucide-react";
+
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useBag } from "@/state/BagContext";
 import { useWishlist } from "@/state/WishlistContext";
