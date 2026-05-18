@@ -217,7 +217,7 @@ export function HomeScreen() {
                           </p>
                         )}
                         {(ar ? bn.cta_label_ar : bn.cta_label_en) && (
-                          <span className="mt-5 inline-flex items-center justify-center h-[52px] px-10 rounded-full bg-background text-foreground text-[14px] font-medium tracking-soft shadow-soft">
+                          <span className="mt-5 inline-flex items-center justify-center h-[52px] px-10 rounded-xl bg-background text-foreground text-[14px] font-medium tracking-soft shadow-soft">
                             {ar ? bn.cta_label_ar : bn.cta_label_en}
                           </span>
                         )}
@@ -266,7 +266,7 @@ export function HomeScreen() {
                         </p>
                       )}
                       {(ar ? currentBanner.cta_label_ar : currentBanner.cta_label_en) && (
-                        <span className="mt-5 inline-flex items-center justify-center h-[52px] px-10 rounded-full bg-background text-foreground text-[14px] font-medium tracking-soft shadow-soft">
+                        <span className="mt-5 inline-flex items-center justify-center h-[52px] px-10 rounded-xl bg-background text-foreground text-[14px] font-medium tracking-soft shadow-soft">
                           {ar ? currentBanner.cta_label_ar : currentBanner.cta_label_en}
                         </span>
                       )}
@@ -290,14 +290,14 @@ export function HomeScreen() {
                     <button
                       aria-label="Previous"
                       onClick={() => setBannerIdx((i) => (i - 1 + banners.length) % banners.length)}
-                      className="absolute top-1/2 -translate-y-1/2 start-2 h-9 w-9 rounded-full bg-background/80 backdrop-blur grid place-items-center text-foreground"
+                      className="absolute top-1/2 -translate-y-1/2 start-2 h-9 w-9 rounded-xl bg-background/80 backdrop-blur grid place-items-center text-foreground"
                     >
                       {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
                     </button>
                     <button
                       aria-label="Next"
                       onClick={() => setBannerIdx((i) => (i + 1) % banners.length)}
-                      className="absolute top-1/2 -translate-y-1/2 end-2 h-9 w-9 rounded-full bg-background/80 backdrop-blur grid place-items-center text-foreground"
+                      className="absolute top-1/2 -translate-y-1/2 end-2 h-9 w-9 rounded-xl bg-background/80 backdrop-blur grid place-items-center text-foreground"
                     >
                       {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                     </button>
@@ -336,7 +336,7 @@ export function HomeScreen() {
                     <a
                       key={fc.id}
                       href={fc.link_url}
-                      className="h-[58px] rounded-full bg-background border-2 border-primary/30 text-primary font-medium text-[16px] grid place-items-center active:scale-[0.97] hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 shadow-sm"
+                      className="h-[58px] rounded-xl bg-background border-2 border-primary/30 text-primary font-medium text-[16px] grid place-items-center active:scale-[0.97] hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 shadow-sm"
                     >
                       {ar ? fc.label_ar : fc.label_en}
                     </a>
@@ -507,7 +507,7 @@ function BestSellersSection({ ar }: { ar: boolean }) {
                   e.stopPropagation();
                   wishlist.toggle(wishId, "home_card");
                 }}
-                className="absolute top-2 end-2 h-9 w-9 grid place-items-center rounded-full bg-background/85 backdrop-blur border border-border hover:bg-background transition"
+                className="absolute top-2 end-2 h-9 w-9 grid place-items-center rounded-xl bg-background/85 backdrop-blur border border-border hover:bg-background transition"
               >
                 <Heart
                   className="h-4 w-4 text-foreground"

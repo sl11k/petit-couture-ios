@@ -92,7 +92,7 @@ function AccountPage() {
           <button
             aria-label={isRTL ? "رجوع" : "Back"}
             onClick={() => router.history.back()}
-            className="h-10 w-10 -ms-2 grid place-items-center rounded-full text-foreground/80 active:scale-95 transition"
+            className="h-10 w-10 -ms-2 grid place-items-center rounded-xl text-foreground/80 active:scale-95 transition"
           >
             <BackIcon className="h-[22px] w-[22px]" strokeWidth={1.6} />
           </button>
@@ -235,7 +235,7 @@ function Field({
           autoComplete={autoComplete}
           disabled={disabled}
           required
-          className="w-full h-[52px] ps-12 pe-4 rounded-full bg-cream-warm/60 border border-border text-[14px] text-foreground placeholder:text-muted-foreground/80 focus:outline-none focus:border-gold-soft focus:bg-background transition"
+          className="w-full h-[52px] ps-12 pe-4 rounded-xl bg-cream-warm/60 border border-border text-[14px] text-foreground placeholder:text-muted-foreground/80 focus:outline-none focus:border-gold-soft focus:bg-background transition"
         />
       </div>
     </label>
@@ -483,7 +483,7 @@ function AddressesPanel() {
         <button
           type="button"
           onClick={() => { setEditing(null); setShowForm(true); }}
-          className="w-full h-[48px] rounded-full border border-dashed border-gold-soft text-gold-deep text-[12px] tracking-luxury inline-flex items-center justify-center gap-2 active:scale-[0.98]"
+          className="w-full h-[48px] rounded-xl border border-dashed border-gold-soft text-gold-deep text-[12px] tracking-luxury inline-flex items-center justify-center gap-2 active:scale-[0.98]"
         >
           <Plus className="h-[14px] w-[14px]" strokeWidth={1.6} />
           {isRTL ? "إضافة عنوان" : "Add address"}

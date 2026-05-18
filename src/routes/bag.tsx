@@ -226,7 +226,7 @@ function BagPage() {
                         </p>
 
                         <div className="mt-auto pt-2 flex items-center justify-between">
-                          <div className="inline-flex items-center rounded-full border border-border bg-background">
+                          <div className="inline-flex items-center rounded-xl border border-border bg-background">
                             <button aria-label={ar ? "إنقاص" : "Decrease"} onClick={() => bag.setQty(it.id, it.qty - 1)} className="h-8 w-8 grid place-items-center text-foreground/70 active:scale-95">
                               <Minus className="h-[14px] w-[14px]" strokeWidth={1.6} />
                             </button>

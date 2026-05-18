@@ -473,7 +473,7 @@ function ProductDetails() {
               <button
                 aria-label={ar ? "تكبير" : "Zoom"}
                 onClick={() => setZoomOpen(true)}
-                className="absolute bottom-4 start-4 h-10 w-10 rounded-full bg-background/90 backdrop-blur grid place-items-center text-foreground/80 active:scale-95 transition"
+                className="absolute bottom-4 start-4 h-10 w-10 rounded-xl bg-background/90 backdrop-blur grid place-items-center text-foreground/80 active:scale-95 transition"
               >
                 <ZoomIn className="h-[16px] w-[16px]" strokeWidth={1.6} />
               </button>
@@ -582,7 +582,7 @@ function ProductDetails() {
                     aria-checked={active}
                     onClick={() => setColor(c.name)}
                     aria-label={c.name}
-                    className={`h-11 w-11 rounded-full grid place-items-center transition active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${active ? "ring-1 ring-gold ring-offset-2 ring-offset-background" : ""}`}
+                    className={`h-11 w-11 rounded-xl grid place-items-center transition active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${active ? "ring-1 ring-gold ring-offset-2 ring-offset-background" : ""}`}
                   >
                     <span className="h-8 w-8 rounded-full border border-border" style={{ backgroundColor: c.hex }} />
                   </button>
@@ -612,7 +612,7 @@ function ProductDetails() {
                     role="radio"
                     aria-checked={active}
                     onClick={() => setSize(s)}
-                    className={`h-12 rounded-full text-[13px] tracking-soft border transition active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${active ? "bg-gold-soft border-gold text-gold-deep font-medium" : "bg-background border-border text-muted-foreground hover:border-foreground/40"}`}
+                    className={`h-12 rounded-xl text-[13px] tracking-soft border transition active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${active ? "bg-gold-soft border-gold text-gold-deep font-medium" : "bg-background border-border text-muted-foreground hover:border-foreground/40"}`}
                   >
                     {s}
                   </button>
@@ -625,7 +625,7 @@ function ProductDetails() {
           <section className="px-5 mt-7">
             <div className="flex items-center justify-between">
               <span className="text-[12px] tracking-luxury text-muted-foreground">{t.qty}</span>
-              <div className="flex items-center gap-1 border border-border rounded-full">
+              <div className="flex items-center gap-1 border border-border rounded-xl">
                 <button onClick={() => setQty(Math.max(1, qty - 1))} className="h-10 w-10 grid place-items-center text-foreground/70 active:scale-95"><Minus className="h-4 w-4" /></button>
                 <span className="w-8 text-center text-[14px] font-medium">{fmt(qty)}</span>
                 <button onClick={() => setQty(Math.min(product.stock || 99, qty + 1))} className="h-10 w-10 grid place-items-center text-foreground/70 active:scale-95"><Plus className="h-4 w-4" /></button>

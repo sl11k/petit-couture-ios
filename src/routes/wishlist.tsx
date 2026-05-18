@@ -319,7 +319,7 @@ function WishlistPage() {
           <button
             aria-label={isRTL ? "رجوع" : "Back"}
             onClick={() => router.history.back()}
-            className="h-10 w-10 -ms-2 grid place-items-center rounded-full text-foreground/80 active:scale-95 transition"
+            className="h-10 w-10 -ms-2 grid place-items-center rounded-xl text-foreground/80 active:scale-95 transition"
           >
             <BackIcon className="h-[22px] w-[22px]" strokeWidth={1.6} />
           </button>
@@ -356,7 +356,7 @@ function WishlistPage() {
                     },
                   });
                 }}
-                className="h-10 px-3 grid place-items-center rounded-full text-[10.5px] tracking-luxury text-gold-deep active:scale-95 transition"
+                className="h-10 px-3 grid place-items-center rounded-xl text-[10.5px] tracking-luxury text-gold-deep active:scale-95 transition"
               >
                 {lang === "en" ? t.wishlist.clearAll.toUpperCase() : t.wishlist.clearAll}
               </button>
@@ -412,7 +412,7 @@ function WishlistPage() {
                   {t.account.syncBannerBody}
                 </span>
               </span>
-              <span className="shrink-0 inline-flex items-center h-8 px-3 rounded-full bg-foreground text-background text-[10.5px] tracking-luxury">
+              <span className="shrink-0 inline-flex items-center h-8 px-3 rounded-xl bg-foreground text-background text-[10.5px] tracking-luxury">
                 {isRTL ? t.account.syncBannerCta : t.account.syncBannerCta.toUpperCase()}
               </span>
             </Link>
@@ -454,7 +454,7 @@ function WishlistPage() {
                         aria-haspopup="listbox"
                         aria-expanded={sortMenuOpen}
                         aria-label={t.wishlist.sortBy}
-                        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border border-border bg-background text-[11px] tracking-soft text-foreground/80 active:scale-[0.97] transition"
+                        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl border border-border bg-background text-[11px] tracking-soft text-foreground/80 active:scale-[0.97] transition"
                       >
                         <ArrowUpDown className="h-[12px] w-[12px]" strokeWidth={1.6} />
                         <span className="text-[10.5px] tracking-luxury text-gold-deep">
@@ -598,20 +598,20 @@ function WishlistPage() {
 
                         <div className="mt-auto pt-2 flex items-center gap-2">
                           {linkedCard && it.slug && renderLink(
-                            "h-9 px-4 rounded-full bg-foreground text-background text-[12px] tracking-soft font-medium grid place-items-center active:scale-[0.97] transition",
+                            "h-9 px-4 rounded-xl bg-foreground text-background text-[12px] tracking-soft font-medium grid place-items-center active:scale-[0.97] transition",
                             t.wishlist.view,
                           )}
                           <button
                             aria-label={t.wishlist.share}
                             onClick={() => shareItem(it.id, it.name)}
-                            className="h-9 w-9 rounded-full border border-border text-muted-foreground hover:text-foreground active:scale-95 transition grid place-items-center"
+                            className="h-9 w-9 rounded-xl border border-border text-muted-foreground hover:text-foreground active:scale-95 transition grid place-items-center"
                           >
                             <Share2 className="h-[13px] w-[13px]" strokeWidth={1.6} />
                           </button>
                           <button
                             aria-label={ariaLabel}
                             onClick={() => wishlist.remove(it.id, "wishlist_screen")}
-                            className="h-9 px-3 rounded-full border border-border text-[12px] tracking-soft text-muted-foreground hover:text-foreground active:scale-95 transition inline-flex items-center gap-1.5"
+                            className="h-9 px-3 rounded-xl border border-border text-[12px] tracking-soft text-muted-foreground hover:text-foreground active:scale-95 transition inline-flex items-center gap-1.5"
                           >
                             <Trash2 className="h-[13px] w-[13px]" strokeWidth={1.6} />
                             {t.wishlist.remove}
