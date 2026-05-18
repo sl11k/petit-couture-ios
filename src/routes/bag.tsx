@@ -52,9 +52,6 @@ function BagPage() {
   const fmt = (n: number) => Math.round(n).toLocaleString(locale);
   const fmtPrice = usePriceFormatter();
 
-  const [code, setCode] = useState("");
-  const [appliedCode, setAppliedCode] = useState<string | null>(null);
-  const [codeError, setCodeError] = useState<string | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
   const [sharePayload, setSharePayload] = useState<ShareSheetPayload | null>(null);
 
@@ -76,54 +73,19 @@ function BagPage() {
     });
   }, [bag.items, bagProductsBySlug]);
 
-  const promo = appliedCode ? PROMO_CODES[appliedCode] : null;
-
+  // Coupons are validated server-side at /checkout (validate_coupon RPC).
+  // We intentionally do NOT show fake/client-side discounts in the bag to
+  // avoid mismatches between the bag preview and the real order total.
   const subtotal = bag.subtotal;
-  const discount = useMemo(() => {
-    if (!promo) return 0;
-    if (promo.type === "percent") return Math.round((subtotal * promo.value) / 100);
-    if (promo.type === "fixed") return Math.min(promo.value, subtotal);
-    return 0;
-  }, [promo, subtotal]);
+  const qualifiesFreeShip = subtotal >= FREE_SHIPPING_THRESHOLD;
+  const shipping = bag.items.length === 0 ? 0 : (qualifiesFreeShip ? 0 : SHIPPING_FEE);
+  const tax = Math.round(subtotal * TAX_RATE);
+  const total = subtotal + shipping + tax;
 
-  const subAfterDiscount = Math.max(0, subtotal - discount);
-  const freeShippingByPromo = promo?.type === "freeship";
-  const qualifiesFreeShip = subAfterDiscount >= FREE_SHIPPING_THRESHOLD;
-  const shipping = bag.items.length === 0 ? 0 : (freeShippingByPromo || qualifiesFreeShip ? 0 : SHIPPING_FEE);
-  const tax = Math.round(subAfterDiscount * TAX_RATE);
-  const total = subAfterDiscount + shipping + tax;
+  const remainingForFreeShip = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
+  const freeShipProgress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
 
-  const remainingForFreeShip = Math.max(0, FREE_SHIPPING_THRESHOLD - subAfterDiscount);
-  const freeShipProgress = Math.min(100, (subAfterDiscount / FREE_SHIPPING_THRESHOLD) * 100);
 
-  const applyCode = () => {
-    const normalized = code.trim().toUpperCase();
-    setCodeError(null);
-    if (!normalized) {
-      setCodeError(ar ? "أدخل كود الخصم" : "Please enter a promo code");
-      return;
-    }
-    const found = PROMO_CODES[normalized];
-    if (!found) {
-      setCodeError(ar ? "الكود غير صحيح أو منتهي الصلاحية" : "Invalid or expired code");
-      return;
-    }
-    if (found.minSubtotal && subtotal < found.minSubtotal) {
-      setCodeError(
-        ar
-          ? `الحد الأدنى للطلب ${fmt(found.minSubtotal)} ر.س`
-          : `Minimum order of ${fmt(found.minSubtotal)} SAR required`,
-      );
-      return;
-    }
-    setAppliedCode(normalized);
-  };
-
-  const removeCode = () => {
-    setAppliedCode(null);
-    setCode("");
-    setCodeError(null);
-  };
 
   const moveToWishlist = (itemId: string, slug: string) => {
     wishlist.toggle(`product:${slug}`, "wishlist_screen");
