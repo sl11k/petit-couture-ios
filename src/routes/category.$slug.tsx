@@ -226,7 +226,7 @@ function CategoryView() {
           <Link
             to="/"
             aria-label={ar ? "رجوع" : "Back"}
-            className="h-10 w-10 grid place-items-center rounded-full hover:bg-muted transition"
+            className="h-10 w-10 grid place-items-center rounded-xl hover:bg-muted transition"
           >
             <ChevronLeft className={`h-5 w-5 ${isRTL ? "rotate-180" : ""}`} />
           </Link>
@@ -236,7 +236,7 @@ function CategoryView() {
           <Link
             to="/wishlist"
             aria-label={ar ? "المفضلة" : "Wishlist"}
-            className="h-10 w-10 grid place-items-center rounded-full hover:bg-muted transition"
+            className="h-10 w-10 grid place-items-center rounded-xl hover:bg-muted transition"
           >
             <Heart className="h-5 w-5" strokeWidth={1.5} />
           </Link>

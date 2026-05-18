@@ -90,14 +90,14 @@ export function MobileHeader({
             <Link
               to="/search"
               aria-label="Search"
-              className="h-11 w-11 grid place-items-center rounded-full hover:bg-accent active:bg-accent/70"
+              className="h-11 w-11 grid place-items-center rounded-xl hover:bg-accent active:bg-accent/70"
             >
               <Search className="h-5 w-5" />
             </Link>
             <Link
               to="/bag"
               aria-label="Bag"
-              className="relative h-11 w-11 -me-2 grid place-items-center rounded-full hover:bg-accent active:bg-accent/70"
+              className="relative h-11 w-11 -me-2 grid place-items-center rounded-xl hover:bg-accent active:bg-accent/70"
             >
               <ShoppingBag className="h-5 w-5" />
               {bagCount > 0 && (

@@ -239,7 +239,7 @@ export function WishlistBanner() {
           type="button"
           onClick={onUndo}
           aria-label={t.wishlist.undo}
-          className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full bg-gold-deep text-background text-[10.5px] tracking-luxury active:scale-95 transition shadow-gold/40"
+          className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3.5 rounded-xl bg-gold-deep text-background text-[10.5px] tracking-luxury active:scale-95 transition shadow-gold/40"
         >
           <RotateCcw className="h-[11px] w-[11px]" strokeWidth={1.8} />
           {isRTL ? t.wishlist.undo : t.wishlist.undo.toUpperCase()}

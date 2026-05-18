@@ -128,7 +128,7 @@ function OurStoryPage() {
           <Link
             to="/category/$slug"
             params={{ slug: "new-in" }}
-            className="inline-flex items-center justify-center rounded-full bg-foreground text-background px-7 h-11 text-xs tracking-[0.18em] hover:opacity-90 transition shadow-soft mt-2"
+            className="inline-flex items-center justify-center rounded-xl bg-foreground text-background px-7 h-11 text-xs tracking-[0.18em] hover:opacity-90 transition shadow-soft mt-2"
           >
             {tr("تصفّحي مجموعاتنا الكاملة", "Browse our Complete Product Range")}
           </Link>

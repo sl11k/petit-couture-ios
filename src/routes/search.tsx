@@ -360,7 +360,7 @@ function SearchPage() {
       {activeChips.length > 0 && (
         <button
           onClick={clearAll}
-          className="w-full h-10 rounded-full border border-border text-xs tracking-luxury text-muted-foreground hover:border-gold/60 hover:text-gold-deep transition"
+          className="w-full h-10 rounded-xl border border-border text-xs tracking-luxury text-muted-foreground hover:border-gold/60 hover:text-gold-deep transition"
         >
           {isRTL ? "مسح كل الفلاتر" : "Clear all filters"}
         </button>
@@ -454,7 +454,7 @@ function SearchPage() {
                   <button
                     onClick={c.onRemove}
                     aria-label={isRTL ? "إزالة الفلتر" : "Remove filter"}
-                    className="grid place-items-center h-5 w-5 rounded-full hover:bg-background/60 transition"
+                    className="grid place-items-center h-5 w-5 rounded-xl hover:bg-background/60 transition"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -508,7 +508,7 @@ function SearchPage() {
               {activeChips.length > 0 && !didYouMean && (
                 <button
                   onClick={clearAll}
-                  className="h-10 px-5 rounded-full border border-border text-xs tracking-luxury text-foreground/80 hover:border-gold/60 transition"
+                  className="h-10 px-5 rounded-xl border border-border text-xs tracking-luxury text-foreground/80 hover:border-gold/60 transition"
                 >
                   {isRTL ? "مسح الفلاتر" : "Clear filters"}
                 </button>
@@ -609,7 +609,7 @@ function SearchPage() {
             <div className="fixed bottom-0 inset-x-0 max-w-sm bg-background border-t border-border p-4 flex gap-2">
               <button
                 onClick={clearAll}
-                className="flex-1 h-12 rounded-full border border-border text-xs tracking-luxury text-foreground/70 active:scale-95 transition"
+                className="flex-1 h-12 rounded-xl border border-border text-xs tracking-luxury text-foreground/70 active:scale-95 transition"
               >
                 {isRTL ? "مسح" : "Clear"}
               </button>
