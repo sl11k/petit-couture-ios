@@ -366,6 +366,15 @@ export function HomeScreen() {
                           loading="lazy"
                           className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04]"
                         />
+                        <button
+                          type="button"
+                          aria-label={isRTL ? (liked ? "إزالة من المفضلة" : "أضف للمفضلة") : (liked ? "Remove" : "Save")}
+                          aria-pressed={liked}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); wishlist.toggle(c.wishId, "category_card"); }}
+                          className="absolute top-2.5 end-2.5 h-9 w-9 rounded-full bg-background/85 backdrop-blur grid place-items-center text-gold-deep border border-gold-soft active:scale-90 transition"
+                        >
+                          <Heart className="h-[15px] w-[15px]" strokeWidth={1.6} fill={liked ? "currentColor" : "none"} />
+                        </button>
                       </div>
                       <span className="mt-3 text-[15px] text-foreground/85 font-medium tracking-tight text-center">{c.label}</span>
                     </a>
