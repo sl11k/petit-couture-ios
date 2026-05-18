@@ -11,6 +11,8 @@ export type WishlistSource =
   | "product_gallery"
   | "wishlist_screen"
   | "shared_link"
+  | "search_results"
+  | "collection_card"
   | "hero"
   | "unknown";
 

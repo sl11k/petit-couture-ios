@@ -64,7 +64,6 @@ type ResolvedItem = {
   image: string;
   price: number | null;
   currency: string;
-  detailTo: "/category/$slug" | "/" ;
 };
 
 function WishlistPage() {
@@ -154,21 +153,50 @@ function WishlistPage() {
   const resolved = useMemo<ResolvedItem[]>(() => {
     return wishlist.items
       .map((id): ResolvedItem | null => {
-        if (id.startsWith("product:") || id.startsWith("category:")) {
-          const slug = id.split(":")[1];
+        if (id.startsWith("product:")) {
+          const slug = id.slice("product:".length);
+          if (!slug) return null;
+          const dbProduct = wishlistProductsBySlug[slug];
           const cat = categories.find((c) => c.slug === slug);
-          if (!cat) return null;
-          const product = wishlistProductsBySlug[slug] ?? getProductForCategory(slug);
+          const product = dbProduct ?? (cat ? getProductForCategory(slug) : null);
+          if (product) {
+            return {
+              id,
+              kind: "product",
+              slug,
+              name: product.name,
+              brand: product.brand,
+              image: product.images[0] ?? cat?.img ?? "",
+              price: product.price,
+              currency: product.currency,
+            };
+          }
+          // DB lookup pending or product missing — render minimal placeholder.
           return {
             id,
-            kind: id.startsWith("product:") ? "product" : "category",
+            kind: "product",
+            slug,
+            name: slug,
+            brand: null,
+            image: "",
+            price: null,
+            currency: "SAR",
+          };
+        }
+        if (id.startsWith("category:")) {
+          const slug = id.slice("category:".length);
+          const cat = categories.find((c) => c.slug === slug);
+          if (!cat) return null;
+          const product = getProductForCategory(slug);
+          return {
+            id,
+            kind: "category",
             slug,
             name: product.name,
             brand: product.brand,
             image: product.images[0] ?? cat.img,
             price: product.price,
             currency: product.currency,
-            detailTo: "/category/$slug",
           };
         }
         if (id.startsWith("hero:")) {
@@ -181,7 +209,6 @@ function WishlistPage() {
             image: hero,
             price: null,
             currency: "SAR",
-            detailTo: "/",
           };
         }
         return null;
@@ -484,6 +511,35 @@ function WishlistPage() {
                   const ariaLabel = isRTL
                     ? `${t.wishlist.remove}: ${it.name}`
                     : `${t.wishlist.remove} ${it.name}`;
+                  const renderLink = (
+                    className: string,
+                    children: React.ReactNode,
+                    extra?: { ariaLabel?: string },
+                  ) => {
+                    if (!linkedCard || !it.slug) return null;
+                    if (it.kind === "product") {
+                      return (
+                        <Link
+                          to="/product/$slug"
+                          params={{ slug: it.slug }}
+                          className={className}
+                          aria-label={extra?.ariaLabel}
+                        >
+                          {children}
+                        </Link>
+                      );
+                    }
+                    return (
+                      <Link
+                        to="/category/$slug"
+                        params={{ slug: it.slug }}
+                        className={className}
+                        aria-label={extra?.ariaLabel}
+                      >
+                        {children}
+                      </Link>
+                    );
+                  };
 
                   return (
                     <article
@@ -491,19 +547,16 @@ function WishlistPage() {
                       className="relative flex gap-4 rounded-[22px] border border-border bg-cream-warm/40 p-3"
                     >
                       {linkedCard && it.slug ? (
-                        <Link
-                          to="/category/$slug"
-                          params={{ slug: it.slug }}
-                          className="h-[112px] w-[92px] overflow-hidden rounded-[16px] bg-pastel-peach shrink-0 active:opacity-90"
-                          aria-label={it.name}
-                        >
+                        renderLink(
+                          "h-[112px] w-[92px] overflow-hidden rounded-[16px] bg-pastel-peach shrink-0 active:opacity-90",
                           <img
                             src={it.image}
                             alt={it.name}
                             loading="lazy"
                             className="w-full h-full object-cover"
-                          />
-                        </Link>
+                          />,
+                          { ariaLabel: it.name },
+                        )
                       ) : (
                         <div className="h-[112px] w-[92px] overflow-hidden rounded-[16px] bg-pastel-peach shrink-0">
                           <img
@@ -522,13 +575,10 @@ function WishlistPage() {
                           </span>
                         )}
                         {linkedCard && it.slug ? (
-                          <Link
-                            to="/category/$slug"
-                            params={{ slug: it.slug }}
-                            className="font-serif text-[16px] leading-snug text-foreground mt-0.5 truncate"
-                          >
-                            {it.name}
-                          </Link>
+                          renderLink(
+                            "font-serif text-[16px] leading-snug text-foreground mt-0.5 truncate",
+                            it.name,
+                          )
                         ) : (
                           <h2 className="font-serif text-[16px] leading-snug text-foreground mt-0.5 truncate">
                             {it.name}
@@ -547,14 +597,9 @@ function WishlistPage() {
                         )}
 
                         <div className="mt-auto pt-2 flex items-center gap-2">
-                          {linkedCard && it.slug && (
-                            <Link
-                              to="/category/$slug"
-                              params={{ slug: it.slug }}
-                              className="h-9 px-4 rounded-full bg-foreground text-background text-[12px] tracking-soft font-medium grid place-items-center active:scale-[0.97] transition"
-                            >
-                              {t.wishlist.view}
-                            </Link>
+                          {linkedCard && it.slug && renderLink(
+                            "h-9 px-4 rounded-full bg-foreground text-background text-[12px] tracking-soft font-medium grid place-items-center active:scale-[0.97] transition",
+                            t.wishlist.view,
                           )}
                           <button
                             aria-label={t.wishlist.share}

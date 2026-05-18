@@ -3,10 +3,11 @@ import { buildMeta } from "@/lib/seo";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { fallback, zodValidator } from "@tanstack/zod-adapter";
-import { SlidersHorizontal, Star, X, Search as SearchIcon } from "lucide-react";
+import { SlidersHorizontal, Star, X, Search as SearchIcon, Heart } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePriceFormatter } from "@/state/CurrencyContext";
+import { useWishlist } from "@/state/WishlistContext";
 import {
   searchProducts,
   fetchFacets,
@@ -196,6 +197,7 @@ function SearchPage() {
   const locale = lang === "ar" ? "ar-EG" : "en-US";
   const fmtNum = (n: number) => n.toLocaleString(locale);
   const fmtPrice = usePriceFormatter();
+  const wishlist = useWishlist();
 
   const Sidebar = (
     <aside className="space-y-6 text-sm" dir={isRTL ? "rtl" : "ltr"}>
@@ -514,42 +516,64 @@ function SearchPage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
-              {items.map((p) => (
-                <Link
-                  key={p.id}
-                  to="/category/$slug"
-                  params={{ slug: p.slug ?? p.id }}
-                  className="group block bg-background rounded-2xl overflow-hidden border border-border hover:shadow-soft hover:border-gold/40 transition"
-                >
-                  <div className="aspect-[3/4] bg-cream-warm overflow-hidden">
-                    {p.image_url ? (
-                      <img
-                        src={p.image_url}
-                        alt={isRTL ? p.name_ar : p.name_en}
-                        className="w-full h-full object-cover group-hover:scale-[1.04] transition duration-500"
-                        loading="lazy"
+              {items.map((p) => {
+                const slug = p.slug ?? p.id;
+                const wishId = `product:${slug}`;
+                const wished = wishlist.has(wishId);
+                return (
+                  <div key={p.id} className="group relative">
+                    <Link
+                      to="/product/$slug"
+                      params={{ slug }}
+                      className="block bg-background rounded-2xl overflow-hidden border border-border hover:shadow-soft hover:border-gold/40 transition"
+                    >
+                      <div className="aspect-[3/4] bg-cream-warm overflow-hidden">
+                        {p.image_url ? (
+                          <img
+                            src={p.image_url}
+                            alt={isRTL ? p.name_ar : p.name_en}
+                            className="w-full h-full object-cover group-hover:scale-[1.04] transition duration-500"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full grid place-items-center text-muted-foreground">
+                            <SearchIcon className="h-8 w-8" strokeWidth={1} />
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-3.5">
+                        {p.brand && (
+                          <div className="text-[10px] tracking-luxury text-gold-deep mb-1">
+                            {p.brand}
+                          </div>
+                        )}
+                        <div className="text-sm text-foreground line-clamp-2 leading-snug min-h-[2.5rem]">
+                          {isRTL ? p.name_ar : p.name_en}
+                        </div>
+                        <div className="mt-2.5 font-serif text-[17px] text-foreground tabular-nums">
+                          {fmtPrice(p.price)}
+                        </div>
+                      </div>
+                    </Link>
+                    <button
+                      type="button"
+                      aria-label={isRTL ? "أضف للمفضلة" : "Add to wishlist"}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        wishlist.toggle(wishId, "search_results");
+                      }}
+                      className="absolute top-2 end-2 h-9 w-9 grid place-items-center rounded-full bg-background/85 backdrop-blur border border-border hover:bg-background transition"
+                    >
+                      <Heart
+                        className="h-4 w-4 text-foreground"
+                        strokeWidth={1.5}
+                        fill={wished ? "currentColor" : "none"}
                       />
-                    ) : (
-                      <div className="w-full h-full grid place-items-center text-muted-foreground">
-                        <SearchIcon className="h-8 w-8" strokeWidth={1} />
-                      </div>
-                    )}
+                    </button>
                   </div>
-                  <div className="p-3.5">
-                    {p.brand && (
-                      <div className="text-[10px] tracking-luxury text-gold-deep mb-1">
-                        {p.brand}
-                      </div>
-                    )}
-                    <div className="text-sm text-foreground line-clamp-2 leading-snug min-h-[2.5rem]">
-                      {isRTL ? p.name_ar : p.name_en}
-                    </div>
-                    <div className="mt-2.5 font-serif text-[17px] text-foreground tabular-nums">
-                      {fmtPrice(p.price)}
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
