@@ -165,7 +165,7 @@ function StorefrontShell({
   // Wrap storefront only — translates Arabic → English (or vice versa) at runtime
   // using the bulk dictionary in src/i18n/adminDict.ts.
   const wrapped = (
-    <>
+    <div className="storefront-shell">
       <SkipLink />
       {showStoreChrome && <DesktopHeader />}
       <AnalyticsTracker />
@@ -183,7 +183,7 @@ function StorefrontShell({
       )}
       <OfflineBanner />
       <Toaster />
-    </>
+    </div>
   );
 
   if (isAdmin || lang === "ar") return wrapped;
