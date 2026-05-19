@@ -5510,6 +5510,13 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_user_emails: {
+        Args: { _ids: string[] }
+        Returns: {
+          email: string
+          user_id: string
+        }[]
+      }
       has_permission: {
         Args: { _permission: string; _user_id: string }
         Returns: boolean
