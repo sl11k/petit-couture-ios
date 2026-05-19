@@ -17,7 +17,12 @@ export function useAdminTable<T extends Record<string, any>>(config: AdminPageCo
     }
     const { data, error: err } = await q;
     if (err) setError(err.message);
-    setRows((data ?? []) as unknown as T[]);
+    let next = (data ?? []) as unknown as T[];
+    if (config.enrichRows && next.length > 0) {
+      try { next = await config.enrichRows(next); }
+      catch (e: any) { console.warn("enrichRows failed", e); }
+    }
+    setRows(next);
     setLoading(false);
   };
 

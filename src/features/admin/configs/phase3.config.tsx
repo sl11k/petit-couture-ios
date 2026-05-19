@@ -132,12 +132,22 @@ export const usersConfig: AdminPageConfig = {
   table: "user_roles",
   orderBy: { column: "created_at", ascending: false },
   columns: [
-    { key: "user_id", label: { ar: "معرف المستخدم", en: "User ID" } },
+    {
+      key: "email",
+      label: { ar: "البريد الإلكتروني", en: "Email" },
+      render: (_v, row: any) => row.email || row.user_id,
+    },
+    { key: "user_id", label: { ar: "معرف المستخدم", en: "User ID" }, hideOnMobile: true,
+      render: (v: string) => (
+        <span className="font-mono text-[10px] text-muted-foreground">{v?.slice(0, 8)}…</span>
+      ),
+    },
     { key: "role", label: { ar: "الدور", en: "Role" }, type: "badge" },
     { key: "created_at", label: { ar: "أُضيف", en: "Added" }, type: "datetime", hideOnMobile: true },
   ],
   filters: [
-    { key: "search", type: "search", columns: ["user_id"] },
+    { key: "search", type: "search", columns: ["user_id", "email"],
+      placeholder: { ar: "بحث بالإيميل أو المعرّف...", en: "Search by email or ID..." } },
     {
       key: "role", type: "select", label: { ar: "الدور", en: "Role" },
       options: [
@@ -152,6 +162,15 @@ export const usersConfig: AdminPageConfig = {
     },
   ],
   actions: { export: true },
+  enrichRows: async (rows: any[]) => {
+    const ids = Array.from(new Set(rows.map((r) => r.user_id).filter(Boolean)));
+    if (ids.length === 0) return rows;
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data, error } = await (supabase as any).rpc("get_user_emails", { _ids: ids });
+    if (error) { console.warn("get_user_emails:", error.message); return rows; }
+    const map = new Map<string, string>((data ?? []).map((r: any) => [r.user_id, r.email]));
+    return rows.map((r) => ({ ...r, email: map.get(r.user_id) ?? null }));
+  },
 };
 
 export const notificationsConfig: AdminPageConfig = {
