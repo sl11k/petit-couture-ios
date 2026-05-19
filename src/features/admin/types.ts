@@ -100,6 +100,8 @@ export type AdminPageConfig<T = any> = {
   select?: string;
   /** Click row navigates to */
   rowHref?: (row: T) => string;
+  /** Optional post-load row enrichment (e.g. join external data) */
+  enrichRows?: (rows: T[]) => Promise<T[]> | T[];
 };
 
 export type DetailFieldType =
