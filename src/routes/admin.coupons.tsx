@@ -1,7 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { AdminPage } from "@/features/admin/components/AdminPage";
-import { couponsConfig } from "@/features/admin/configs/phase2.config";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/admin/coupons")({
-  component: () => <AdminPage config={couponsConfig} />,
+  component: () => <Outlet />,
 });

@@ -101,6 +101,17 @@ import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAbandonedRouteImport } from './routes/admin.abandoned'
 import { Route as AdminAbTestsRouteImport } from './routes/admin.ab-tests'
 import { Route as AccountPrivacyRouteImport } from './routes/account.privacy'
+import { Route as AdminWebhooksIndexRouteImport } from './routes/admin.webhooks.index'
+import { Route as AdminSupportIndexRouteImport } from './routes/admin.support.index'
+import { Route as AdminProductsIndexRouteImport } from './routes/admin.products.index'
+import { Route as AdminOrdersIndexRouteImport } from './routes/admin.orders.index'
+import { Route as AdminMessagesIndexRouteImport } from './routes/admin.messages.index'
+import { Route as AdminLandingPagesIndexRouteImport } from './routes/admin.landing-pages.index'
+import { Route as AdminIntegrationsIndexRouteImport } from './routes/admin.integrations.index'
+import { Route as AdminCustomersIndexRouteImport } from './routes/admin.customers.index'
+import { Route as AdminCouponsIndexRouteImport } from './routes/admin.coupons.index'
+import { Route as AdminCampaignsIndexRouteImport } from './routes/admin.campaigns.index'
+import { Route as AdminAuditIndexRouteImport } from './routes/admin.audit.index'
 import { Route as ApiV1ProductsRouteImport } from './routes/api.v1.products'
 import { Route as ApiV1OrdersRouteImport } from './routes/api.v1.orders'
 import { Route as ApiV1InventoryRouteImport } from './routes/api.v1.inventory'
@@ -587,6 +598,61 @@ const AccountPrivacyRoute = AccountPrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => AccountRoute,
 } as any)
+const AdminWebhooksIndexRoute = AdminWebhooksIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminWebhooksRoute,
+} as any)
+const AdminSupportIndexRoute = AdminSupportIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminSupportRoute,
+} as any)
+const AdminProductsIndexRoute = AdminProductsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminProductsRoute,
+} as any)
+const AdminOrdersIndexRoute = AdminOrdersIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminOrdersRoute,
+} as any)
+const AdminMessagesIndexRoute = AdminMessagesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminMessagesRoute,
+} as any)
+const AdminLandingPagesIndexRoute = AdminLandingPagesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminLandingPagesRoute,
+} as any)
+const AdminIntegrationsIndexRoute = AdminIntegrationsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminIntegrationsRoute,
+} as any)
+const AdminCustomersIndexRoute = AdminCustomersIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminCustomersRoute,
+} as any)
+const AdminCouponsIndexRoute = AdminCouponsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminCouponsRoute,
+} as any)
+const AdminCampaignsIndexRoute = AdminCampaignsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminCampaignsRoute,
+} as any)
+const AdminAuditIndexRoute = AdminAuditIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminAuditRoute,
+} as any)
 const ApiV1ProductsRoute = ApiV1ProductsRouteImport.update({
   id: '/api/v1/products',
   path: '/api/v1/products',
@@ -813,6 +879,17 @@ export interface FileRoutesByFullPath {
   '/api/v1/inventory': typeof ApiV1InventoryRoute
   '/api/v1/orders': typeof ApiV1OrdersRoute
   '/api/v1/products': typeof ApiV1ProductsRoute
+  '/admin/audit/': typeof AdminAuditIndexRoute
+  '/admin/campaigns/': typeof AdminCampaignsIndexRoute
+  '/admin/coupons/': typeof AdminCouponsIndexRoute
+  '/admin/customers/': typeof AdminCustomersIndexRoute
+  '/admin/integrations/': typeof AdminIntegrationsIndexRoute
+  '/admin/landing-pages/': typeof AdminLandingPagesIndexRoute
+  '/admin/messages/': typeof AdminMessagesIndexRoute
+  '/admin/orders/': typeof AdminOrdersIndexRoute
+  '/admin/products/': typeof AdminProductsIndexRoute
+  '/admin/support/': typeof AdminSupportIndexRoute
+  '/admin/webhooks/': typeof AdminWebhooksIndexRoute
   '/api/public/cron/notify-delays': typeof ApiPublicCronNotifyDelaysRoute
   '/api/public/oto/webhook': typeof ApiPublicOtoWebhookRoute
 }
@@ -839,16 +916,12 @@ export interface FileRoutesByTo {
   '/admin/abandoned': typeof AdminAbandonedRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
-  '/admin/audit': typeof AdminAuditRouteWithChildren
   '/admin/audit-logins': typeof AdminAuditLoginsRoute
   '/admin/bundles': typeof AdminBundlesRoute
-  '/admin/campaigns': typeof AdminCampaignsRouteWithChildren
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/conversion': typeof AdminConversionRoute
-  '/admin/coupons': typeof AdminCouponsRouteWithChildren
   '/admin/create-order': typeof AdminCreateOrderRoute
-  '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/errors': typeof AdminErrorsRoute
   '/admin/faq': typeof AdminFaqRoute
   '/admin/featured-categories': typeof AdminFeaturedCategoriesRoute
@@ -856,18 +929,14 @@ export interface FileRoutesByTo {
   '/admin/home-builder': typeof AdminHomeBuilderRoute
   '/admin/incoming-webhooks': typeof AdminIncomingWebhooksRoute
   '/admin/incomplete': typeof AdminIncompleteRoute
-  '/admin/integrations': typeof AdminIntegrationsRouteWithChildren
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/invoices': typeof AdminInvoicesRoute
-  '/admin/landing-pages': typeof AdminLandingPagesRouteWithChildren
   '/admin/loyalty': typeof AdminLoyaltyRoute
   '/admin/loyalty-transactions': typeof AdminLoyaltyTransactionsRoute
-  '/admin/messages': typeof AdminMessagesRouteWithChildren
   '/admin/metrics': typeof AdminMetricsRoute
   '/admin/notification-rules': typeof AdminNotificationRulesRoute
   '/admin/notification-templates': typeof AdminNotificationTemplatesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
-  '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/oto': typeof AdminOtoRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
@@ -876,7 +945,6 @@ export interface FileRoutesByTo {
   '/admin/privacy': typeof AdminPrivacyRoute
   '/admin/product-offers': typeof AdminProductOffersRoute
   '/admin/product-relations': typeof AdminProductRelationsRoute
-  '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/referrals': typeof AdminReferralsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
@@ -891,10 +959,8 @@ export interface FileRoutesByTo {
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
   '/admin/states': typeof AdminStatesRoute
   '/admin/storefront': typeof AdminStorefrontRoute
-  '/admin/support': typeof AdminSupportRouteWithChildren
   '/admin/themes': typeof AdminThemesRoute
   '/admin/users': typeof AdminUsersRoute
-  '/admin/webhooks': typeof AdminWebhooksRouteWithChildren
   '/admin/webhooks-deliveries': typeof AdminWebhooksDeliveriesRoute
   '/admin/webhooks-health': typeof AdminWebhooksHealthRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -928,6 +994,17 @@ export interface FileRoutesByTo {
   '/api/v1/inventory': typeof ApiV1InventoryRoute
   '/api/v1/orders': typeof ApiV1OrdersRoute
   '/api/v1/products': typeof ApiV1ProductsRoute
+  '/admin/audit': typeof AdminAuditIndexRoute
+  '/admin/campaigns': typeof AdminCampaignsIndexRoute
+  '/admin/coupons': typeof AdminCouponsIndexRoute
+  '/admin/customers': typeof AdminCustomersIndexRoute
+  '/admin/integrations': typeof AdminIntegrationsIndexRoute
+  '/admin/landing-pages': typeof AdminLandingPagesIndexRoute
+  '/admin/messages': typeof AdminMessagesIndexRoute
+  '/admin/orders': typeof AdminOrdersIndexRoute
+  '/admin/products': typeof AdminProductsIndexRoute
+  '/admin/support': typeof AdminSupportIndexRoute
+  '/admin/webhooks': typeof AdminWebhooksIndexRoute
   '/api/public/cron/notify-delays': typeof ApiPublicCronNotifyDelaysRoute
   '/api/public/oto/webhook': typeof ApiPublicOtoWebhookRoute
 }
@@ -1045,6 +1122,17 @@ export interface FileRoutesById {
   '/api/v1/inventory': typeof ApiV1InventoryRoute
   '/api/v1/orders': typeof ApiV1OrdersRoute
   '/api/v1/products': typeof ApiV1ProductsRoute
+  '/admin/audit/': typeof AdminAuditIndexRoute
+  '/admin/campaigns/': typeof AdminCampaignsIndexRoute
+  '/admin/coupons/': typeof AdminCouponsIndexRoute
+  '/admin/customers/': typeof AdminCustomersIndexRoute
+  '/admin/integrations/': typeof AdminIntegrationsIndexRoute
+  '/admin/landing-pages/': typeof AdminLandingPagesIndexRoute
+  '/admin/messages/': typeof AdminMessagesIndexRoute
+  '/admin/orders/': typeof AdminOrdersIndexRoute
+  '/admin/products/': typeof AdminProductsIndexRoute
+  '/admin/support/': typeof AdminSupportIndexRoute
+  '/admin/webhooks/': typeof AdminWebhooksIndexRoute
   '/api/public/cron/notify-delays': typeof ApiPublicCronNotifyDelaysRoute
   '/api/public/oto/webhook': typeof ApiPublicOtoWebhookRoute
 }
@@ -1163,6 +1251,17 @@ export interface FileRouteTypes {
     | '/api/v1/inventory'
     | '/api/v1/orders'
     | '/api/v1/products'
+    | '/admin/audit/'
+    | '/admin/campaigns/'
+    | '/admin/coupons/'
+    | '/admin/customers/'
+    | '/admin/integrations/'
+    | '/admin/landing-pages/'
+    | '/admin/messages/'
+    | '/admin/orders/'
+    | '/admin/products/'
+    | '/admin/support/'
+    | '/admin/webhooks/'
     | '/api/public/cron/notify-delays'
     | '/api/public/oto/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -1189,16 +1288,12 @@ export interface FileRouteTypes {
     | '/admin/abandoned'
     | '/admin/analytics'
     | '/admin/announcements'
-    | '/admin/audit'
     | '/admin/audit-logins'
     | '/admin/bundles'
-    | '/admin/campaigns'
     | '/admin/categories'
     | '/admin/content'
     | '/admin/conversion'
-    | '/admin/coupons'
     | '/admin/create-order'
-    | '/admin/customers'
     | '/admin/errors'
     | '/admin/faq'
     | '/admin/featured-categories'
@@ -1206,18 +1301,14 @@ export interface FileRouteTypes {
     | '/admin/home-builder'
     | '/admin/incoming-webhooks'
     | '/admin/incomplete'
-    | '/admin/integrations'
     | '/admin/inventory'
     | '/admin/invoices'
-    | '/admin/landing-pages'
     | '/admin/loyalty'
     | '/admin/loyalty-transactions'
-    | '/admin/messages'
     | '/admin/metrics'
     | '/admin/notification-rules'
     | '/admin/notification-templates'
     | '/admin/notifications'
-    | '/admin/orders'
     | '/admin/oto'
     | '/admin/payments'
     | '/admin/performance'
@@ -1226,7 +1317,6 @@ export interface FileRouteTypes {
     | '/admin/privacy'
     | '/admin/product-offers'
     | '/admin/product-relations'
-    | '/admin/products'
     | '/admin/referrals'
     | '/admin/reports'
     | '/admin/returns'
@@ -1241,10 +1331,8 @@ export interface FileRouteTypes {
     | '/admin/site-analytics'
     | '/admin/states'
     | '/admin/storefront'
-    | '/admin/support'
     | '/admin/themes'
     | '/admin/users'
-    | '/admin/webhooks'
     | '/admin/webhooks-deliveries'
     | '/admin/webhooks-health'
     | '/category/$slug'
@@ -1278,6 +1366,17 @@ export interface FileRouteTypes {
     | '/api/v1/inventory'
     | '/api/v1/orders'
     | '/api/v1/products'
+    | '/admin/audit'
+    | '/admin/campaigns'
+    | '/admin/coupons'
+    | '/admin/customers'
+    | '/admin/integrations'
+    | '/admin/landing-pages'
+    | '/admin/messages'
+    | '/admin/orders'
+    | '/admin/products'
+    | '/admin/support'
+    | '/admin/webhooks'
     | '/api/public/cron/notify-delays'
     | '/api/public/oto/webhook'
   id:
@@ -1394,6 +1493,17 @@ export interface FileRouteTypes {
     | '/api/v1/inventory'
     | '/api/v1/orders'
     | '/api/v1/products'
+    | '/admin/audit/'
+    | '/admin/campaigns/'
+    | '/admin/coupons/'
+    | '/admin/customers/'
+    | '/admin/integrations/'
+    | '/admin/landing-pages/'
+    | '/admin/messages/'
+    | '/admin/orders/'
+    | '/admin/products/'
+    | '/admin/support/'
+    | '/admin/webhooks/'
     | '/api/public/cron/notify-delays'
     | '/api/public/oto/webhook'
   fileRoutesById: FileRoutesById
@@ -2084,6 +2194,83 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountPrivacyRouteImport
       parentRoute: typeof AccountRoute
     }
+    '/admin/webhooks/': {
+      id: '/admin/webhooks/'
+      path: '/'
+      fullPath: '/admin/webhooks/'
+      preLoaderRoute: typeof AdminWebhooksIndexRouteImport
+      parentRoute: typeof AdminWebhooksRoute
+    }
+    '/admin/support/': {
+      id: '/admin/support/'
+      path: '/'
+      fullPath: '/admin/support/'
+      preLoaderRoute: typeof AdminSupportIndexRouteImport
+      parentRoute: typeof AdminSupportRoute
+    }
+    '/admin/products/': {
+      id: '/admin/products/'
+      path: '/'
+      fullPath: '/admin/products/'
+      preLoaderRoute: typeof AdminProductsIndexRouteImport
+      parentRoute: typeof AdminProductsRoute
+    }
+    '/admin/orders/': {
+      id: '/admin/orders/'
+      path: '/'
+      fullPath: '/admin/orders/'
+      preLoaderRoute: typeof AdminOrdersIndexRouteImport
+      parentRoute: typeof AdminOrdersRoute
+    }
+    '/admin/messages/': {
+      id: '/admin/messages/'
+      path: '/'
+      fullPath: '/admin/messages/'
+      preLoaderRoute: typeof AdminMessagesIndexRouteImport
+      parentRoute: typeof AdminMessagesRoute
+    }
+    '/admin/landing-pages/': {
+      id: '/admin/landing-pages/'
+      path: '/'
+      fullPath: '/admin/landing-pages/'
+      preLoaderRoute: typeof AdminLandingPagesIndexRouteImport
+      parentRoute: typeof AdminLandingPagesRoute
+    }
+    '/admin/integrations/': {
+      id: '/admin/integrations/'
+      path: '/'
+      fullPath: '/admin/integrations/'
+      preLoaderRoute: typeof AdminIntegrationsIndexRouteImport
+      parentRoute: typeof AdminIntegrationsRoute
+    }
+    '/admin/customers/': {
+      id: '/admin/customers/'
+      path: '/'
+      fullPath: '/admin/customers/'
+      preLoaderRoute: typeof AdminCustomersIndexRouteImport
+      parentRoute: typeof AdminCustomersRoute
+    }
+    '/admin/coupons/': {
+      id: '/admin/coupons/'
+      path: '/'
+      fullPath: '/admin/coupons/'
+      preLoaderRoute: typeof AdminCouponsIndexRouteImport
+      parentRoute: typeof AdminCouponsRoute
+    }
+    '/admin/campaigns/': {
+      id: '/admin/campaigns/'
+      path: '/'
+      fullPath: '/admin/campaigns/'
+      preLoaderRoute: typeof AdminCampaignsIndexRouteImport
+      parentRoute: typeof AdminCampaignsRoute
+    }
+    '/admin/audit/': {
+      id: '/admin/audit/'
+      path: '/'
+      fullPath: '/admin/audit/'
+      preLoaderRoute: typeof AdminAuditIndexRouteImport
+      parentRoute: typeof AdminAuditRoute
+    }
     '/api/v1/products': {
       id: '/api/v1/products'
       path: '/api/v1/products'
@@ -2256,10 +2443,12 @@ const AccountRouteWithChildren =
 
 interface AdminAuditRouteChildren {
   AdminAuditIdRoute: typeof AdminAuditIdRoute
+  AdminAuditIndexRoute: typeof AdminAuditIndexRoute
 }
 
 const AdminAuditRouteChildren: AdminAuditRouteChildren = {
   AdminAuditIdRoute: AdminAuditIdRoute,
+  AdminAuditIndexRoute: AdminAuditIndexRoute,
 }
 
 const AdminAuditRouteWithChildren = AdminAuditRoute._addFileChildren(
@@ -2268,10 +2457,12 @@ const AdminAuditRouteWithChildren = AdminAuditRoute._addFileChildren(
 
 interface AdminCampaignsRouteChildren {
   AdminCampaignsIdRoute: typeof AdminCampaignsIdRoute
+  AdminCampaignsIndexRoute: typeof AdminCampaignsIndexRoute
 }
 
 const AdminCampaignsRouteChildren: AdminCampaignsRouteChildren = {
   AdminCampaignsIdRoute: AdminCampaignsIdRoute,
+  AdminCampaignsIndexRoute: AdminCampaignsIndexRoute,
 }
 
 const AdminCampaignsRouteWithChildren = AdminCampaignsRoute._addFileChildren(
@@ -2280,10 +2471,12 @@ const AdminCampaignsRouteWithChildren = AdminCampaignsRoute._addFileChildren(
 
 interface AdminCouponsRouteChildren {
   AdminCouponsIdRoute: typeof AdminCouponsIdRoute
+  AdminCouponsIndexRoute: typeof AdminCouponsIndexRoute
 }
 
 const AdminCouponsRouteChildren: AdminCouponsRouteChildren = {
   AdminCouponsIdRoute: AdminCouponsIdRoute,
+  AdminCouponsIndexRoute: AdminCouponsIndexRoute,
 }
 
 const AdminCouponsRouteWithChildren = AdminCouponsRoute._addFileChildren(
@@ -2292,10 +2485,12 @@ const AdminCouponsRouteWithChildren = AdminCouponsRoute._addFileChildren(
 
 interface AdminCustomersRouteChildren {
   AdminCustomersIdRoute: typeof AdminCustomersIdRoute
+  AdminCustomersIndexRoute: typeof AdminCustomersIndexRoute
 }
 
 const AdminCustomersRouteChildren: AdminCustomersRouteChildren = {
   AdminCustomersIdRoute: AdminCustomersIdRoute,
+  AdminCustomersIndexRoute: AdminCustomersIndexRoute,
 }
 
 const AdminCustomersRouteWithChildren = AdminCustomersRoute._addFileChildren(
@@ -2304,10 +2499,12 @@ const AdminCustomersRouteWithChildren = AdminCustomersRoute._addFileChildren(
 
 interface AdminIntegrationsRouteChildren {
   AdminIntegrationsIdRoute: typeof AdminIntegrationsIdRoute
+  AdminIntegrationsIndexRoute: typeof AdminIntegrationsIndexRoute
 }
 
 const AdminIntegrationsRouteChildren: AdminIntegrationsRouteChildren = {
   AdminIntegrationsIdRoute: AdminIntegrationsIdRoute,
+  AdminIntegrationsIndexRoute: AdminIntegrationsIndexRoute,
 }
 
 const AdminIntegrationsRouteWithChildren =
@@ -2315,10 +2512,12 @@ const AdminIntegrationsRouteWithChildren =
 
 interface AdminLandingPagesRouteChildren {
   AdminLandingPagesIdRoute: typeof AdminLandingPagesIdRoute
+  AdminLandingPagesIndexRoute: typeof AdminLandingPagesIndexRoute
 }
 
 const AdminLandingPagesRouteChildren: AdminLandingPagesRouteChildren = {
   AdminLandingPagesIdRoute: AdminLandingPagesIdRoute,
+  AdminLandingPagesIndexRoute: AdminLandingPagesIndexRoute,
 }
 
 const AdminLandingPagesRouteWithChildren =
@@ -2326,10 +2525,12 @@ const AdminLandingPagesRouteWithChildren =
 
 interface AdminMessagesRouteChildren {
   AdminMessagesIdRoute: typeof AdminMessagesIdRoute
+  AdminMessagesIndexRoute: typeof AdminMessagesIndexRoute
 }
 
 const AdminMessagesRouteChildren: AdminMessagesRouteChildren = {
   AdminMessagesIdRoute: AdminMessagesIdRoute,
+  AdminMessagesIndexRoute: AdminMessagesIndexRoute,
 }
 
 const AdminMessagesRouteWithChildren = AdminMessagesRoute._addFileChildren(
@@ -2338,10 +2539,12 @@ const AdminMessagesRouteWithChildren = AdminMessagesRoute._addFileChildren(
 
 interface AdminOrdersRouteChildren {
   AdminOrdersIdRoute: typeof AdminOrdersIdRoute
+  AdminOrdersIndexRoute: typeof AdminOrdersIndexRoute
 }
 
 const AdminOrdersRouteChildren: AdminOrdersRouteChildren = {
   AdminOrdersIdRoute: AdminOrdersIdRoute,
+  AdminOrdersIndexRoute: AdminOrdersIndexRoute,
 }
 
 const AdminOrdersRouteWithChildren = AdminOrdersRoute._addFileChildren(
@@ -2350,10 +2553,12 @@ const AdminOrdersRouteWithChildren = AdminOrdersRoute._addFileChildren(
 
 interface AdminProductsRouteChildren {
   AdminProductsIdRoute: typeof AdminProductsIdRoute
+  AdminProductsIndexRoute: typeof AdminProductsIndexRoute
 }
 
 const AdminProductsRouteChildren: AdminProductsRouteChildren = {
   AdminProductsIdRoute: AdminProductsIdRoute,
+  AdminProductsIndexRoute: AdminProductsIndexRoute,
 }
 
 const AdminProductsRouteWithChildren = AdminProductsRoute._addFileChildren(
@@ -2362,10 +2567,12 @@ const AdminProductsRouteWithChildren = AdminProductsRoute._addFileChildren(
 
 interface AdminSupportRouteChildren {
   AdminSupportIdRoute: typeof AdminSupportIdRoute
+  AdminSupportIndexRoute: typeof AdminSupportIndexRoute
 }
 
 const AdminSupportRouteChildren: AdminSupportRouteChildren = {
   AdminSupportIdRoute: AdminSupportIdRoute,
+  AdminSupportIndexRoute: AdminSupportIndexRoute,
 }
 
 const AdminSupportRouteWithChildren = AdminSupportRoute._addFileChildren(
@@ -2374,10 +2581,12 @@ const AdminSupportRouteWithChildren = AdminSupportRoute._addFileChildren(
 
 interface AdminWebhooksRouteChildren {
   AdminWebhooksIdRoute: typeof AdminWebhooksIdRoute
+  AdminWebhooksIndexRoute: typeof AdminWebhooksIndexRoute
 }
 
 const AdminWebhooksRouteChildren: AdminWebhooksRouteChildren = {
   AdminWebhooksIdRoute: AdminWebhooksIdRoute,
+  AdminWebhooksIndexRoute: AdminWebhooksIndexRoute,
 }
 
 const AdminWebhooksRouteWithChildren = AdminWebhooksRoute._addFileChildren(
