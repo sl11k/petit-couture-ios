@@ -1,7 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { AdminPage } from "@/features/admin/components/AdminPage";
-import { customersConfig } from "@/features/admin/configs/misc.config";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/admin/customers")({
-  component: () => <AdminPage config={customersConfig} />,
+  component: () => <Outlet />,
 });

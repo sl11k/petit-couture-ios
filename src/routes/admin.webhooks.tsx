@@ -1,7 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { AdminPage } from "@/features/admin/components/AdminPage";
-import { webhooksConfig } from "@/features/admin/configs/phase3.config";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/admin/webhooks")({
-  component: () => <AdminPage config={webhooksConfig} />,
+  component: () => <Outlet />,
 });
