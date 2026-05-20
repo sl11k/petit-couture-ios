@@ -5499,6 +5499,15 @@ export type Database = {
         Returns: string
       }
       finalize_order_stock: { Args: { _order_id: string }; Returns: undefined }
+      get_all_users_with_roles: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          roles: string[]
+          user_id: string
+        }[]
+      }
       get_profile_safe: {
         Args: { _user_id: string }
         Returns: {
@@ -5578,6 +5587,10 @@ export type Database = {
         }[]
       }
       search_spell_suggest: { Args: { _q: string }; Returns: string }
+      set_user_roles: {
+        Args: { _roles: string[]; _user_id: string }
+        Returns: undefined
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       unaccent: { Args: { "": string }; Returns: string }
