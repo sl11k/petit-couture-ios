@@ -1,4 +1,4 @@
-import { Link, useRouter } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { ColumnDef, RowAction } from "../types";
 import { StatusBadge } from "./StatusBadge";
@@ -116,16 +116,21 @@ export function DataTable<T extends Record<string, any>>({
                           a.variant === "danger" && "text-destructive",
                         );
                         if (a.to) {
+                          const href = a.to(row);
                           return (
-                            <Link
+                            <button
                               key={a.key}
-                              to={a.to(row)}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.history.push(href);
+                              }}
                               className={className}
                               title={ar ? a.label.ar : a.label.en}
-                              onClick={(e) => e.stopPropagation()}
+                              aria-label={ar ? a.label.ar : a.label.en}
                             >
                               {a.icon}
-                            </Link>
+                            </button>
                           );
                         }
                         return (
