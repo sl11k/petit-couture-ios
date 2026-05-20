@@ -117,15 +117,21 @@ export function DataTable<T extends Record<string, any>>({
                         );
                         if (a.to) {
                           return (
-                            <a key={a.key} href={a.to(row)} className={className} title={ar ? a.label.ar : a.label.en}>
+                            <Link
+                              key={a.key}
+                              to={a.to(row)}
+                              className={className}
+                              title={ar ? a.label.ar : a.label.en}
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               {a.icon}
-                            </a>
+                            </Link>
                           );
                         }
                         return (
                           <button
                             key={a.key}
-                            onClick={() => a.onClick?.(row)}
+                            onClick={(e) => { e.stopPropagation(); a.onClick?.(row); }}
                             className={className}
                             title={ar ? a.label.ar : a.label.en}
                           >
