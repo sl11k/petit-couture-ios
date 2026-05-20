@@ -49,7 +49,10 @@ export function useUserRole() {
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [user, ready]);
+    // Depend on user?.id (stable across Supabase token refreshes) to avoid
+    // re-running on tab refocus, which would flip AdminShell into a loading
+    // state and unmount/remount admin pages (wiping filters, dialogs, etc.).
+  }, [user?.id, ready]);
 
   const isSuperAdmin = roles.includes("super_admin") || roles.includes("admin");
   const isManager = roles.includes("manager") || roles.includes("store_manager");
