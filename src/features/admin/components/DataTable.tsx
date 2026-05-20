@@ -1,4 +1,4 @@
-import { useRouter } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { ColumnDef, RowAction } from "../types";
 import { StatusBadge } from "./StatusBadge";
@@ -43,7 +43,7 @@ export function DataTable<T extends Record<string, any>>({
   emptyMessage?: string;
 }) {
   const { lang } = useLanguage();
-  const router = useRouter();
+  const navigate = useNavigate();
   const ar = lang === "ar";
 
   if (loading) {
@@ -93,7 +93,9 @@ export function DataTable<T extends Record<string, any>>({
                   "border-b border-border/50 last:border-0",
                   href && "cursor-pointer hover:bg-muted/30",
                 )}
-                onClick={() => href && router.history.push(href)}
+                onClick={() => {
+                  if (href) navigate({ to: href as any });
+                }}
               >
                 {columns.map((c) => (
                   <td
@@ -123,7 +125,7 @@ export function DataTable<T extends Record<string, any>>({
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                router.history.push(href);
+                                navigate({ to: href as any });
                               }}
                               className={className}
                               title={ar ? a.label.ar : a.label.en}
