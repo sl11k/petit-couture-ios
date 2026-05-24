@@ -15,6 +15,7 @@ const ItemSchema = z.object({
   qty: z.number().int().min(1).max(999),
   size: z.string().max(64).nullable().optional(),
   color: z.string().max(64).nullable().optional(),
+  variant_id: z.string().uuid().nullable().optional(),
 });
 
 const AddressSchema = z.object({
