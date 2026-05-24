@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { MediaUploader } from "./MediaUploader";
 import { ProductMediaGallery } from "./ProductMediaGallery";
+import { WarehouseStockPicker, type WarehouseStockEntry } from "./WarehouseStockPicker";
 import type { Bilingual, FormFieldDef } from "../types";
 import { cn } from "@/lib/utils";
 
