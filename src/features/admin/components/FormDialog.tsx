@@ -109,7 +109,7 @@ function coerceForDb(fields: FormFieldDef[], values: Record<string, any>) {
   for (const f of fields) {
     if (f.type === "warehouseStock") continue; // virtual field; handled separately
     let v = values[f.key];
-    if (f.type === "gallery") {
+    if (f.type === "gallery" || f.type === "videoGallery") {
       out[f.key] = Array.isArray(v) ? v : [];
       continue;
     }
