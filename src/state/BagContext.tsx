@@ -22,6 +22,8 @@ export type BagItem = {
   size: string;
   color: string;
   qty: number;
+  variantId?: string;
+  variantLabel?: string;
 };
 
 type AddInput = Omit<BagItem, "id" | "qty"> & { qty?: number };
@@ -39,8 +41,8 @@ type Ctx = {
 
 const BagContext = createContext<Ctx | null>(null);
 
-function makeId(slug: string, size: string, color: string) {
-  return `${slug}::${size}::${color}`;
+function makeId(slug: string, size: string, color: string, variantId?: string) {
+  return variantId ? `${slug}::v::${variantId}` : `${slug}::${size}::${color}`;
 }
 
 function readInitial(): BagItem[] {
@@ -90,7 +92,7 @@ export function BagProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const add = useCallback((input: AddInput) => {
-    const id = makeId(input.slug, input.size, input.color);
+    const id = makeId(input.slug, input.size, input.color, input.variantId);
     const qty = input.qty ?? 1;
     setItems((prev) => {
       const existing = prev.find((p) => p.id === id);

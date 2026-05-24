@@ -135,6 +135,7 @@ import { Route as AdminAuditIdRouteImport } from './routes/admin.audit.$id'
 import { Route as AccountReturnsNewRouteImport } from './routes/account.returns.new'
 import { Route as ApiPublicOtoWebhookRouteImport } from './routes/api.public.oto.webhook'
 import { Route as ApiPublicCronNotifyDelaysRouteImport } from './routes/api/public/cron.notify-delays'
+import { Route as AdminProductsIdVariantsRouteImport } from './routes/admin.products.$id.variants'
 
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
@@ -771,6 +772,11 @@ const ApiPublicCronNotifyDelaysRoute =
     path: '/api/public/cron/notify-delays',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AdminProductsIdVariantsRoute = AdminProductsIdVariantsRouteImport.update({
+  id: '/variants',
+  path: '/variants',
+  getParentRoute: () => AdminProductsIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -875,7 +881,7 @@ export interface FileRoutesByFullPath {
   '/admin/landing-pages/$id': typeof AdminLandingPagesIdRoute
   '/admin/messages/$id': typeof AdminMessagesIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
-  '/admin/products/$id': typeof AdminProductsIdRoute
+  '/admin/products/$id': typeof AdminProductsIdRouteWithChildren
   '/admin/support/$id': typeof AdminSupportIdRoute
   '/admin/webhooks/$id': typeof AdminWebhooksIdRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
@@ -897,6 +903,7 @@ export interface FileRoutesByFullPath {
   '/admin/products/': typeof AdminProductsIndexRoute
   '/admin/support/': typeof AdminSupportIndexRoute
   '/admin/webhooks/': typeof AdminWebhooksIndexRoute
+  '/admin/products/$id/variants': typeof AdminProductsIdVariantsRoute
   '/api/public/cron/notify-delays': typeof ApiPublicCronNotifyDelaysRoute
   '/api/public/oto/webhook': typeof ApiPublicOtoWebhookRoute
 }
@@ -991,7 +998,7 @@ export interface FileRoutesByTo {
   '/admin/landing-pages/$id': typeof AdminLandingPagesIdRoute
   '/admin/messages/$id': typeof AdminMessagesIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
-  '/admin/products/$id': typeof AdminProductsIdRoute
+  '/admin/products/$id': typeof AdminProductsIdRouteWithChildren
   '/admin/support/$id': typeof AdminSupportIdRoute
   '/admin/webhooks/$id': typeof AdminWebhooksIdRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
@@ -1013,6 +1020,7 @@ export interface FileRoutesByTo {
   '/admin/products': typeof AdminProductsIndexRoute
   '/admin/support': typeof AdminSupportIndexRoute
   '/admin/webhooks': typeof AdminWebhooksIndexRoute
+  '/admin/products/$id/variants': typeof AdminProductsIdVariantsRoute
   '/api/public/cron/notify-delays': typeof ApiPublicCronNotifyDelaysRoute
   '/api/public/oto/webhook': typeof ApiPublicOtoWebhookRoute
 }
@@ -1120,7 +1128,7 @@ export interface FileRoutesById {
   '/admin/landing-pages/$id': typeof AdminLandingPagesIdRoute
   '/admin/messages/$id': typeof AdminMessagesIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
-  '/admin/products/$id': typeof AdminProductsIdRoute
+  '/admin/products/$id': typeof AdminProductsIdRouteWithChildren
   '/admin/support/$id': typeof AdminSupportIdRoute
   '/admin/webhooks/$id': typeof AdminWebhooksIdRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
@@ -1142,6 +1150,7 @@ export interface FileRoutesById {
   '/admin/products/': typeof AdminProductsIndexRoute
   '/admin/support/': typeof AdminSupportIndexRoute
   '/admin/webhooks/': typeof AdminWebhooksIndexRoute
+  '/admin/products/$id/variants': typeof AdminProductsIdVariantsRoute
   '/api/public/cron/notify-delays': typeof ApiPublicCronNotifyDelaysRoute
   '/api/public/oto/webhook': typeof ApiPublicOtoWebhookRoute
 }
@@ -1272,6 +1281,7 @@ export interface FileRouteTypes {
     | '/admin/products/'
     | '/admin/support/'
     | '/admin/webhooks/'
+    | '/admin/products/$id/variants'
     | '/api/public/cron/notify-delays'
     | '/api/public/oto/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -1388,6 +1398,7 @@ export interface FileRouteTypes {
     | '/admin/products'
     | '/admin/support'
     | '/admin/webhooks'
+    | '/admin/products/$id/variants'
     | '/api/public/cron/notify-delays'
     | '/api/public/oto/webhook'
   id:
@@ -1516,6 +1527,7 @@ export interface FileRouteTypes {
     | '/admin/products/'
     | '/admin/support/'
     | '/admin/webhooks/'
+    | '/admin/products/$id/variants'
     | '/api/public/cron/notify-delays'
     | '/api/public/oto/webhook'
   fileRoutesById: FileRoutesById
@@ -2444,6 +2456,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronNotifyDelaysRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/products/$id/variants': {
+      id: '/admin/products/$id/variants'
+      path: '/variants'
+      fullPath: '/admin/products/$id/variants'
+      preLoaderRoute: typeof AdminProductsIdVariantsRouteImport
+      parentRoute: typeof AdminProductsIdRoute
+    }
   }
 }
 
@@ -2570,13 +2589,25 @@ const AdminOrdersRouteWithChildren = AdminOrdersRoute._addFileChildren(
   AdminOrdersRouteChildren,
 )
 
+interface AdminProductsIdRouteChildren {
+  AdminProductsIdVariantsRoute: typeof AdminProductsIdVariantsRoute
+}
+
+const AdminProductsIdRouteChildren: AdminProductsIdRouteChildren = {
+  AdminProductsIdVariantsRoute: AdminProductsIdVariantsRoute,
+}
+
+const AdminProductsIdRouteWithChildren = AdminProductsIdRoute._addFileChildren(
+  AdminProductsIdRouteChildren,
+)
+
 interface AdminProductsRouteChildren {
-  AdminProductsIdRoute: typeof AdminProductsIdRoute
+  AdminProductsIdRoute: typeof AdminProductsIdRouteWithChildren
   AdminProductsIndexRoute: typeof AdminProductsIndexRoute
 }
 
 const AdminProductsRouteChildren: AdminProductsRouteChildren = {
-  AdminProductsIdRoute: AdminProductsIdRoute,
+  AdminProductsIdRoute: AdminProductsIdRouteWithChildren,
   AdminProductsIndexRoute: AdminProductsIndexRoute,
 }
 
