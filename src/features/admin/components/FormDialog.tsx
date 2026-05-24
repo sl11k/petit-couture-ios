@@ -312,7 +312,7 @@ export function FormDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {visibleFields.map((f) => {
-              const isFull = f.fullWidth ?? (f.type === "textarea" || f.type === "json" || f.type === "gallery" || f.type === "image" || f.type === "video" || f.type === "warehouseStock");
+              const isFull = f.fullWidth ?? (f.type === "textarea" || f.type === "json" || f.type === "gallery" || f.type === "videoGallery" || f.type === "image" || f.type === "video" || f.type === "warehouseStock");
               const lbl = ar ? f.label.ar : f.label.en;
               const ph = f.placeholder ? (ar ? f.placeholder.ar : f.placeholder.en) : undefined;
               const help = f.helpText ? (ar ? f.helpText.ar : f.helpText.en) : undefined;
@@ -330,13 +330,14 @@ export function FormDialog({
                       folder={f.folder}
                       kind={f.type}
                     />
-                  ) : f.type === "gallery" ? (
+                  ) : f.type === "gallery" || f.type === "videoGallery" ? (
                     <ProductMediaGallery
                       value={Array.isArray(values[f.key]) ? values[f.key] : []}
                       onChange={(urls) => setVal(f.key, urls)}
                       bucket={f.bucket || "product-media"}
-                      folder={f.folder || "gallery"}
-                      max={f.maxItems ?? 20}
+                      folder={f.folder || (f.type === "videoGallery" ? "videos" : "gallery")}
+                      max={f.maxItems ?? (f.type === "videoGallery" ? 10 : 20)}
+                      kind={f.type === "videoGallery" ? "video" : "image"}
                     />
                   ) : f.type === "warehouseStock" ? (
                     <WarehouseStockPicker
