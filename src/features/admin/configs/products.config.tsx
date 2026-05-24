@@ -52,7 +52,8 @@ productsConfig.form = [
   { key: "weight", label: { ar: "الوزن (كجم)", en: "Weight (kg)" }, type: "number", min: 0, step: 0.01 },
   { key: "image_url", label: { ar: "الصورة الرئيسية", en: "Main image" }, type: "image", bucket: "product-media", folder: "main", helpText: { ar: "ارفع صورة من جهازك أو الصق رابطاً", en: "Upload from your device or paste a URL" } },
   { key: "images", label: { ar: "معرض الصور", en: "Image gallery" }, type: "gallery", bucket: "product-media", folder: "gallery", maxItems: 20 },
-  { key: "video_url", label: { ar: "فيديو المنتج", en: "Product video" }, type: "video", bucket: "product-media", folder: "videos" },
+  { key: "video_url", label: { ar: "الفيديو الرئيسي", en: "Main video" }, type: "video", bucket: "product-media", folder: "videos" },
+  { key: "videos", label: { ar: "معرض الفيديوهات", en: "Video gallery" }, type: "videoGallery", bucket: "product-media", folder: "videos", maxItems: 10 },
   { key: "image_alt", label: { ar: "وصف الصورة (alt)", en: "Image alt" }, type: "text" },
   { key: "status", label: { ar: "الحالة", en: "Status" }, type: "select", required: true, defaultValue: "active", options: [
     { value: "active", label: { ar: "نشط", en: "Active" } },
