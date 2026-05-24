@@ -44,21 +44,27 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
       continue;
     }
     let s: z.ZodTypeAny;
+    let alreadyHandled = false;
     switch (f.type) {
-      case "number":
+      case "number": {
+        // BUGFIX: z.preprocess returns ZodEffects which has NO .min()/.max().
+        // Build the constraints on the inner ZodNumber, THEN wrap with preprocess.
+        let numSchema: z.ZodTypeAny = z.number({ invalid_type_error: ar ? "رقم غير صحيح" : "Invalid number" });
+        if (f.min !== undefined) numSchema = (numSchema as z.ZodNumber).min(f.min, ar ? `الحد الأدنى ${f.min}` : `Min ${f.min}`);
+        if (f.max !== undefined) numSchema = (numSchema as z.ZodNumber).max(f.max, ar ? `الحد الأقصى ${f.max}` : `Max ${f.max}`);
         s = z.preprocess(
           (v) => (v === "" || v === null || v === undefined ? undefined : Number(v)),
-          z.number({ invalid_type_error: ar ? "رقم غير صحيح" : "Invalid number" }),
+          f.required ? numSchema : numSchema.optional(),
         );
-        if (f.min !== undefined) s = (s as z.ZodNumber).min(f.min);
-        if (f.max !== undefined) s = (s as z.ZodNumber).max(f.max);
+        alreadyHandled = true;
         break;
+      }
       case "boolean":
         s = z.boolean().or(z.string().transform((v) => v === "true"));
         break;
       case "date":
       case "datetime":
-        s = z.string().min(1).or(z.literal(""));
+        s = z.string().or(z.literal(""));
         break;
       case "email":
         s = z.string().email(ar ? "بريد غير صحيح" : "Invalid email");
@@ -68,12 +74,12 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
         break;
       case "image":
       case "video":
-        // Storage public URL — accept any non-empty string
         s = z.string();
         break;
       case "gallery":
       case "videoGallery":
         s = z.array(z.string()).default([]);
+        alreadyHandled = true;
         break;
       case "json":
         s = z.string().refine(
@@ -92,12 +98,16 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
         if (f.maxLength) s = (s as z.ZodString).max(f.maxLength);
         if (f.pattern) s = (s as z.ZodString).regex(new RegExp(f.pattern), ar ? "صيغة غير صحيحة" : "Invalid format");
     }
-    if (f.type === "gallery" || f.type === "videoGallery") {
-      // arrays are always present (possibly empty)
-    } else if (!f.required) {
-      s = s.optional().or(z.literal("")).or(z.null());
-    } else if (f.type === "text" || f.type === "textarea" || f.type === "select" || f.type === "url" || f.type === "email" || f.type === "image" || f.type === "video") {
-      s = (s as z.ZodString).min(1, ar ? "حقل مطلوب" : "Required");
+    if (!alreadyHandled) {
+      if (!f.required) {
+        s = s.optional().or(z.literal("")).or(z.null());
+      } else if (
+        f.type === "text" || f.type === "textarea" || f.type === "select" ||
+        f.type === "url" || f.type === "email" || f.type === "image" || f.type === "video" ||
+        f.type === "tel" || f.type === "color" || f.type === "date" || f.type === "datetime"
+      ) {
+        s = (s as z.ZodString).min(1, ar ? "حقل مطلوب" : "Required");
+      }
     }
     shape[f.key] = s;
   }
@@ -243,55 +253,92 @@ export function FormDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const schema = buildSchema(fields, mode, ar);
+
+    // BUGFIX: wrap schema construction in try/catch — previously a bad zod chain
+    // (e.g. .min on a ZodEffects) would throw silently and the form would hang.
+    let schema: z.ZodTypeAny;
+    try {
+      schema = buildSchema(fields, mode, ar);
+    } catch (err: any) {
+      console.error("[FormDialog] schema build failed", err);
+      toast.error(
+        ar
+          ? `تعذّر بناء النموذج: ${err?.message ?? "خطأ داخلي"}`
+          : `Failed to build form: ${err?.message ?? "internal error"}`,
+      );
+      return;
+    }
+
     const parsed = schema.safeParse(values);
     if (!parsed.success) {
       const errs: Record<string, string> = {};
       parsed.error.issues.forEach((i: ZodIssue) => { errs[String(i.path[0])] = i.message; });
       setErrors(errs);
+      // BUGFIX: do NOT return silently — surface the first validation error to the user.
+      const first = parsed.error.issues[0];
+      const firstKey = String(first?.path?.[0] ?? "");
+      const firstField = visibleFields.find((f) => f.key === firstKey);
+      const fieldLabel = firstField ? (ar ? firstField.label.ar : firstField.label.en) : firstKey;
+      toast.error(
+        `${fieldLabel ? fieldLabel + ": " : ""}${first?.message ?? (ar ? "تحقق من الحقول المطلوبة" : "Check the highlighted fields")}`,
+      );
+      console.warn("[FormDialog] validation failed", { issues: parsed.error.issues, values });
       return;
     }
+
     setSaving(true);
     const payload = coerceForDb(visibleFields, values);
     let productId = rowId;
-    if (mode === "create") {
-      const { data, error } = await supabase
-        .from(table as any)
-        .insert(payload as any)
-        .select("id")
-        .single();
-      if (error) {
-        setSaving(false);
-        toast.error(error.message);
-        return;
-      }
-      productId = (data as any)?.id;
-    } else {
-      const { error } = await supabase
-        .from(table as any)
-        .update(payload as any)
-        .eq("id", rowId!);
-      if (error) {
-        setSaving(false);
-        toast.error(error.message);
-        return;
-      }
-    }
 
-    if (warehouseStockField && productId) {
-      try {
-        await persistWarehouseStock(productId, (values[warehouseStockField.key] as WarehouseStockEntry[]) ?? []);
-      } catch (err: any) {
-        setSaving(false);
-        toast.error(err?.message || (ar ? "تعذر حفظ مخزون المستودعات" : "Failed to save warehouse stock"));
-        return;
+    // BUGFIX: wrap supabase calls in try/catch — an unexpected throw used to leave
+    // the form stuck in "Saving..." with no feedback to the user.
+    try {
+      if (mode === "create") {
+        const { data, error } = await supabase
+          .from(table as any)
+          .insert(payload as any)
+          .select("id")
+          .single();
+        if (error) {
+          setSaving(false);
+          console.error("[FormDialog] insert failed", { table, error, payload });
+          toast.error(error.message || (ar ? "فشل الإنشاء" : "Create failed"));
+          return;
+        }
+        productId = (data as any)?.id;
+      } else {
+        const { error } = await supabase
+          .from(table as any)
+          .update(payload as any)
+          .eq("id", rowId!);
+        if (error) {
+          setSaving(false);
+          console.error("[FormDialog] update failed", { table, rowId, error, payload });
+          toast.error(error.message || (ar ? "فشل الحفظ" : "Update failed"));
+          return;
+        }
       }
-    }
 
-    setSaving(false);
-    toast.success(ar ? (mode === "create" ? "تم الإنشاء" : "تم الحفظ") : mode === "create" ? "Created" : "Saved");
-    onSaved();
-    onClose();
+      if (warehouseStockField && productId) {
+        try {
+          await persistWarehouseStock(productId, (values[warehouseStockField.key] as WarehouseStockEntry[]) ?? []);
+        } catch (err: any) {
+          setSaving(false);
+          console.error("[FormDialog] warehouse stock failed", err);
+          toast.error(err?.message || (ar ? "تعذر حفظ مخزون المستودعات" : "Failed to save warehouse stock"));
+          return;
+        }
+      }
+
+      setSaving(false);
+      toast.success(ar ? (mode === "create" ? "تم الإنشاء" : "تم الحفظ") : mode === "create" ? "Created" : "Saved");
+      onSaved();
+      onClose();
+    } catch (err: any) {
+      setSaving(false);
+      console.error("[FormDialog] unexpected error during save", err);
+      toast.error(err?.message || (ar ? "حدث خطأ غير متوقع أثناء الحفظ" : "Unexpected error during save"));
+    }
   };
 
   const setVal = (k: string, v: any) => setValues((s) => ({ ...s, [k]: v }));
