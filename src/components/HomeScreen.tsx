@@ -63,6 +63,8 @@ export function HomeScreen() {
   const [annIdx, setAnnIdx] = useState(0);
   const [sections, setSections] = useState<HomeSection[]>([]);
   const [sectionProducts, setSectionProducts] = useState<Record<string, ResolvedProduct[]>>({});
+  const [hasAnyProducts, setHasAnyProducts] = useState<boolean | null>(null);
+  const [hasAnyCategories, setHasAnyCategories] = useState<boolean | null>(null);
 
   useEffect(() => {
     fetchBanners().then(setBanners).catch(() => {});
@@ -70,6 +72,17 @@ export function HomeScreen() {
     fetchPopularPicks().then(setPopular).catch(() => {});
     fetchAnnouncements().then(setAnnouncements).catch(() => {});
     fetchStorefrontSettings().then(setSettings).catch(() => {});
+    // Detect whether admin has added any real products/categories — used to hide mock content
+    supabase
+      .from("products")
+      .select("id", { count: "exact", head: true })
+      .eq("is_active", true)
+      .then(({ count }) => setHasAnyProducts((count ?? 0) > 0));
+    supabase
+      .from("categories")
+      .select("id", { count: "exact", head: true })
+      .eq("is_active", true)
+      .then(({ count }) => setHasAnyCategories((count ?? 0) > 0));
     fetchHomeSections(true).then(async (secs) => {
       setSections(secs);
       const productKinds = new Set(["most_popular", "new_arrivals", "custom_collection"]);
@@ -109,7 +122,8 @@ export function HomeScreen() {
 
   useEffect(() => { setAnnIdx(0); }, [lang, announcements.length]);
 
-  // Render category cards: dynamic if popular_picks exist, else fallback to seed data
+  // Popular cards: dynamic if popular_picks exist; otherwise show mock ONLY when no real
+  // products/categories have been added by the admin yet.
   const popularCards = popular.length > 0
     ? popular.map((p) => ({
         key: p.id,
@@ -118,13 +132,15 @@ export function HomeScreen() {
         label: ar ? p.label_ar : p.label_en,
         wishId: `popular:${p.id}`,
       }))
-    : categories.map((c) => ({
-        key: c.slug,
-        href: `/category/${c.slug}`,
-        img: c.img,
-        label: t.categories[c.slug] ?? c.name,
-        wishId: `category:${c.slug}`,
-      }));
+    : (hasAnyProducts || hasAnyCategories)
+      ? []
+      : categories.map((c) => ({
+          key: c.slug,
+          href: `/category/${c.slug}`,
+          img: c.img,
+          label: t.categories[c.slug] ?? c.name,
+          wishId: `category:${c.slug}`,
+        }));
 
   const currentBanner = banners[bannerIdx];
 
@@ -312,15 +328,18 @@ export function HomeScreen() {
             )}
           </section>
 
-          {/* Shop by category — Babies / Girls / Boys (DB-driven, with fallback) */}
+          {/* Shop by category — DB-driven; mock shown only when no admin content exists */}
           {(() => {
             const cats = featuredCats.length > 0
               ? featuredCats
-              : [
-                  { id: "f1", label_ar: "رضّع", label_en: "Babies", link_url: "/category/babysuits" },
-                  { id: "f2", label_ar: "بنات", label_en: "Girls", link_url: "/category/dresses" },
-                  { id: "f3", label_ar: "أولاد", label_en: "Boys", link_url: "/category/outfit-sets" },
-                ] as any[];
+              : (hasAnyCategories || hasAnyProducts)
+                ? []
+                : ([
+                    { id: "f1", label_ar: "رضّع", label_en: "Babies", link_url: "/category/babysuits" },
+                    { id: "f2", label_ar: "بنات", label_en: "Girls", link_url: "/category/dresses" },
+                    { id: "f3", label_ar: "أولاد", label_en: "Boys", link_url: "/category/outfit-sets" },
+                  ] as any[]);
+            if (cats.length === 0) return null;
             return (
               <section className="px-5 mt-8">
                 <div className="text-center mb-4">
@@ -347,42 +366,44 @@ export function HomeScreen() {
           })()}
 
           {/* Most Popular */}
-          <section className="mt-12 px-5">
-            <div className="text-center">
-              <span className="text-[10.5px] tracking-luxury text-gold-deep">{t.curatedEdit}</span>
-              <h2 className="font-serif text-[34px] leading-tight text-foreground mt-1.5">{t.mostPopular}</h2>
-            </div>
+          {popularCards.length > 0 && (
+            <section className="mt-12 px-5">
+              <div className="text-center">
+                <span className="text-[10.5px] tracking-luxury text-gold-deep">{t.curatedEdit}</span>
+                <h2 className="font-serif text-[34px] leading-tight text-foreground mt-1.5">{t.mostPopular}</h2>
+              </div>
 
-            <div className="grid grid-cols-2 gap-x-4 gap-y-8 mt-7">
-              {popularCards.map((c) => {
-                const liked = wishlist.has(c.wishId);
-                return (
-                  <ImpressionCell key={c.key} itemId={c.wishId} source="category_card">
-                    <a href={c.href} className="group flex flex-col items-center text-left active:scale-[0.99] transition">
-                      <div className="relative w-full overflow-hidden rounded-[22px] bg-cream-warm aspect-[1.35/1]">
-                        <img
-                          src={c.img}
-                          alt={c.label}
-                          loading="lazy"
-                          className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04]"
-                        />
-                      </div>
-                      <span className="mt-3 text-[15px] text-foreground/85 font-medium tracking-tight text-center">{c.label}</span>
-                    </a>
-                  </ImpressionCell>
-                );
-              })}
-            </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-8 mt-7">
+                {popularCards.map((c) => {
+                  const liked = wishlist.has(c.wishId);
+                  return (
+                    <ImpressionCell key={c.key} itemId={c.wishId} source="category_card">
+                      <a href={c.href} className="group flex flex-col items-center text-left active:scale-[0.99] transition">
+                        <div className="relative w-full overflow-hidden rounded-[22px] bg-cream-warm aspect-[1.35/1]">
+                          <img
+                            src={c.img}
+                            alt={c.label}
+                            loading="lazy"
+                            className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04]"
+                          />
+                        </div>
+                        <span className="mt-3 text-[15px] text-foreground/85 font-medium tracking-tight text-center">{c.label}</span>
+                      </a>
+                    </ImpressionCell>
+                  );
+                })}
+              </div>
 
-            <div className="mt-10 flex justify-center">
-              <Link to="/search" className="h-[52px] px-10 rounded-xl bg-background border border-border text-gold-deep text-[12px] tracking-luxury font-medium grid place-items-center active:scale-[0.97] transition">
-                {t.shopAll}
-              </Link>
-            </div>
-          </section>
+              <div className="mt-10 flex justify-center">
+                <Link to="/search" className="h-[52px] px-10 rounded-xl bg-background border border-border text-gold-deep text-[12px] tracking-luxury font-medium grid place-items-center active:scale-[0.97] transition">
+                  {t.shopAll}
+                </Link>
+              </div>
+            </section>
+          )}
 
           {/* Best Sellers — real product cards (apparel) */}
-          <BestSellersSection ar={ar} />
+          <BestSellersSection ar={ar} hasAnyProducts={hasAnyProducts} />
 
           {/* Dynamic sections from /admin/home-builder */}
           {sections
@@ -397,7 +418,7 @@ export function HomeScreen() {
   );
 }
 
-function BestSellersSection({ ar }: { ar: boolean }) {
+function BestSellersSection({ ar, hasAnyProducts }: { ar: boolean; hasAnyProducts: boolean | null }) {
   const fmt = usePriceFormatter();
   const wishlist = useWishlist();
   const { isRTL } = useLanguage();
@@ -412,6 +433,8 @@ function BestSellersSection({ ar }: { ar: boolean }) {
   }>>([]);
 
   useEffect(() => {
+    // Wait until we know whether the admin has added any real products.
+    if (hasAnyProducts === null) return;
     let cancelled = false;
     (async () => {
       const { data } = await supabase
@@ -436,7 +459,13 @@ function BestSellersSection({ ar }: { ar: boolean }) {
         setItems(real);
         return;
       }
-      // Fallback preview items
+      // If the admin has any real products, do NOT show mock data — even if none
+      // of them qualify as a best seller yet. Hide the section in that case.
+      if (hasAnyProducts) {
+        setItems([]);
+        return;
+      }
+      // No real products at all → keep the demo preview so the page isn't empty.
       setItems([
         { id: "bs1", name_ar: "فستان روزالي تول", name_en: "Rosalie Tulle Dress", price: 1250, compareAt: 1650, image: productDress1, slug: "best-sellers" },
         { id: "bs2", name_ar: "فستان زهور كلاسيك", name_en: "Classic Floral Dress", price: 980, compareAt: 1280, image: productDress2, slug: "dresses" },
@@ -445,7 +474,8 @@ function BestSellersSection({ ar }: { ar: boolean }) {
       ]);
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [hasAnyProducts]);
+
 
   if (items.length === 0) return null;
 
