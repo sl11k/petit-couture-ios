@@ -122,7 +122,8 @@ export function HomeScreen() {
 
   useEffect(() => { setAnnIdx(0); }, [lang, announcements.length]);
 
-  // Render category cards: dynamic if popular_picks exist, else fallback to seed data
+  // Popular cards: dynamic if popular_picks exist; otherwise show mock ONLY when no real
+  // products/categories have been added by the admin yet.
   const popularCards = popular.length > 0
     ? popular.map((p) => ({
         key: p.id,
@@ -131,13 +132,15 @@ export function HomeScreen() {
         label: ar ? p.label_ar : p.label_en,
         wishId: `popular:${p.id}`,
       }))
-    : categories.map((c) => ({
-        key: c.slug,
-        href: `/category/${c.slug}`,
-        img: c.img,
-        label: t.categories[c.slug] ?? c.name,
-        wishId: `category:${c.slug}`,
-      }));
+    : (hasAnyProducts || hasAnyCategories)
+      ? []
+      : categories.map((c) => ({
+          key: c.slug,
+          href: `/category/${c.slug}`,
+          img: c.img,
+          label: t.categories[c.slug] ?? c.name,
+          wishId: `category:${c.slug}`,
+        }));
 
   const currentBanner = banners[bannerIdx];
 
