@@ -74,7 +74,7 @@ export function ProductImportDialog({
   const [fileName, setFileName] = useState("");
   const [headers, setHeaders] = useState<string[]>([]);
   const [rows, setRows] = useState<Row[]>([]);
-  const [mapping, setMapping] = useState<Record<string, string>>({}); // field -> excel column
+  const [mapping, setMapping] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ added: number; updated: number; failed: { row: number; reason: string }[]; categoriesCreated: string[] } | null>(null);
 
@@ -85,25 +85,29 @@ export function ProductImportDialog({
 
   async function handleFile(f: File) {
     setFileName(f.name);
-    const buf = await f.arrayBuffer();
-    const wb = XLSX.read(buf, { type: "array" });
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    const data = XLSX.utils.sheet_to_json<Row>(sheet, { defval: "" });
-    if (!data.length) { toast.error(t("الملف فارغ", "Empty file")); return; }
-    const hs = Object.keys(data[0]);
-    setHeaders(hs);
-    setRows(data);
-    // auto-map
-    const auto: Record<string, string> = {};
-    for (const f of FIELDS) {
-      const found = hs.find((h) => {
-        const hh = h.toLowerCase().trim();
-        return hh === f.key || hh === f.label.en.toLowerCase() || hh === f.label.ar.toLowerCase() || hh.replace(/[^a-z]/g, "") === f.key.replace(/_/g, "");
-      });
-      if (found) auto[f.key] = found;
+    try {
+      const buf = await f.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array" });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json<Row>(sheet, { defval: "" });
+      if (!data.length) { toast.error(t("الملف فارغ", "Empty file")); return; }
+      const hs = Object.keys(data[0]);
+      setHeaders(hs);
+      setRows(data);
+      const auto: Record<string, string> = {};
+      for (const f of FIELDS) {
+        const found = hs.find((h) => {
+          const hh = h.toLowerCase().trim();
+          return hh === f.key || hh === f.label.en.toLowerCase() || hh === f.label.ar.toLowerCase() || hh.replace(/[^a-z]/g, "") === f.key.replace(/_/g, "");
+        });
+        if (found) auto[f.key] = found;
+      }
+      setMapping(auto);
+      setStep(2);
+    } catch (err: any) {
+      console.error("[ProductImport] file parse failed", err);
+      toast.error(err?.message || t("تعذّر قراءة الملف", "Failed to read file"));
     }
-    setMapping(auto);
-    setStep(2);
   }
 
   const preview = useMemo(() => rows.slice(0, 5).map((r) => {
@@ -117,9 +121,12 @@ export function ProductImportDialog({
 
   async function runImport() {
     setBusy(true);
+    // BUGFIX: outer try/catch — previously only try/finally, so if the initial
+    // categories load threw (network error), no toast was shown and the step
+    // never advanced — user saw "nothing happen".
     try {
-      // Load existing categories
-      const { data: catsData } = await (supabase as any).from("categories").select("id, slug, name_ar, name_en");
+      const { data: catsData, error: catsErr } = await (supabase as any).from("categories").select("id, slug, name_ar, name_en");
+      if (catsErr) throw catsErr;
       const catBy = new Map<string, string>();
       for (const c of (catsData ?? []) as any[]) {
         if (c.slug) catBy.set(String(c.slug).toLowerCase(), c.id);
@@ -144,7 +151,6 @@ export function ProductImportDialog({
           const sku = get("sku") ? String(get("sku")).trim() : null;
           let slug = get("slug") ? slugify(String(get("slug"))) : slugify(name_en || name_ar);
 
-          // category resolve
           let category_id: string | null = null;
           const catRaw = get("category");
           if (catRaw) {
@@ -164,7 +170,6 @@ export function ProductImportDialog({
             }
           }
 
-          // find existing
           let existingId: string | null = null;
           if (sku) {
             const { data: e } = await (supabase as any).from("products").select("id").eq("sku", sku).maybeSingle();
@@ -197,7 +202,6 @@ export function ProductImportDialog({
             is_active: toBool(get("is_active")) ?? true,
             status: get("status") ? String(get("status")).toLowerCase() : "active",
           };
-          // strip undefined
           Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
 
           if (existingId) {
@@ -216,7 +220,20 @@ export function ProductImportDialog({
 
       setResult({ added, updated, failed, categoriesCreated });
       setStep(4);
+      // BUGFIX: show a summary toast so user gets immediate feedback
+      // instead of having to visually scan the result panel.
+      const total = added + updated;
+      if (total > 0 && failed.length === 0) {
+        toast.success(t(`تم استيراد ${total} منتج بنجاح`, `Imported ${total} products successfully`));
+      } else if (total > 0 && failed.length > 0) {
+        toast.success(t(`تم استيراد ${total} وفشل ${failed.length}`, `Imported ${total}, failed ${failed.length}`));
+      } else if (failed.length > 0) {
+        toast.error(t(`فشل استيراد كل ${failed.length} الصفوف`, `All ${failed.length} rows failed`));
+      }
       onDone?.();
+    } catch (err: any) {
+      console.error("[ProductImport] runImport failed", err);
+      toast.error(err?.message || t("تعذّر تشغيل الاستيراد", "Import failed to run"));
     } finally {
       setBusy(false);
     }
@@ -356,7 +373,7 @@ export function ProductImportDialog({
             {step === 2 && (
               <button
                 onClick={() => setStep(3)}
-                disabled={!mapping.name_ar && !mapping.name_en || !mapping.price}
+                disabled={(!mapping.name_ar && !mapping.name_en) || !mapping.price}
                 className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50"
               >
                 {t("التالي: معاينة", "Next: Preview")}
