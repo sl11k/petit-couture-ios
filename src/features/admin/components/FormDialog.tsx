@@ -39,6 +39,10 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
   for (const f of fields) {
     if (mode === "create" && f.editOnly) continue;
     if (mode === "edit" && f.createOnly) continue;
+    if (f.type === "warehouseStock") {
+      shape[f.key] = z.array(z.any()).default([]);
+      continue;
+    }
     let s: z.ZodTypeAny;
     switch (f.type) {
       case "number":
