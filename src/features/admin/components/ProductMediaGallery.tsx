@@ -39,12 +39,14 @@ function SortableThumb({
   onMakeMain,
   onRemove,
   ar,
+  kind,
 }: {
   url: string;
   isMain: boolean;
   onMakeMain: () => void;
   onRemove: () => void;
   ar: boolean;
+  kind: "image" | "video";
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: url });
   const style = {
