@@ -366,42 +366,44 @@ export function HomeScreen() {
           })()}
 
           {/* Most Popular */}
-          <section className="mt-12 px-5">
-            <div className="text-center">
-              <span className="text-[10.5px] tracking-luxury text-gold-deep">{t.curatedEdit}</span>
-              <h2 className="font-serif text-[34px] leading-tight text-foreground mt-1.5">{t.mostPopular}</h2>
-            </div>
+          {popularCards.length > 0 && (
+            <section className="mt-12 px-5">
+              <div className="text-center">
+                <span className="text-[10.5px] tracking-luxury text-gold-deep">{t.curatedEdit}</span>
+                <h2 className="font-serif text-[34px] leading-tight text-foreground mt-1.5">{t.mostPopular}</h2>
+              </div>
 
-            <div className="grid grid-cols-2 gap-x-4 gap-y-8 mt-7">
-              {popularCards.map((c) => {
-                const liked = wishlist.has(c.wishId);
-                return (
-                  <ImpressionCell key={c.key} itemId={c.wishId} source="category_card">
-                    <a href={c.href} className="group flex flex-col items-center text-left active:scale-[0.99] transition">
-                      <div className="relative w-full overflow-hidden rounded-[22px] bg-cream-warm aspect-[1.35/1]">
-                        <img
-                          src={c.img}
-                          alt={c.label}
-                          loading="lazy"
-                          className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04]"
-                        />
-                      </div>
-                      <span className="mt-3 text-[15px] text-foreground/85 font-medium tracking-tight text-center">{c.label}</span>
-                    </a>
-                  </ImpressionCell>
-                );
-              })}
-            </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-8 mt-7">
+                {popularCards.map((c) => {
+                  const liked = wishlist.has(c.wishId);
+                  return (
+                    <ImpressionCell key={c.key} itemId={c.wishId} source="category_card">
+                      <a href={c.href} className="group flex flex-col items-center text-left active:scale-[0.99] transition">
+                        <div className="relative w-full overflow-hidden rounded-[22px] bg-cream-warm aspect-[1.35/1]">
+                          <img
+                            src={c.img}
+                            alt={c.label}
+                            loading="lazy"
+                            className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04]"
+                          />
+                        </div>
+                        <span className="mt-3 text-[15px] text-foreground/85 font-medium tracking-tight text-center">{c.label}</span>
+                      </a>
+                    </ImpressionCell>
+                  );
+                })}
+              </div>
 
-            <div className="mt-10 flex justify-center">
-              <Link to="/search" className="h-[52px] px-10 rounded-xl bg-background border border-border text-gold-deep text-[12px] tracking-luxury font-medium grid place-items-center active:scale-[0.97] transition">
-                {t.shopAll}
-              </Link>
-            </div>
-          </section>
+              <div className="mt-10 flex justify-center">
+                <Link to="/search" className="h-[52px] px-10 rounded-xl bg-background border border-border text-gold-deep text-[12px] tracking-luxury font-medium grid place-items-center active:scale-[0.97] transition">
+                  {t.shopAll}
+                </Link>
+              </div>
+            </section>
+          )}
 
           {/* Best Sellers — real product cards (apparel) */}
-          <BestSellersSection ar={ar} />
+          <BestSellersSection ar={ar} hasAnyProducts={hasAnyProducts} />
 
           {/* Dynamic sections from /admin/home-builder */}
           {sections
