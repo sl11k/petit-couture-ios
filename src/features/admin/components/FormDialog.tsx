@@ -169,6 +169,12 @@ export function FormDialog({
   const [values, setValues] = useState<Record<string, any>>(() => defaultsFrom(visibleFields, initialValues));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [existingInventory, setExistingInventory] = useState<Record<string, number>>({});
+
+  const warehouseStockField = useMemo(
+    () => visibleFields.find((f) => f.type === "warehouseStock"),
+    [visibleFields],
+  );
 
   useEffect(() => {
     if (open) {
@@ -176,6 +182,50 @@ export function FormDialog({
       setErrors({});
     }
   }, [open, initialValues, visibleFields]);
+
+  useEffect(() => {
+    if (!open || !warehouseStockField || mode !== "edit" || !rowId) {
+      setExistingInventory({});
+      return;
+    }
+    (async () => {
+      const { data } = await supabase
+        .from("inventory")
+        .select("warehouse_id, quantity")
+        .eq("product_id", rowId)
+        .is("variant_id", null);
+      const map: Record<string, number> = {};
+      (data ?? []).forEach((r: any) => { map[r.warehouse_id] = r.quantity; });
+      setExistingInventory(map);
+      setValues((s) => ({
+        ...s,
+        [warehouseStockField.key]: Object.entries(map).map(([wid, qty]) => ({
+          warehouse_id: wid,
+          quantity: qty as number,
+          enabled: true,
+        })),
+      }));
+    })();
+  }, [open, mode, rowId, warehouseStockField]);
+
+  const persistWarehouseStock = async (productId: string, entries: WarehouseStockEntry[]) => {
+    const active = entries.filter((e) => e.enabled);
+    for (const e of active) {
+      const { error: upErr } = await supabase
+        .from("inventory")
+        .upsert(
+          {
+            product_id: productId,
+            warehouse_id: e.warehouse_id,
+            variant_id: null,
+            quantity: Math.max(0, Number(e.quantity) || 0),
+            status: "active",
+          } as any,
+          { onConflict: "product_id,variant_id,warehouse_id" } as any,
+        );
+      if (upErr) throw upErr;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,15 +239,42 @@ export function FormDialog({
     }
     setSaving(true);
     const payload = coerceForDb(visibleFields, values);
-    const { error } =
-      mode === "create"
-        ? await supabase.from(table as any).insert(payload as any)
-        : await supabase.from(table as any).update(payload as any).eq("id", rowId!);
-    setSaving(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    let productId = rowId;
+    if (mode === "create") {
+      const { data, error } = await supabase
+        .from(table as any)
+        .insert(payload as any)
+        .select("id")
+        .single();
+      if (error) {
+        setSaving(false);
+        toast.error(error.message);
+        return;
+      }
+      productId = (data as any)?.id;
+    } else {
+      const { error } = await supabase
+        .from(table as any)
+        .update(payload as any)
+        .eq("id", rowId!);
+      if (error) {
+        setSaving(false);
+        toast.error(error.message);
+        return;
+      }
     }
+
+    if (warehouseStockField && productId) {
+      try {
+        await persistWarehouseStock(productId, (values[warehouseStockField.key] as WarehouseStockEntry[]) ?? []);
+      } catch (err: any) {
+        setSaving(false);
+        toast.error(err?.message || (ar ? "تعذر حفظ مخزون المستودعات" : "Failed to save warehouse stock"));
+        return;
+      }
+    }
+
+    setSaving(false);
     toast.success(ar ? (mode === "create" ? "تم الإنشاء" : "تم الحفظ") : mode === "create" ? "Created" : "Saved");
     onSaved();
     onClose();
