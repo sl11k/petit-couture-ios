@@ -67,8 +67,23 @@ export const productDetailConfig: AdminDetailConfig = {
       title: { ar: "المتغيرات والوسائط", en: "Variants & media" },
       columns: 1,
       fields: [
-        { key: "sizes", label: { ar: "المقاسات", en: "Sizes" }, type: "json", hideIfEmpty: true },
-        { key: "colors", label: { ar: "الألوان", en: "Colors" }, type: "json", hideIfEmpty: true },
+        {
+          key: "id",
+          label: { ar: "إدارة المتغيرات والمخزون", en: "Manage variants & inventory" },
+          render: (_v: any, row: any) => (
+            <Link
+              to="/admin/products/$id/variants"
+              params={{ id: row.id }}
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              <Boxes className="h-4 w-4" />
+              {row.id ? "" : ""}
+              فتح محرر المتغيرات / Open variants editor
+            </Link>
+          ),
+        },
+        { key: "sizes", label: { ar: "المقاسات (قديم)", en: "Sizes (legacy)" }, type: "json", hideIfEmpty: true },
+        { key: "colors", label: { ar: "الألوان (قديم)", en: "Colors (legacy)" }, type: "json", hideIfEmpty: true },
         { key: "images", label: { ar: "صور إضافية", en: "Images" }, type: "json", hideIfEmpty: true },
         { key: "video_url", label: { ar: "رابط الفيديو", en: "Video URL" }, type: "url", hideIfEmpty: true },
       ],
