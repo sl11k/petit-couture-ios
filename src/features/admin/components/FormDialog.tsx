@@ -92,7 +92,7 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
         if (f.maxLength) s = (s as z.ZodString).max(f.maxLength);
         if (f.pattern) s = (s as z.ZodString).regex(new RegExp(f.pattern), ar ? "صيغة غير صحيحة" : "Invalid format");
     }
-    if (f.type === "gallery") {
+    if (f.type === "gallery" || f.type === "videoGallery") {
       // arrays are always present (possibly empty)
     } else if (!f.required) {
       s = s.optional().or(z.literal("")).or(z.null());
