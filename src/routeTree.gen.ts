@@ -122,6 +122,7 @@ import { Route as ApiPublicTabbyWebhookRouteImport } from './routes/api.public.t
 import { Route as ApiPublicShippingWebhookRouteImport } from './routes/api.public.shipping-webhook'
 import { Route as ApiPublicPaymentWebhookRouteImport } from './routes/api.public.payment-webhook'
 import { Route as AdminWebhooksIdRouteImport } from './routes/admin.webhooks.$id'
+import { Route as AdminWarehousesIdRouteImport } from './routes/admin.warehouses.$id'
 import { Route as AdminSupportIdRouteImport } from './routes/admin.support.$id'
 import { Route as AdminProductsIdRouteImport } from './routes/admin.products.$id'
 import { Route as AdminOrdersIdRouteImport } from './routes/admin.orders.$id'
@@ -706,6 +707,11 @@ const AdminWebhooksIdRoute = AdminWebhooksIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AdminWebhooksRoute,
 } as any)
+const AdminWarehousesIdRoute = AdminWarehousesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminWarehousesRoute,
+} as any)
 const AdminSupportIdRoute = AdminSupportIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -857,7 +863,7 @@ export interface FileRoutesByFullPath {
   '/admin/support': typeof AdminSupportRouteWithChildren
   '/admin/themes': typeof AdminThemesRoute
   '/admin/users': typeof AdminUsersRoute
-  '/admin/warehouses': typeof AdminWarehousesRoute
+  '/admin/warehouses': typeof AdminWarehousesRouteWithChildren
   '/admin/webhooks': typeof AdminWebhooksRouteWithChildren
   '/admin/webhooks-deliveries': typeof AdminWebhooksDeliveriesRoute
   '/admin/webhooks-health': typeof AdminWebhooksHealthRoute
@@ -883,6 +889,7 @@ export interface FileRoutesByFullPath {
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRouteWithChildren
   '/admin/support/$id': typeof AdminSupportIdRoute
+  '/admin/warehouses/$id': typeof AdminWarehousesIdRoute
   '/admin/webhooks/$id': typeof AdminWebhooksIdRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
@@ -975,7 +982,7 @@ export interface FileRoutesByTo {
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/themes': typeof AdminThemesRoute
   '/admin/users': typeof AdminUsersRoute
-  '/admin/warehouses': typeof AdminWarehousesRoute
+  '/admin/warehouses': typeof AdminWarehousesRouteWithChildren
   '/admin/webhooks-deliveries': typeof AdminWebhooksDeliveriesRoute
   '/admin/webhooks-health': typeof AdminWebhooksHealthRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -1000,6 +1007,7 @@ export interface FileRoutesByTo {
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRouteWithChildren
   '/admin/support/$id': typeof AdminSupportIdRoute
+  '/admin/warehouses/$id': typeof AdminWarehousesIdRoute
   '/admin/webhooks/$id': typeof AdminWebhooksIdRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
@@ -1104,7 +1112,7 @@ export interface FileRoutesById {
   '/admin/support': typeof AdminSupportRouteWithChildren
   '/admin/themes': typeof AdminThemesRoute
   '/admin/users': typeof AdminUsersRoute
-  '/admin/warehouses': typeof AdminWarehousesRoute
+  '/admin/warehouses': typeof AdminWarehousesRouteWithChildren
   '/admin/webhooks': typeof AdminWebhooksRouteWithChildren
   '/admin/webhooks-deliveries': typeof AdminWebhooksDeliveriesRoute
   '/admin/webhooks-health': typeof AdminWebhooksHealthRoute
@@ -1130,6 +1138,7 @@ export interface FileRoutesById {
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRouteWithChildren
   '/admin/support/$id': typeof AdminSupportIdRoute
+  '/admin/warehouses/$id': typeof AdminWarehousesIdRoute
   '/admin/webhooks/$id': typeof AdminWebhooksIdRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
@@ -1261,6 +1270,7 @@ export interface FileRouteTypes {
     | '/admin/orders/$id'
     | '/admin/products/$id'
     | '/admin/support/$id'
+    | '/admin/warehouses/$id'
     | '/admin/webhooks/$id'
     | '/api/public/payment-webhook'
     | '/api/public/shipping-webhook'
@@ -1378,6 +1388,7 @@ export interface FileRouteTypes {
     | '/admin/orders/$id'
     | '/admin/products/$id'
     | '/admin/support/$id'
+    | '/admin/warehouses/$id'
     | '/admin/webhooks/$id'
     | '/api/public/payment-webhook'
     | '/api/public/shipping-webhook'
@@ -1507,6 +1518,7 @@ export interface FileRouteTypes {
     | '/admin/orders/$id'
     | '/admin/products/$id'
     | '/admin/support/$id'
+    | '/admin/warehouses/$id'
     | '/admin/webhooks/$id'
     | '/api/public/payment-webhook'
     | '/api/public/shipping-webhook'
@@ -2365,6 +2377,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminWebhooksIdRouteImport
       parentRoute: typeof AdminWebhooksRoute
     }
+    '/admin/warehouses/$id': {
+      id: '/admin/warehouses/$id'
+      path: '/$id'
+      fullPath: '/admin/warehouses/$id'
+      preLoaderRoute: typeof AdminWarehousesIdRouteImport
+      parentRoute: typeof AdminWarehousesRoute
+    }
     '/admin/support/$id': {
       id: '/admin/support/$id'
       path: '/$id'
@@ -2629,6 +2648,18 @@ const AdminSupportRouteWithChildren = AdminSupportRoute._addFileChildren(
   AdminSupportRouteChildren,
 )
 
+interface AdminWarehousesRouteChildren {
+  AdminWarehousesIdRoute: typeof AdminWarehousesIdRoute
+}
+
+const AdminWarehousesRouteChildren: AdminWarehousesRouteChildren = {
+  AdminWarehousesIdRoute: AdminWarehousesIdRoute,
+}
+
+const AdminWarehousesRouteWithChildren = AdminWarehousesRoute._addFileChildren(
+  AdminWarehousesRouteChildren,
+)
+
 interface AdminWebhooksRouteChildren {
   AdminWebhooksIdRoute: typeof AdminWebhooksIdRoute
   AdminWebhooksIndexRoute: typeof AdminWebhooksIndexRoute
@@ -2703,7 +2734,7 @@ interface AdminRouteChildren {
   AdminSupportRoute: typeof AdminSupportRouteWithChildren
   AdminThemesRoute: typeof AdminThemesRoute
   AdminUsersRoute: typeof AdminUsersRoute
-  AdminWarehousesRoute: typeof AdminWarehousesRoute
+  AdminWarehousesRoute: typeof AdminWarehousesRouteWithChildren
   AdminWebhooksRoute: typeof AdminWebhooksRouteWithChildren
   AdminWebhooksDeliveriesRoute: typeof AdminWebhooksDeliveriesRoute
   AdminWebhooksHealthRoute: typeof AdminWebhooksHealthRoute
@@ -2770,7 +2801,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSupportRoute: AdminSupportRouteWithChildren,
   AdminThemesRoute: AdminThemesRoute,
   AdminUsersRoute: AdminUsersRoute,
-  AdminWarehousesRoute: AdminWarehousesRoute,
+  AdminWarehousesRoute: AdminWarehousesRouteWithChildren,
   AdminWebhooksRoute: AdminWebhooksRouteWithChildren,
   AdminWebhooksDeliveriesRoute: AdminWebhooksDeliveriesRoute,
   AdminWebhooksHealthRoute: AdminWebhooksHealthRoute,

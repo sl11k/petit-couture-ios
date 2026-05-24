@@ -5869,9 +5869,21 @@ export type Database = {
         }
         Returns: string
       }
+      reassign_order_item_warehouse: {
+        Args: { _item_id: string; _new_warehouse: string }
+        Returns: undefined
+      }
       refresh_product_sales_counts: { Args: never; Returns: undefined }
       register_failed_login: { Args: { _email: string }; Returns: undefined }
       release_expired_order_stock: {
+        Args: { _order_id: string }
+        Returns: undefined
+      }
+      release_order_inventory: {
+        Args: { _order_id: string }
+        Returns: undefined
+      }
+      reserve_order_inventory: {
         Args: { _order_id: string }
         Returns: undefined
       }
@@ -5895,6 +5907,16 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      transfer_inventory: {
+        Args: {
+          _from_warehouse: string
+          _product_id: string
+          _qty: number
+          _to_warehouse: string
+          _variant_id: string
+        }
+        Returns: undefined
+      }
       unaccent: { Args: { "": string }; Returns: string }
       validate_coupon: {
         Args: {

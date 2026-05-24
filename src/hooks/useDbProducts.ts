@@ -124,6 +124,7 @@ const SELECT_COLS =
 
 export function useDbProductBySlug(slug: string): {
   product: MergedProduct;
+  productId: string | null;
   loading: boolean;
   fromDb: boolean;
 } {
@@ -151,7 +152,7 @@ export function useDbProductBySlug(slug: string): {
   }, [slug]);
 
   const product = mergeRowOntoBase(slug, row, lang === "ar" ? "ar" : "en");
-  return { product, loading, fromDb: !!row };
+  return { product, productId: row?.id ?? null, loading, fromDb: !!row };
 }
 
 export function useDbProductsBySlugs(slugs: string[]): {

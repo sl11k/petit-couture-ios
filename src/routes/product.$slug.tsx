@@ -35,6 +35,8 @@ import { usePriceFormatter } from "@/state/CurrencyContext";
 import { trackEvent } from "@/lib/analytics";
 import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
 
+import { VariantsPicker } from "@/components/product/VariantsPicker";
+
 import { buildMeta, productJsonLd, breadcrumbJsonLd, canonical } from "@/lib/seo";
 import { devValidateJsonLd } from "@/lib/seoValidate";
 
@@ -104,7 +106,7 @@ type TabKey = "description" | "specs" | "care" | "shipping";
 function ProductDetails() {
   const { slug } = Route.useParams();
   const router = useRouter();
-  const { product } = useDbProductBySlug(slug);
+  const { product, productId } = useDbProductBySlug(slug);
   const { reviews: dbReviews, bundles: dbBundles, offers: dbOffers } = useProductExtras(slug);
   const { isRTL, lang } = useLanguage();
   const ar = isRTL;
@@ -620,6 +622,21 @@ function ProductDetails() {
               })}
             </div>
           </section>
+
+          {/* Variants (sizes + colors as full DB variants when configured) */}
+          {productId && (
+            <section className="px-5 mt-5">
+              <VariantsPicker
+                productId={productId}
+                slug={slug}
+                productName={product.name}
+                brand={product.brand}
+                basePrice={product.price}
+                currency={(product as any).currency ?? "SAR"}
+                image={product.images?.[0] ?? ""}
+              />
+            </section>
+          )}
 
           {/* Quantity */}
           <section className="px-5 mt-7">
