@@ -22,6 +22,8 @@ export type BagItem = {
   size: string;
   color: string;
   qty: number;
+  variantId?: string;
+  variantLabel?: string;
 };
 
 type AddInput = Omit<BagItem, "id" | "qty"> & { qty?: number };
@@ -39,8 +41,8 @@ type Ctx = {
 
 const BagContext = createContext<Ctx | null>(null);
 
-function makeId(slug: string, size: string, color: string) {
-  return `${slug}::${size}::${color}`;
+function makeId(slug: string, size: string, color: string, variantId?: string) {
+  return variantId ? `${slug}::v::${variantId}` : `${slug}::${size}::${color}`;
 }
 
 function readInitial(): BagItem[] {
