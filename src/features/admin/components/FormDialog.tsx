@@ -72,6 +72,7 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
         s = z.string();
         break;
       case "gallery":
+      case "videoGallery":
         s = z.array(z.string()).default([]);
         break;
       case "json":
