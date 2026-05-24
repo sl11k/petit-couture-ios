@@ -15,6 +15,7 @@ const ItemSchema = z.object({
   qty: z.number().int().min(1).max(999),
   size: z.string().max(64).nullable().optional(),
   color: z.string().max(64).nullable().optional(),
+  variant_id: z.string().uuid().nullable().optional(),
 });
 
 const AddressSchema = z.object({
@@ -177,6 +178,7 @@ export const placeOrder = createServerFn({ method: "POST" })
       qty: it.qty,
       size: it.size ?? null,
       color: it.color ?? null,
+      variant_id: it.variant_id ?? null,
       line_total: it.price * it.qty,
     }));
     const { error: itemsErr } = await supabaseAdmin
