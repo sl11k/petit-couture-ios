@@ -418,7 +418,7 @@ export function HomeScreen() {
   );
 }
 
-function BestSellersSection({ ar }: { ar: boolean }) {
+function BestSellersSection({ ar, hasAnyProducts }: { ar: boolean; hasAnyProducts: boolean | null }) {
   const fmt = usePriceFormatter();
   const wishlist = useWishlist();
   const { isRTL } = useLanguage();
@@ -433,6 +433,8 @@ function BestSellersSection({ ar }: { ar: boolean }) {
   }>>([]);
 
   useEffect(() => {
+    // Wait until we know whether the admin has added any real products.
+    if (hasAnyProducts === null) return;
     let cancelled = false;
     (async () => {
       const { data } = await supabase
@@ -457,7 +459,13 @@ function BestSellersSection({ ar }: { ar: boolean }) {
         setItems(real);
         return;
       }
-      // Fallback preview items
+      // If the admin has any real products, do NOT show mock data — even if none
+      // of them qualify as a best seller yet. Hide the section in that case.
+      if (hasAnyProducts) {
+        setItems([]);
+        return;
+      }
+      // No real products at all → keep the demo preview so the page isn't empty.
       setItems([
         { id: "bs1", name_ar: "فستان روزالي تول", name_en: "Rosalie Tulle Dress", price: 1250, compareAt: 1650, image: productDress1, slug: "best-sellers" },
         { id: "bs2", name_ar: "فستان زهور كلاسيك", name_en: "Classic Floral Dress", price: 980, compareAt: 1280, image: productDress2, slug: "dresses" },
@@ -466,7 +474,8 @@ function BestSellersSection({ ar }: { ar: boolean }) {
       ]);
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [hasAnyProducts]);
+
 
   if (items.length === 0) return null;
 
