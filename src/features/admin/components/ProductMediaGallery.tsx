@@ -14,21 +14,23 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Star, Trash2, GripVertical, Loader2, ImagePlus } from "lucide-react";
+import { Star, Trash2, GripVertical, Loader2, ImagePlus, Film } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { IMAGE_MAX_BYTES } from "./MediaUploader";
+import { IMAGE_MAX_BYTES, VIDEO_MAX_BYTES } from "./MediaUploader";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  /** Array of image URLs. First item is the "main" image. */
+  /** Array of media URLs. First item is the "main" media. */
   value: string[];
   onChange: (urls: string[]) => void;
   bucket?: string;
   folder?: string;
-  /** Max number of images */
+  /** Max number of items */
   max?: number;
+  /** Media kind. Defaults to "image". */
+  kind?: "image" | "video";
 };
 
 function SortableThumb({
