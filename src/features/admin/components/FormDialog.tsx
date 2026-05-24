@@ -72,6 +72,7 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
         s = z.string();
         break;
       case "gallery":
+      case "videoGallery":
         s = z.array(z.string()).default([]);
         break;
       case "json":
@@ -91,7 +92,7 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
         if (f.maxLength) s = (s as z.ZodString).max(f.maxLength);
         if (f.pattern) s = (s as z.ZodString).regex(new RegExp(f.pattern), ar ? "صيغة غير صحيحة" : "Invalid format");
     }
-    if (f.type === "gallery") {
+    if (f.type === "gallery" || f.type === "videoGallery") {
       // arrays are always present (possibly empty)
     } else if (!f.required) {
       s = s.optional().or(z.literal("")).or(z.null());
@@ -108,7 +109,7 @@ function coerceForDb(fields: FormFieldDef[], values: Record<string, any>) {
   for (const f of fields) {
     if (f.type === "warehouseStock") continue; // virtual field; handled separately
     let v = values[f.key];
-    if (f.type === "gallery") {
+    if (f.type === "gallery" || f.type === "videoGallery") {
       out[f.key] = Array.isArray(v) ? v : [];
       continue;
     }
@@ -132,7 +133,7 @@ function defaultsFrom(fields: FormFieldDef[], initial?: Record<string, any>) {
   const out: Record<string, any> = {};
   for (const f of fields) {
     let v = initial?.[f.key] ?? f.defaultValue;
-    if (f.type === "gallery") {
+    if (f.type === "gallery" || f.type === "videoGallery") {
       out[f.key] = Array.isArray(v) ? v : [];
       continue;
     }
@@ -311,7 +312,7 @@ export function FormDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {visibleFields.map((f) => {
-              const isFull = f.fullWidth ?? (f.type === "textarea" || f.type === "json" || f.type === "gallery" || f.type === "image" || f.type === "video" || f.type === "warehouseStock");
+              const isFull = f.fullWidth ?? (f.type === "textarea" || f.type === "json" || f.type === "gallery" || f.type === "videoGallery" || f.type === "image" || f.type === "video" || f.type === "warehouseStock");
               const lbl = ar ? f.label.ar : f.label.en;
               const ph = f.placeholder ? (ar ? f.placeholder.ar : f.placeholder.en) : undefined;
               const help = f.helpText ? (ar ? f.helpText.ar : f.helpText.en) : undefined;
@@ -329,13 +330,14 @@ export function FormDialog({
                       folder={f.folder}
                       kind={f.type}
                     />
-                  ) : f.type === "gallery" ? (
+                  ) : f.type === "gallery" || f.type === "videoGallery" ? (
                     <ProductMediaGallery
                       value={Array.isArray(values[f.key]) ? values[f.key] : []}
                       onChange={(urls) => setVal(f.key, urls)}
                       bucket={f.bucket || "product-media"}
-                      folder={f.folder || "gallery"}
-                      max={f.maxItems ?? 20}
+                      folder={f.folder || (f.type === "videoGallery" ? "videos" : "gallery")}
+                      max={f.maxItems ?? (f.type === "videoGallery" ? 10 : 20)}
+                      kind={f.type === "videoGallery" ? "video" : "image"}
                     />
                   ) : f.type === "warehouseStock" ? (
                     <WarehouseStockPicker

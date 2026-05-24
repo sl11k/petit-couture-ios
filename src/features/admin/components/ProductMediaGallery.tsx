@@ -14,21 +14,23 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Star, Trash2, GripVertical, Loader2, ImagePlus } from "lucide-react";
+import { Star, Trash2, GripVertical, Loader2, ImagePlus, Film } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { IMAGE_MAX_BYTES } from "./MediaUploader";
+import { IMAGE_MAX_BYTES, VIDEO_MAX_BYTES } from "./MediaUploader";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  /** Array of image URLs. First item is the "main" image. */
+  /** Array of media URLs. First item is the "main" media. */
   value: string[];
   onChange: (urls: string[]) => void;
   bucket?: string;
   folder?: string;
-  /** Max number of images */
+  /** Max number of items */
   max?: number;
+  /** Media kind. Defaults to "image". */
+  kind?: "image" | "video";
 };
 
 function SortableThumb({
@@ -37,12 +39,14 @@ function SortableThumb({
   onMakeMain,
   onRemove,
   ar,
+  kind,
 }: {
   url: string;
   isMain: boolean;
   onMakeMain: () => void;
   onRemove: () => void;
   ar: boolean;
+  kind: "image" | "video";
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: url });
   const style = {
@@ -59,7 +63,11 @@ function SortableThumb({
         isMain && "ring-2 ring-primary",
       )}
     >
-      <img src={url} alt="" className="w-full h-28 object-cover" />
+      {kind === "video" ? (
+        <video src={url} className="w-full h-28 object-cover bg-black" muted playsInline preload="metadata" />
+      ) : (
+        <img src={url} alt="" className="w-full h-28 object-cover" />
+      )}
       <div className="absolute top-1 start-1 flex gap-1">
         <button
           type="button"
@@ -107,6 +115,7 @@ export function ProductMediaGallery({
   bucket = "product-media",
   folder = "gallery",
   max = 20,
+  kind = "image",
 }: Props) {
   const { lang } = useLanguage();
   const ar = lang === "ar";
@@ -114,28 +123,35 @@ export function ProductMediaGallery({
   const [uploading, setUploading] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const urls = Array.isArray(value) ? value.filter(Boolean) : [];
+  const isVideo = kind === "video";
 
   const handleUpload = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const remaining = max - urls.length;
     const list = Array.from(files).slice(0, remaining);
     if (list.length === 0) {
-      toast.error(ar ? `الحد الأقصى ${max} صورة` : `Max ${max} images`);
+      toast.error(ar ? `الحد الأقصى ${max} ${isVideo ? "فيديو" : "صورة"}` : `Max ${max} ${isVideo ? "videos" : "images"}`);
       return;
     }
     setUploading(true);
     const next = [...urls];
+    const maxBytes = isVideo ? VIDEO_MAX_BYTES : IMAGE_MAX_BYTES;
+    const typePrefix = isVideo ? "video/" : "image/";
     for (const file of list) {
-      if (!file.type.startsWith("image/")) {
-        toast.error(ar ? "يجب اختيار صور فقط" : "Images only");
+      if (!file.type.startsWith(typePrefix)) {
+        toast.error(
+          ar
+            ? isVideo ? "يجب اختيار فيديوهات فقط" : "يجب اختيار صور فقط"
+            : isVideo ? "Videos only" : "Images only",
+        );
         continue;
       }
-      if (file.size > IMAGE_MAX_BYTES) {
+      if (file.size > maxBytes) {
         toast.error(ar ? `${file.name}: حجم كبير` : `${file.name}: too large`);
         continue;
       }
-      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const safe = file.name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9-_]/g, "-").slice(0, 40) || "img";
+      const ext = file.name.split(".").pop()?.toLowerCase() || (isVideo ? "mp4" : "jpg");
+      const safe = file.name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9-_]/g, "-").slice(0, 40) || (isVideo ? "vid" : "img");
       const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2,8)}-${safe}.${ext}`;
       const { error } = await supabase.storage.from(bucket).upload(path, file, {
         cacheControl: "3600",
@@ -151,7 +167,7 @@ export function ProductMediaGallery({
     }
     onChange(next);
     setUploading(false);
-  }, [urls, max, bucket, folder, ar, onChange]);
+  }, [urls, max, bucket, folder, ar, onChange, isVideo]);
 
   const handleRemove = async (url: string) => {
     try {
@@ -190,6 +206,7 @@ export function ProductMediaGallery({
                 onMakeMain={() => handleMakeMain(url)}
                 onRemove={() => handleRemove(url)}
                 ar={ar}
+                kind={kind}
               />
             ))}
             {urls.length < max && (
@@ -205,6 +222,13 @@ export function ProductMediaGallery({
               >
                 {uploading ? (
                   <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                ) : isVideo ? (
+                  <>
+                    <Film className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-[10px] mt-1 text-muted-foreground">
+                      {ar ? "إضافة فيديوهات" : "Add videos"}
+                    </span>
+                  </>
                 ) : (
                   <>
                     <ImagePlus className="h-5 w-5 text-muted-foreground" />
@@ -216,7 +240,7 @@ export function ProductMediaGallery({
                 <input
                   id={inputId}
                   type="file"
-                  accept="image/*"
+                  accept={isVideo ? "video/*" : "image/*"}
                   multiple
                   className="sr-only"
                   onChange={(e) => handleUpload(e.target.files)}
@@ -229,8 +253,8 @@ export function ProductMediaGallery({
       </DndContext>
       <p className="text-[10px] text-muted-foreground">
         {ar
-          ? `أول صورة هي الرئيسية. اسحب لإعادة الترتيب. (${urls.length}/${max})`
-          : `First image is the main. Drag to reorder. (${urls.length}/${max})`}
+          ? `أول ${isVideo ? "فيديو" : "صورة"} ${isVideo ? "هو الرئيسي" : "هي الرئيسية"}. اسحب لإعادة الترتيب. (${urls.length}/${max})`
+          : `First ${isVideo ? "video" : "image"} is the main. Drag to reorder. (${urls.length}/${max})`}
       </p>
     </div>
   );

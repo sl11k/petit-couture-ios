@@ -3546,6 +3546,7 @@ export type Database = {
           tax_rate: number | null
           updated_at: string
           video_url: string | null
+          videos: Json
           views_count: number
           weight: number | null
         }
@@ -3594,6 +3595,7 @@ export type Database = {
           tax_rate?: number | null
           updated_at?: string
           video_url?: string | null
+          videos?: Json
           views_count?: number
           weight?: number | null
         }
@@ -3642,6 +3644,7 @@ export type Database = {
           tax_rate?: number | null
           updated_at?: string
           video_url?: string | null
+          videos?: Json
           views_count?: number
           weight?: number | null
         }
