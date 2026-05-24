@@ -1606,6 +1606,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "inventory_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "inventory_warehouse_id_fkey"
             columns: ["warehouse_id"]
             isOneToOne: false
@@ -2462,6 +2469,8 @@ export type Database = {
           qty: number
           size: string | null
           unit_price: number
+          variant_id: string | null
+          warehouse_id: string | null
         }
         Insert: {
           brand?: string | null
@@ -2477,6 +2486,8 @@ export type Database = {
           qty: number
           size?: string | null
           unit_price: number
+          variant_id?: string | null
+          warehouse_id?: string | null
         }
         Update: {
           brand?: string | null
@@ -2492,6 +2503,8 @@ export type Database = {
           qty?: number
           size?: string | null
           unit_price?: number
+          variant_id?: string | null
+          warehouse_id?: string | null
         }
         Relationships: [
           {
@@ -2506,6 +2519,20 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
             referencedColumns: ["id"]
           },
         ]
@@ -3182,6 +3209,88 @@ export type Database = {
           },
         ]
       }
+      product_option_types: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          name_en: string | null
+          position: number
+          product_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          name_en?: string | null
+          position?: number
+          product_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          name_en?: string | null
+          position?: number
+          product_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_option_types_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_option_values: {
+        Row: {
+          created_at: string
+          hex_color: string | null
+          id: string
+          image_url: string | null
+          option_type_id: string
+          position: number
+          updated_at: string
+          value: string
+          value_en: string | null
+        }
+        Insert: {
+          created_at?: string
+          hex_color?: string | null
+          id?: string
+          image_url?: string | null
+          option_type_id: string
+          position?: number
+          updated_at?: string
+          value: string
+          value_en?: string | null
+        }
+        Update: {
+          created_at?: string
+          hex_color?: string | null
+          id?: string
+          image_url?: string | null
+          option_type_id?: string
+          position?: number
+          updated_at?: string
+          value?: string
+          value_en?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_option_values_option_type_id_fkey"
+            columns: ["option_type_id"]
+            isOneToOne: false
+            referencedRelation: "product_option_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_recommendations: {
         Row: {
           created_at: string
@@ -3310,9 +3419,11 @@ export type Database = {
       }
       product_variants: {
         Row: {
+          attributes: Json
           barcode: string | null
           color: string | null
           compare_at_price: number | null
+          compare_at_price_override: number | null
           cost: number | null
           created_at: string
           flavor: string | null
@@ -3320,7 +3431,9 @@ export type Database = {
           image_url: string | null
           is_active: boolean
           material: string | null
+          position: number
           price: number | null
+          price_override: number | null
           product_id: string
           size: string | null
           sku: string | null
@@ -3330,9 +3443,11 @@ export type Database = {
           weight: number | null
         }
         Insert: {
+          attributes?: Json
           barcode?: string | null
           color?: string | null
           compare_at_price?: number | null
+          compare_at_price_override?: number | null
           cost?: number | null
           created_at?: string
           flavor?: string | null
@@ -3340,7 +3455,9 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           material?: string | null
+          position?: number
           price?: number | null
+          price_override?: number | null
           product_id: string
           size?: string | null
           sku?: string | null
@@ -3350,9 +3467,11 @@ export type Database = {
           weight?: number | null
         }
         Update: {
+          attributes?: Json
           barcode?: string | null
           color?: string | null
           compare_at_price?: number | null
+          compare_at_price_override?: number | null
           cost?: number | null
           created_at?: string
           flavor?: string | null
@@ -3360,7 +3479,9 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           material?: string | null
+          position?: number
           price?: number | null
+          price_override?: number | null
           product_id?: string
           size?: string | null
           sku?: string | null
@@ -5394,6 +5515,36 @@ export type Database = {
         }
         Relationships: []
       }
+      variant_option_values: {
+        Row: {
+          option_value_id: string
+          variant_id: string
+        }
+        Insert: {
+          option_value_id: string
+          variant_id: string
+        }
+        Update: {
+          option_value_id?: string
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "variant_option_values_option_value_id_fkey"
+            columns: ["option_value_id"]
+            isOneToOne: false
+            referencedRelation: "product_option_values"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "variant_option_values_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       warehouses: {
         Row: {
           address: string | null
@@ -5617,6 +5768,21 @@ export type Database = {
           email: string
           roles: string[]
           user_id: string
+        }[]
+      }
+      get_product_variants_with_stock: {
+        Args: { _product_id: string }
+        Returns: {
+          attributes: Json
+          available_quantity: number
+          compare_at_price_override: number
+          image_url: string
+          is_active: boolean
+          option_values: Json
+          price_override: number
+          sku: string
+          sort_order: number
+          variant_id: string
         }[]
       }
       get_profile_safe: {
