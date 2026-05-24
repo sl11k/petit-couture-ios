@@ -178,6 +178,7 @@ export const placeOrder = createServerFn({ method: "POST" })
       qty: it.qty,
       size: it.size ?? null,
       color: it.color ?? null,
+      variant_id: it.variant_id ?? null,
       line_total: it.price * it.qty,
     }));
     const { error: itemsErr } = await supabaseAdmin
