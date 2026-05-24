@@ -133,7 +133,7 @@ function defaultsFrom(fields: FormFieldDef[], initial?: Record<string, any>) {
   const out: Record<string, any> = {};
   for (const f of fields) {
     let v = initial?.[f.key] ?? f.defaultValue;
-    if (f.type === "gallery") {
+    if (f.type === "gallery" || f.type === "videoGallery") {
       out[f.key] = Array.isArray(v) ? v : [];
       continue;
     }
