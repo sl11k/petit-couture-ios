@@ -19,8 +19,13 @@ import { useEffect } from "react";
 import { startWebVitals } from "@/lib/perf";
 import { GlobalErrorBoundary, OfflineBanner } from "@/components/ErrorDisplay";
 import { flushErrorBuffer } from "@/lib/errors";
+import { checkAdminOutlets } from "@/dev/checkAdminOutlets";
 
 import appCss from "../styles.css?url";
+
+// Dev-only: warn about /admin parent routes missing <Outlet />.
+if (import.meta.env.DEV) checkAdminOutlets();
+
 
 function NotFoundComponent() {
   // Note: i18n context isn't available at the route-not-found boundary,
