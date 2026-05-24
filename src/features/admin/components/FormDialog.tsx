@@ -298,7 +298,7 @@ export function FormDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {visibleFields.map((f) => {
-              const isFull = f.fullWidth ?? (f.type === "textarea" || f.type === "json" || f.type === "gallery" || f.type === "image" || f.type === "video");
+              const isFull = f.fullWidth ?? (f.type === "textarea" || f.type === "json" || f.type === "gallery" || f.type === "image" || f.type === "video" || f.type === "warehouseStock");
               const lbl = ar ? f.label.ar : f.label.en;
               const ph = f.placeholder ? (ar ? f.placeholder.ar : f.placeholder.en) : undefined;
               const help = f.helpText ? (ar ? f.helpText.ar : f.helpText.en) : undefined;
@@ -323,6 +323,12 @@ export function FormDialog({
                       bucket={f.bucket || "product-media"}
                       folder={f.folder || "gallery"}
                       max={f.maxItems ?? 20}
+                    />
+                  ) : f.type === "warehouseStock" ? (
+                    <WarehouseStockPicker
+                      value={Array.isArray(values[f.key]) ? values[f.key] : []}
+                      onChange={(v) => setVal(f.key, v)}
+                      existing={existingInventory}
                     />
                   ) : f.type === "textarea" || f.type === "json" ? (
                     <Textarea
