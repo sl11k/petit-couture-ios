@@ -124,10 +124,10 @@ function OptionTypesSection({ productId, types, values, onChange, ar }: any) {
               key={t.id}
               type={t}
               values={values.filter((v: any) => v.option_type_id === t.id)}
-              onSaveType={async (patch) => { await upsertType({ data: { id: t.id, product_id: productId, name: patch.name, name_en: patch.name_en, position: patch.position } }); onChange(); }}
+              onSaveType={async (patch: any) => { await upsertType({ data: { id: t.id, product_id: productId, name: patch.name, name_en: patch.name_en, position: patch.position } }); onChange(); }}
               onDeleteType={async () => { if (confirm(ar ? "حذف هذا النوع وكل قيمه؟" : "Delete this type and all its values?")) { await delType({ data: { id: t.id } }); onChange(); } }}
-              onSaveValue={async (val) => { await upsertValue({ data: { id: val.id, option_type_id: t.id, value: val.value, value_en: val.value_en, hex_color: val.hex_color, image_url: val.image_url, position: val.position ?? 0 } }); onChange(); }}
-              onDeleteValue={async (id) => { await delValue({ data: { id } }); onChange(); }}
+              onSaveValue={async (val: any) => { await upsertValue({ data: { id: val.id, option_type_id: t.id, value: val.value, value_en: val.value_en, hex_color: val.hex_color, image_url: val.image_url, position: val.position ?? 0 } }); onChange(); }}
+              onDeleteValue={async (id: string) => { await delValue({ data: { id } }); onChange(); }}
               ar={ar}
             />
           ))}
@@ -277,7 +277,7 @@ function VariantsSection({ productId, types, values, variants, bridge, inventory
                       warehouse={w}
                       inv={inv}
                       ar={ar}
-                      onSave={async (qty, lowThreshold, sku) => {
+                      onSave={async (qty: number, lowThreshold: number, sku: string | null) => {
                         await upsertInv({ data: { product_id: productId, variant_id: v.id, warehouse_id: w.id, quantity: qty, low_stock_threshold: lowThreshold, sku } });
                         onChange();
                         toast.success(ar ? "تم الحفظ" : "Saved");
@@ -298,7 +298,7 @@ function VariantsSection({ productId, types, values, variants, bridge, inventory
           values={values}
           ar={ar}
           onCancel={() => setEditing(null)}
-          onSave={async (payload) => {
+          onSave={async (payload: any) => {
             await upsert({ data: payload });
             setEditing(null);
             onChange();
