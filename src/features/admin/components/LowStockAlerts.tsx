@@ -55,15 +55,24 @@ export function LowStockAlerts() {
       return;
     }
     setSaving(true);
-    const { error } = await supabase.from("products").update({ stock: n }).eq("id", id);
-    setSaving(false);
-    if (error) {
-      toast.error(ar ? "تعذّر التحديث" : "Update failed");
-      return;
+    // BUGFIX: wrap supabase call in try/catch so an unexpected throw
+    // (network failure, etc.) doesn't leave the row stuck in "saving" state forever.
+    try {
+      const { error } = await supabase.from("products").update({ stock: n }).eq("id", id);
+      if (error) {
+        console.error("[LowStockAlerts] update failed", error);
+        toast.error(error.message || (ar ? "تعذّر التحديث" : "Update failed"));
+        return;
+      }
+      toast.success(ar ? "تم تحديث الكمية" : "Quantity updated");
+      setEditing(null);
+      load();
+    } catch (err: any) {
+      console.error("[LowStockAlerts] update unexpected", err);
+      toast.error(err?.message || (ar ? "حدث خطأ غير متوقع" : "Unexpected error"));
+    } finally {
+      setSaving(false);
     }
-    toast.success(ar ? "تم تحديث الكمية" : "Quantity updated");
-    setEditing(null);
-    load();
   };
 
   const reorder = async (r: Row) => {
