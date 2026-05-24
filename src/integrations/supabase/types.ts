@@ -5856,6 +5856,19 @@ export type Database = {
           notified: number
         }[]
       }
+      pick_warehouse_for_item: {
+        Args: {
+          _city: string
+          _country: string
+          _lat: number
+          _lng: number
+          _product_id: string
+          _qty: number
+          _region: string
+          _variant_id: string
+        }
+        Returns: string
+      }
       refresh_product_sales_counts: { Args: never; Returns: undefined }
       register_failed_login: { Args: { _email: string }; Returns: undefined }
       release_expired_order_stock: {
