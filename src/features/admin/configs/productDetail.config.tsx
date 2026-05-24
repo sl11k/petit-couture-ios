@@ -1,5 +1,7 @@
 import type { AdminDetailConfig } from "@/features/admin/types";
 import { productsConfig } from "./products.config";
+import { Link } from "@tanstack/react-router";
+import { Boxes } from "lucide-react";
 
 export const productDetailConfig: AdminDetailConfig = {
   table: "products",
