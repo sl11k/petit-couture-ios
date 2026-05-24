@@ -1557,6 +1557,63 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory: {
+        Row: {
+          created_at: string
+          id: string
+          low_stock_threshold: number
+          product_id: string
+          quantity: number
+          reserved_quantity: number
+          sku: string | null
+          status: string
+          updated_at: string
+          variant_id: string | null
+          warehouse_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          low_stock_threshold?: number
+          product_id: string
+          quantity?: number
+          reserved_quantity?: number
+          sku?: string | null
+          status?: string
+          updated_at?: string
+          variant_id?: string | null
+          warehouse_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          low_stock_threshold?: number
+          product_id?: string
+          quantity?: number
+          reserved_quantity?: number
+          sku?: string | null
+          status?: string
+          updated_at?: string
+          variant_id?: string | null
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_alerts: {
         Row: {
           created_at: string
@@ -5337,6 +5394,60 @@ export type Database = {
         }
         Relationships: []
       }
+      warehouses: {
+        Row: {
+          address: string | null
+          city: string | null
+          code: string
+          country_code: string | null
+          created_at: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          name: string
+          name_en: string | null
+          notes: string | null
+          priority: number
+          region: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          code: string
+          country_code?: string | null
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          name_en?: string | null
+          notes?: string | null
+          priority?: number
+          region?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          code?: string
+          country_code?: string | null
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          name_en?: string | null
+          notes?: string | null
+          priority?: number
+          region?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       webhook_deliveries: {
         Row: {
           attempt: number
@@ -5524,6 +5635,18 @@ export type Database = {
         Returns: {
           email: string
           user_id: string
+        }[]
+      }
+      get_warehouse_stats: {
+        Args: never
+        Returns: {
+          available_quantity: number
+          low_stock_count: number
+          out_of_stock_count: number
+          product_count: number
+          reserved_quantity: number
+          total_quantity: number
+          warehouse_id: string
         }[]
       }
       has_permission: {

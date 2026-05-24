@@ -1,117 +1,91 @@
+# خطة نظام المستودعات + متغيرات المنتج (variants) + المخزون
 
-## Why the current setup is wrong
-
-- The current `/admin/incoming-webhooks` page treats OTO like a generic provider that just POSTs to us with `X-Webhook-Signature = HMAC_SHA256_hex(body, secret)`. OTO does not work that way.
-- OTO requires us to **register our endpoint with them** via `POST https://api.tryoto.com/rest/v2/webhook` using a Bearer token, and OTO embeds a **`signature` field inside the JSON body**, computed as `Base64(HmacSHA256("orderId:status:timestamp" or "orderId:errorCode:timestamp", secretKey))`.
-- The raw secret env name (`SHIPPING_WEBHOOK_SECRET`) is shown in the UI and even revealed as plain text (which is how the page ended up displaying garbage like "not now" / "بعدين" — those are literal stored secret values).
-- Payment webhook is mixed into the same page with a fake Stripe sample even though no payment provider is integrated.
-
-## What we'll build
-
-### A. Backend
-
-1. **New OTO inbound endpoint** — `src/routes/api.public.oto.webhook.ts` (`POST /api/public/oto/webhook`):
-   - Detects `orderStatus` vs `shipmentError` from payload fields.
-   - Optional `Authorization` header check against `OTO_WEBHOOK_AUTHORIZATION_KEY`.
-   - Optional in-body `signature` check via new util `verifyOtoWebhookSignature`.
-   - In production, missing signature when `OTO_WEBHOOK_SECRET_KEY` is configured → 401. Unsigned mode allowed only when `OTO_ALLOW_UNSIGNED=1`.
-   - Normalizes payload, updates `shipments` and `orders.shipping_status` using the new OTO status map, inserts `shipment_tracking_events` and a row in the new `oto_webhook_deliveries` log.
-   - Returns `{ ok, provider:"oto", eventType, orderId, trackingNumber }`.
-
-2. **Old `/api/public/shipping-webhook`** kept as a thin compat shim that 410s with a pointer to the new URL (no behavior change to `payment-webhook`).
-
-3. **OTO signature/status utilities** — `src/lib/oto-webhook.ts` (server-safe, pure):
-   - `buildOtoSignatureBase(payload)` → string per event type.
-   - `verifyOtoWebhookSignature(payload, secretKey)` → boolean (HMAC-SHA256, Base64, timing-safe).
-   - `mapOtoStatus(otoStatus)` → internal status (`processing | in_transit | delivered | returned | failed | unknown`) preserving raw value.
-   - `normalizeOtoPayload(payload)` → discriminated union `{ kind:"orderStatus"|"shipmentError", ...fields }`.
-
-4. **Admin webhook registration server fn** — `src/lib/oto-webhook.functions.ts` + `.server.ts`:
-   - `otoRegisterWebhook({ webhookType, endpointUrl, orderPrefix?, timestampFormat?, useSecret?, useAuth? })`.
-   - Server-only. Reads `OTO_API_BASE_URL`, gets bearer via existing `getOtoAccessToken`, POSTs to `/webhook`.
-   - Reads `OTO_WEBHOOK_SECRET_KEY` / `OTO_WEBHOOK_AUTHORIZATION_KEY` server-side; never sent to browser.
-   - Persists result in new `oto_webhook_registrations` table (id, webhook_type, url, oto_webhook_id, status, response, created_by, created_at, last_registered_at).
-   - `otoListWebhookRegistrations()` and `otoListOtoDeliveries()` for the UI.
-   - `otoSendLocalTestWebhook(kind)` — POSTs a sample OTO-shaped body (with valid signature when secret configured) to our own `/api/public/oto/webhook` and returns the result.
-
-### B. Database
-
-Migration `oto_webhooks_setup`:
-- `oto_webhook_registrations(id, webhook_type, endpoint_url, oto_webhook_id, status, response jsonb, created_by uuid, created_at, last_registered_at)` — RLS: admin/super_admin only via `has_role`.
-- `oto_webhook_deliveries(id, webhook_type, order_id text, raw jsonb, signature_present bool, signature_valid bool, auth_valid bool, processed bool, processing_error text, http_status int, received_at)` — RLS: admin/super_admin read; service role inserts.
-
-(Existing `shipping_webhooks_log` and `webhook_deliveries` tables are left untouched.)
-
-### C. Admin UI
-
-- Rename route file `src/routes/admin.incoming-webhooks.tsx` → completely rewritten as **OTO Webhook Setup** page (tab title: "تكاملات الشحن — OTO Webhooks").
-- Sections:
-  1. **Status card**: `OTO_API_TOKEN` configured/missing, `OTO_WEBHOOK_SECRET_KEY` configured/missing (mask shown as `••••last4`), `OTO_WEBHOOK_AUTHORIZATION_KEY` same.
-  2. **Endpoint URL** (copy-only, no secret shown): `https://lppme.trendify.sa/api/public/oto/webhook`.
-  3. **Register webhook**: dropdown for `webhookType` (orderStatus / shipmentError / newOrders), optional `orderPrefix`, `timestampFormat` (default `YYYY-MM-DD HH:mm:ss`), checkboxes "إرسال secretKey" / "إرسال authorizationKey" — calls `otoRegisterWebhook`.
-  4. **Registrations table**: list from `oto_webhook_registrations`.
-  5. **Send local test** button → calls `otoSendLocalTestWebhook`, links to deliveries.
-  6. Help text in Arabic explaining: نحن نسجّل الويب هوك في OTO عبر API ولا ننتظر منهم رابطًا، التوقيع داخل الجسم وليس في `X-Webhook-Signature`، إلخ.
-- **Payment webhooks**: separate page `src/routes/admin.payment-webhooks.tsx` clearly marked "Not configured — no payment provider integrated yet".
-- Sidebar `nav.config.ts`: add "OTO Webhooks" entry under Shipping; remove/repoint old "Webhooks الواردة" if still there.
-
-### D. Secrets handling
-
-- Old `SHIPPING_WEBHOOK_SECRET` and `PAYMENT_WEBHOOK_SECRET` retained in env for backward compat but UI no longer renders them. Old `revealIncomingWebhookSecret` server fn deleted.
-- New env names referenced in code: `OTO_API_TOKEN` (or fall back to existing `OTO_REFRESH_TOKEN` flow), `OTO_API_BASE_URL` (default `https://api.tryoto.com/rest/v2`), `OTO_WEBHOOK_SECRET_KEY`, `OTO_WEBHOOK_AUTHORIZATION_KEY`, `OTO_ALLOW_UNSIGNED`.
-- `secrets.add_secret` will be requested for the three new ones at the end of implementation (user confirms in secure form). Founder must set them before live registration.
-
-### E. Tests
-
-`src/lib/oto-webhook.test.ts` (vitest, already in project):
-- `verifyOtoWebhookSignature` ✓ valid orderStatus, ✓ valid shipmentError, ✗ tampered, ✗ wrong secret.
-- `normalizeOtoPayload` ✓ both kinds.
-- `mapOtoStatus` covers all required mappings.
-- `buildRegistrationBody` (pure builder used by `otoRegisterWebhook`) returns expected shape.
-- Endpoint contract test: unsigned payload rejected when secret configured + `OTO_ALLOW_UNSIGNED` unset.
-
-### F. Docs
-
-Create `.ai-os/` directory with:
-- `ARABIC_CHANGELOG.md` — what/where/why/correct URL/required secrets/founder actions.
-- `EVIDENCE.md`, `WORK_LOG.md`, `FINAL_REPORT.md`, `FOUNDER_REPORT.md`, `SESSION_MEMORY.md`, `CRITICAL_RISKS.md` — concise, scoped to this change.
-
-### Files added / changed
-
-```text
-NEW   src/lib/oto-webhook.ts                  (signature + status + normalize utils)
-NEW   src/lib/oto-webhook.server.ts           (registration + delivery queries, server-only)
-NEW   src/lib/oto-webhook.functions.ts        (createServerFn wrappers)
-NEW   src/lib/oto-webhook.test.ts             (vitest)
-NEW   src/routes/api.public.oto.webhook.ts    (OTO inbound endpoint)
-NEW   src/routes/admin.payment-webhooks.tsx   (clearly "Not configured")
-EDIT  src/routes/admin.incoming-webhooks.tsx  (rewritten as OTO Webhook Setup)
-EDIT  src/routes/api.public.shipping-webhook.ts (compat shim → 410 + pointer)
-EDIT  src/features/admin/sidebar/nav.config.ts (label/section update)
-DEL   src/lib/incoming-webhooks.functions.ts  (replaced)
-DEL   src/lib/incoming-webhooks.server.ts     (replaced)
-NEW   .ai-os/*.md                             (6 docs)
-MIG   oto_webhooks_setup                      (2 tables + RLS)
-SECRETS  OTO_WEBHOOK_SECRET_KEY, OTO_WEBHOOK_AUTHORIZATION_KEY, OTO_API_BASE_URL (optional)
-```
-
-### Verification
-
-- Run `bunx vitest run src/lib/oto-webhook.test.ts`.
-- `code--exec curl` against the new endpoint with a signed sample payload.
-- Confirm typecheck via the harness build.
-
-### Out of scope (will not do)
-
-- Touching historical migrations.
-- Auto-deploying or pushing.
-- Setting secret values on user's behalf (only requesting via `add_secret`).
-- Implementing real payment provider verification (no provider connected).
-
-### Open vendor question
-
-OTO's public docs do not always pin down the exact base-string ordering for signatures. Implementation will use the documented `orderId:status:timestamp` and `orderId:errorCode:timestamp` Base64-HMAC-SHA256 scheme exactly as you described, with a clearly marked TODO + admin-page note asking the founder to confirm with OTO support before relying on signatures in production. `OTO_ALLOW_UNSIGNED=1` is the documented escape hatch for the staging/confirmation period.
+سأنفذ هذا على **3 مراحل** كما اخترت. هذا الرد يصف الخطة الكاملة، ثم سأبدأ تنفيذ **المرحلة 1** فقط بعد موافقتك. عند انتهاء كل مرحلة سأعرض ملخصاً وننتقل للتالية.
 
 ---
 
-Approve this plan to proceed, or tell me what to adjust (e.g., skip the new tables and reuse `webhook_deliveries`, skip payment page, etc.).
+## مبادئ عامة (تطبق على كل المراحل)
+- لا حذف لأي ميزة قائمة. `products.stock` يبقى موجوداً ويُحدَّث تلقائياً من مجموع `inventory.quantity` عبر trigger (مصدر الحقيقة = جدول `inventory`).
+- كل البيانات في DB (لا hardcoded).
+- RLS مفعّل على الجداول الجديدة: قراءة عامة للمخزون المتاح فقط، كتابة للأدمن/super_admin.
+- العربي/الإنجليزي وRTL محفوظ.
+
+---
+
+## المرحلة 1 — مستودعات + جدول inventory + ترحيل تلقائي (سأبدأ بها الآن)
+
+### قاعدة البيانات
+- جدول `warehouses` (id, name, name_en, code, country_code, region, city, address, latitude, longitude, status, priority, created_at, updated_at).
+  - `country_code` و `latitude/longitude` يخدمان قرار "أقرب مستودع" في المرحلة 3.
+- جدول `inventory` (id, product_id, variant_id NULL في المرحلة 1, warehouse_id, sku, quantity, reserved_quantity, low_stock_threshold, status, created_at, updated_at).
+  - UNIQUE (product_id, variant_id, warehouse_id).
+- Trigger `inventory_sync_product_stock`: عند أي INSERT/UPDATE/DELETE على `inventory` يُحدِّث `products.stock = SUM(quantity - reserved_quantity)` للمنتج.
+- Migration ترحيلي: ينشئ مستودعاً افتراضياً `Main Warehouse` (code=MAIN, country=SA, status=active) ويُدرج سجل inventory واحد لكل منتج موجود بالقيمة الحالية لـ `products.stock`.
+- دوال SECURITY DEFINER:
+  - `get_warehouse_stats()` لإحصائيات صفحة المستودعات (عدد المنتجات، إجمالي المخزون، تحذيرات low stock).
+  - `adjust_inventory(_inventory_id, _delta, _reason)` لتعديلات آمنة مع audit.
+
+### الأدمن (UI)
+- صفحة جديدة `/admin/warehouses` بنفس نمط `AdminPage` الحالي:
+  - جدول: الاسم، الكود، الدولة/المدينة، الحالة، عدد المنتجات، إجمالي المخزون، تحذيرات low stock.
+  - فلاتر: نشط/غير نشط/low stock + بحث.
+  - أزرار create/edit/delete (delete = soft-disable إذا كان فيه inventory).
+- إضافة الرابط للقائمة الجانبية ضمن قسم "العمليات".
+- تحديث صفحة المنتج في الأدمن: عرض جدول inventory للقراءة فقط في المرحلة 1 (التعديل الكامل في المرحلة 2).
+
+### الواجهة (Storefront)
+- لا تغيير ظاهر. `products.stock` يظل محسوباً تلقائياً، فكل ما يعتمد عليه (PDP، السلة، checkout) يستمر بالعمل كما هو.
+
+---
+
+## المرحلة 2 — متغيرات المنتج (variants) + ربط بالـ PDP/السلة
+
+### قاعدة البيانات
+- جدول `product_option_types` (للمنتج: Size, Color, …)
+- جدول `product_option_values` (S, M, L, Red, …)
+- جدول `product_variants` (id, product_id, sku, price_override NULL, image_url, status, attributes jsonb)
+- جدول جسر `variant_option_values`
+- تحديث `inventory`: `variant_id` يصبح NOT NULL لأي منتج مفعَّل عليه variants. منتج بدون variants → سجل واحد per warehouse مع variant_id NULL (backward compatible).
+- تحديث `cart_items` (إن وُجد جدول مستمر) و `order_items` لإضافة `variant_id` و `warehouse_id` (nullable للطلبات القديمة).
+
+### الأدمن
+- في صفحة تعديل المنتج: تبويب جديد "المتغيرات والمخزون" يتيح تفعيل variants وإدارة المقاسات/الألوان، ولكل تركيبة تعيين stock في كل warehouse + SKU خاص.
+- جدول inventory الموصوف في طلبك: Size | Warehouse | SKU | Qty | Status | Actions.
+
+### الواجهة
+- صفحة المنتج: محدد المقاس (مع تعطيل المقاسات النافدة عبر كل المستودعات).
+- السلة: تخزن `variant_id`.
+- مستودع الخصم لا يُحدَّد في السلة — يُختار وقت checkout (مرحلة 3).
+- منتج بدون variants يبقى يعمل كما هو.
+
+---
+
+## المرحلة 3 — Checkout + اختيار المستودع الأقرب + Fulfillment
+
+### Routing المستودع (حسب اختيارك: الأقرب جغرافياً)
+1. عند checkout نأخذ عنوان الشحن (country, city, [lat/lng إن وُجد]).
+2. خوارزمية الاختيار لكل سطر:
+   - فلتر: مستودعات `status=active` بها `quantity - reserved_quantity >= qty المطلوبة` للـ variant.
+   - أولوية أولى: نفس `country_code`.
+   - أولوية ثانية: نفس `region` أو `city`.
+   - الترتيب النهائي: مسافة haversine بين إحداثيات العنوان والمستودع (نتطلب lat/lng على المستودع لتفعيل المسافة؛ إن لم تتوفر، نقع على `priority` ثم created_at).
+3. الـ checkout يحجز المخزون (`reserved_quantity += qty`) داخل transaction قبل إنشاء الطلب، ويحرره عند الفشل/الانتهاء/الإلغاء (مثل آلية `release_expired_order_stock` الموجودة).
+4. عند نجاح الدفع، الترحيل من reserved إلى خصم نهائي عبر تحديث `finalize_order_stock`.
+
+### الأدمن
+- صفحة الطلب: لكل order_item نعرض المستودع المُنفِّذ + تاريخ الخصم. زر "تغيير المستودع" يدوياً للأدمن.
+- صفحة inventory low-stock alerts متصلة بـ admin_notifications.
+
+### الواجهة
+- رسائل واضحة: "هذا المقاس غير متوفر"، "تم تحديث المخزون قبل إتمام الطلب، يرجى المراجعة".
+
+---
+
+## ملاحظات تقنية مهمة
+- كل migrations تُكتب بحيث لا تكسر البيانات الحالية (NULL-safe، defaults، ON CONFLICT DO NOTHING).
+- لن أُنشئ أي بيانات وهمية. مستودع "Main Warehouse" هو بيانات تشغيلية ضرورية للترحيل وليس fake data.
+- ملفات server-fn جديدة تحت `src/lib/warehouses.functions.ts` و `src/lib/inventory.functions.ts` للعمليات التي تحتاج صلاحيات admin.
+
+---
+
+**هل أبدأ المرحلة 1 الآن؟** بعد الموافقة سأنفذ migrations + صفحة `/admin/warehouses` + ربط القائمة الجانبية، ثم أعرض ملخصاً قبل البدء بالمرحلة 2.

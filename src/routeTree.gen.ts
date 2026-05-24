@@ -41,6 +41,7 @@ import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as AdminWebhooksHealthRouteImport } from './routes/admin.webhooks-health'
 import { Route as AdminWebhooksDeliveriesRouteImport } from './routes/admin.webhooks-deliveries'
 import { Route as AdminWebhooksRouteImport } from './routes/admin.webhooks'
+import { Route as AdminWarehousesRouteImport } from './routes/admin.warehouses'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminThemesRouteImport } from './routes/admin.themes'
 import { Route as AdminSupportRouteImport } from './routes/admin.support'
@@ -294,6 +295,11 @@ const AdminWebhooksDeliveriesRoute = AdminWebhooksDeliveriesRouteImport.update({
 const AdminWebhooksRoute = AdminWebhooksRouteImport.update({
   id: '/webhooks',
   path: '/webhooks',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminWarehousesRoute = AdminWarehousesRouteImport.update({
+  id: '/warehouses',
+  path: '/warehouses',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
@@ -845,6 +851,7 @@ export interface FileRoutesByFullPath {
   '/admin/support': typeof AdminSupportRouteWithChildren
   '/admin/themes': typeof AdminThemesRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/warehouses': typeof AdminWarehousesRoute
   '/admin/webhooks': typeof AdminWebhooksRouteWithChildren
   '/admin/webhooks-deliveries': typeof AdminWebhooksDeliveriesRoute
   '/admin/webhooks-health': typeof AdminWebhooksHealthRoute
@@ -961,6 +968,7 @@ export interface FileRoutesByTo {
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/themes': typeof AdminThemesRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/warehouses': typeof AdminWarehousesRoute
   '/admin/webhooks-deliveries': typeof AdminWebhooksDeliveriesRoute
   '/admin/webhooks-health': typeof AdminWebhooksHealthRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -1088,6 +1096,7 @@ export interface FileRoutesById {
   '/admin/support': typeof AdminSupportRouteWithChildren
   '/admin/themes': typeof AdminThemesRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/warehouses': typeof AdminWarehousesRoute
   '/admin/webhooks': typeof AdminWebhooksRouteWithChildren
   '/admin/webhooks-deliveries': typeof AdminWebhooksDeliveriesRoute
   '/admin/webhooks-health': typeof AdminWebhooksHealthRoute
@@ -1217,6 +1226,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/themes'
     | '/admin/users'
+    | '/admin/warehouses'
     | '/admin/webhooks'
     | '/admin/webhooks-deliveries'
     | '/admin/webhooks-health'
@@ -1333,6 +1343,7 @@ export interface FileRouteTypes {
     | '/admin/storefront'
     | '/admin/themes'
     | '/admin/users'
+    | '/admin/warehouses'
     | '/admin/webhooks-deliveries'
     | '/admin/webhooks-health'
     | '/category/$slug'
@@ -1459,6 +1470,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/themes'
     | '/admin/users'
+    | '/admin/warehouses'
     | '/admin/webhooks'
     | '/admin/webhooks-deliveries'
     | '/admin/webhooks-health'
@@ -1772,6 +1784,13 @@ declare module '@tanstack/react-router' {
       path: '/webhooks'
       fullPath: '/admin/webhooks'
       preLoaderRoute: typeof AdminWebhooksRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/warehouses': {
+      id: '/admin/warehouses'
+      path: '/warehouses'
+      fullPath: '/admin/warehouses'
+      preLoaderRoute: typeof AdminWarehousesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/users': {
@@ -2653,6 +2672,7 @@ interface AdminRouteChildren {
   AdminSupportRoute: typeof AdminSupportRouteWithChildren
   AdminThemesRoute: typeof AdminThemesRoute
   AdminUsersRoute: typeof AdminUsersRoute
+  AdminWarehousesRoute: typeof AdminWarehousesRoute
   AdminWebhooksRoute: typeof AdminWebhooksRouteWithChildren
   AdminWebhooksDeliveriesRoute: typeof AdminWebhooksDeliveriesRoute
   AdminWebhooksHealthRoute: typeof AdminWebhooksHealthRoute
@@ -2719,6 +2739,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSupportRoute: AdminSupportRouteWithChildren,
   AdminThemesRoute: AdminThemesRoute,
   AdminUsersRoute: AdminUsersRoute,
+  AdminWarehousesRoute: AdminWarehousesRoute,
   AdminWebhooksRoute: AdminWebhooksRouteWithChildren,
   AdminWebhooksDeliveriesRoute: AdminWebhooksDeliveriesRoute,
   AdminWebhooksHealthRoute: AdminWebhooksHealthRoute,
@@ -2781,12 +2802,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
