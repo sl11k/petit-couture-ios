@@ -106,6 +106,7 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
 function coerceForDb(fields: FormFieldDef[], values: Record<string, any>) {
   const out: Record<string, any> = {};
   for (const f of fields) {
+    if (f.type === "warehouseStock") continue; // virtual field; handled separately
     let v = values[f.key];
     if (f.type === "gallery") {
       out[f.key] = Array.isArray(v) ? v : [];
@@ -132,6 +133,10 @@ function defaultsFrom(fields: FormFieldDef[], initial?: Record<string, any>) {
   for (const f of fields) {
     let v = initial?.[f.key] ?? f.defaultValue;
     if (f.type === "gallery") {
+      out[f.key] = Array.isArray(v) ? v : [];
+      continue;
+    }
+    if (f.type === "warehouseStock") {
       out[f.key] = Array.isArray(v) ? v : [];
       continue;
     }
