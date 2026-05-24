@@ -186,15 +186,20 @@ export const placeOrder = createServerFn({ method: "POST" })
       .insert(items);
     if (itemsErr) throw new Error(itemsErr.message);
 
-    // 3b. Link product_id on order_items + decrement stock atomically.
+    // 3b. Stock handling:
+    //  - For payments that confirm immediately (cod, card, apple_pay): finalize now.
+    //  - For deferred-payment methods (bank_transfer, tabby, tamara): reserve only.
+    //    The payment webhook later calls finalize_order_stock on confirmation,
+    //    or release_order_inventory on cancel/expiry.
+    const asyncPayment = ["bank_transfer", "tabby", "tamara"].includes(data.payment_method);
+    const rpcName = asyncPayment ? "reserve_order_inventory" : "finalize_order_stock";
     try {
-      const { error: finalizeErr } = await (supabaseAdmin as any).rpc(
-        "finalize_order_stock",
-        { _order_id: order.id },
+      const { error: stockErr } = await (supabaseAdmin as any).rpc(
+        rpcName, { _order_id: order.id },
       );
-      if (finalizeErr) console.error("[placeOrder] finalize_order_stock:", finalizeErr.message);
+      if (stockErr) console.error(`[placeOrder] ${rpcName}:`, stockErr.message);
     } catch (e: any) {
-      console.error("[placeOrder] finalize_order_stock threw:", e?.message || e);
+      console.error(`[placeOrder] ${rpcName} threw:`, e?.message || e);
     }
 
     // 3c. Record coupon redemption + bump used_count (best-effort).
