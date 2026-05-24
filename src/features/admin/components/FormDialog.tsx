@@ -211,19 +211,32 @@ export function FormDialog({
   const persistWarehouseStock = async (productId: string, entries: WarehouseStockEntry[]) => {
     const active = entries.filter((e) => e.enabled);
     for (const e of active) {
-      const { error: upErr } = await supabase
+      const qty = Math.max(0, Number(e.quantity) || 0);
+      const { data: existing } = await supabase
         .from("inventory")
-        .upsert(
-          {
+        .select("id")
+        .eq("product_id", productId)
+        .eq("warehouse_id", e.warehouse_id)
+        .is("variant_id", null)
+        .maybeSingle();
+      if (existing?.id) {
+        const { error: upErr } = await supabase
+          .from("inventory")
+          .update({ quantity: qty, status: "active" } as any)
+          .eq("id", existing.id);
+        if (upErr) throw upErr;
+      } else {
+        const { error: insErr } = await supabase
+          .from("inventory")
+          .insert({
             product_id: productId,
             warehouse_id: e.warehouse_id,
             variant_id: null,
-            quantity: Math.max(0, Number(e.quantity) || 0),
+            quantity: qty,
             status: "active",
-          } as any,
-          { onConflict: "product_id,variant_id,warehouse_id" } as any,
-        );
-      if (upErr) throw upErr;
+          } as any);
+        if (insErr) throw insErr;
+      }
     }
   };
 
