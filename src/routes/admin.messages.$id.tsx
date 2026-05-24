@@ -33,25 +33,53 @@ function ConversationDetailPage() {
   useEffect(() => { load(); }, [id]);
 
   const updateStatus = async (status: string) => {
-    const { error } = await supabase.from("messaging_conversations").update({ status }).eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success(ar ? "تم التحديث" : "Updated"); load(); }
+    try {
+      const { error } = await supabase.from("messaging_conversations").update({ status }).eq("id", id);
+      if (error) {
+        console.error("[messages] updateStatus failed", error);
+        toast.error(error.message || (ar ? "فشل تحديث الحالة" : "Failed to update status"));
+        return;
+      }
+      toast.success(ar ? "تم التحديث" : "Updated");
+      load();
+    } catch (err: any) {
+      console.error("[messages] updateStatus unexpected", err);
+      toast.error(err?.message || (ar ? "حدث خطأ غير متوقع" : "Unexpected error"));
+    }
   };
 
   const send = async () => {
-    if (!body.trim() || !conv) return;
+    if (!conv) {
+      toast.error(ar ? "المحادثة غير محملة" : "Conversation not loaded");
+      return;
+    }
+    if (!body.trim()) {
+      toast.error(ar ? "اكتب نص الرسالة أولاً" : "Type a message first");
+      return;
+    }
     setSending(true);
-    const { error } = await supabase.from("messaging_messages").insert({
-      conversation_id: id,
-      direction: "outbound",
-      channel: conv.channel,
-      body,
-      status: "queued",
-    });
-    setSending(false);
-    if (error) { toast.error(error.message); return; }
-    setBody("");
-    load();
+    try {
+      const { error } = await supabase.from("messaging_messages").insert({
+        conversation_id: id,
+        direction: "outbound",
+        channel: conv.channel,
+        body,
+        status: "queued",
+      });
+      if (error) {
+        console.error("[messages] send failed", error);
+        toast.error(error.message || (ar ? "فشل إرسال الرسالة" : "Failed to send message"));
+        return;
+      }
+      toast.success(ar ? "تم الإرسال" : "Sent");
+      setBody("");
+      load();
+    } catch (err: any) {
+      console.error("[messages] send unexpected", err);
+      toast.error(err?.message || (ar ? "حدث خطأ غير متوقع أثناء الإرسال" : "Unexpected error while sending"));
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -100,7 +128,7 @@ function ConversationDetailPage() {
             <div className="mt-2 flex justify-end">
               <button
                 onClick={send}
-                disabled={sending || !body.trim()}
+                disabled={sending}
                 className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground hover:opacity-90 disabled:opacity-50"
               >
                 {sending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
