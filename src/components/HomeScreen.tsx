@@ -63,6 +63,8 @@ export function HomeScreen() {
   const [annIdx, setAnnIdx] = useState(0);
   const [sections, setSections] = useState<HomeSection[]>([]);
   const [sectionProducts, setSectionProducts] = useState<Record<string, ResolvedProduct[]>>({});
+  const [hasAnyProducts, setHasAnyProducts] = useState<boolean | null>(null);
+  const [hasAnyCategories, setHasAnyCategories] = useState<boolean | null>(null);
 
   useEffect(() => {
     fetchBanners().then(setBanners).catch(() => {});
@@ -70,6 +72,17 @@ export function HomeScreen() {
     fetchPopularPicks().then(setPopular).catch(() => {});
     fetchAnnouncements().then(setAnnouncements).catch(() => {});
     fetchStorefrontSettings().then(setSettings).catch(() => {});
+    // Detect whether admin has added any real products/categories — used to hide mock content
+    supabase
+      .from("products")
+      .select("id", { count: "exact", head: true })
+      .eq("is_active", true)
+      .then(({ count }) => setHasAnyProducts((count ?? 0) > 0));
+    supabase
+      .from("categories")
+      .select("id", { count: "exact", head: true })
+      .eq("is_active", true)
+      .then(({ count }) => setHasAnyCategories((count ?? 0) > 0));
     fetchHomeSections(true).then(async (secs) => {
       setSections(secs);
       const productKinds = new Set(["most_popular", "new_arrivals", "custom_collection"]);
