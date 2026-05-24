@@ -328,15 +328,18 @@ export function HomeScreen() {
             )}
           </section>
 
-          {/* Shop by category — Babies / Girls / Boys (DB-driven, with fallback) */}
+          {/* Shop by category — DB-driven; mock shown only when no admin content exists */}
           {(() => {
             const cats = featuredCats.length > 0
               ? featuredCats
-              : [
-                  { id: "f1", label_ar: "رضّع", label_en: "Babies", link_url: "/category/babysuits" },
-                  { id: "f2", label_ar: "بنات", label_en: "Girls", link_url: "/category/dresses" },
-                  { id: "f3", label_ar: "أولاد", label_en: "Boys", link_url: "/category/outfit-sets" },
-                ] as any[];
+              : (hasAnyCategories || hasAnyProducts)
+                ? []
+                : ([
+                    { id: "f1", label_ar: "رضّع", label_en: "Babies", link_url: "/category/babysuits" },
+                    { id: "f2", label_ar: "بنات", label_en: "Girls", link_url: "/category/dresses" },
+                    { id: "f3", label_ar: "أولاد", label_en: "Boys", link_url: "/category/outfit-sets" },
+                  ] as any[]);
+            if (cats.length === 0) return null;
             return (
               <section className="px-5 mt-8">
                 <div className="text-center mb-4">
