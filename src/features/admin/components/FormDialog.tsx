@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { MediaUploader } from "./MediaUploader";
 import { ProductMediaGallery } from "./ProductMediaGallery";
+import { WarehouseStockPicker, type WarehouseStockEntry } from "./WarehouseStockPicker";
 import type { Bilingual, FormFieldDef } from "../types";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +39,10 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
   for (const f of fields) {
     if (mode === "create" && f.editOnly) continue;
     if (mode === "edit" && f.createOnly) continue;
+    if (f.type === "warehouseStock") {
+      shape[f.key] = z.array(z.any()).default([]);
+      continue;
+    }
     let s: z.ZodTypeAny;
     switch (f.type) {
       case "number":
@@ -101,6 +106,7 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
 function coerceForDb(fields: FormFieldDef[], values: Record<string, any>) {
   const out: Record<string, any> = {};
   for (const f of fields) {
+    if (f.type === "warehouseStock") continue; // virtual field; handled separately
     let v = values[f.key];
     if (f.type === "gallery") {
       out[f.key] = Array.isArray(v) ? v : [];
@@ -127,6 +133,10 @@ function defaultsFrom(fields: FormFieldDef[], initial?: Record<string, any>) {
   for (const f of fields) {
     let v = initial?.[f.key] ?? f.defaultValue;
     if (f.type === "gallery") {
+      out[f.key] = Array.isArray(v) ? v : [];
+      continue;
+    }
+    if (f.type === "warehouseStock") {
       out[f.key] = Array.isArray(v) ? v : [];
       continue;
     }
@@ -159,6 +169,12 @@ export function FormDialog({
   const [values, setValues] = useState<Record<string, any>>(() => defaultsFrom(visibleFields, initialValues));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [existingInventory, setExistingInventory] = useState<Record<string, number>>({});
+
+  const warehouseStockField = useMemo(
+    () => visibleFields.find((f) => f.type === "warehouseStock"),
+    [visibleFields],
+  );
 
   useEffect(() => {
     if (open) {
@@ -166,6 +182,63 @@ export function FormDialog({
       setErrors({});
     }
   }, [open, initialValues, visibleFields]);
+
+  useEffect(() => {
+    if (!open || !warehouseStockField || mode !== "edit" || !rowId) {
+      setExistingInventory({});
+      return;
+    }
+    (async () => {
+      const { data } = await supabase
+        .from("inventory")
+        .select("warehouse_id, quantity")
+        .eq("product_id", rowId)
+        .is("variant_id", null);
+      const map: Record<string, number> = {};
+      (data ?? []).forEach((r: any) => { map[r.warehouse_id] = r.quantity; });
+      setExistingInventory(map);
+      setValues((s) => ({
+        ...s,
+        [warehouseStockField.key]: Object.entries(map).map(([wid, qty]) => ({
+          warehouse_id: wid,
+          quantity: qty as number,
+          enabled: true,
+        })),
+      }));
+    })();
+  }, [open, mode, rowId, warehouseStockField]);
+
+  const persistWarehouseStock = async (productId: string, entries: WarehouseStockEntry[]) => {
+    const active = entries.filter((e) => e.enabled);
+    for (const e of active) {
+      const qty = Math.max(0, Number(e.quantity) || 0);
+      const { data: existing } = await supabase
+        .from("inventory")
+        .select("id")
+        .eq("product_id", productId)
+        .eq("warehouse_id", e.warehouse_id)
+        .is("variant_id", null)
+        .maybeSingle();
+      if (existing?.id) {
+        const { error: upErr } = await supabase
+          .from("inventory")
+          .update({ quantity: qty, status: "active" } as any)
+          .eq("id", existing.id);
+        if (upErr) throw upErr;
+      } else {
+        const { error: insErr } = await supabase
+          .from("inventory")
+          .insert({
+            product_id: productId,
+            warehouse_id: e.warehouse_id,
+            variant_id: null,
+            quantity: qty,
+            status: "active",
+          } as any);
+        if (insErr) throw insErr;
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,15 +252,42 @@ export function FormDialog({
     }
     setSaving(true);
     const payload = coerceForDb(visibleFields, values);
-    const { error } =
-      mode === "create"
-        ? await supabase.from(table as any).insert(payload as any)
-        : await supabase.from(table as any).update(payload as any).eq("id", rowId!);
-    setSaving(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    let productId = rowId;
+    if (mode === "create") {
+      const { data, error } = await supabase
+        .from(table as any)
+        .insert(payload as any)
+        .select("id")
+        .single();
+      if (error) {
+        setSaving(false);
+        toast.error(error.message);
+        return;
+      }
+      productId = (data as any)?.id;
+    } else {
+      const { error } = await supabase
+        .from(table as any)
+        .update(payload as any)
+        .eq("id", rowId!);
+      if (error) {
+        setSaving(false);
+        toast.error(error.message);
+        return;
+      }
     }
+
+    if (warehouseStockField && productId) {
+      try {
+        await persistWarehouseStock(productId, (values[warehouseStockField.key] as WarehouseStockEntry[]) ?? []);
+      } catch (err: any) {
+        setSaving(false);
+        toast.error(err?.message || (ar ? "تعذر حفظ مخزون المستودعات" : "Failed to save warehouse stock"));
+        return;
+      }
+    }
+
+    setSaving(false);
     toast.success(ar ? (mode === "create" ? "تم الإنشاء" : "تم الحفظ") : mode === "create" ? "Created" : "Saved");
     onSaved();
     onClose();
@@ -211,7 +311,7 @@ export function FormDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {visibleFields.map((f) => {
-              const isFull = f.fullWidth ?? (f.type === "textarea" || f.type === "json" || f.type === "gallery" || f.type === "image" || f.type === "video");
+              const isFull = f.fullWidth ?? (f.type === "textarea" || f.type === "json" || f.type === "gallery" || f.type === "image" || f.type === "video" || f.type === "warehouseStock");
               const lbl = ar ? f.label.ar : f.label.en;
               const ph = f.placeholder ? (ar ? f.placeholder.ar : f.placeholder.en) : undefined;
               const help = f.helpText ? (ar ? f.helpText.ar : f.helpText.en) : undefined;
@@ -236,6 +336,12 @@ export function FormDialog({
                       bucket={f.bucket || "product-media"}
                       folder={f.folder || "gallery"}
                       max={f.maxItems ?? 20}
+                    />
+                  ) : f.type === "warehouseStock" ? (
+                    <WarehouseStockPicker
+                      value={Array.isArray(values[f.key]) ? values[f.key] : []}
+                      onChange={(v) => setVal(f.key, v)}
+                      existing={existingInventory}
                     />
                   ) : f.type === "textarea" || f.type === "json" ? (
                     <Textarea
