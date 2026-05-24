@@ -38,6 +38,7 @@ export type FormFieldType =
   | "tel"
   | "color"
   | "json"
+  | "videoGallery"
   | "warehouseStock";
 
 export type FormFieldDef = {
