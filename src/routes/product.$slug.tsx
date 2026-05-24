@@ -35,6 +35,8 @@ import { usePriceFormatter } from "@/state/CurrencyContext";
 import { trackEvent } from "@/lib/analytics";
 import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
 
+import { VariantsPicker } from "@/components/product/VariantsPicker";
+
 import { buildMeta, productJsonLd, breadcrumbJsonLd, canonical } from "@/lib/seo";
 import { devValidateJsonLd } from "@/lib/seoValidate";
 
