@@ -623,6 +623,21 @@ function ProductDetails() {
             </div>
           </section>
 
+          {/* Variants (sizes + colors as full DB variants when configured) */}
+          {productId && (
+            <section className="px-5 mt-5">
+              <VariantsPicker
+                productId={productId}
+                slug={slug}
+                productName={product.name}
+                brand={product.brand}
+                basePrice={product.price}
+                currency={(product as any).currency ?? "SAR"}
+                image={product.images?.[0] ?? ""}
+              />
+            </section>
+          )}
+
           {/* Quantity */}
           <section className="px-5 mt-7">
             <div className="flex items-center justify-between">
