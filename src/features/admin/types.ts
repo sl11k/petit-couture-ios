@@ -37,7 +37,8 @@ export type FormFieldType =
   | "email"
   | "tel"
   | "color"
-  | "json";
+  | "json"
+  | "warehouseStock";
 
 export type FormFieldDef = {
   key: string;
