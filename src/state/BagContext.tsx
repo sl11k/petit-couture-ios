@@ -92,7 +92,7 @@ export function BagProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const add = useCallback((input: AddInput) => {
-    const id = makeId(input.slug, input.size, input.color);
+    const id = makeId(input.slug, input.size, input.color, input.variantId);
     const qty = input.qty ?? 1;
     setItems((prev) => {
       const existing = prev.find((p) => p.id === id);
