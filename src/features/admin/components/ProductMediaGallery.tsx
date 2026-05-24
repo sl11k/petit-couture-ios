@@ -63,7 +63,11 @@ function SortableThumb({
         isMain && "ring-2 ring-primary",
       )}
     >
-      <img src={url} alt="" className="w-full h-28 object-cover" />
+      {kind === "video" ? (
+        <video src={url} className="w-full h-28 object-cover bg-black" muted playsInline preload="metadata" />
+      ) : (
+        <img src={url} alt="" className="w-full h-28 object-cover" />
+      )}
       <div className="absolute top-1 start-1 flex gap-1">
         <button
           type="button"
