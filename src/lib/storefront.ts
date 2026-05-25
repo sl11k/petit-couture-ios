@@ -71,6 +71,29 @@ export async function fetchBanners(activeOnly = true): Promise<Banner[]> {
 }
 
 export async function fetchFeaturedCategories(activeOnly = true): Promise<FeaturedCategory[]> {
+  // Prefer the new admin-managed table; fall back to the legacy one.
+  try {
+    let q = (supabase as any)
+      .from("shop_by_category_items")
+      .select("id, title_ar, title_en, image_url, category_id, href, display_order, is_active");
+    if (activeOnly) q = q.eq("is_active", true);
+    const { data } = await q.order("display_order", { ascending: true });
+    if (Array.isArray(data) && data.length) {
+      return data.map((r: any) => ({
+        id: r.id,
+        title: r.title_ar,
+        title_ar: r.title_ar,
+        title_en: r.title_en,
+        image_url: r.image_url,
+        category_id: r.category_id,
+        href: r.href || (r.category_id ? `/category/${r.category_id}` : "/"),
+        sort_order: r.display_order,
+        is_active: r.is_active,
+      })) as unknown as FeaturedCategory[];
+    }
+  } catch (e) {
+    console.warn("[storefront] shop_by_category_items unavailable, falling back", e);
+  }
   let q = supabase.from("featured_categories").select("*").order("sort_order");
   if (activeOnly) q = q.eq("is_active", true);
   const { data, error } = await q;
@@ -79,6 +102,33 @@ export async function fetchFeaturedCategories(activeOnly = true): Promise<Featur
 }
 
 export async function fetchPopularPicks(activeOnly = true): Promise<PopularPick[]> {
+  // Prefer the new admin-managed season_picks table; fall back to legacy popular_picks.
+  try {
+    let q = (supabase as any)
+      .from("season_picks")
+      .select("id, title_ar, title_en, subtitle_ar, subtitle_en, product_id, badge_ar, badge_en, display_order, is_active");
+    if (activeOnly) q = q.eq("is_active", true);
+    const { data } = await q.order("display_order", { ascending: true });
+    if (Array.isArray(data) && data.length) {
+      return data.map((r: any) => ({
+        id: r.id,
+        title: r.title_ar,
+        title_ar: r.title_ar,
+        title_en: r.title_en,
+        subtitle: r.subtitle_ar,
+        subtitle_ar: r.subtitle_ar,
+        subtitle_en: r.subtitle_en,
+        product_id: r.product_id,
+        badge: r.badge_ar,
+        badge_ar: r.badge_ar,
+        badge_en: r.badge_en,
+        sort_order: r.display_order,
+        is_active: r.is_active,
+      })) as unknown as PopularPick[];
+    }
+  } catch (e) {
+    console.warn("[storefront] season_picks unavailable, falling back", e);
+  }
   let q = supabase.from("popular_picks").select("*").order("sort_order");
   if (activeOnly) q = q.eq("is_active", true);
   const { data, error } = await q;
