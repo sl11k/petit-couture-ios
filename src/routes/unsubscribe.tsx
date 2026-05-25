@@ -28,18 +28,13 @@ function Unsubscribe() {
   useEffect(() => {
     void (async () => {
       if (!token) { setStatus("invalid"); return; }
-      const { data, error } = await db.from("unsubscribe_tokens").select("*").eq("token", token).maybeSingle();
-      if (error || !data) { setStatus("invalid"); return; }
-      if (data.used_at) { setEmail(data.email); setChannel(data.channel); setStatus("already"); return; }
-      setEmail(data.email); setChannel(data.channel);
-      await db.from("unsubscribe_tokens").update({ used_at: new Date().toISOString() }).eq("token", token);
-      if (data.user_id) {
-        const col = `marketing_${data.channel}`;
-        await db.from("customer_consents").upsert({
-          user_id: data.user_id, [col]: false, source: "unsubscribe_link", updated_at: new Date().toISOString(),
-        });
-      }
-      setStatus("ok");
+      const { data, error } = await (db as any).rpc("redeem_unsubscribe_token", { _token: token });
+      if (error || !data || data.length === 0) { setStatus("invalid"); return; }
+      const row = data[0] as { status: string; email: string | null; channel: string | null };
+      if (row.status === "invalid") { setStatus("invalid"); return; }
+      if (row.email) setEmail(row.email);
+      if (row.channel) setChannel(row.channel);
+      setStatus(row.status === "already" ? "already" : "ok");
     })();
   }, [token]);
 
