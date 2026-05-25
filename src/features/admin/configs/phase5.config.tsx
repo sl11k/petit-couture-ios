@@ -119,7 +119,23 @@ export const productOffersConfig: AdminPageConfig = {
         { value: "free_shipping", label: { ar: "شحن مجاني", en: "Free shipping" } },
         { value: "bundle", label: { ar: "باقة", en: "Bundle" } },
       ] },
-    { key: "config", label: { ar: "الإعدادات (JSON)", en: "Config (JSON)" }, type: "json" },
+    // BxGy fields
+    { key: "buy_quantity", label: { ar: "كمية الشراء (لعرض اشتر X)", en: "Buy quantity (for BxGy)" }, type: "number", min: 1, helpText: { ar: "املأ فقط لعرض BxGy", en: "Fill only for BxGy offers" } },
+    { key: "get_quantity", label: { ar: "كمية الحصول (لعرض اشتر X واحصل على Y)", en: "Get quantity (BxGy)" }, type: "number", min: 1, helpText: { ar: "املأ فقط لعرض BxGy", en: "Fill only for BxGy offers" } },
+    { key: "get_discount_percent", label: { ar: "نسبة خصم الحصول %", en: "Get discount %" }, type: "number", min: 0, max: 100, step: 0.01, helpText: { ar: "مثلاً 100 = مجاناً، 50 = نصف السعر", en: "100 = free, 50 = half price" } },
+    // Discount fields
+    { key: "discount_percent", label: { ar: "نسبة الخصم % (لعرض خصم)", en: "Discount % (for Discount)" }, type: "number", min: 0, max: 100, step: 0.01, helpText: { ar: "املأ نسبة أو مبلغ ثابت تحت", en: "Either percent here or fixed amount below" } },
+    { key: "discount_amount", label: { ar: "مبلغ خصم ثابت", en: "Fixed discount amount" }, type: "number", min: 0, step: 0.01 },
+    // Free shipping
+    { key: "min_order_value", label: { ar: "أدنى قيمة طلب (لعرض شحن مجاني)", en: "Min order value (free shipping)" }, type: "number", min: 0, step: 0.01, helpText: { ar: "الطلب لازم يتجاوز هذا المبلغ", en: "Order must exceed this amount" } },
+    // Bundle
+    {
+      key: "bundle_product_ids",
+      label: { ar: "منتجات الباقة (لعرض باقة)", en: "Bundle products (for Bundle)" },
+      type: "lookup",
+      lookup: { ...productLookup, multiple: true },
+      helpText: { ar: "اختر المنتجات المضمّنة في الباقة", en: "Pick the products bundled together" },
+    },
     { key: "starts_at", label: { ar: "يبدأ", en: "Starts at" }, type: "datetime" },
     { key: "ends_at", label: { ar: "ينتهي", en: "Ends at" }, type: "datetime" },
     { key: "is_active", label: { ar: "نشط", en: "Active" }, type: "boolean", defaultValue: true },
