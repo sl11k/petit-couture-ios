@@ -23,7 +23,7 @@ export type LookupConfig = {
   /** Image column to show as thumbnail. */
   imageColumn?: string;
   /** Columns matched by the search input (case-insensitive). */
-  searchColumns?: string[];
+  searchColumns?: readonly string[];
   /** Multi-select returns string[]; otherwise returns string|null. */
   multiple?: boolean;
   /** Max rows fetched for the initial list (default 50). */
