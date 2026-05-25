@@ -235,6 +235,10 @@ async function syncProductAttributes(productId: string, entries: AttributeEntry[
       attribute_key: e.attribute_key.trim(),
       value_ar: e.value_ar || null,
       value_en: e.value_en || null,
+      color_hex: e.color_hex || null,
+      image_url: e.image_url || null,
+      stock: Number(e.stock) || 0,
+      is_active: e.is_active ?? true,
       sort_order: i,
     };
     if (e.id && existingIds.has(e.id)) {
@@ -299,7 +303,7 @@ export function FormDialog({
   useEffect(() => {
     if (!open || !attributesField || mode !== "edit" || !rowId) return;
     (async () => {
-      const { data } = await (supabase as any).from("product_attributes").select("id, attribute_key, value_ar, value_en, sort_order").eq("product_id", rowId).order("sort_order", { ascending: true });
+      const { data } = await (supabase as any).from("product_attributes").select("id, attribute_key, value_ar, value_en, color_hex, image_url, stock, is_active, sort_order").eq("product_id", rowId).order("sort_order", { ascending: true });
       setValues((s) => ({ ...s, [attributesField.key]: (data ?? []) as AttributeEntry[] }));
     })();
   }, [open, mode, rowId, attributesField]);
