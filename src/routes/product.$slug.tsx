@@ -113,8 +113,20 @@ function ProductDetails() {
   const ar = isRTL;
 
   const [activeImg, setActiveImg] = useState(0);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
+  const [activeOptions, setActiveOptions] = useState<Record<string, any>>({});
   const [size, setSize] = useState<string>(product.sizes[2] ?? product.sizes[0] ?? "");
   const [color, setColor] = useState<string>(product.colors[0]?.name ?? "");
+
+  const displayImages = useMemo(() => {
+    if (!activeImage) return product.images;
+    const rest = product.images.filter((s) => s !== activeImage);
+    return [activeImage, ...rest];
+  }, [activeImage, product.images]);
+
+  useEffect(() => {
+    if (activeImage) setActiveImg(0);
+  }, [activeImage]);
 
   // Re-sync selection if the loaded product no longer contains the picks.
   useEffect(() => {
