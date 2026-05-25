@@ -5,6 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useBag } from "@/state/BagContext";
 import { categories } from "@/data/categories";
+import { supabase } from "@/integrations/supabase/client";
 import { BrandLogo } from "@/components/Logo";
 import { CurrencySelector } from "@/components/CurrencySelector";
 
@@ -27,6 +28,27 @@ export function DesktopHeader() {
 
   // Featured nav: a curated subset of categories to keep the bar elegant.
   const featured = categories.slice(0, 7);
+  const [navItems, setNavItems] = useState<Array<{slug:string;name:string;href:string}>>([]);
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await (supabase as any)
+          .from("header_nav_items")
+          .select("label_ar, label_en, href, is_active, display_order")
+          .eq("is_active", true)
+          .order("display_order", { ascending: true });
+        if (Array.isArray(data) && data.length) {
+          const rows = data.map((r: any) => ({
+            slug: (r.href as string).replace(/^\//, "").replace(/^category\//, "") || "home",
+            name: r.label_ar || r.label_en || "",
+            href: r.href as string,
+          }));
+          setNavItems(rows);
+        }
+      } catch (e) { console.error("[DesktopHeader] nav fetch failed", e); }
+    })();
+  }, []);
+  const dynamicFeatured = navItems.length > 0 ? navItems : featured.map((c) => ({ slug: c.slug, name: c.name, href: `/category/${c.slug}` }));
 
   const isActive = (path: string) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
@@ -142,7 +164,7 @@ export function DesktopHeader() {
           >
             {lang === "en" ? "BOUTIQUE" : "البوتيك"}
           </Link>
-          {featured.map((c) => {
+          {dynamicFeatured.map((c) => {
             const active = location.pathname === `/category/${c.slug}`;
             return (
               <Link
