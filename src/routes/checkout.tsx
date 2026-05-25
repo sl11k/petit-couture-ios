@@ -28,7 +28,7 @@ import { useAddress, type Address } from "@/state/AddressContext";
 import { db } from "@/lib/db";
 import { trackServerEvent, getCurrentSessionId } from "@/lib/serverAnalytics";
 import { supabase } from "@/integrations/supabase/client";
-import { placeOrder } from "@/server/placeOrder";
+import { placeOrder } from "@/lib/placeOrder.functions";
 import { validateCoupon } from "@/lib/coupons.functions";
 
 // Map only loads on the client when entering step 2.
