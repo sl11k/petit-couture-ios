@@ -3,6 +3,7 @@ import {
   CreditCard, Truck, Undo2, Ticket, Megaphone, FileText, Layout, BarChart3, Bell,
   MessageSquare, Headphones, Plug, Settings, Shield, ScrollText, LifeBuoy, Search,
   Plus, AlertCircle, FileSpreadsheet, Activity, Globe, Eye, Mail, Webhook,
+  Sparkles, MenuSquare,
   type LucideIcon,
 } from "lucide-react";
 import type { Bilingual } from "../types";
@@ -11,7 +12,6 @@ export type NavItem = {
   to: string;
   label: Bilingual;
   icon: LucideIcon;
-  /** Set to true if not yet rebuilt */
   comingSoon?: boolean;
 };
 
@@ -20,10 +20,6 @@ export type NavGroup = {
   items: NavItem[];
 };
 
-/**
- * The `comingSoon` flag marks pages that are not yet rebuilt in Phase 1.
- * Once a page is rebuilt, just remove the flag — the link becomes active.
- */
 export const ADMIN_NAV: NavGroup[] = [
   {
     label: { ar: "نظرة عامة", en: "Overview" },
@@ -87,6 +83,9 @@ export const ADMIN_NAV: NavGroup[] = [
   {
     label: { ar: "المحتوى", en: "Content" },
     items: [
+      { to: "/admin/header-nav", label: { ar: "روابط الهيدر", en: "Header navigation" }, icon: MenuSquare },
+      { to: "/admin/shop-by-category", label: { ar: "تسوقي حسب الفئة", en: "Shop by category" }, icon: FolderTree },
+      { to: "/admin/season-picks", label: { ar: "مختارات الموسم", en: "Season picks" }, icon: Sparkles },
       { to: "/admin/storefront", label: { ar: "بانرات المتجر", en: "Storefront banners" }, icon: Layout },
       { to: "/admin/home-builder", label: { ar: "محرر الرئيسية", en: "Home builder" }, icon: Layout },
       { to: "/admin/featured-categories", label: { ar: "أقسام مميزة", en: "Featured categories" }, icon: FolderTree },
