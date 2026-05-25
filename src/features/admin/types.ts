@@ -39,7 +39,32 @@ export type FormFieldType =
   | "color"
   | "json"
   | "videoGallery"
-  | "warehouseStock";
+  | "warehouseStock"
+  // NEW: searchable lookup that replaces every "UUID" / "JSON array of IDs" field.
+  // Configure via the `lookup` property on FormFieldDef.
+  | "lookup";
+
+/** Configuration for the "lookup" field type. */
+export type LookupConfig = {
+  /** Supabase table name, e.g. "products" or "profiles". */
+  table: string;
+  /** Columns concatenated to build the visible label. First non-empty wins per row. */
+  labelColumns?: string[];
+  /** Secondary column shown small under the label (SKU, email, …). */
+  secondaryColumn?: string;
+  /** Image column to show as thumbnail in the dropdown. */
+  imageColumn?: string;
+  /** Columns matched by the search input (case-insensitive). Defaults to labelColumns. */
+  searchColumns?: string[];
+  /** If true, multi-select (returns string[]); otherwise single (returns string|null). */
+  multiple?: boolean;
+  /** Max rows fetched for the initial list (default 50). */
+  limit?: number;
+  /** Extra equality filters, e.g. { is_active: true }. */
+  filter?: Record<string, any>;
+  /** Order column; defaults to created_at desc. */
+  orderBy?: { column: string; ascending?: boolean };
+};
 
 export type FormFieldDef = {
   key: string;
@@ -68,6 +93,8 @@ export type FormFieldDef = {
   folder?: string;
   /** Max items for gallery type */
   maxItems?: number;
+  /** Required when type === "lookup" */
+  lookup?: LookupConfig;
 };
 
 export type RowAction<T = any> = {
