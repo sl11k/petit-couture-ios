@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { MediaUploader } from "./MediaUploader";
 import { ProductMediaGallery } from "./ProductMediaGallery";
 import { WarehouseStockPicker, type WarehouseStockEntry } from "./WarehouseStockPicker";
+import { LookupField } from "./LookupField";
 import type { Bilingual, FormFieldDef } from "../types";
 import { cn } from "@/lib/utils";
 
@@ -43,12 +44,22 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
       shape[f.key] = z.array(z.any()).default([]);
       continue;
     }
+    if (f.type === "lookup") {
+      if (f.lookup?.multiple) {
+        shape[f.key] = f.required
+          ? z.array(z.string()).min(1, ar ? "حقل مطلوب" : "Required")
+          : z.array(z.string()).default([]).optional();
+      } else {
+        shape[f.key] = f.required
+          ? z.string().min(1, ar ? "حقل مطلوب" : "Required")
+          : z.string().optional().or(z.literal("")).or(z.null());
+      }
+      continue;
+    }
     let s: z.ZodTypeAny;
     let alreadyHandled = false;
     switch (f.type) {
       case "number": {
-        // BUGFIX: z.preprocess returns ZodEffects which has NO .min()/.max().
-        // Build the constraints on the inner ZodNumber, THEN wrap with preprocess.
         let numSchema: z.ZodTypeAny = z.number({ invalid_type_error: ar ? "رقم غير صحيح" : "Invalid number" });
         if (f.min !== undefined) numSchema = (numSchema as z.ZodNumber).min(f.min, ar ? `الحد الأدنى ${f.min}` : `Min ${f.min}`);
         if (f.max !== undefined) numSchema = (numSchema as z.ZodNumber).max(f.max, ar ? `الحد الأقصى ${f.max}` : `Max ${f.max}`);
@@ -117,8 +128,16 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
 function coerceForDb(fields: FormFieldDef[], values: Record<string, any>) {
   const out: Record<string, any> = {};
   for (const f of fields) {
-    if (f.type === "warehouseStock") continue; // virtual field; handled separately
+    if (f.type === "warehouseStock") continue;
     let v = values[f.key];
+    if (f.type === "lookup") {
+      if (f.lookup?.multiple) {
+        out[f.key] = Array.isArray(v) ? v : [];
+      } else {
+        out[f.key] = v && String(v).trim() !== "" ? v : null;
+      }
+      continue;
+    }
     if (f.type === "gallery" || f.type === "videoGallery") {
       out[f.key] = Array.isArray(v) ? v : [];
       continue;
@@ -143,6 +162,11 @@ function defaultsFrom(fields: FormFieldDef[], initial?: Record<string, any>) {
   const out: Record<string, any> = {};
   for (const f of fields) {
     let v = initial?.[f.key] ?? f.defaultValue;
+    if (f.type === "lookup") {
+      if (f.lookup?.multiple) out[f.key] = Array.isArray(v) ? v : [];
+      else out[f.key] = v ?? "";
+      continue;
+    }
     if (f.type === "gallery" || f.type === "videoGallery") {
       out[f.key] = Array.isArray(v) ? v : [];
       continue;
@@ -254,18 +278,12 @@ export function FormDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // BUGFIX: wrap schema construction in try/catch — previously a bad zod chain
-    // (e.g. .min on a ZodEffects) would throw silently and the form would hang.
     let schema: z.ZodTypeAny;
     try {
       schema = buildSchema(fields, mode, ar);
     } catch (err: any) {
       console.error("[FormDialog] schema build failed", err);
-      toast.error(
-        ar
-          ? `تعذّر بناء النموذج: ${err?.message ?? "خطأ داخلي"}`
-          : `Failed to build form: ${err?.message ?? "internal error"}`,
-      );
+      toast.error(ar ? `تعذّر بناء النموذج: ${err?.message ?? "خطأ داخلي"}` : `Failed to build form: ${err?.message ?? "internal error"}`);
       return;
     }
 
@@ -274,14 +292,11 @@ export function FormDialog({
       const errs: Record<string, string> = {};
       parsed.error.issues.forEach((i: ZodIssue) => { errs[String(i.path[0])] = i.message; });
       setErrors(errs);
-      // BUGFIX: do NOT return silently — surface the first validation error to the user.
       const first = parsed.error.issues[0];
       const firstKey = String(first?.path?.[0] ?? "");
       const firstField = visibleFields.find((f) => f.key === firstKey);
       const fieldLabel = firstField ? (ar ? firstField.label.ar : firstField.label.en) : firstKey;
-      toast.error(
-        `${fieldLabel ? fieldLabel + ": " : ""}${first?.message ?? (ar ? "تحقق من الحقول المطلوبة" : "Check the highlighted fields")}`,
-      );
+      toast.error(`${fieldLabel ? fieldLabel + ": " : ""}${first?.message ?? (ar ? "تحقق من الحقول المطلوبة" : "Check the highlighted fields")}`);
       console.warn("[FormDialog] validation failed", { issues: parsed.error.issues, values });
       return;
     }
@@ -290,8 +305,6 @@ export function FormDialog({
     const payload = coerceForDb(visibleFields, values);
     let productId = rowId;
 
-    // BUGFIX: wrap supabase calls in try/catch — an unexpected throw used to leave
-    // the form stuck in "Saving..." with no feedback to the user.
     try {
       if (mode === "create") {
         const { data, error } = await supabase
@@ -359,7 +372,11 @@ export function FormDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {visibleFields.map((f) => {
-              const isFull = f.fullWidth ?? (f.type === "textarea" || f.type === "json" || f.type === "gallery" || f.type === "videoGallery" || f.type === "image" || f.type === "video" || f.type === "warehouseStock");
+              const isFull = f.fullWidth ?? (
+                f.type === "textarea" || f.type === "json" || f.type === "gallery" ||
+                f.type === "videoGallery" || f.type === "image" || f.type === "video" ||
+                f.type === "warehouseStock" || (f.type === "lookup" && f.lookup?.multiple)
+              );
               const lbl = ar ? f.label.ar : f.label.en;
               const ph = f.placeholder ? (ar ? f.placeholder.ar : f.placeholder.en) : undefined;
               const help = f.helpText ? (ar ? f.helpText.ar : f.helpText.en) : undefined;
@@ -369,7 +386,14 @@ export function FormDialog({
                   <Label htmlFor={f.key} className="text-xs">
                     {lbl} {f.required && <span className="text-destructive">*</span>}
                   </Label>
-                  {f.type === "image" || f.type === "video" ? (
+                  {f.type === "lookup" && f.lookup ? (
+                    <LookupField
+                      value={values[f.key]}
+                      onChange={(v) => setVal(f.key, v)}
+                      cfg={f.lookup}
+                      placeholder={ph}
+                    />
+                  ) : f.type === "image" || f.type === "video" ? (
                     <MediaUploader
                       value={values[f.key] ?? ""}
                       onChange={(url) => setVal(f.key, url ?? "")}
