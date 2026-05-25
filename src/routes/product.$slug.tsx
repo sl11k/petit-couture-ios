@@ -36,6 +36,7 @@ import { trackEvent } from "@/lib/analytics";
 import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
 
 import { VariantsPicker } from "@/components/product/VariantsPicker";
+import { ProductOptionsPicker } from "@/components/product/ProductOptionsPicker";
 
 import { buildMeta, productJsonLd, breadcrumbJsonLd, canonical } from "@/lib/seo";
 import { devValidateJsonLd } from "@/lib/seoValidate";
@@ -112,8 +113,20 @@ function ProductDetails() {
   const ar = isRTL;
 
   const [activeImg, setActiveImg] = useState(0);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
+  const [activeOptions, setActiveOptions] = useState<Record<string, any>>({});
   const [size, setSize] = useState<string>(product.sizes[2] ?? product.sizes[0] ?? "");
   const [color, setColor] = useState<string>(product.colors[0]?.name ?? "");
+
+  const displayImages = useMemo(() => {
+    if (!activeImage) return product.images;
+    const rest = product.images.filter((s) => s !== activeImage);
+    return [activeImage, ...rest];
+  }, [activeImage, product.images]);
+
+  useEffect(() => {
+    if (activeImage) setActiveImg(0);
+  }, [activeImage]);
 
   // Re-sync selection if the loaded product no longer contains the picks.
   useEffect(() => {
@@ -445,13 +458,13 @@ function ProductDetails() {
                 className="flex h-full w-full overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth"
                 dir={ar ? "rtl" : "ltr"}
               >
-                {product.images.map((src, i) => (
+                {displayImages.map((src, i) => (
                   <div
                     key={src}
                     className="snap-center shrink-0 w-full h-full"
                     role="group"
                     aria-roledescription="slide"
-                    aria-label={`${i + 1} / ${product.images.length}`}
+                    aria-label={`${i + 1} / ${displayImages.length}`}
                   >
                     <img
                       src={src}
@@ -634,6 +647,17 @@ function ProductDetails() {
                 basePrice={product.price}
                 currency={(product as any).currency ?? "SAR"}
                 image={product.images?.[0] ?? ""}
+              />
+            </section>
+          )}
+
+          {/* Product options (color/size/age/...) — drives main image when color selected */}
+          {productId && (
+            <section className="px-5 mt-2">
+              <ProductOptionsPicker
+                productId={productId}
+                onImageChange={setActiveImage}
+                onSelectionChange={setActiveOptions}
               />
             </section>
           )}
@@ -1014,7 +1038,7 @@ function ProductDetails() {
           <button aria-label={t.close} onClick={() => setZoomOpen(false)} className="absolute top-5 end-5 h-11 w-11 rounded-xl bg-white/10 grid place-items-center text-white">
             <X className="h-5 w-5" />
           </button>
-          <img src={product.images[activeImg]} alt={product.name} width={1280} height={1600} loading="eager" decoding="sync" className="max-w-full max-h-full object-contain" />
+          <img src={displayImages[activeImg]} alt={product.name} width={1280} height={1600} loading="eager" decoding="sync" className="max-w-full max-h-full object-contain" />
         </div>
       )}
 

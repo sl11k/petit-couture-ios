@@ -17,13 +17,13 @@ export type LookupConfig = {
   /** Supabase table to query, e.g. "products" */
   table: string;
   /** Columns concatenated to build the visible label. First non-empty wins per row. */
-  labelColumns?: string[];
+  labelColumns?: readonly string[];
   /** Secondary column shown small under the label (e.g. SKU or email). */
   secondaryColumn?: string;
   /** Image column to show as thumbnail. */
   imageColumn?: string;
   /** Columns matched by the search input (case-insensitive). */
-  searchColumns?: string[];
+  searchColumns?: readonly string[];
   /** Multi-select returns string[]; otherwise returns string|null. */
   multiple?: boolean;
   /** Max rows fetched for the initial list (default 50). */
@@ -38,7 +38,7 @@ type Row = { id: string; __label: string; __secondary?: string; __image?: string
 
 const DEFAULT_LABEL_COLS = ["name_ar", "name_en", "title_ar", "title_en", "full_name", "email", "name"];
 
-function rowLabel(r: any, labelCols: string[]): string {
+function rowLabel(r: any, labelCols: readonly string[]): string {
   for (const c of labelCols) {
     const v = r?.[c];
     if (v !== null && v !== undefined && String(v).trim() !== "") return String(v);

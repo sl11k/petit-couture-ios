@@ -34,10 +34,10 @@ export type LookupJunctionConfig = {
 
 export type LookupConfig = {
   table: string;
-  labelColumns?: string[];
+  labelColumns?: readonly string[];
   secondaryColumn?: string;
   imageColumn?: string;
-  searchColumns?: string[];
+  searchColumns?: readonly string[];
   multiple?: boolean;
   limit?: number;
   filter?: Record<string, any>;
