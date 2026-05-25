@@ -6,7 +6,7 @@ export function WhatsAppButton() {
 
   useEffect(() => {
     supabase
-      .from("site_settings")
+      .from("public_site_settings" as any)
       .select("whatsapp_number")
       .eq("id", 1)
       .maybeSingle()

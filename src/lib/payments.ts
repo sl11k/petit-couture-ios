@@ -96,7 +96,7 @@ export async function markTransactionStatus(
   if (!error && (status === "captured" || status === "paid")) {
     try {
       const { data: txn } = await supabase.from("payment_transactions").select("order_id").eq("id", transactionId).maybeSingle();
-      const { data: settings } = await supabase.from("site_settings").select("auto_issue_on_payment").maybeSingle();
+      const { data: settings } = await supabase.from("public_site_settings" as any).select("auto_issue_on_payment").maybeSingle();
       if (txn?.order_id && settings?.auto_issue_on_payment !== false) {
         const { generateInvoiceForOrder } = await import("@/lib/invoices");
         await generateInvoiceForOrder(txn.order_id).catch(() => null);

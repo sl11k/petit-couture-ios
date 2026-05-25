@@ -34,7 +34,7 @@ function ContactPage() {
   const [contactInfo, setContactInfo] = useState<any>({});
 
   useEffect(() => {
-    supabase.from("site_settings").select("whatsapp_number,support_email,support_phone").eq("id", 1).maybeSingle()
+    supabase.from("public_site_settings" as any).select("whatsapp_number,support_email,support_phone").eq("id", 1).maybeSingle()
       .then(({ data }) => setContactInfo(data || {}));
     if (user?.email) setForm(f => ({ ...f, email: user.email! }));
   }, [user]);
