@@ -5,13 +5,9 @@ export type Bilingual = { ar: string; en: string };
 export type ColumnDef<T = any> = {
   key: string;
   label: Bilingual;
-  /** Optional custom renderer */
   render?: (value: any, row: T) => ReactNode;
-  /** Format hint when no `render` provided */
   type?: "text" | "number" | "currency" | "date" | "datetime" | "badge" | "boolean" | "image";
-  /** width hint in tailwind class form, e.g. "w-32" */
   width?: string;
-  /** Hide on small screens */
   hideOnMobile?: boolean;
 };
 
@@ -23,47 +19,30 @@ export type FilterDef =
   | { key: string; type: "date"; label: Bilingual };
 
 export type FormFieldType =
-  | "text"
-  | "textarea"
-  | "number"
-  | "select"
-  | "boolean"
-  | "date"
-  | "datetime"
-  | "image"
-  | "video"
-  | "gallery"
-  | "url"
-  | "email"
-  | "tel"
-  | "color"
-  | "json"
-  | "videoGallery"
-  | "warehouseStock"
-  // NEW: searchable lookup that replaces every "UUID" / "JSON array of IDs" field.
-  // Configure via the `lookup` property on FormFieldDef.
-  | "lookup";
+  | "text" | "textarea" | "number" | "select" | "boolean" | "date" | "datetime"
+  | "image" | "video" | "gallery" | "url" | "email" | "tel" | "color" | "json"
+  | "videoGallery" | "warehouseStock"
+  | "lookup"
+  | "productVariants"
+  | "productAttributes";
 
-/** Configuration for the "lookup" field type. */
-export type LookupConfig = {
-  /** Supabase table name, e.g. "products" or "profiles". */
+export type LookupJunctionConfig = {
   table: string;
-  /** Columns concatenated to build the visible label. First non-empty wins per row. */
+  ownerColumn: string;
+  itemColumn: string;
+};
+
+export type LookupConfig = {
+  table: string;
   labelColumns?: string[];
-  /** Secondary column shown small under the label (SKU, email, …). */
   secondaryColumn?: string;
-  /** Image column to show as thumbnail in the dropdown. */
   imageColumn?: string;
-  /** Columns matched by the search input (case-insensitive). Defaults to labelColumns. */
   searchColumns?: string[];
-  /** If true, multi-select (returns string[]); otherwise single (returns string|null). */
   multiple?: boolean;
-  /** Max rows fetched for the initial list (default 50). */
   limit?: number;
-  /** Extra equality filters, e.g. { is_active: true }. */
   filter?: Record<string, any>;
-  /** Order column; defaults to created_at desc. */
   orderBy?: { column: string; ascending?: boolean };
+  junction?: LookupJunctionConfig;
 };
 
 export type FormFieldDef = {
@@ -81,19 +60,12 @@ export type FormFieldDef = {
   maxLength?: number;
   pattern?: string;
   helpText?: Bilingual;
-  /** Show field only when creating */
   createOnly?: boolean;
-  /** Show field only when editing */
   editOnly?: boolean;
-  /** Take full row width (default true for textarea/json/gallery) */
   fullWidth?: boolean;
-  /** Storage bucket for image/video/gallery types */
   bucket?: string;
-  /** Folder inside bucket */
   folder?: string;
-  /** Max items for gallery type */
   maxItems?: number;
-  /** Required when type === "lookup" */
   lookup?: LookupConfig;
 };
 
@@ -109,27 +81,16 @@ export type RowAction<T = any> = {
 export type AdminPageConfig<T = any> = {
   title: Bilingual;
   description?: Bilingual;
-  /** Supabase table name */
   table: string;
-  /** Default order column */
   orderBy?: { column: string; ascending?: boolean };
-  /** Page size for client-side pagination */
   pageSize?: number;
   columns: ColumnDef<T>[];
   filters?: FilterDef[];
   form?: FormFieldDef[];
-  actions?: {
-    create?: boolean;
-    edit?: boolean;
-    delete?: boolean;
-    export?: boolean;
-  };
+  actions?: { create?: boolean; edit?: boolean; delete?: boolean; export?: boolean };
   rowActions?: RowAction<T>[];
-  /** Custom select clause; defaults to "*" */
   select?: string;
-  /** Click row navigates to */
   rowHref?: (row: T) => string;
-  /** Optional post-load row enrichment (e.g. join external data) */
   enrichRows?: (rows: T[]) => Promise<T[]> | T[];
 };
 
@@ -141,56 +102,41 @@ export type DetailFieldDef<T = any> = {
   key: string;
   label: Bilingual;
   type?: DetailFieldType;
-  /** Custom renderer */
   render?: (value: any, row: T) => ReactNode;
-  /** Hide field if value is empty */
   hideIfEmpty?: boolean;
-  /** Span columns inside its section */
   span?: 1 | 2 | 3;
 };
 
 export type DetailSectionDef<T = any> = {
   title: Bilingual;
   fields: DetailFieldDef<T>[];
-  /** Number of columns inside this section (sm+) */
   columns?: 1 | 2 | 3;
-  /** Place section in the sidebar instead of main column */
   sidebar?: boolean;
 };
 
 export type RelatedTableDef<T = any> = {
   title: Bilingual;
   table: string;
-  /** Foreign key column on the related table */
   foreignKey: string;
-  /** How to compute the FK value from the main row (default: row.id) */
   foreignKeyValue?: (row: T) => string | undefined;
   orderBy?: { column: string; ascending?: boolean };
   limit?: number;
   columns: ColumnDef[];
   select?: string;
-  /** Additional equality filters applied to the related query */
   extraEq?: Record<string, any>;
   rowHref?: (row: any) => string;
-  /** Footer renderer (e.g. totals) */
   footer?: (rows: any[], main: T) => ReactNode;
-  /** Empty state */
   emptyMessage?: Bilingual;
 };
 
 export type AdminDetailConfig<T = any> = {
-  /** Supabase table for the main entity */
   table: string;
-  /** Path back to the listing */
   backTo: string;
   backLabel: Bilingual;
   title: (row: T) => Bilingual | string;
   description?: (row: T) => Bilingual | string;
-  /** Custom select for main row (default "*") */
   select?: string;
-  /** Sections (sidebar:true sections render in side column) */
   sections: DetailSectionDef<T>[];
   related?: RelatedTableDef<T>[];
-  /** Optional inline edit using FormDialog */
   editForm?: FormFieldDef[];
 };
