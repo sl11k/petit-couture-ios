@@ -5,12 +5,12 @@ export function WhatsAppButton() {
   const [number, setNumber] = useState<string>("");
 
   useEffect(() => {
-    supabase
-      .from("site_settings")
+    (supabase
+      .from("public_site_settings" as any)
       .select("whatsapp_number")
       .eq("id", 1)
-      .maybeSingle()
-      .then(({ data }) => {
+      .maybeSingle() as any)
+      .then(({ data }: { data: any }) => {
         if (data?.whatsapp_number) setNumber(data.whatsapp_number);
       });
   }, []);
