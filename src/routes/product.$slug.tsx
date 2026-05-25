@@ -1027,7 +1027,7 @@ function ProductDetails() {
           <button aria-label={t.close} onClick={() => setZoomOpen(false)} className="absolute top-5 end-5 h-11 w-11 rounded-xl bg-white/10 grid place-items-center text-white">
             <X className="h-5 w-5" />
           </button>
-          <img src={product.images[activeImg]} alt={product.name} width={1280} height={1600} loading="eager" decoding="sync" className="max-w-full max-h-full object-contain" />
+          <img src={displayImages[activeImg]} alt={product.name} width={1280} height={1600} loading="eager" decoding="sync" className="max-w-full max-h-full object-contain" />
         </div>
       )}
 
