@@ -34,7 +34,9 @@ export const customersConfig: AdminPageConfig = {
 export const categoriesConfig: AdminPageConfig = {
   title: { ar: "التصنيفات", en: "Categories" },
   table: "categories",
-  orderBy: { column: "sort_order", ascending: true },
+  // BUGFIX: was "sort_order" — column does not exist in the categories table.
+  // Form uses display_order so we sort by the same column.
+  orderBy: { column: "display_order", ascending: true },
   columns: [
     { key: "image_url", label: { ar: "الصورة", en: "Image" }, type: "image", width: "w-16" },
     { key: "name_ar", label: { ar: "العربي", en: "Arabic" } },
