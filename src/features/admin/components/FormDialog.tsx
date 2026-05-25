@@ -20,6 +20,8 @@ import { MediaUploader } from "./MediaUploader";
 import { ProductMediaGallery } from "./ProductMediaGallery";
 import { WarehouseStockPicker, type WarehouseStockEntry } from "./WarehouseStockPicker";
 import { LookupField } from "./LookupField";
+import { VariantEditor, type VariantEntry } from "./VariantEditor";
+import { AttributesEditor, type AttributeEntry } from "./AttributesEditor";
 import type { Bilingual, FormFieldDef } from "../types";
 import { cn } from "@/lib/utils";
 
@@ -40,7 +42,7 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
   for (const f of fields) {
     if (mode === "create" && f.editOnly) continue;
     if (mode === "edit" && f.createOnly) continue;
-    if (f.type === "warehouseStock") {
+    if (f.type === "warehouseStock" || f.type === "productVariants" || f.type === "productAttributes") {
       shape[f.key] = z.array(z.any()).default([]);
       continue;
     }
@@ -94,10 +96,7 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
         break;
       case "json":
         s = z.string().refine(
-          (v) => {
-            if (!v || v.trim() === "") return true;
-            try { JSON.parse(v); return true; } catch { return false; }
-          },
+          (v) => { if (!v || v.trim() === "") return true; try { JSON.parse(v); return true; } catch { return false; } },
           { message: ar ? "JSON غير صحيح" : "Invalid JSON" },
         );
         break;
@@ -128,7 +127,8 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
 function coerceForDb(fields: FormFieldDef[], values: Record<string, any>) {
   const out: Record<string, any> = {};
   for (const f of fields) {
-    if (f.type === "warehouseStock") continue;
+    if (f.type === "warehouseStock" || f.type === "productVariants" || f.type === "productAttributes") continue;
+    if (f.type === "lookup" && f.lookup?.junction) continue;
     let v = values[f.key];
     if (f.type === "lookup") {
       if (f.lookup?.multiple) {
@@ -152,7 +152,7 @@ function coerceForDb(fields: FormFieldDef[], values: Record<string, any>) {
     }
     if (f.type === "number") v = Number(v);
     else if (f.type === "boolean") v = typeof v === "string" ? v === "true" : Boolean(v);
-    else if (f.type === "json") { try { v = JSON.parse(v); } catch { /* keep string */ } }
+    else if (f.type === "json") { try { v = JSON.parse(v); } catch { /* keep */ } }
     out[f.key] = v;
   }
   return out;
@@ -163,18 +163,13 @@ function defaultsFrom(fields: FormFieldDef[], initial?: Record<string, any>) {
   for (const f of fields) {
     let v = initial?.[f.key] ?? f.defaultValue;
     if (f.type === "lookup") {
-      if (f.lookup?.multiple) out[f.key] = Array.isArray(v) ? v : [];
+      if (f.lookup?.multiple || f.lookup?.junction) out[f.key] = Array.isArray(v) ? v : [];
       else out[f.key] = v ?? "";
       continue;
     }
-    if (f.type === "gallery" || f.type === "videoGallery") {
-      out[f.key] = Array.isArray(v) ? v : [];
-      continue;
-    }
-    if (f.type === "warehouseStock") {
-      out[f.key] = Array.isArray(v) ? v : [];
-      continue;
-    }
+    if (f.type === "gallery" || f.type === "videoGallery") { out[f.key] = Array.isArray(v) ? v : []; continue; }
+    if (f.type === "warehouseStock") { out[f.key] = Array.isArray(v) ? v : []; continue; }
+    if (f.type === "productVariants" || f.type === "productAttributes") { out[f.key] = Array.isArray(v) ? v : []; continue; }
     if (f.type === "json" && v && typeof v !== "string") v = JSON.stringify(v, null, 2);
     if (f.type === "boolean") v = Boolean(v);
     if (v === undefined || v === null) v = f.type === "boolean" ? false : "";
@@ -183,16 +178,83 @@ function defaultsFrom(fields: FormFieldDef[], initial?: Record<string, any>) {
   return out;
 }
 
+async function syncJunction(cfg: NonNullable<NonNullable<FormFieldDef["lookup"]>["junction"]>, ownerId: string, selectedItemIds: string[]) {
+  const { error: delErr } = await (supabase as any).from(cfg.table).delete().eq(cfg.ownerColumn, ownerId);
+  if (delErr) throw delErr;
+  if (selectedItemIds.length === 0) return;
+  const rows = selectedItemIds.map((id) => ({ [cfg.ownerColumn]: ownerId, [cfg.itemColumn]: id }));
+  const { error: insErr } = await (supabase as any).from(cfg.table).insert(rows);
+  if (insErr) throw insErr;
+}
+
+async function syncProductVariants(productId: string, entries: VariantEntry[]) {
+  const { data: existing, error: exErr } = await (supabase as any).from("product_variants").select("id").eq("product_id", productId);
+  if (exErr) throw exErr;
+  const existingIds = new Set<string>((existing ?? []).map((r: any) => r.id));
+  const keptIds = new Set<string>();
+  for (let i = 0; i < entries.length; i++) {
+    const e = entries[i];
+    const payload = {
+      product_id: productId,
+      color_name_ar: e.color_name_ar || null,
+      color_name_en: e.color_name_en || null,
+      color_hex: e.color_hex || null,
+      color_image_url: e.color_image_url || null,
+      size: e.size || null,
+      sku: e.sku || null,
+      stock: Number(e.stock) || 0,
+      is_active: e.is_active ?? true,
+      sort_order: i,
+    };
+    if (e.id && existingIds.has(e.id)) {
+      keptIds.add(e.id);
+      const { error } = await (supabase as any).from("product_variants").update(payload).eq("id", e.id);
+      if (error) throw error;
+    } else {
+      const { error } = await (supabase as any).from("product_variants").insert(payload);
+      if (error) throw error;
+    }
+  }
+  const toDelete = Array.from(existingIds).filter((id) => !keptIds.has(id));
+  if (toDelete.length) {
+    const { error } = await (supabase as any).from("product_variants").delete().in("id", toDelete);
+    if (error) throw error;
+  }
+}
+
+async function syncProductAttributes(productId: string, entries: AttributeEntry[]) {
+  const clean = entries.filter((e) => (e.attribute_key || "").trim() !== "");
+  const { data: existing, error: exErr } = await (supabase as any).from("product_attributes").select("id").eq("product_id", productId);
+  if (exErr) throw exErr;
+  const existingIds = new Set<string>((existing ?? []).map((r: any) => r.id));
+  const keptIds = new Set<string>();
+  for (let i = 0; i < clean.length; i++) {
+    const e = clean[i];
+    const payload = {
+      product_id: productId,
+      attribute_key: e.attribute_key.trim(),
+      value_ar: e.value_ar || null,
+      value_en: e.value_en || null,
+      sort_order: i,
+    };
+    if (e.id && existingIds.has(e.id)) {
+      keptIds.add(e.id);
+      const { error } = await (supabase as any).from("product_attributes").update(payload).eq("id", e.id);
+      if (error) throw error;
+    } else {
+      const { error } = await (supabase as any).from("product_attributes").insert(payload);
+      if (error) throw error;
+    }
+  }
+  const toDelete = Array.from(existingIds).filter((id) => !keptIds.has(id));
+  if (toDelete.length) {
+    const { error } = await (supabase as any).from("product_attributes").delete().in("id", toDelete);
+    if (error) throw error;
+  }
+}
+
 export function FormDialog({
-  open,
-  mode,
-  table,
-  title,
-  fields,
-  initialValues,
-  rowId,
-  onClose,
-  onSaved,
+  open, mode, table, title, fields, initialValues, rowId, onClose, onSaved,
 }: Props) {
   const { lang } = useLanguage();
   const ar = lang === "ar";
@@ -206,87 +268,78 @@ export function FormDialog({
   const [saving, setSaving] = useState(false);
   const [existingInventory, setExistingInventory] = useState<Record<string, number>>({});
 
-  const warehouseStockField = useMemo(
-    () => visibleFields.find((f) => f.type === "warehouseStock"),
-    [visibleFields],
-  );
+  const warehouseStockField = useMemo(() => visibleFields.find((f) => f.type === "warehouseStock"), [visibleFields]);
+  const variantsField = useMemo(() => visibleFields.find((f) => f.type === "productVariants"), [visibleFields]);
+  const attributesField = useMemo(() => visibleFields.find((f) => f.type === "productAttributes"), [visibleFields]);
+  const junctionLookupFields = useMemo(() => visibleFields.filter((f) => f.type === "lookup" && f.lookup?.junction), [visibleFields]);
 
   useEffect(() => {
-    if (open) {
-      setValues(defaultsFrom(visibleFields, initialValues));
-      setErrors({});
-    }
+    if (open) { setValues(defaultsFrom(visibleFields, initialValues)); setErrors({}); }
   }, [open, initialValues, visibleFields]);
 
   useEffect(() => {
-    if (!open || !warehouseStockField || mode !== "edit" || !rowId) {
-      setExistingInventory({});
-      return;
-    }
+    if (!open || !warehouseStockField || mode !== "edit" || !rowId) { setExistingInventory({}); return; }
     (async () => {
-      const { data } = await supabase
-        .from("inventory")
-        .select("warehouse_id, quantity")
-        .eq("product_id", rowId)
-        .is("variant_id", null);
+      const { data } = await supabase.from("inventory").select("warehouse_id, quantity").eq("product_id", rowId).is("variant_id", null);
       const map: Record<string, number> = {};
       (data ?? []).forEach((r: any) => { map[r.warehouse_id] = r.quantity; });
       setExistingInventory(map);
-      setValues((s) => ({
-        ...s,
-        [warehouseStockField.key]: Object.entries(map).map(([wid, qty]) => ({
-          warehouse_id: wid,
-          quantity: qty as number,
-          enabled: true,
-        })),
-      }));
+      setValues((s) => ({ ...s, [warehouseStockField.key]: Object.entries(map).map(([wid, qty]) => ({ warehouse_id: wid, quantity: qty as number, enabled: true })) }));
     })();
   }, [open, mode, rowId, warehouseStockField]);
+
+  useEffect(() => {
+    if (!open || !variantsField || mode !== "edit" || !rowId) return;
+    (async () => {
+      const { data } = await (supabase as any).from("product_variants").select("id, color_name_ar, color_name_en, color_hex, color_image_url, size, sku, stock, is_active, sort_order").eq("product_id", rowId).order("sort_order", { ascending: true });
+      setValues((s) => ({ ...s, [variantsField.key]: (data ?? []) as VariantEntry[] }));
+    })();
+  }, [open, mode, rowId, variantsField]);
+
+  useEffect(() => {
+    if (!open || !attributesField || mode !== "edit" || !rowId) return;
+    (async () => {
+      const { data } = await (supabase as any).from("product_attributes").select("id, attribute_key, value_ar, value_en, sort_order").eq("product_id", rowId).order("sort_order", { ascending: true });
+      setValues((s) => ({ ...s, [attributesField.key]: (data ?? []) as AttributeEntry[] }));
+    })();
+  }, [open, mode, rowId, attributesField]);
+
+  useEffect(() => {
+    if (!open || mode !== "edit" || !rowId || junctionLookupFields.length === 0) return;
+    (async () => {
+      for (const f of junctionLookupFields) {
+        const j = f.lookup!.junction!;
+        const { data } = await (supabase as any).from(j.table).select(j.itemColumn).eq(j.ownerColumn, rowId);
+        const ids = (data ?? []).map((r: any) => r[j.itemColumn]).filter(Boolean);
+        setValues((s) => ({ ...s, [f.key]: ids }));
+      }
+    })();
+  }, [open, mode, rowId, junctionLookupFields]);
 
   const persistWarehouseStock = async (productId: string, entries: WarehouseStockEntry[]) => {
     const active = entries.filter((e) => e.enabled);
     for (const e of active) {
       const qty = Math.max(0, Number(e.quantity) || 0);
-      const { data: existing } = await supabase
-        .from("inventory")
-        .select("id")
-        .eq("product_id", productId)
-        .eq("warehouse_id", e.warehouse_id)
-        .is("variant_id", null)
-        .maybeSingle();
+      const { data: existing } = await supabase.from("inventory").select("id").eq("product_id", productId).eq("warehouse_id", e.warehouse_id).is("variant_id", null).maybeSingle();
       if (existing?.id) {
-        const { error: upErr } = await supabase
-          .from("inventory")
-          .update({ quantity: qty, status: "active" } as any)
-          .eq("id", existing.id);
-        if (upErr) throw upErr;
+        const { error } = await supabase.from("inventory").update({ quantity: qty, status: "active" } as any).eq("id", existing.id);
+        if (error) throw error;
       } else {
-        const { error: insErr } = await supabase
-          .from("inventory")
-          .insert({
-            product_id: productId,
-            warehouse_id: e.warehouse_id,
-            variant_id: null,
-            quantity: qty,
-            status: "active",
-          } as any);
-        if (insErr) throw insErr;
+        const { error } = await supabase.from("inventory").insert({ product_id: productId, warehouse_id: e.warehouse_id, variant_id: null, quantity: qty, status: "active" } as any);
+        if (error) throw error;
       }
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     let schema: z.ZodTypeAny;
-    try {
-      schema = buildSchema(fields, mode, ar);
-    } catch (err: any) {
+    try { schema = buildSchema(fields, mode, ar); }
+    catch (err: any) {
       console.error("[FormDialog] schema build failed", err);
       toast.error(ar ? `تعذّر بناء النموذج: ${err?.message ?? "خطأ داخلي"}` : `Failed to build form: ${err?.message ?? "internal error"}`);
       return;
     }
-
     const parsed = schema.safeParse(values);
     if (!parsed.success) {
       const errs: Record<string, string> = {};
@@ -307,40 +360,34 @@ export function FormDialog({
 
     try {
       if (mode === "create") {
-        const { data, error } = await supabase
-          .from(table as any)
-          .insert(payload as any)
-          .select("id")
-          .single();
-        if (error) {
-          setSaving(false);
-          console.error("[FormDialog] insert failed", { table, error, payload });
-          toast.error(error.message || (ar ? "فشل الإنشاء" : "Create failed"));
-          return;
-        }
+        const { data, error } = await supabase.from(table as any).insert(payload as any).select("id").single();
+        if (error) { setSaving(false); console.error("[FormDialog] insert failed", { table, error, payload }); toast.error(error.message || (ar ? "فشل الإنشاء" : "Create failed")); return; }
         productId = (data as any)?.id;
       } else {
-        const { error } = await supabase
-          .from(table as any)
-          .update(payload as any)
-          .eq("id", rowId!);
-        if (error) {
-          setSaving(false);
-          console.error("[FormDialog] update failed", { table, rowId, error, payload });
-          toast.error(error.message || (ar ? "فشل الحفظ" : "Update failed"));
-          return;
-        }
+        const { error } = await supabase.from(table as any).update(payload as any).eq("id", rowId!);
+        if (error) { setSaving(false); console.error("[FormDialog] update failed", { table, rowId, error, payload }); toast.error(error.message || (ar ? "فشل الحفظ" : "Update failed")); return; }
       }
 
       if (warehouseStockField && productId) {
-        try {
-          await persistWarehouseStock(productId, (values[warehouseStockField.key] as WarehouseStockEntry[]) ?? []);
-        } catch (err: any) {
-          setSaving(false);
-          console.error("[FormDialog] warehouse stock failed", err);
-          toast.error(err?.message || (ar ? "تعذر حفظ مخزون المستودعات" : "Failed to save warehouse stock"));
-          return;
+        try { await persistWarehouseStock(productId, (values[warehouseStockField.key] as WarehouseStockEntry[]) ?? []); }
+        catch (err: any) { setSaving(false); console.error("[FormDialog] warehouse stock failed", err); toast.error(err?.message || (ar ? "تعذر حفظ مخزون المستودعات" : "Failed to save warehouse stock")); return; }
+      }
+
+      if (productId && junctionLookupFields.length) {
+        for (const f of junctionLookupFields) {
+          try { await syncJunction(f.lookup!.junction!, productId, (values[f.key] as string[]) ?? []); }
+          catch (err: any) { setSaving(false); console.error("[FormDialog] junction sync failed", { field: f.key, err }); toast.error(err?.message || `${ar ? f.label.ar : f.label.en}: ${ar ? "فشل الحفظ" : "save failed"}`); return; }
         }
+      }
+
+      if (variantsField && productId) {
+        try { await syncProductVariants(productId, (values[variantsField.key] as VariantEntry[]) ?? []); }
+        catch (err: any) { setSaving(false); console.error("[FormDialog] variants sync failed", err); toast.error(err?.message || (ar ? "تعذر حفظ الألوان" : "Failed to save colours")); return; }
+      }
+
+      if (attributesField && productId) {
+        try { await syncProductAttributes(productId, (values[attributesField.key] as AttributeEntry[]) ?? []); }
+        catch (err: any) { setSaving(false); console.error("[FormDialog] attributes sync failed", err); toast.error(err?.message || (ar ? "تعذر حفظ التصنيفات الفرعية" : "Failed to save attributes")); return; }
       }
 
       setSaving(false);
@@ -364,9 +411,7 @@ export function FormDialog({
             {mode === "create" ? (ar ? "إضافة " : "Add ") : (ar ? "تعديل " : "Edit ")}
             {ar ? title.ar : title.en}
           </DialogTitle>
-          <DialogDescription>
-            {ar ? "املأ الحقول التالية" : "Fill in the fields below"}
-          </DialogDescription>
+          <DialogDescription>{ar ? "املأ الحقول التالية" : "Fill in the fields below"}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -375,7 +420,9 @@ export function FormDialog({
               const isFull = f.fullWidth ?? (
                 f.type === "textarea" || f.type === "json" || f.type === "gallery" ||
                 f.type === "videoGallery" || f.type === "image" || f.type === "video" ||
-                f.type === "warehouseStock" || (f.type === "lookup" && f.lookup?.multiple)
+                f.type === "warehouseStock" ||
+                f.type === "productVariants" || f.type === "productAttributes" ||
+                (f.type === "lookup" && (f.lookup?.multiple || !!f.lookup?.junction))
               );
               const lbl = ar ? f.label.ar : f.label.en;
               const ph = f.placeholder ? (ar ? f.placeholder.ar : f.placeholder.en) : undefined;
@@ -386,91 +433,32 @@ export function FormDialog({
                   <Label htmlFor={f.key} className="text-xs">
                     {lbl} {f.required && <span className="text-destructive">*</span>}
                   </Label>
-                  {f.type === "lookup" && f.lookup ? (
-                    <LookupField
-                      value={values[f.key]}
-                      onChange={(v) => setVal(f.key, v)}
-                      cfg={f.lookup}
-                      placeholder={ph}
-                    />
+                  {f.type === "productVariants" ? (
+                    <VariantEditor value={(Array.isArray(values[f.key]) ? values[f.key] : []) as VariantEntry[]} onChange={(v) => setVal(f.key, v)} />
+                  ) : f.type === "productAttributes" ? (
+                    <AttributesEditor value={(Array.isArray(values[f.key]) ? values[f.key] : []) as AttributeEntry[]} onChange={(v) => setVal(f.key, v)} />
+                  ) : f.type === "lookup" && f.lookup ? (
+                    <LookupField value={values[f.key]} onChange={(v) => setVal(f.key, v)} cfg={f.lookup} placeholder={ph} />
                   ) : f.type === "image" || f.type === "video" ? (
-                    <MediaUploader
-                      value={values[f.key] ?? ""}
-                      onChange={(url) => setVal(f.key, url ?? "")}
-                      bucket={f.bucket || (f.type === "video" ? "product-media" : "content-media")}
-                      folder={f.folder}
-                      kind={f.type}
-                    />
+                    <MediaUploader value={values[f.key] ?? ""} onChange={(url) => setVal(f.key, url ?? "")} bucket={f.bucket || (f.type === "video" ? "product-media" : "content-media")} folder={f.folder} kind={f.type} />
                   ) : f.type === "gallery" || f.type === "videoGallery" ? (
-                    <ProductMediaGallery
-                      value={Array.isArray(values[f.key]) ? values[f.key] : []}
-                      onChange={(urls) => setVal(f.key, urls)}
-                      bucket={f.bucket || "product-media"}
-                      folder={f.folder || (f.type === "videoGallery" ? "videos" : "gallery")}
-                      max={f.maxItems ?? (f.type === "videoGallery" ? 10 : 20)}
-                      kind={f.type === "videoGallery" ? "video" : "image"}
-                    />
+                    <ProductMediaGallery value={Array.isArray(values[f.key]) ? values[f.key] : []} onChange={(urls) => setVal(f.key, urls)} bucket={f.bucket || "product-media"} folder={f.folder || (f.type === "videoGallery" ? "videos" : "gallery")} max={f.maxItems ?? (f.type === "videoGallery" ? 10 : 20)} kind={f.type === "videoGallery" ? "video" : "image"} />
                   ) : f.type === "warehouseStock" ? (
-                    <WarehouseStockPicker
-                      value={Array.isArray(values[f.key]) ? values[f.key] : []}
-                      onChange={(v) => setVal(f.key, v)}
-                      existing={existingInventory}
-                    />
+                    <WarehouseStockPicker value={Array.isArray(values[f.key]) ? values[f.key] : []} onChange={(v) => setVal(f.key, v)} existing={existingInventory} />
                   ) : f.type === "textarea" || f.type === "json" ? (
-                    <Textarea
-                      id={f.key}
-                      rows={f.rows ?? (f.type === "json" ? 6 : 4)}
-                      value={values[f.key] ?? ""}
-                      onChange={(e) => setVal(f.key, e.target.value)}
-                      placeholder={ph}
-                      className={cn("text-sm", f.type === "json" && "font-mono text-xs")}
-                    />
+                    <Textarea id={f.key} rows={f.rows ?? (f.type === "json" ? 6 : 4)} value={values[f.key] ?? ""} onChange={(e) => setVal(f.key, e.target.value)} placeholder={ph} className={cn("text-sm", f.type === "json" && "font-mono text-xs")} />
                   ) : f.type === "select" ? (
-                    <select
-                      id={f.key}
-                      value={values[f.key] ?? ""}
-                      onChange={(e) => setVal(f.key, e.target.value)}
-                      className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
-                    >
+                    <select id={f.key} value={values[f.key] ?? ""} onChange={(e) => setVal(f.key, e.target.value)} className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm">
                       <option value="">—</option>
-                      {(f.options ?? []).map((o) => (
-                        <option key={o.value} value={o.value}>
-                          {ar ? o.label.ar : o.label.en}
-                        </option>
-                      ))}
+                      {(f.options ?? []).map((o) => (<option key={o.value} value={o.value}>{ar ? o.label.ar : o.label.en}</option>))}
                     </select>
                   ) : f.type === "boolean" ? (
                     <div className="flex items-center gap-2 h-9">
-                      <Switch
-                        id={f.key}
-                        checked={Boolean(values[f.key])}
-                        onCheckedChange={(c) => setVal(f.key, c)}
-                      />
-                      <span className="text-xs text-muted-foreground">
-                        {values[f.key] ? (ar ? "نعم" : "Yes") : (ar ? "لا" : "No")}
-                      </span>
+                      <Switch id={f.key} checked={Boolean(values[f.key])} onCheckedChange={(c) => setVal(f.key, c)} />
+                      <span className="text-xs text-muted-foreground">{values[f.key] ? (ar ? "نعم" : "Yes") : (ar ? "لا" : "No")}</span>
                     </div>
                   ) : (
-                    <Input
-                      id={f.key}
-                      type={
-                        f.type === "number" ? "number"
-                        : f.type === "date" ? "date"
-                        : f.type === "datetime" ? "datetime-local"
-                        : f.type === "color" ? "color"
-                        : f.type === "tel" ? "tel"
-                        : f.type === "email" ? "email"
-                        : f.type === "url" ? "url"
-                        : "text"
-                      }
-                      value={values[f.key] ?? ""}
-                      onChange={(e) => setVal(f.key, e.target.value)}
-                      placeholder={ph}
-                      min={f.min}
-                      max={f.max}
-                      step={f.step}
-                      maxLength={f.maxLength}
-                    />
+                    <Input id={f.key} type={f.type === "number" ? "number" : f.type === "date" ? "date" : f.type === "datetime" ? "datetime-local" : f.type === "color" ? "color" : f.type === "tel" ? "tel" : f.type === "email" ? "email" : f.type === "url" ? "url" : "text"} value={values[f.key] ?? ""} onChange={(e) => setVal(f.key, e.target.value)} placeholder={ph} min={f.min} max={f.max} step={f.step} maxLength={f.maxLength} />
                   )}
                   {help && <p className="text-[10px] text-muted-foreground">{help}</p>}
                   {err && <p className="text-[11px] text-destructive">{err}</p>}
@@ -480,9 +468,7 @@ export function FormDialog({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
-              {ar ? "إلغاء" : "Cancel"}
-            </Button>
+            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>{ar ? "إلغاء" : "Cancel"}</Button>
             <Button type="submit" disabled={saving}>
               {saving ? (ar ? "جاري الحفظ..." : "Saving...") : ar ? "حفظ" : "Save"}
             </Button>
