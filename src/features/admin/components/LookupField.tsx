@@ -38,7 +38,7 @@ type Row = { id: string; __label: string; __secondary?: string; __image?: string
 
 const DEFAULT_LABEL_COLS = ["name_ar", "name_en", "title_ar", "title_en", "full_name", "email", "name"];
 
-function rowLabel(r: any, labelCols: string[]): string {
+function rowLabel(r: any, labelCols: readonly string[]): string {
   for (const c of labelCols) {
     const v = r?.[c];
     if (v !== null && v !== undefined && String(v).trim() !== "") return String(v);
