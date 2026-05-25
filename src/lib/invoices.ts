@@ -32,7 +32,7 @@ export type CustomerSnapshot = {
 };
 
 export async function loadStoreSnapshot(): Promise<StoreSnapshot> {
-  const { data: s } = await supabase.from("public_site_settings" as any).select("*").maybeSingle();
+  const { data: s } = await supabase.from("public_site_settings" as any).select("*").maybeSingle() as { data: any };
   if (!s) return {};
   return {
     store_name: s.store_name ?? "",
@@ -58,7 +58,7 @@ export async function generateInvoiceForOrder(orderId: string, opts?: { type?: "
   const { data: order } = await supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
   if (!order) throw new Error("الطلب غير موجود");
   const { data: items } = await supabase.from("order_items").select("*").eq("order_id", orderId);
-  const { data: settings } = await supabase.from("public_site_settings" as any).select("*").maybeSingle();
+  const { data: settings } = await supabase.from("public_site_settings" as any).select("*").maybeSingle() as { data: any };
 
   const taxRate = Number(settings?.tax_rate ?? 0);
   const taxInclusive = settings?.tax_inclusive ?? true;
