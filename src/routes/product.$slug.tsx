@@ -36,6 +36,7 @@ import { trackEvent } from "@/lib/analytics";
 import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
 
 import { VariantsPicker } from "@/components/product/VariantsPicker";
+import { ProductOptionsPicker } from "@/components/product/ProductOptionsPicker";
 
 import { buildMeta, productJsonLd, breadcrumbJsonLd, canonical } from "@/lib/seo";
 import { devValidateJsonLd } from "@/lib/seoValidate";
