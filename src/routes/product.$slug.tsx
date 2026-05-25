@@ -458,13 +458,13 @@ function ProductDetails() {
                 className="flex h-full w-full overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth"
                 dir={ar ? "rtl" : "ltr"}
               >
-                {product.images.map((src, i) => (
+                {displayImages.map((src, i) => (
                   <div
                     key={src}
                     className="snap-center shrink-0 w-full h-full"
                     role="group"
                     aria-roledescription="slide"
-                    aria-label={`${i + 1} / ${product.images.length}`}
+                    aria-label={`${i + 1} / ${displayImages.length}`}
                   >
                     <img
                       src={src}
