@@ -17,7 +17,7 @@ export type LookupConfig = {
   /** Supabase table to query, e.g. "products" */
   table: string;
   /** Columns concatenated to build the visible label. First non-empty wins per row. */
-  labelColumns?: string[];
+  labelColumns?: readonly string[];
   /** Secondary column shown small under the label (e.g. SKU or email). */
   secondaryColumn?: string;
   /** Image column to show as thumbnail. */
