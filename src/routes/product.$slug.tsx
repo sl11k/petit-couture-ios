@@ -651,6 +651,17 @@ function ProductDetails() {
             </section>
           )}
 
+          {/* Product options (color/size/age/...) — drives main image when color selected */}
+          {productId && (
+            <section className="px-5 mt-2">
+              <ProductOptionsPicker
+                productId={productId}
+                onImageChange={setActiveImage}
+                onSelectionChange={setActiveOptions}
+              />
+            </section>
+          )}
+
           {/* Quantity */}
           <section className="px-5 mt-7">
             <div className="flex items-center justify-between">
