@@ -5,6 +5,42 @@ const yesNo = [
   { value: "false", label: { ar: "لا", en: "No" } },
 ];
 
+// Reusable lookup configs ─ keeps the form definitions tidy
+const productLookup = {
+  table: "products",
+  labelColumns: ["name_ar", "name_en"],
+  secondaryColumn: "sku",
+  imageColumn: "image_url",
+  searchColumns: ["name_ar", "name_en", "sku"],
+  filter: { is_active: true },
+  limit: 100,
+} as const;
+
+const customerLookup = {
+  table: "profiles",
+  labelColumns: ["full_name", "email"],
+  secondaryColumn: "phone",
+  searchColumns: ["full_name", "email", "phone"],
+  limit: 100,
+} as const;
+
+const carrierLookup = {
+  table: "shipping_carriers",
+  labelColumns: ["name_ar", "name_en"],
+  secondaryColumn: "code",
+  imageColumn: "logo_url",
+  filter: { is_active: true },
+  limit: 100,
+} as const;
+
+const zoneLookup = {
+  table: "shipping_zones",
+  labelColumns: ["name_ar", "name_en"],
+  secondaryColumn: "country_code",
+  filter: { is_active: true },
+  limit: 100,
+} as const;
+
 // ───────── Bundles ─────────
 export const bundlesConfig: AdminPageConfig = {
   title: { ar: "الباقات", en: "Bundles" },
@@ -28,7 +64,13 @@ export const bundlesConfig: AdminPageConfig = {
     { key: "description", label: { ar: "الوصف", en: "Description" }, type: "textarea", rows: 3 },
     { key: "bundle_price", label: { ar: "سعر الباقة", en: "Bundle price" }, type: "number", required: true, min: 0, step: 0.01 },
     { key: "discount_percent", label: { ar: "نسبة الخصم %", en: "Discount %" }, type: "number", min: 0, max: 100, step: 0.01 },
-    { key: "product_ids", label: { ar: "معرّفات المنتجات (JSON array)", en: "Product IDs (JSON array)" }, type: "json", helpText: { ar: 'مثال: ["uuid1","uuid2"]', en: 'e.g. ["uuid1","uuid2"]' } },
+    {
+      key: "product_ids",
+      label: { ar: "المنتجات في الباقة", en: "Products in the bundle" },
+      type: "lookup",
+      lookup: { ...productLookup, multiple: true },
+      helpText: { ar: "ابحث وأضف عدة منتجات", en: "Search and add multiple products" },
+    },
     { key: "starts_at", label: { ar: "تبدأ", en: "Starts at" }, type: "datetime" },
     { key: "ends_at", label: { ar: "تنتهي", en: "Ends at" }, type: "datetime" },
     { key: "is_active", label: { ar: "نشطة", en: "Active" }, type: "boolean", defaultValue: true },
@@ -43,7 +85,7 @@ export const productOffersConfig: AdminPageConfig = {
   table: "product_offers",
   orderBy: { column: "created_at", ascending: false },
   columns: [
-    { key: "product_id", label: { ar: "معرّف المنتج", en: "Product ID" } },
+    { key: "product_id", label: { ar: "المنتج", en: "Product" } },
     { key: "offer_type", label: { ar: "النوع", en: "Type" }, type: "badge" },
     { key: "is_active", label: { ar: "نشط", en: "Active" }, type: "boolean" },
     { key: "starts_at", label: { ar: "يبدأ", en: "Starts" }, type: "date", hideOnMobile: true },
@@ -63,8 +105,14 @@ export const productOffersConfig: AdminPageConfig = {
     },
   ],
   form: [
-    { key: "product_id", label: { ar: "معرّف المنتج", en: "Product ID" }, type: "text", required: true },
-    { key: "offer_type", label: { ar: "النوع", en: "Type" }, type: "select", required: true,
+    {
+      key: "product_id",
+      label: { ar: "المنتج", en: "Product" },
+      type: "lookup",
+      required: true,
+      lookup: productLookup,
+    },
+    { key: "offer_type", label: { ar: "نوع العرض", en: "Offer type" }, type: "select", required: true,
       options: [
         { value: "bxgy", label: { ar: "اشتر X واحصل على Y", en: "BxGy" } },
         { value: "discount", label: { ar: "خصم", en: "Discount" } },
@@ -82,18 +130,18 @@ export const productOffersConfig: AdminPageConfig = {
 // ───────── Product relations ─────────
 export const productRelationsConfig: AdminPageConfig = {
   title: { ar: "المنتجات المرتبطة", en: "Product Relations" },
-  description: { ar: "ربط المنتجات (مرتبط/مكمّل/بديل)", en: "Link products (related/cross-sell/upsell)" },
+  description: { ar: "اربط منتجاً بمنتج آخر — مرتبط أو مكمّل أو ترقية أو بديل", en: "Link products together — related, complementary, upsell, or alternative" },
   table: "product_relations",
   orderBy: { column: "created_at", ascending: false },
   columns: [
-    { key: "product_id", label: { ar: "المنتج", en: "Product" } },
-    { key: "related_product_id", label: { ar: "المرتبط", en: "Related" } },
-    { key: "relation_type", label: { ar: "النوع", en: "Type" }, type: "badge" },
-    { key: "display_order", label: { ar: "ترتيب", en: "Order" }, type: "number", hideOnMobile: true },
+    { key: "product_id", label: { ar: "المنتج الأصلي", en: "Source product" } },
+    { key: "related_product_id", label: { ar: "المرتبط به", en: "Related product" } },
+    { key: "relation_type", label: { ar: "نوع العلاقة", en: "Relation" }, type: "badge" },
+    { key: "display_order", label: { ar: "الترتيب", en: "Order" }, type: "number", hideOnMobile: true },
   ],
   filters: [
     {
-      key: "relation_type", type: "select", label: { ar: "النوع", en: "Type" },
+      key: "relation_type", type: "select", label: { ar: "نوع العلاقة", en: "Relation" },
       options: [
         { value: "related", label: { ar: "مرتبط", en: "Related" } },
         { value: "cross_sell", label: { ar: "مكمّل", en: "Cross-sell" } },
@@ -103,16 +151,31 @@ export const productRelationsConfig: AdminPageConfig = {
     },
   ],
   form: [
-    { key: "product_id", label: { ar: "المنتج (UUID)", en: "Product ID" }, type: "text", required: true },
-    { key: "related_product_id", label: { ar: "المنتج المرتبط (UUID)", en: "Related product ID" }, type: "text", required: true },
-    { key: "relation_type", label: { ar: "النوع", en: "Type" }, type: "select", required: true,
+    {
+      key: "product_id",
+      label: { ar: "المنتج الأصلي", en: "Source product" },
+      type: "lookup",
+      required: true,
+      lookup: productLookup,
+      helpText: { ar: "ابحث عن المنتج الذي تظهر علاقاته في الصفحة", en: "Search for the product whose relations appear on its page" },
+    },
+    {
+      key: "related_product_id",
+      label: { ar: "المنتج المرتبط", en: "Related product" },
+      type: "lookup",
+      required: true,
+      lookup: productLookup,
+      helpText: { ar: "المنتج الذي سيُعرض كاقتراح", en: "The product that will be shown as a suggestion" },
+    },
+    { key: "relation_type", label: { ar: "نوع العلاقة", en: "Relation type" }, type: "select", required: true,
       options: [
         { value: "related", label: { ar: "مرتبط", en: "Related" } },
-        { value: "cross_sell", label: { ar: "مكمّل", en: "Cross-sell" } },
-        { value: "upsell", label: { ar: "ترقية", en: "Upsell" } },
+        { value: "cross_sell", label: { ar: "مكمّل (اشتراه عملاء آخرون مع …)", en: "Cross-sell" } },
+        { value: "upsell", label: { ar: "ترقية (نسخة أفضل / أغلى)", en: "Upsell (a better/pricier version)" } },
         { value: "alternative", label: { ar: "بديل", en: "Alternative" } },
       ], defaultValue: "related" },
-    { key: "display_order", label: { ar: "الترتيب", en: "Display order" }, type: "number", defaultValue: 0 },
+    { key: "display_order", label: { ar: "ترتيب الظهور", en: "Display order" }, type: "number", defaultValue: 0,
+      helpText: { ar: "أرقام أقل تظهر أولاً", en: "Lower numbers appear first" } },
   ],
   actions: { create: true, edit: true, delete: true, export: true },
 };
@@ -271,7 +334,14 @@ export const loyaltyAccountsConfig: AdminPageConfig = {
       ] },
   ],
   form: [
-    { key: "user_id", label: { ar: "معرّف العميل", en: "User ID" }, type: "text", required: true, createOnly: true },
+    {
+      key: "user_id",
+      label: { ar: "العميل", en: "Customer" },
+      type: "lookup",
+      required: true,
+      createOnly: true,
+      lookup: customerLookup,
+    },
     { key: "tier", label: { ar: "المستوى", en: "Tier" }, type: "select",
       options: [
         { value: "bronze", label: { ar: "برونزي", en: "Bronze" } },
@@ -301,7 +371,13 @@ export const loyaltyTransactionsConfig: AdminPageConfig = {
     { key: "search", type: "search", columns: ["user_id", "reason", "related_id"] },
   ],
   form: [
-    { key: "user_id", label: { ar: "معرّف العميل", en: "User ID" }, type: "text", required: true },
+    {
+      key: "user_id",
+      label: { ar: "العميل", en: "Customer" },
+      type: "lookup",
+      required: true,
+      lookup: customerLookup,
+    },
     { key: "delta", label: { ar: "التغيير (+/-)", en: "Delta (+/-)" }, type: "number", required: true },
     { key: "reason", label: { ar: "السبب", en: "Reason" }, type: "text", required: true,
       placeholder: { ar: "purchase / refund / manual / redeem", en: "purchase / refund / manual / redeem" } },
@@ -335,7 +411,13 @@ export const referralsConfig: AdminPageConfig = {
       ] },
   ],
   form: [
-    { key: "referrer_user_id", label: { ar: "معرّف المُحيل", en: "Referrer user ID" }, type: "text", required: true },
+    {
+      key: "referrer_user_id",
+      label: { ar: "العميل المُحيل", en: "Referrer" },
+      type: "lookup",
+      required: true,
+      lookup: customerLookup,
+    },
     { key: "referral_code", label: { ar: "كود الإحالة", en: "Referral code" }, type: "text", required: true, maxLength: 64 },
     { key: "referred_email", label: { ar: "إيميل المُحال", en: "Referred email" }, type: "email" },
     { key: "status", label: { ar: "الحالة", en: "Status" }, type: "select",
@@ -411,7 +493,13 @@ export const reviewsConfig: AdminPageConfig = {
       ] },
   ],
   form: [
-    { key: "product_id", label: { ar: "المنتج (UUID)", en: "Product ID" }, type: "text", required: true },
+    {
+      key: "product_id",
+      label: { ar: "المنتج", en: "Product" },
+      type: "lookup",
+      required: true,
+      lookup: productLookup,
+    },
     { key: "customer_name", label: { ar: "اسم العميل", en: "Customer name" }, type: "text", required: true },
     { key: "rating", label: { ar: "النجوم (1-5)", en: "Rating (1-5)" }, type: "number", min: 1, max: 5, required: true },
     { key: "title", label: { ar: "العنوان", en: "Title" }, type: "text" },
@@ -476,7 +564,12 @@ export const shippingZonesConfig: AdminPageConfig = {
     { key: "is_active", type: "select", label: { ar: "الحالة", en: "Status" }, options: yesNo },
   ],
   form: [
-    { key: "carrier_id", label: { ar: "شركة الشحن (UUID)", en: "Carrier ID" }, type: "text" },
+    {
+      key: "carrier_id",
+      label: { ar: "شركة الشحن", en: "Shipping carrier" },
+      type: "lookup",
+      lookup: carrierLookup,
+    },
     { key: "name_ar", label: { ar: "الاسم (عربي)", en: "Name (AR)" }, type: "text", required: true },
     { key: "name_en", label: { ar: "الاسم (إنجليزي)", en: "Name (EN)" }, type: "text" },
     { key: "country_code", label: { ar: "رمز الدولة", en: "Country code" }, type: "text", defaultValue: "SA", maxLength: 2 },
@@ -514,8 +607,19 @@ export const shippingRatesConfig: AdminPageConfig = {
     { key: "is_active", type: "select", label: { ar: "الحالة", en: "Status" }, options: yesNo },
   ],
   form: [
-    { key: "zone_id", label: { ar: "المنطقة (UUID)", en: "Zone ID" }, type: "text", required: true },
-    { key: "carrier_id", label: { ar: "شركة الشحن (UUID)", en: "Carrier ID" }, type: "text" },
+    {
+      key: "zone_id",
+      label: { ar: "منطقة الشحن", en: "Shipping zone" },
+      type: "lookup",
+      required: true,
+      lookup: zoneLookup,
+    },
+    {
+      key: "carrier_id",
+      label: { ar: "شركة الشحن", en: "Shipping carrier" },
+      type: "lookup",
+      lookup: carrierLookup,
+    },
     { key: "rate_type", label: { ar: "نوع التسعير", en: "Rate type" }, type: "select",
       options: [
         { value: "flat", label: { ar: "ثابت", en: "Flat" } },
