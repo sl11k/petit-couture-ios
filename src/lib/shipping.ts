@@ -40,7 +40,7 @@ export interface ResolvedRate {
 export async function resolveShippingRates(ctx: RateContext): Promise<ResolvedRate[]> {
   const { data: carriers } = await supabase
     .from("shipping_carriers")
-    .select("*")
+    .select("id, code, name_ar, name_en, carrier_type, logo_url, is_active, supports_cod, supports_international, supports_tracking, supports_webhook, default_delivery_days_min, default_delivery_days_max, display_order")
     .eq("is_active", true);
   if (!carriers?.length) return [];
 
