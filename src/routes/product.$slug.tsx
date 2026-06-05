@@ -26,7 +26,7 @@ import {
   Zap,
 } from "lucide-react";
 import { getProductForCategory, categories, productsByCategory } from "@/data/categories";
-import { useDbProductBySlug, useDbRelatedProducts } from "@/hooks/useDbProducts";
+import { useDbProductBySlug, useDbRelatedProducts, useProductSizeVariants } from "@/hooks/useDbProducts";
 import { useProductExtras } from "@/hooks/useProductExtras";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
@@ -108,6 +108,7 @@ function ProductDetails() {
   const { slug } = Route.useParams();
   const router = useRouter();
   const { product, productId } = useDbProductBySlug(slug);
+  const { bySize: sizeVariantBySize } = useProductSizeVariants(productId);
   const { reviews: dbReviews, bundles: dbBundles, offers: dbOffers } = useProductExtras(slug);
   const { isRTL, lang } = useLanguage();
   const ar = isRTL;
@@ -242,7 +243,10 @@ function ProductDetails() {
     [product.upsells, selectedUpsells]
   );
   const giftWrapFee = giftWrap ? 35 : 0;
-  const lineTotal = product.price * qty + upsellsTotal + giftWrapFee;
+  // Per-size SKU/price/stock (when the product uses the Sizes & SKUs editor).
+  const selectedSizeVariant = sizeVariantBySize[size];
+  const effectivePrice = selectedSizeVariant?.price ?? product.price;
+  const lineTotal = effectivePrice * qty + upsellsTotal + giftWrapFee;
 
   const isOOS = product.status === "out_of_stock";
   const isPreorder = product.status === "preorder";
@@ -254,15 +258,20 @@ function ProductDetails() {
       toast.error(ar ? "اختر المقاس أولاً" : "Please select a size");
       return;
     }
+    if (selectedSizeVariant && selectedSizeVariant.stock <= 0) {
+      toast.error(ar ? "هذا المقاس غير متوفر" : "This size is out of stock");
+      return;
+    }
     bag.add({
       slug,
       name: product.name,
       brand: product.brand,
-      price: product.price,
+      price: effectivePrice,
       currency: product.currency,
       image: product.images[0],
       size,
       color,
+      sku: selectedSizeVariant?.sku ?? product.sku ?? undefined,
     });
     toast.success(ar ? "تمت الإضافة إلى السلة" : "Added to bag", {
       action: {
@@ -278,15 +287,20 @@ function ProductDetails() {
       toast.error(ar ? "اختر المقاس أولاً" : "Please select a size");
       return;
     }
+    if (selectedSizeVariant && selectedSizeVariant.stock <= 0) {
+      toast.error(ar ? "هذا المقاس غير متوفر" : "This size is out of stock");
+      return;
+    }
     bag.add({
       slug,
       name: product.name,
       brand: product.brand,
-      price: product.price,
+      price: effectivePrice,
       currency: product.currency,
       image: product.images[0],
       size,
       color,
+      sku: selectedSizeVariant?.sku ?? product.sku ?? undefined,
     });
     navigate({ to: "/checkout" });
   };
@@ -621,13 +635,17 @@ function ProductDetails() {
             >
               {product.sizes.map((s) => {
                 const active = s === size;
+                const sv = sizeVariantBySize[s];
+                const soldOut = !!sv && sv.stock <= 0;
                 return (
                   <button
                     key={s}
                     role="radio"
                     aria-checked={active}
+                    disabled={soldOut}
                     onClick={() => setSize(s)}
-                    className={`h-12 rounded-xl text-[13px] tracking-soft border transition active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${active ? "bg-gold-soft border-gold text-gold-deep font-medium" : "bg-background border-border text-muted-foreground hover:border-foreground/40"}`}
+                    title={soldOut ? (ar ? "غير متوفر" : "Out of stock") : undefined}
+                    className={`h-12 rounded-xl text-[13px] tracking-soft border transition active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${active ? "bg-gold-soft border-gold text-gold-deep font-medium" : "bg-background border-border text-muted-foreground hover:border-foreground/40"} ${soldOut ? "opacity-40 line-through cursor-not-allowed" : ""}`}
                   >
                     {s}
                   </button>

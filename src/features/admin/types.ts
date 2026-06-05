@@ -24,6 +24,7 @@ export type FormFieldType =
   | "videoGallery" | "warehouseStock"
   | "lookup"
   | "productVariants"
+  | "productSizes"
   | "productAttributes";
 
 export type LookupJunctionConfig = {

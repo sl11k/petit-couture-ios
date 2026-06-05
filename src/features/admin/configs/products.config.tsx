@@ -38,7 +38,7 @@ productsConfig.form = [
   { key: "name_ar", label: { ar: "الاسم العربي", en: "Name (AR)" }, type: "text", required: true, maxLength: 200 },
   { key: "name_en", label: { ar: "الاسم الإنجليزي", en: "Name (EN)" }, type: "text", required: true, maxLength: 200 },
   { key: "slug", label: { ar: "Slug", en: "Slug" }, type: "text", required: true, pattern: "^[a-z0-9-]+$", helpText: { ar: "حروف صغيرة وأرقام وشرطة", en: "lowercase letters, numbers and dashes" } },
-  { key: "sku", label: { ar: "SKU", en: "SKU" }, type: "text" },
+  { key: "sku", label: { ar: "SKU الأساسي (للمنتج)", en: "Base SKU (product)" }, type: "text", helpText: { ar: "كود عام للمنتج. لو عندك كود مختلف لكل مقاس، عبّيه في قسم \"المقاسات والأكواد\" بالأسفل.", en: "A general code for the product. If each size has its own code, fill them in the \"Sizes & SKUs\" section below." } },
   { key: "barcode", label: { ar: "الباركود", en: "Barcode" }, type: "text" },
   { key: "brand", label: { ar: "العلامة التجارية", en: "Brand" }, type: "text" },
 
@@ -84,6 +84,17 @@ productsConfig.form = [
   { key: "video_url", label: { ar: "الفيديو الرئيسي", en: "Main video" }, type: "video", bucket: "product-media", folder: "videos" },
   { key: "videos", label: { ar: "معرض الفيديوهات", en: "Video gallery" }, type: "videoGallery", bucket: "product-media", folder: "videos", maxItems: 10 },
   { key: "image_alt", label: { ar: "وصف الصورة (alt)", en: "Image alt" }, type: "text" },
+
+  {
+    key: "sizeSkus",
+    label: { ar: "المقاسات والأكواد (SKU لكل مقاس)", en: "Sizes & SKUs (one SKU per size)" },
+    type: "productSizes",
+    fullWidth: true,
+    helpText: {
+      ar: "لكل مقاس/عمر كود (SKU) وسعر وكمية مستقلة. هذي المقاسات تظهر للعميل في صفحة المنتج، والكود ينتقل مع الطلب.",
+      en: "Each size/age gets its own SKU, price and quantity. These sizes appear to the customer on the product page and the SKU flows through to the order.",
+    },
+  },
 
   {
     key: "variants",

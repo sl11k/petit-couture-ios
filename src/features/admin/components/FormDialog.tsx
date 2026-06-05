@@ -21,6 +21,7 @@ import { ProductMediaGallery } from "./ProductMediaGallery";
 import { WarehouseStockPicker, type WarehouseStockEntry } from "./WarehouseStockPicker";
 import { LookupField } from "./LookupField";
 import { VariantEditor, type VariantEntry } from "./VariantEditor";
+import { SizeSkuEditor, type SizeEntry } from "./SizeSkuEditor";
 import { AttributesEditor, type AttributeEntry } from "./AttributesEditor";
 import type { Bilingual, FormFieldDef } from "../types";
 import { cn } from "@/lib/utils";
@@ -42,7 +43,7 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
   for (const f of fields) {
     if (mode === "create" && f.editOnly) continue;
     if (mode === "edit" && f.createOnly) continue;
-    if (f.type === "warehouseStock" || f.type === "productVariants" || f.type === "productAttributes") {
+    if (f.type === "warehouseStock" || f.type === "productVariants" || f.type === "productSizes" || f.type === "productAttributes") {
       shape[f.key] = z.array(z.any()).default([]);
       continue;
     }
@@ -127,7 +128,7 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
 function coerceForDb(fields: FormFieldDef[], values: Record<string, any>) {
   const out: Record<string, any> = {};
   for (const f of fields) {
-    if (f.type === "warehouseStock" || f.type === "productVariants" || f.type === "productAttributes") continue;
+    if (f.type === "warehouseStock" || f.type === "productVariants" || f.type === "productSizes" || f.type === "productAttributes") continue;
     if (f.type === "lookup" && f.lookup?.junction) continue;
     let v = values[f.key];
     if (f.type === "lookup") {
@@ -169,7 +170,7 @@ function defaultsFrom(fields: FormFieldDef[], initial?: Record<string, any>) {
     }
     if (f.type === "gallery" || f.type === "videoGallery") { out[f.key] = Array.isArray(v) ? v : []; continue; }
     if (f.type === "warehouseStock") { out[f.key] = Array.isArray(v) ? v : []; continue; }
-    if (f.type === "productVariants" || f.type === "productAttributes") { out[f.key] = Array.isArray(v) ? v : []; continue; }
+    if (f.type === "productVariants" || f.type === "productSizes" || f.type === "productAttributes") { out[f.key] = Array.isArray(v) ? v : []; continue; }
     if (f.type === "json" && v && typeof v !== "string") v = JSON.stringify(v, null, 2);
     if (f.type === "boolean") v = Boolean(v);
     if (v === undefined || v === null) v = f.type === "boolean" ? false : "";
@@ -188,9 +189,13 @@ async function syncJunction(cfg: NonNullable<NonNullable<FormFieldDef["lookup"]>
 }
 
 async function syncProductVariants(productId: string, entries: VariantEntry[]) {
-  const { data: existing, error: exErr } = await (supabase as any).from("product_variants").select("id").eq("product_id", productId);
+  const { data: existing, error: exErr } = await (supabase as any).from("product_variants").select("id, attributes").eq("product_id", productId);
   if (exErr) throw exErr;
-  const existingIds = new Set<string>((existing ?? []).map((r: any) => r.id));
+  // Only manage colour rows here — size rows (attributes.kind = "size") are
+  // owned by syncProductSizes and must never be deleted by this editor.
+  const existingIds = new Set<string>(
+    (existing ?? []).filter((r: any) => r?.attributes?.kind !== "size").map((r: any) => r.id),
+  );
   const keptIds = new Set<string>();
   for (let i = 0; i < entries.length; i++) {
     const e = entries[i];
@@ -219,6 +224,61 @@ async function syncProductVariants(productId: string, entries: VariantEntry[]) {
   if (toDelete.length) {
     const { error } = await (supabase as any).from("product_variants").delete().in("id", toDelete);
     if (error) throw error;
+  }
+}
+
+// Size variants live in product_variants tagged `attributes.kind = "size"`.
+// Each row carries its own SKU, price and stock. We also mirror the active
+// size labels onto products.sizes so the existing storefront size selector
+// keeps working unchanged.
+async function syncProductSizes(productId: string, entries: SizeEntry[]) {
+  const clean = entries.filter((e) => (e.size || "").trim() !== "");
+  const { data: existing, error: exErr } = await (supabase as any)
+    .from("product_variants")
+    .select("id, attributes")
+    .eq("product_id", productId);
+  if (exErr) throw exErr;
+  // Only the size rows are ours to manage.
+  const existingIds = new Set<string>(
+    (existing ?? []).filter((r: any) => r?.attributes?.kind === "size").map((r: any) => r.id),
+  );
+  const keptIds = new Set<string>();
+  for (let i = 0; i < clean.length; i++) {
+    const e = clean[i];
+    const payload = {
+      product_id: productId,
+      size: e.size.trim(),
+      sku: e.sku?.trim() || null,
+      price: e.price ?? null,
+      compare_at_price: e.compare_at_price ?? null,
+      stock: Number(e.stock) || 0,
+      is_active: e.is_active ?? true,
+      sort_order: i,
+      position: i,
+      attributes: { kind: "size" },
+    };
+    if (e.id && existingIds.has(e.id)) {
+      keptIds.add(e.id);
+      const { error } = await (supabase as any).from("product_variants").update(payload).eq("id", e.id);
+      if (error) throw error;
+    } else {
+      const { error } = await (supabase as any).from("product_variants").insert(payload);
+      if (error) throw error;
+    }
+  }
+  const toDelete = Array.from(existingIds).filter((id) => !keptIds.has(id));
+  if (toDelete.length) {
+    const { error } = await (supabase as any).from("product_variants").delete().in("id", toDelete);
+    if (error) throw error;
+  }
+  // Mirror active size labels onto products.sizes for the storefront selector.
+  // Guard: only touch products.sizes when this editor is actually in use
+  // (has rows now, or had size rows before) so we never wipe legacy sizes that
+  // were set elsewhere (e.g. via import) on products that don't use per-size SKUs.
+  if (clean.length > 0 || existingIds.size > 0) {
+    const labels = clean.filter((e) => e.is_active !== false).map((e) => e.size.trim());
+    const { error: pErr } = await (supabase as any).from("products").update({ sizes: labels }).eq("id", productId);
+    if (pErr) throw pErr;
   }
 }
 
@@ -274,6 +334,7 @@ export function FormDialog({
 
   const warehouseStockField = useMemo(() => visibleFields.find((f) => f.type === "warehouseStock"), [visibleFields]);
   const variantsField = useMemo(() => visibleFields.find((f) => f.type === "productVariants"), [visibleFields]);
+  const sizesField = useMemo(() => visibleFields.find((f) => f.type === "productSizes"), [visibleFields]);
   const attributesField = useMemo(() => visibleFields.find((f) => f.type === "productAttributes"), [visibleFields]);
   const junctionLookupFields = useMemo(() => visibleFields.filter((f) => f.type === "lookup" && f.lookup?.junction), [visibleFields]);
 
@@ -295,10 +356,21 @@ export function FormDialog({
   useEffect(() => {
     if (!open || !variantsField || mode !== "edit" || !rowId) return;
     (async () => {
-      const { data } = await (supabase as any).from("product_variants").select("id, color_name_ar, color_name_en, color_hex, color_image_url, size, sku, stock, is_active, sort_order").eq("product_id", rowId).order("sort_order", { ascending: true });
-      setValues((s) => ({ ...s, [variantsField.key]: (data ?? []) as VariantEntry[] }));
+      const { data } = await (supabase as any).from("product_variants").select("id, color_name_ar, color_name_en, color_hex, color_image_url, size, sku, stock, is_active, sort_order, attributes").eq("product_id", rowId).order("sort_order", { ascending: true });
+      // Exclude size rows — they belong to the Sizes & SKUs editor.
+      const colourRows = ((data ?? []) as any[]).filter((r) => r?.attributes?.kind !== "size");
+      setValues((s) => ({ ...s, [variantsField.key]: colourRows as VariantEntry[] }));
     })();
   }, [open, mode, rowId, variantsField]);
+
+  useEffect(() => {
+    if (!open || !sizesField || mode !== "edit" || !rowId) return;
+    (async () => {
+      const { data } = await (supabase as any).from("product_variants").select("id, size, sku, price, compare_at_price, stock, is_active, sort_order, attributes").eq("product_id", rowId).order("sort_order", { ascending: true });
+      const sizeRows = ((data ?? []) as any[]).filter((r) => r?.attributes?.kind === "size");
+      setValues((s) => ({ ...s, [sizesField.key]: sizeRows as SizeEntry[] }));
+    })();
+  }, [open, mode, rowId, sizesField]);
 
   useEffect(() => {
     if (!open || !attributesField || mode !== "edit" || !rowId) return;
@@ -389,6 +461,11 @@ export function FormDialog({
         catch (err: any) { setSaving(false); console.error("[FormDialog] variants sync failed", err); toast.error(err?.message || (ar ? "تعذر حفظ الألوان" : "Failed to save colours")); return; }
       }
 
+      if (sizesField && productId) {
+        try { await syncProductSizes(productId, (values[sizesField.key] as SizeEntry[]) ?? []); }
+        catch (err: any) { setSaving(false); console.error("[FormDialog] sizes sync failed", err); toast.error(err?.message || (ar ? "تعذر حفظ المقاسات" : "Failed to save sizes")); return; }
+      }
+
       if (attributesField && productId) {
         try { await syncProductAttributes(productId, (values[attributesField.key] as AttributeEntry[]) ?? []); }
         catch (err: any) { setSaving(false); console.error("[FormDialog] attributes sync failed", err); toast.error(err?.message || (ar ? "تعذر حفظ التصنيفات الفرعية" : "Failed to save attributes")); return; }
@@ -425,7 +502,7 @@ export function FormDialog({
                 f.type === "textarea" || f.type === "json" || f.type === "gallery" ||
                 f.type === "videoGallery" || f.type === "image" || f.type === "video" ||
                 f.type === "warehouseStock" ||
-                f.type === "productVariants" || f.type === "productAttributes" ||
+                f.type === "productVariants" || f.type === "productSizes" || f.type === "productAttributes" ||
                 (f.type === "lookup" && (f.lookup?.multiple || !!f.lookup?.junction))
               );
               const lbl = ar ? f.label.ar : f.label.en;
@@ -439,6 +516,8 @@ export function FormDialog({
                   </Label>
                   {f.type === "productVariants" ? (
                     <VariantEditor value={(Array.isArray(values[f.key]) ? values[f.key] : []) as VariantEntry[]} onChange={(v) => setVal(f.key, v)} />
+                  ) : f.type === "productSizes" ? (
+                    <SizeSkuEditor value={(Array.isArray(values[f.key]) ? values[f.key] : []) as SizeEntry[]} onChange={(v) => setVal(f.key, v)} basePrice={Number(values["price"]) || 0} currency={(values["currency"] as string) || "SAR"} />
                   ) : f.type === "productAttributes" ? (
                     <AttributesEditor value={(Array.isArray(values[f.key]) ? values[f.key] : []) as AttributeEntry[]} onChange={(v) => setVal(f.key, v)} />
                   ) : f.type === "lookup" && f.lookup ? (

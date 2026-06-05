@@ -68,7 +68,7 @@ function VariantsAdminPage() {
         productId={id}
         types={data.types}
         values={data.values}
-        variants={data.variants}
+        variants={(data.variants ?? []).filter((v: any) => v.attributes?.kind !== "size")}
         bridge={data.bridge}
         inventory={data.inventory}
         warehouses={data.warehouses}

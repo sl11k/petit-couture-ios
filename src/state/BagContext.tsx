@@ -22,6 +22,7 @@ export type BagItem = {
   size: string;
   color: string;
   qty: number;
+  sku?: string;
   variantId?: string;
   variantLabel?: string;
 };

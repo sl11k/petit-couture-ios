@@ -27,7 +27,9 @@ export function VariantsPicker(props: Props) {
     enabled: !!props.productId,
   });
 
-  const variants = (data ?? []).filter((v: any) => v.is_active);
+  // Size rows (attributes.kind="size") are surfaced by the main size selector,
+  // not here — exclude them so they don't appear as extra/out-of-stock pills.
+  const variants = (data ?? []).filter((v: any) => v.is_active && v.attributes?.kind !== "size");
   const [selected, setSelected] = useState<string | null>(null);
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   getProductForCategory,
@@ -121,6 +121,66 @@ function mergeRowOntoBase(slug: string, row: DbRow | null, lang: "ar" | "en"): M
 
 const SELECT_COLS =
   "id,slug,name_ar,name_en,brand,description_ar,description_en,short_description_ar,short_description_en,price,compare_at_price,currency,image_url,images,sizes,colors,stock,low_stock_threshold,status,video_url,sku,is_active";
+
+export type SizeVariant = {
+  size: string;
+  sku: string | null;
+  price: number | null;
+  stock: number;
+};
+
+/**
+ * Per-size variants for a product (rows in `product_variants` tagged
+ * attributes.kind = "size"). Each size carries its own SKU, price and stock,
+ * entered via the admin "Sizes & SKUs" editor. Returns an empty list for
+ * products that don't use per-size SKUs, so callers stay backward-compatible.
+ */
+export function useProductSizeVariants(productId: string | null): {
+  variants: SizeVariant[];
+  bySize: Record<string, SizeVariant>;
+  loading: boolean;
+} {
+  const [variants, setVariants] = useState<SizeVariant[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!productId) {
+      setVariants([]);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    (supabase as any)
+      .from("product_variants")
+      .select("size, sku, price, stock, is_active, attributes, sort_order")
+      .eq("product_id", productId)
+      .order("sort_order", { ascending: true })
+      .then(({ data }: { data: unknown }) => {
+        if (cancelled) return;
+        const rows: SizeVariant[] = (arr<any>(data))
+          .filter((r) => r?.attributes?.kind === "size" && r?.is_active !== false && String(r?.size ?? "").trim() !== "")
+          .map((r) => ({
+            size: String(r.size).trim(),
+            sku: r.sku ?? null,
+            price: r.price != null ? Number(r.price) : null,
+            stock: Number(r.stock) || 0,
+          }));
+        setVariants(rows);
+        setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [productId]);
+
+  const bySize = useMemo(() => {
+    const m: Record<string, SizeVariant> = {};
+    for (const v of variants) m[v.size] = v;
+    return m;
+  }, [variants]);
+
+  return { variants, bySize, loading };
+}
 
 export function useDbProductBySlug(slug: string): {
   product: MergedProduct;
