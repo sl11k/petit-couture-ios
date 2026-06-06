@@ -129,7 +129,10 @@ function InvoiceView() {
             <tbody>
               {(inv.items as any[]).map((it, i) => (
                 <tr key={i} className="border-b border-border/50">
-                  <td className="p-2">{it.product_name}</td>
+                  <td className="p-2">
+                    {it.product_name}
+                    {it.sku && <span className="block text-[11px] text-muted-foreground font-mono" dir="ltr">SKU: {it.sku}</span>}
+                  </td>
                   <td className="p-2 text-center">{it.qty}</td>
                   <td className="p-2 text-left">{formatMoney(it.unit_price, cur)}</td>
                   <td className="p-2 text-left">{formatMoney(it.line_total, cur)}</td>

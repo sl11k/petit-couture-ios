@@ -342,6 +342,7 @@ function CheckoutPage() {
             qty: it.qty,
             size: it.size ?? null,
             color: it.color ?? null,
+            sku: it.sku ?? null,
           })),
           address: fullAddress as Record<string, unknown> as never,
           currency: bag.currency,

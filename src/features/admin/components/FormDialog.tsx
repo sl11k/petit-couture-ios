@@ -276,8 +276,16 @@ async function syncProductSizes(productId: string, entries: SizeEntry[]) {
   // (has rows now, or had size rows before) so we never wipe legacy sizes that
   // were set elsewhere (e.g. via import) on products that don't use per-size SKUs.
   if (clean.length > 0 || existingIds.size > 0) {
-    const labels = clean.filter((e) => e.is_active !== false).map((e) => e.size.trim());
-    const { error: pErr } = await (supabase as any).from("products").update({ sizes: labels }).eq("id", productId);
+    const activeRows = clean.filter((e) => e.is_active !== false);
+    const labels = activeRows.map((e) => e.size.trim());
+    const update: Record<string, any> = { sizes: labels };
+    // When sizes are in use, the per-size quantities ARE the product's stock —
+    // sum them so storefront availability/status stays correct. (Products with
+    // no inventory rows aren't touched by the warehouse stock-sync trigger.)
+    if (clean.length > 0) {
+      update.stock = activeRows.reduce((s, e) => s + (Number(e.stock) || 0), 0);
+    }
+    const { error: pErr } = await (supabase as any).from("products").update(update).eq("id", productId);
     if (pErr) throw pErr;
   }
 }

@@ -139,6 +139,21 @@ function ProductDetails() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.sizes.join("|"), product.colors.map((c) => c.name).join("|")]);
+
+  // Once per-size stock loads, avoid landing on a sold-out size: switch to the
+  // first size that's actually available.
+  useEffect(() => {
+    if (!product.sizes.length) return;
+    const isSold = (s: string) => {
+      const v = sizeVariantBySize[s];
+      return !!v && v.stock <= 0;
+    };
+    if (!size || isSold(size)) {
+      const firstAvailable = product.sizes.find((s) => !isSold(s));
+      if (firstAvailable && firstAvailable !== size) setSize(firstAvailable);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [Object.keys(sizeVariantBySize).join("|"), product.sizes.join("|")]);
   const [qty, setQty] = useState(1);
   const [giftWrap, setGiftWrap] = useState(false);
   const [selectedUpsells, setSelectedUpsells] = useState<string[]>([]);
@@ -246,7 +261,13 @@ function ProductDetails() {
   // Per-size SKU/price/stock (when the product uses the Sizes & SKUs editor).
   const selectedSizeVariant = sizeVariantBySize[size];
   const effectivePrice = selectedSizeVariant?.price ?? product.price;
+  const maxQty = selectedSizeVariant ? Math.max(1, selectedSizeVariant.stock) : (product.stock || 99);
   const lineTotal = effectivePrice * qty + upsellsTotal + giftWrapFee;
+
+  // Don't let quantity exceed the selected size's available stock.
+  useEffect(() => {
+    if (qty > maxQty) setQty(maxQty);
+  }, [maxQty, qty]);
 
   const isOOS = product.status === "out_of_stock";
   const isPreorder = product.status === "preorder";
@@ -573,13 +594,13 @@ function ProductDetails() {
                 {t.reviews(effectiveReviewsCount)}
               </button>
               <span>·</span>
-              <span className="truncate">{t.sku}: {product.sku}</span>
+              <span className="truncate">{t.sku}: {selectedSizeVariant?.sku ?? product.sku}</span>
             </div>
 
             {/* Price */}
             <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-              <span className="text-[22px] text-foreground tracking-tight font-medium">{fmtPrice(product.price)}</span>
-              {product.compareAtPrice && (
+              <span className="text-[22px] text-foreground tracking-tight font-medium">{fmtPrice(effectivePrice)}</span>
+              {product.compareAtPrice && product.compareAtPrice > effectivePrice && (
                 <span className="text-[14px] text-muted-foreground line-through">{fmtPrice(product.compareAtPrice)}</span>
               )}
               {discountPct > 0 && (
@@ -587,7 +608,7 @@ function ProductDetails() {
               )}
             </div>
             <p className="text-[12px] text-muted-foreground mt-1">
-              {ar ? `أو 4 دفعات بدون فوائد ${fmtPrice(product.price / 4)} عبر تمارا` : `Or 4 interest-free of ${fmtPrice(product.price / 4)} with Tamara`}
+              {ar ? `أو 4 دفعات بدون فوائد ${fmtPrice(effectivePrice / 4)} عبر تمارا` : `Or 4 interest-free of ${fmtPrice(effectivePrice / 4)} with Tamara`}
             </p>
           </section>
 
@@ -687,9 +708,12 @@ function ProductDetails() {
               <div className="flex items-center gap-1 border border-border rounded-xl">
                 <button onClick={() => setQty(Math.max(1, qty - 1))} className="h-10 w-10 grid place-items-center text-foreground/70 active:scale-95"><Minus className="h-4 w-4" /></button>
                 <span className="w-8 text-center text-[14px] font-medium">{fmt(qty)}</span>
-                <button onClick={() => setQty(Math.min(product.stock || 99, qty + 1))} className="h-10 w-10 grid place-items-center text-foreground/70 active:scale-95"><Plus className="h-4 w-4" /></button>
+                <button onClick={() => setQty(Math.min(maxQty, qty + 1))} disabled={qty >= maxQty} className="h-10 w-10 grid place-items-center text-foreground/70 active:scale-95 disabled:opacity-40"><Plus className="h-4 w-4" /></button>
               </div>
             </div>
+            {selectedSizeVariant && selectedSizeVariant.stock > 0 && selectedSizeVariant.stock <= 5 && (
+              <p className="mt-2 text-[12px] text-amber-700">{ar ? `بقي ${fmt(selectedSizeVariant.stock)} فقط لهذا المقاس` : `Only ${fmt(selectedSizeVariant.stock)} left in this size`}</p>
+            )}
           </section>
 
           {/* Gift wrap */}

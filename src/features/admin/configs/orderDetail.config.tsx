@@ -84,6 +84,7 @@ export const orderDetailConfig: AdminDetailConfig = {
       columns: [
         { key: "image_url", label: { ar: "الصورة", en: "Image" }, type: "image", width: "w-16" },
         { key: "product_name", label: { ar: "المنتج", en: "Product" } },
+        { key: "sku", label: { ar: "SKU", en: "SKU" } },
         { key: "size", label: { ar: "المقاس", en: "Size" }, hideOnMobile: true },
         { key: "color", label: { ar: "اللون", en: "Color" }, hideOnMobile: true },
         { key: "qty", label: { ar: "الكمية", en: "Qty" }, type: "number" },

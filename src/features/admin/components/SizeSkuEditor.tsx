@@ -22,6 +22,19 @@ export type SizeEntry = {
 // digits inside a size label, e.g. "3 Years" -> "3"
 const digitsOf = (s: string) => (s.match(/\d+/)?.[0] ?? "");
 
+// Grammatically correct age label per language.
+const ageLabel = (n: number, ar: boolean) => {
+  if (ar) {
+    if (n === 1) return "سنة";
+    if (n === 2) return "سنتان";
+    if (n >= 3 && n <= 10) return `${n} سنوات`;
+    return `${n} سنة`;
+  }
+  return `${n} ${n === 1 ? "Year" : "Years"}`;
+};
+
+const norm = (s?: string) => (s ?? "").trim().toLowerCase();
+
 export function SizeSkuEditor({
   value,
   onChange,
@@ -43,6 +56,7 @@ export function SizeSkuEditor({
   const [toAge, setToAge] = useState(10);
   const [skuBase, setSkuBase] = useState("");
   const [skuSuffix, setSkuSuffix] = useState("Y");
+  const [priceAll, setPriceAll] = useState<string>("");
 
   const update = (idx: number, patch: Partial<SizeEntry>) => {
     const next = value.slice();
@@ -63,14 +77,20 @@ export function SizeSkuEditor({
   const generateAges = () => {
     const lo = Math.min(fromAge, toAge);
     const hi = Math.max(fromAge, toAge);
-    const existing = new Set(value.map((r) => digitsOf(r.size)).filter(Boolean));
-    const unit = ar ? "سنوات" : "Years";
+    const existing = new Set(value.map((r) => norm(r.size)).filter(Boolean));
     const added: SizeEntry[] = [];
     for (let n = lo; n <= hi; n++) {
-      if (existing.has(String(n))) continue;
-      added.push({ size: `${n} ${unit}`, sku: "", price: basePrice || null, stock: 0, is_active: true });
+      const label = ageLabel(n, ar);
+      if (existing.has(norm(label))) continue;
+      added.push({ size: label, sku: "", price: basePrice || null, stock: 0, is_active: true });
     }
     if (added.length) onChange([...value, ...added]);
+  };
+
+  // Apply one price to every row (uses the typed value, else the base price).
+  const applyPriceToAll = () => {
+    const p = priceAll.trim() === "" ? (basePrice || null) : Number(priceAll);
+    onChange(value.map((r) => ({ ...r, price: p })));
   };
 
   // Fill empty SKUs as `${base}${ageDigits}${suffix}` → e.g. VESTIDO481 + 3 + Y = VESTIDO4813Y
@@ -85,6 +105,14 @@ export function SizeSkuEditor({
       }),
     );
   };
+
+  // Duplicate detection + totals for the summary line.
+  const sizeCounts = value.reduce<Record<string, number>>((a, r) => { const k = norm(r.size); if (k) a[k] = (a[k] || 0) + 1; return a; }, {});
+  const skuCounts = value.reduce<Record<string, number>>((a, r) => { const k = norm(r.sku); if (k) a[k] = (a[k] || 0) + 1; return a; }, {});
+  const totalQty = value.reduce((s, r) => s + (Number(r.stock) || 0), 0);
+  const namedCount = value.filter((r) => (r.size || "").trim() !== "").length;
+  const dupSizes = Object.values(sizeCounts).some((n) => n > 1);
+  const dupSkus = Object.values(skuCounts).some((n) => n > 1);
 
   return (
     <div className="space-y-3">
@@ -127,6 +155,32 @@ export function SizeSkuEditor({
         </div>
       </div>
 
+      {/* Bulk price + live summary */}
+      {value.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 px-0.5">
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center rounded-md border border-input bg-background">
+              <span className="px-1.5 text-[10px] text-muted-foreground">{currency}</span>
+              <input type="number" min={0} step={0.01} value={priceAll} onChange={(e) => setPriceAll(e.target.value)} placeholder={String(basePrice || "")} className="h-7 w-20 bg-transparent px-1 text-xs outline-none" dir="ltr" aria-label={ar ? "سعر موحّد" : "Uniform price"} />
+            </div>
+            <button type="button" onClick={applyPriceToAll} disabled={disabled} className="h-7 rounded-md bg-secondary px-2.5 text-[11px] hover:bg-secondary/80 disabled:opacity-50">
+              {ar ? "طبّق السعر على الكل" : "Apply price to all"}
+            </button>
+          </div>
+          <div className="text-[11px] text-muted-foreground">
+            {ar ? `${namedCount} مقاس · المخزون الكلي ${totalQty}` : `${namedCount} sizes · ${totalQty} total stock`}
+          </div>
+        </div>
+      )}
+
+      {(dupSizes || dupSkus) && (
+        <div className="rounded-md border border-amber-300 bg-amber-50 p-2 text-[11px] text-amber-800">
+          {ar
+            ? `تنبيه: يوجد ${dupSizes ? "مقاسات" : ""}${dupSizes && dupSkus ? " و" : ""}${dupSkus ? "أكواد" : ""} مكرّرة — صحّح المميّزة بالأحمر.`
+            : `Warning: duplicate ${dupSizes ? "sizes" : ""}${dupSizes && dupSkus ? " and " : ""}${dupSkus ? "SKUs" : ""} — fix the ones highlighted in red.`}
+        </div>
+      )}
+
       {value.length === 0 && (
         <div className="rounded-md border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
           {ar ? 'لا توجد مقاسات بعد — ولّد الأعمار بالأعلى أو اضغط "إضافة مقاس".' : 'No sizes yet — generate ages above or click "Add size".'}
@@ -147,6 +201,8 @@ export function SizeSkuEditor({
       <ul className="space-y-2">
         {value.map((row, idx) => {
           const inactive = row.is_active === false;
+          const sizeDup = !!norm(row.size) && sizeCounts[norm(row.size)] > 1;
+          const skuDup = !!norm(row.sku) && skuCounts[norm(row.sku)] > 1;
           return (
             <li
               key={row.id ?? `new-${idx}`}
@@ -157,12 +213,12 @@ export function SizeSkuEditor({
             >
               <div className="space-y-1">
                 <span className="text-[10px] text-muted-foreground sm:hidden">{ar ? "المقاس / العمر" : "Size / Age"}</span>
-                <input type="text" value={row.size} onChange={(e) => update(idx, { size: e.target.value })} placeholder={ar ? "مثال: 3 سنوات" : "e.g. 3 Years"} className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs" />
+                <input type="text" value={row.size} onChange={(e) => update(idx, { size: e.target.value })} placeholder={ar ? "مثال: 3 سنوات" : "e.g. 3 Years"} className={cn("h-8 w-full rounded-md border bg-background px-2 text-xs", sizeDup ? "border-red-400 ring-1 ring-red-300" : "border-input")} />
               </div>
 
               <div className="space-y-1">
                 <span className="text-[10px] text-muted-foreground sm:hidden">SKU</span>
-                <input type="text" value={row.sku ?? ""} onChange={(e) => update(idx, { sku: e.target.value })} placeholder="VESTIDO4813Y" className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs font-mono" dir="ltr" />
+                <input type="text" value={row.sku ?? ""} onChange={(e) => update(idx, { sku: e.target.value })} placeholder="VESTIDO4813Y" className={cn("h-8 w-full rounded-md border bg-background px-2 text-xs font-mono", skuDup ? "border-red-400 ring-1 ring-red-300" : "border-input")} dir="ltr" />
               </div>
 
               <div className="space-y-1">

@@ -10,6 +10,7 @@ type OrderItem = {
   qty: number;
   size: string | null;
   color: string | null;
+  sku: string | null;
   unit_price: number;
   line_total: number;
   image_url: string | null;
@@ -37,7 +38,7 @@ export const Route = createFileRoute("/order-confirmation/$orderNumber")({
     const { data, error } = await db
       .from("orders")
       .select(
-        "id, order_number, status, customer_name, customer_email, customer_phone, subtotal, shipping_fee, tax, total, currency, shipping_address, created_at, order_items(id, product_name, brand, qty, size, color, unit_price, line_total, image_url)",
+        "id, order_number, status, customer_name, customer_email, customer_phone, subtotal, shipping_fee, tax, total, currency, shipping_address, created_at, order_items(id, product_name, brand, qty, size, color, sku, unit_price, line_total, image_url)",
       )
       .eq("order_number", params.orderNumber)
       .maybeSingle();
@@ -218,6 +219,9 @@ function OrderConfirmationPage() {
                     {it.size || it.color ? " · " : ""}
                     {t.qty} {fmt(it.qty)}
                   </p>
+                  {it.sku && (
+                    <p className="text-[10.5px] text-muted-foreground/80 font-mono mt-0.5" dir="ltr">SKU: {it.sku}</p>
+                  )}
                 </div>
                 <span className="text-[13px] tabular-nums text-foreground self-start">
                   {fmt(it.line_total)} {order.currency}

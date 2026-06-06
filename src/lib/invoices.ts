@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 export type InvoiceItem = {
   product_id?: string | null;
   product_name: string;
+  sku?: string | null;
   qty: number;
   unit_price: number;
   line_total: number;
@@ -87,6 +88,7 @@ export async function generateInvoiceForOrder(orderId: string, opts?: { type?: "
     items: (items ?? []).map((it: any) => ({
       product_id: it.product_id,
       product_name: it.product_name,
+      sku: it.sku ?? null,
       qty: it.qty,
       unit_price: Number(it.unit_price),
       line_total: Number(it.line_total),

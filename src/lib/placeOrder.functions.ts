@@ -15,6 +15,7 @@ const ItemSchema = z.object({
   qty: z.number().int().min(1).max(999),
   size: z.string().max(64).nullable().optional(),
   color: z.string().max(64).nullable().optional(),
+  sku: z.string().max(120).nullable().optional(),
   variant_id: z.string().uuid().nullable().optional(),
 });
 
@@ -178,12 +179,19 @@ export const placeOrder = createServerFn({ method: "POST" })
       qty: it.qty,
       size: it.size ?? null,
       color: it.color ?? null,
+      sku: it.sku ?? null,
       variant_id: it.variant_id ?? null,
       line_total: it.price * it.qty,
     }));
-    const { error: itemsErr } = await supabaseAdmin
+    let { error: itemsErr } = await supabaseAdmin
       .from("order_items")
       .insert(items);
+    // Defensive: if the per-size SKU column hasn't been migrated yet on this
+    // environment, retry without it so checkout never breaks on a timing gap.
+    if (itemsErr && /sku/i.test(itemsErr.message)) {
+      const itemsNoSku = items.map(({ sku: _sku, ...rest }) => rest);
+      ({ error: itemsErr } = await supabaseAdmin.from("order_items").insert(itemsNoSku));
+    }
     if (itemsErr) throw new Error(itemsErr.message);
 
     // 3b. Stock handling:

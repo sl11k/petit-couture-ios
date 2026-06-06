@@ -224,6 +224,9 @@ function BagPage() {
                         <p className="mt-1 text-[11.5px] text-muted-foreground tracking-soft">
                           {tt.size} {it.size} · {tt.color} {it.color}
                         </p>
+                        {it.sku && (
+                          <p className="mt-0.5 text-[10.5px] text-muted-foreground/80 font-mono" dir="ltr">SKU: {it.sku}</p>
+                        )}
 
                         <div className="mt-auto pt-2 flex items-center justify-between">
                           <div className="inline-flex items-center rounded-xl border border-border bg-background">
