@@ -3,8 +3,10 @@ import { buildMeta } from "@/lib/seo";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatMoney, markInvoiceEmailed } from "@/lib/invoices";
+import { notify } from "@/lib/notifications";
 import { Printer, Download, Mail, ArrowLeft } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/invoice/$id")({
   head: () =>
@@ -44,10 +46,35 @@ function InvoiceView() {
   const cur = inv.currency === "SAR" ? "ر.س" : inv.currency;
 
   async function emailInvoice() {
+    if (!inv?.customer_email) { toast.error("لا يوجد بريد للعميل على هذه الفاتورة"); return; }
     setSending(true);
     try {
+      // Queue the invoice email through the same notification pipeline used by
+      // order/shipping emails (the configured email system processes the queue).
+      const res = await notify({
+        event_code: "invoice_issued",
+        audience: "customer",
+        recipient_email: inv.customer_email,
+        recipient_user_id: inv.user_id ?? null,
+        channels_override: ["email"],
+        language: "ar",
+        variables: {
+          invoice_number: inv.invoice_number,
+          order_number: inv.order_number,
+          customer_name: inv.customer_name,
+          total: inv.total,
+          currency: inv.currency,
+          invoice_url: typeof window !== "undefined" ? `${window.location.origin}/invoice/${id}` : "",
+        },
+        related_entity: "invoice",
+        related_entity_id: id,
+        triggered_by: "admin_invoice_view",
+      });
       await markInvoiceEmailed(id);
-      alert("تم تسجيل إرسال الفاتورة بالإيميل (سيتم عبر نظام الإيميل المُعدّ).");
+      if (res?.ok) toast.success("تم إرسال الفاتورة إلى بريد العميل عبر نظام البريد.");
+      else toast.error(`تعذّر الإرسال: ${(res as any)?.reason ?? "غير معروف"}`);
+    } catch (e: any) {
+      toast.error(e?.message || "فشل إرسال الفاتورة");
     } finally { setSending(false); }
   }
 
