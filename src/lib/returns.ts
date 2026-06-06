@@ -48,15 +48,34 @@ export async function isOrderEligibleForReturn(orderId: string): Promise<{ ok: b
 export async function restockItems(returnRequestId: string) {
   const { data: items } = await supabase
     .from("return_items")
-    .select("product_id, qty, restock, inspection_status")
+    .select("product_id, qty, restock, inspection_status, order_item_id")
     .eq("return_request_id", returnRequestId);
   if (!items) return;
   for (const it of items) {
     if (!it.product_id || !it.restock) continue;
     if (it.inspection_status === "damaged") continue;
+    const qty = it.qty ?? 0;
     const { data: p } = await supabase.from("products").select("stock").eq("id", it.product_id).maybeSingle();
     if (p) {
-      await supabase.from("products").update({ stock: (p.stock ?? 0) + (it.qty ?? 0) }).eq("id", it.product_id);
+      await supabase.from("products").update({ stock: (p.stock ?? 0) + qty }).eq("id", it.product_id);
+    }
+    // Also restore per-size stock: find the size variant via the order item's
+    // SKU (mirrors the decrement done in finalize_order_stock).
+    const orderItemId = (it as any).order_item_id as string | null;
+    if (orderItemId && qty > 0) {
+      const { data: oi } = await supabase.from("order_items").select("sku").eq("id", orderItemId).maybeSingle();
+      const sku = (oi as any)?.sku as string | null;
+      if (sku) {
+        const { data: v } = await (supabase as any)
+          .from("product_variants")
+          .select("id, stock, attributes")
+          .eq("product_id", it.product_id)
+          .eq("sku", sku)
+          .maybeSingle();
+        if (v && v.attributes?.kind === "size") {
+          await (supabase as any).from("product_variants").update({ stock: (v.stock ?? 0) + qty }).eq("id", v.id);
+        }
+      }
     }
   }
 }

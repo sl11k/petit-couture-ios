@@ -47,6 +47,7 @@ import { Route as AdminThemesRouteImport } from './routes/admin.themes'
 import { Route as AdminSupportRouteImport } from './routes/admin.support'
 import { Route as AdminStorefrontRouteImport } from './routes/admin.storefront'
 import { Route as AdminStatesRouteImport } from './routes/admin.states'
+import { Route as AdminSizeSkusRouteImport } from './routes/admin.size-skus'
 import { Route as AdminSiteAnalyticsRouteImport } from './routes/admin.site-analytics'
 import { Route as AdminShopByCategoryRouteImport } from './routes/admin.shop-by-category'
 import { Route as AdminShippingZonesRouteImport } from './routes/admin.shipping-zones'
@@ -330,6 +331,11 @@ const AdminStorefrontRoute = AdminStorefrontRouteImport.update({
 const AdminStatesRoute = AdminStatesRouteImport.update({
   id: '/states',
   path: '/states',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSizeSkusRoute = AdminSizeSkusRouteImport.update({
+  id: '/size-skus',
+  path: '/size-skus',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSiteAnalyticsRoute = AdminSiteAnalyticsRouteImport.update({
@@ -879,6 +885,7 @@ export interface FileRoutesByFullPath {
   '/admin/shipping-zones': typeof AdminShippingZonesRoute
   '/admin/shop-by-category': typeof AdminShopByCategoryRoute
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
+  '/admin/size-skus': typeof AdminSizeSkusRoute
   '/admin/states': typeof AdminStatesRoute
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/support': typeof AdminSupportRouteWithChildren
@@ -1002,6 +1009,7 @@ export interface FileRoutesByTo {
   '/admin/shipping-zones': typeof AdminShippingZonesRoute
   '/admin/shop-by-category': typeof AdminShopByCategoryRoute
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
+  '/admin/size-skus': typeof AdminSizeSkusRoute
   '/admin/states': typeof AdminStatesRoute
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/themes': typeof AdminThemesRoute
@@ -1134,6 +1142,7 @@ export interface FileRoutesById {
   '/admin/shipping-zones': typeof AdminShippingZonesRoute
   '/admin/shop-by-category': typeof AdminShopByCategoryRoute
   '/admin/site-analytics': typeof AdminSiteAnalyticsRoute
+  '/admin/size-skus': typeof AdminSizeSkusRoute
   '/admin/states': typeof AdminStatesRoute
   '/admin/storefront': typeof AdminStorefrontRoute
   '/admin/support': typeof AdminSupportRouteWithChildren
@@ -1269,6 +1278,7 @@ export interface FileRouteTypes {
     | '/admin/shipping-zones'
     | '/admin/shop-by-category'
     | '/admin/site-analytics'
+    | '/admin/size-skus'
     | '/admin/states'
     | '/admin/storefront'
     | '/admin/support'
@@ -1392,6 +1402,7 @@ export interface FileRouteTypes {
     | '/admin/shipping-zones'
     | '/admin/shop-by-category'
     | '/admin/site-analytics'
+    | '/admin/size-skus'
     | '/admin/states'
     | '/admin/storefront'
     | '/admin/themes'
@@ -1523,6 +1534,7 @@ export interface FileRouteTypes {
     | '/admin/shipping-zones'
     | '/admin/shop-by-category'
     | '/admin/site-analytics'
+    | '/admin/size-skus'
     | '/admin/states'
     | '/admin/storefront'
     | '/admin/support'
@@ -1886,6 +1898,13 @@ declare module '@tanstack/react-router' {
       path: '/states'
       fullPath: '/admin/states'
       preLoaderRoute: typeof AdminStatesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/size-skus': {
+      id: '/admin/size-skus'
+      path: '/size-skus'
+      fullPath: '/admin/size-skus'
+      preLoaderRoute: typeof AdminSizeSkusRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/site-analytics': {
@@ -2789,6 +2808,7 @@ interface AdminRouteChildren {
   AdminShippingZonesRoute: typeof AdminShippingZonesRoute
   AdminShopByCategoryRoute: typeof AdminShopByCategoryRoute
   AdminSiteAnalyticsRoute: typeof AdminSiteAnalyticsRoute
+  AdminSizeSkusRoute: typeof AdminSizeSkusRoute
   AdminStatesRoute: typeof AdminStatesRoute
   AdminStorefrontRoute: typeof AdminStorefrontRoute
   AdminSupportRoute: typeof AdminSupportRouteWithChildren
@@ -2859,6 +2879,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminShippingZonesRoute: AdminShippingZonesRoute,
   AdminShopByCategoryRoute: AdminShopByCategoryRoute,
   AdminSiteAnalyticsRoute: AdminSiteAnalyticsRoute,
+  AdminSizeSkusRoute: AdminSizeSkusRoute,
   AdminStatesRoute: AdminStatesRoute,
   AdminStorefrontRoute: AdminStorefrontRoute,
   AdminSupportRoute: AdminSupportRouteWithChildren,
@@ -2927,3 +2948,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

@@ -5,6 +5,13 @@ export const ordersConfig: AdminPageConfig = {
   title: { ar: "الطلبات", en: "Orders" },
   table: "orders",
   orderBy: { column: "created_at", ascending: false },
+  // Pull each order's item SKUs so admins can search orders by SKU.
+  select: "*, order_items(sku)",
+  enrichRows: (rows: any[]) =>
+    rows.map((r) => ({
+      ...r,
+      _skus: (r.order_items ?? []).map((i: any) => i?.sku).filter(Boolean).join(" "),
+    })),
   rowHref: (row) => `/admin/orders/${row.id}`,
   columns: [
     { key: "order_number", label: { ar: "رقم الطلب", en: "Order #" } },
@@ -18,8 +25,8 @@ export const ordersConfig: AdminPageConfig = {
     {
       key: "search",
       type: "search",
-      columns: ["order_number", "customer_name", "customer_email", "customer_phone"],
-      placeholder: { ar: "بحث بالرقم أو الاسم...", en: "Search by # or name..." },
+      columns: ["order_number", "customer_name", "customer_email", "customer_phone", "_skus"],
+      placeholder: { ar: "بحث بالرقم أو الاسم أو SKU...", en: "Search by #, name or SKU..." },
     },
     {
       key: "status",

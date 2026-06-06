@@ -611,7 +611,7 @@ function ReturnsPanel() {
       <div className="rounded-[18px] border border-border bg-cream-warm/30 p-6 text-center">
         <RotateCcw className="h-[28px] w-[28px] text-muted-foreground mx-auto" strokeWidth={1.4} />
         <p className="mt-3 text-[13px] text-foreground tracking-soft">{isRTL ? "لا توجد طلبات إرجاع" : "No return requests"}</p>
-        <Link to="/account/returns/new" className="mt-3 inline-block text-[11px] tracking-luxury text-gold-deep">
+        <Link to="/account/returns/new" search={{ order: "" }} className="mt-3 inline-block text-[11px] tracking-luxury text-gold-deep">
           {isRTL ? "طلب إرجاع جديد" : "REQUEST A RETURN"}
         </Link>
       </div>
