@@ -65,6 +65,7 @@ export interface OtoCreateOrderInput {
   itemsCount: number;
   totalValue: number;
   currency: string;
+  items?: Array<{ name: string; sku?: string | null; price: number; quantity: number }>;
 }
 
 export async function otoCreateOrder(input: OtoCreateOrderInput) {
@@ -78,6 +79,15 @@ export async function otoCreateOrder(input: OtoCreateOrderInput) {
     boxes: 1,
     weight: input.weight ?? 1,
     items_count: input.itemsCount,
+    // Line items (incl. per-size SKU) so the carrier's picking list / label
+    // shows the exact code that was bought.
+    items: (input.items ?? []).map((it) => ({
+      name: it.name,
+      sku: it.sku || undefined,
+      price: it.price,
+      quantity: it.quantity,
+      rowTotal: Number((it.price * it.quantity).toFixed(2)),
+    })),
     customer: {
       name: input.customerName,
       mobile: input.customerPhone,
@@ -112,9 +122,16 @@ export async function createOtoShipmentForOrder(
   if (existing.data) return { ok: true, shipment: existing.data };
 
   const addr: any = order.shipping_address || {};
-  const itemsCountRes = await supabaseAdmin
-    .from("order_items").select("qty").eq("order_id", order.id);
-  const itemsCount = (itemsCountRes.data || []).reduce((s, r: any) => s + Number(r.qty || 0), 0) || 1;
+  const itemsRes = await supabaseAdmin
+    .from("order_items").select("product_name, sku, qty, unit_price").eq("order_id", order.id);
+  const itemRows = itemsRes.data || [];
+  const itemsCount = itemRows.reduce((s, r: any) => s + Number(r.qty || 0), 0) || 1;
+  const lineItems = itemRows.map((r: any) => ({
+    name: r.product_name,
+    sku: r.sku || null,
+    price: Number(r.unit_price || 0),
+    quantity: Number(r.qty || 0),
+  }));
 
   let otoResp: any;
   try {
@@ -134,6 +151,7 @@ export async function createOtoShipmentForOrder(
       itemsCount,
       totalValue: Number(order.total),
       currency: order.currency || "SAR",
+      items: lineItems,
     });
   } catch (e: any) {
     return { ok: false, error: e?.message || "OTO request failed" };

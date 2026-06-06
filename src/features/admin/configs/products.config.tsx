@@ -17,8 +17,8 @@ export const productsConfig: AdminPageConfig = {
     {
       key: "search",
       type: "search",
-      columns: ["name_ar", "name_en"],
-      placeholder: { ar: "بحث بالاسم...", en: "Search by name..." },
+      columns: ["name_ar", "name_en", "sku"],
+      placeholder: { ar: "بحث بالاسم أو SKU...", en: "Search by name or SKU..." },
     },
     {
       key: "is_active",

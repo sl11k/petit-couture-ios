@@ -179,7 +179,12 @@ function NewReturnRequest() {
                     {it.image_url && <img src={it.image_url} alt={it.product_name} className="h-12 w-12 rounded object-cover" />}
                     <div className="flex-1">
                       <div>{it.product_name}</div>
-                      <div className="text-xs text-muted-foreground">{Number(it.unit_price).toFixed(0)} ر.س × {it.qty}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {[it.size, it.color].filter(Boolean).join(" · ")}
+                        {(it.size || it.color) ? " · " : ""}
+                        {Number(it.unit_price).toFixed(0)} ر.س × {it.qty}
+                      </div>
+                      {it.sku && <div className="text-[11px] text-muted-foreground/80 font-mono" dir="ltr">SKU: {it.sku}</div>}
                       {blocked && <div className="text-xs text-red-600">غير قابل للإرجاع</div>}
                     </div>
                     {!blocked && (
