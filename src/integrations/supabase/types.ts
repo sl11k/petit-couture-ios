@@ -796,6 +796,110 @@ export type Database = {
           },
         ]
       }
+      cms_page_versions: {
+        Row: {
+          content: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          page_id: string
+          version_label: string | null
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          page_id: string
+          version_label?: string | null
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          page_id?: string
+          version_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cms_page_versions_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "cms_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cms_pages: {
+        Row: {
+          canonical_url: string | null
+          created_at: string
+          created_by: string | null
+          draft_content: Json
+          id: string
+          is_system: boolean
+          noindex: boolean
+          og_image_url: string | null
+          published_at: string | null
+          published_content: Json | null
+          seo_description_ar: string | null
+          seo_description_en: string | null
+          seo_title_ar: string | null
+          seo_title_en: string | null
+          slug: string
+          status: string
+          title_ar: string
+          title_en: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          canonical_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          draft_content?: Json
+          id?: string
+          is_system?: boolean
+          noindex?: boolean
+          og_image_url?: string | null
+          published_at?: string | null
+          published_content?: Json | null
+          seo_description_ar?: string | null
+          seo_description_en?: string | null
+          seo_title_ar?: string | null
+          seo_title_en?: string | null
+          slug: string
+          status?: string
+          title_ar?: string
+          title_en?: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          canonical_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          draft_content?: Json
+          id?: string
+          is_system?: boolean
+          noindex?: boolean
+          og_image_url?: string | null
+          published_at?: string | null
+          published_content?: Json | null
+          seo_description_ar?: string | null
+          seo_description_en?: string | null
+          seo_title_ar?: string | null
+          seo_title_en?: string | null
+          slug?: string
+          status?: string
+          title_ar?: string
+          title_en?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contact_submissions: {
         Row: {
           created_at: string
