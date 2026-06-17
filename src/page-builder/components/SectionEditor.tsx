@@ -9,25 +9,29 @@ import type {
   Section, ButtonContent, FeatureCard, FaqItem, TestimonialItem, StatItem, ImageContent,
 } from "../schemas/pageSchema";
 
+type UpdateOpts = { label?: string; key?: string };
+
 type Props = {
   section: Section;
-  onChange: (updater: (s: Section) => Section) => void;
+  onChange: (updater: (s: Section) => Section, opts?: UpdateOpts) => void;
   onConvertLegacy?: () => void;
   notify?: (label: string) => void;
 };
 
 function nid(p: string) { return `${p}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`; }
 
-function TextField({ label, value, onChange, multiline }: { label: string; value?: string; onChange: (v: string) => void; multiline?: boolean }) {
+function TextField({ label, value, onChange, multiline, coalesceKey }: { label: string; value?: string; onChange: (v: string, opts?: UpdateOpts) => void; multiline?: boolean; coalesceKey?: string }) {
+  const key = coalesceKey ?? `text:${label}`;
   return (
     <div>
       <Label className="text-xs">{label}</Label>
       {multiline
-        ? <Textarea rows={3} value={value ?? ""} onChange={(e) => onChange(e.target.value)} />
-        : <Input value={value ?? ""} onChange={(e) => onChange(e.target.value)} />}
+        ? <Textarea rows={3} value={value ?? ""} onChange={(e) => onChange(e.target.value, { label: `تعديل ${label}`, key })} />
+        : <Input value={value ?? ""} onChange={(e) => onChange(e.target.value, { label: `تعديل ${label}`, key })} />}
     </div>
   );
 }
+
 
 function ButtonsEditor({ buttons, onChange }: { buttons?: ButtonContent[]; onChange: (b: ButtonContent[]) => void }) {
   const list = buttons ?? [];
@@ -78,13 +82,18 @@ function SpacingFields({ s, onChange, notify }: { s: Section; onChange: Props["o
   const sp = s.settings?.spacing ?? {};
   const bg = s.settings?.backgroundColor ?? "";
   const setSpacing = (k: "paddingTop" | "paddingBottom", val: number | undefined) => {
-    onChange((cur) => ({ ...cur, settings: { ...cur.settings, spacing: { ...sp, [k]: val } } } as Section));
-    notify?.(k === "paddingTop" ? `تغيّر Padding Top إلى ${val ?? 0}px` : `تغيّر Padding Bottom إلى ${val ?? 0}px`);
+    const label = k === "paddingTop" ? `Padding Top → ${val ?? 0}px` : `Padding Bottom → ${val ?? 0}px`;
+    onChange((cur) => ({ ...cur, settings: { ...cur.settings, spacing: { ...sp, [k]: val } } } as Section),
+      { label, key: `spacing:${s.id}:${k}` });
+    notify?.(label);
   };
   const setBg = (val: string | undefined) => {
-    onChange((cur) => ({ ...cur, settings: { ...cur.settings, backgroundColor: val } } as Section));
-    notify?.(val ? `تغيّر لون الخلفية إلى ${val}` : "تمت إزالة لون الخلفية");
+    const label = val ? `لون الخلفية → ${val}` : "إزالة لون الخلفية";
+    onChange((cur) => ({ ...cur, settings: { ...cur.settings, backgroundColor: val } } as Section),
+      { label, key: `bg:${s.id}` });
+    notify?.(label);
   };
+
   return (
     <div className="space-y-3">
       <div>
@@ -141,10 +150,13 @@ function SpacingFields({ s, onChange, notify }: { s: Section; onChange: Props["o
 function VisibilityFields({ s, onChange, notify }: { s: Section; onChange: Props["onChange"]; notify?: (l: string) => void }) {
   const v = s.settings?.visibility ?? {};
   const set = (k: "desktop" | "tablet" | "mobile", val: boolean) => {
-    onChange((cur) => ({ ...cur, settings: { ...cur.settings, visibility: { ...v, [k]: val } } } as Section));
     const dn = k === "desktop" ? "سطح المكتب" : k === "tablet" ? "تابلت" : "موبايل";
-    notify?.(`${val ? "تم إظهار" : "تم إخفاء"} القسم على ${dn}`);
+    const label = `${val ? "إظهار" : "إخفاء"} القسم على ${dn}`;
+    onChange((cur) => ({ ...cur, settings: { ...cur.settings, visibility: { ...v, [k]: val } } } as Section),
+      { label, key: `vis:${s.id}:${k}` });
+    notify?.(label);
   };
+
   return (
     <div className="space-y-2">
       <Label className="text-xs">الظهور</Label>
@@ -161,8 +173,9 @@ function VisibilityFields({ s, onChange, notify }: { s: Section; onChange: Props
 export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Props) {
   const s = section;
 
-  const updateContent = (patch: any) =>
-    onChange((cur) => ({ ...cur, content: { ...(cur as any).content, ...patch } } as Section));
+  const updateContent = (patch: any, opts?: UpdateOpts) =>
+    onChange((cur) => ({ ...cur, content: { ...(cur as any).content, ...patch } } as Section), opts);
+
 
   return (
     <div className="space-y-4 text-sm">
@@ -172,12 +185,12 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
 
       {s.type === "hero" && (
         <>
-          <TextField label="Eyebrow (ع)" value={s.content.eyebrow_ar} onChange={(v) => updateContent({ eyebrow_ar: v })} />
-          <TextField label="Eyebrow (EN)" value={s.content.eyebrow_en} onChange={(v) => updateContent({ eyebrow_en: v })} />
-          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v) => updateContent({ title_ar: v })} />
-          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v) => updateContent({ title_en: v })} />
-          <TextField label="العنوان الفرعي (ع)" multiline value={s.content.subtitle_ar} onChange={(v) => updateContent({ subtitle_ar: v })} />
-          <TextField label="Subtitle (EN)" multiline value={s.content.subtitle_en} onChange={(v) => updateContent({ subtitle_en: v })} />
+          <TextField label="Eyebrow (ع)" value={s.content.eyebrow_ar} onChange={(v, opts) => updateContent({ eyebrow_ar: v }, opts)} />
+          <TextField label="Eyebrow (EN)" value={s.content.eyebrow_en} onChange={(v, opts) => updateContent({ eyebrow_en: v }, opts)} />
+          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
+          <TextField label="العنوان الفرعي (ع)" multiline value={s.content.subtitle_ar} onChange={(v, opts) => updateContent({ subtitle_ar: v }, opts)} />
+          <TextField label="Subtitle (EN)" multiline value={s.content.subtitle_en} onChange={(v, opts) => updateContent({ subtitle_en: v }, opts)} />
           <div>
             <Label className="text-xs">المحاذاة</Label>
             <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.alignment ?? "center"}
@@ -192,10 +205,10 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
 
       {s.type === "text_block" && (
         <>
-          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v) => updateContent({ title_ar: v })} />
-          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v) => updateContent({ title_en: v })} />
-          <TextField label="النص (ع)" multiline value={s.content.body_ar} onChange={(v) => updateContent({ body_ar: v })} />
-          <TextField label="Body (EN)" multiline value={s.content.body_en} onChange={(v) => updateContent({ body_en: v })} />
+          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
+          <TextField label="النص (ع)" multiline value={s.content.body_ar} onChange={(v, opts) => updateContent({ body_ar: v }, opts)} />
+          <TextField label="Body (EN)" multiline value={s.content.body_en} onChange={(v, opts) => updateContent({ body_en: v }, opts)} />
         </>
       )}
 
@@ -209,17 +222,17 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
               <option value="left">يسار</option><option value="right">يمين</option>
             </select>
           </div>
-          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v) => updateContent({ title_ar: v })} />
-          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v) => updateContent({ title_en: v })} />
-          <TextField label="النص (ع)" multiline value={s.content.body_ar} onChange={(v) => updateContent({ body_ar: v })} />
-          <TextField label="Body (EN)" multiline value={s.content.body_en} onChange={(v) => updateContent({ body_en: v })} />
+          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
+          <TextField label="النص (ع)" multiline value={s.content.body_ar} onChange={(v, opts) => updateContent({ body_ar: v }, opts)} />
+          <TextField label="Body (EN)" multiline value={s.content.body_en} onChange={(v, opts) => updateContent({ body_en: v }, opts)} />
         </>
       )}
 
       {s.type === "feature_grid" && (
         <>
-          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v) => updateContent({ title_ar: v })} />
-          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v) => updateContent({ title_en: v })} />
+          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
           <div>
             <Label className="text-xs">عدد الأعمدة</Label>
             <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.columns ?? 3}
@@ -252,8 +265,8 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
 
       {s.type === "faq" && (
         <>
-          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v) => updateContent({ title_ar: v })} />
-          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v) => updateContent({ title_en: v })} />
+          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
           <div className="space-y-2">
             <Label className="text-xs">الأسئلة</Label>
             {s.content.items.map((it, i) => (
@@ -278,8 +291,8 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
 
       {s.type === "testimonials" && (
         <>
-          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v) => updateContent({ title_ar: v })} />
-          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v) => updateContent({ title_en: v })} />
+          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
           <div className="space-y-2">
             <Label className="text-xs">الآراء</Label>
             {s.content.items.map((it, i) => (
@@ -327,8 +340,8 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
 
       {s.type === "gallery" && (
         <>
-          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v) => updateContent({ title_ar: v })} />
-          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v) => updateContent({ title_en: v })} />
+          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
           <div>
             <Label className="text-xs">عدد الأعمدة</Label>
             <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.columns ?? 3}
@@ -355,10 +368,10 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
 
       {s.type === "cta" && (
         <>
-          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v) => updateContent({ title_ar: v })} />
-          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v) => updateContent({ title_en: v })} />
-          <TextField label="الوصف (ع)" multiline value={s.content.subtitle_ar} onChange={(v) => updateContent({ subtitle_ar: v })} />
-          <TextField label="Subtitle (EN)" multiline value={s.content.subtitle_en} onChange={(v) => updateContent({ subtitle_en: v })} />
+          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
+          <TextField label="الوصف (ع)" multiline value={s.content.subtitle_ar} onChange={(v, opts) => updateContent({ subtitle_ar: v }, opts)} />
+          <TextField label="Subtitle (EN)" multiline value={s.content.subtitle_en} onChange={(v, opts) => updateContent({ subtitle_en: v }, opts)} />
           <ButtonsEditor buttons={s.content.buttons} onChange={(b) => updateContent({ buttons: b })} />
         </>
       )}

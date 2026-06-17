@@ -1,9 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Save, Upload, Undo2, Redo2, Eye, Monitor, Tablet, Smartphone, Copy, Trash2, Settings, Layers, History, MousePointerClick, GripVertical } from "lucide-react";
+import { ArrowLeft, Save, Upload, Undo2, Redo2, Eye, Monitor, Tablet, Smartphone, Copy, Trash2, Settings, Layers, History, MousePointerClick, GripVertical, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -38,6 +40,33 @@ function PageEditor() {
   useEffect(() => {
     if (ed.selectedSectionId) setRightTab("section");
   }, [ed.selectedSectionId]);
+
+  // Keyboard shortcuts: Ctrl/Cmd+Z (undo), Ctrl/Cmd+Shift+Z or Ctrl+Y (redo)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const mod = e.ctrlKey || e.metaKey;
+      if (!mod) return;
+      const k = e.key.toLowerCase();
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      const isEditable = tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement | null)?.isContentEditable;
+      // allow Z/Y shortcuts even in inputs — that's the standard editor UX
+      if (k === "z" && !e.shiftKey) {
+        e.preventDefault();
+        ed.undo();
+      } else if ((k === "z" && e.shiftKey) || k === "y") {
+        e.preventDefault();
+        ed.redo();
+      } else if (k === "s" && !e.shiftKey) {
+        e.preventDefault();
+        ed.saveDraft();
+      } else {
+        void isEditable;
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [ed]);
+
 
   const loadVersions = async () => {
     if (!ed.page) return;
@@ -119,8 +148,46 @@ function PageEditor() {
         </div>
 
         <div className="flex items-center gap-1">
-          <Button size="sm" variant="ghost" disabled={!ed.canUndo} onClick={ed.undo} title="تراجع"><Undo2 className="h-4 w-4" /></Button>
-          <Button size="sm" variant="ghost" disabled={!ed.canRedo} onClick={ed.redo} title="إعادة"><Redo2 className="h-4 w-4" /></Button>
+          <Button size="sm" variant="ghost" disabled={!ed.canUndo} onClick={ed.undo} title="تراجع (Ctrl+Z)"><Undo2 className="h-4 w-4" /></Button>
+          <Button size="sm" variant="ghost" disabled={!ed.canRedo} onClick={ed.redo} title="إعادة (Ctrl+Shift+Z)"><Redo2 className="h-4 w-4" /></Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button size="sm" variant="ghost" title="سجل التعديلات" disabled={ed.historyItems.length === 0}>
+                <Clock className="h-4 w-4" />
+                {ed.historyItems.length > 0 && (
+                  <span className="ms-1 text-[10px] tabular-nums text-muted-foreground">{ed.historyItems.length}</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-72 p-0">
+              <div className="px-3 py-2 border-b border-border text-xs font-medium flex items-center justify-between">
+                <span>سجل التعديلات</span>
+                <span className="text-[10px] text-muted-foreground">{ed.historyItems.length} خطوة</span>
+              </div>
+              <div className="max-h-72 overflow-y-auto">
+                {ed.historyItems.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-4">لا يوجد تعديلات بعد</p>
+                ) : ed.historyItems.map((h) => (
+                  <button
+                    key={h.index + ":" + h.ts}
+                    onClick={() => ed.jumpToHistory(h.index)}
+                    className="w-full text-start px-3 py-1.5 text-xs hover:bg-muted flex items-center justify-between gap-2 border-b border-border/40 last:border-0"
+                  >
+                    <span className="truncate">{h.label}</span>
+                    <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
+                      {new Date(h.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              {ed.canRedo && (
+                <div className="px-3 py-2 border-t border-border text-[10px] text-muted-foreground">
+                  يمكن إعادة {/* canRedo */} الخطوات الملغاة بزر الإعادة (Ctrl+Shift+Z)
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
+
 
           <div className="mx-2 flex rounded-md border border-border">
             <button onClick={() => setDevice("desktop")} className={cn("p-1.5", device === "desktop" && "bg-muted")} title="سطح المكتب"><Monitor className="h-3.5 w-3.5" /></button>
@@ -209,10 +276,11 @@ function PageEditor() {
               selectedSection ? (
                 <SectionEditor
                   section={selectedSection}
-                  onChange={(updater) => ed.updateSection(selectedSection.id, updater)}
+                  onChange={(updater, opts) => ed.updateSection(selectedSection.id, updater, opts)}
                   onConvertLegacy={selectedSection.type === "legacy_home" ? convertLegacyToEditable : undefined}
                   notify={ed.notifyChange}
                 />
+
               ) : (
                 <p className="text-xs text-muted-foreground text-center mt-8">اختر قسماً من اللوحة لتعديله.</p>
               )
