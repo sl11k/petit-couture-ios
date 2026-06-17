@@ -182,8 +182,8 @@ export function DesktopHeader() {
                 ].join(" ")}
               >
                 {lang === "en"
-                  ? (t.categories[c.slug] ?? c.name).toUpperCase()
-                  : (t.categories[c.slug] ?? c.name)}
+                  ? (t.categories[c.slug] ?? c.name_en).toUpperCase()
+                  : (t.categories[c.slug] ?? c.name_ar)}
               </Link>
             );
           })}
