@@ -66,6 +66,14 @@ export function SizeSkuEditor({
 
   const remove = (idx: number) => onChange(value.filter((_, i) => i !== idx));
 
+  const move = (idx: number, dir: -1 | 1) => {
+    const target = idx + dir;
+    if (target < 0 || target >= value.length) return;
+    const next = value.slice();
+    [next[idx], next[target]] = [next[target], next[idx]];
+    onChange(next);
+  };
+
   const add = () => {
     onChange([
       ...value,
