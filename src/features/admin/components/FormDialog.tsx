@@ -96,10 +96,8 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
         alreadyHandled = true;
         break;
       case "json":
-        s = z.string().refine(
-          (v) => { if (!v || v.trim() === "") return true; try { JSON.parse(v); return true; } catch { return false; } },
-          { message: ar ? "JSON غير صحيح" : "Invalid JSON" },
-        );
+        s = z.any();
+        alreadyHandled = true;
         break;
       case "select":
         s = z.string();
