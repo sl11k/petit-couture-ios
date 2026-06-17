@@ -288,6 +288,18 @@ function isVisible(s: Section, device: "desktop" | "tablet" | "mobile"): boolean
   return v[device] !== false;
 }
 
+// CSS-class based visibility so it also works on the public (non-preview) site.
+function visibilityClass(s: Section): string {
+  const v = s.settings?.visibility;
+  if (!v) return "";
+  // Tailwind breakpoints: <768 mobile, 768-1023 tablet, >=1024 desktop
+  const parts: string[] = [];
+  if (v.mobile === false) parts.push("max-md:hidden");
+  if (v.tablet === false) parts.push("max-lg:md:hidden");
+  if (v.desktop === false) parts.push("lg:hidden");
+  return parts.join(" ");
+}
+
 export type PageRendererProps = {
   content: PageContent;
   device?: "desktop" | "tablet" | "mobile";
@@ -300,8 +312,16 @@ export function PageRenderer({ content, device }: PageRendererProps) {
   return (
     <>
       {sections.map((s) => {
+        // In the editor, hard-hide when device toggle excludes the section.
         if (device && !isVisible(s, device)) return null;
-        return <RenderSection key={s.id} s={s} ar={ar} />;
+        const cls = visibilityClass(s);
+        // Wrap legacy_home in a div would break its full-bleed layout; only wrap when needed.
+        if (!cls) return <RenderSection key={s.id} s={s} ar={ar} />;
+        return (
+          <div key={s.id} className={cls}>
+            <RenderSection s={s} ar={ar} />
+          </div>
+        );
       })}
     </>
   );
