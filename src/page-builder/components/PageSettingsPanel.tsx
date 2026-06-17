@@ -56,7 +56,7 @@ export function PageSettingsPanel({
             <MediaUploader
               value={page.og_image_url}
               onChange={(url) => onChange({ og_image_url: url })}
-              bucket="public-assets"
+              bucket="content-media"
               kind="image"
               folder="cms/og"
             />

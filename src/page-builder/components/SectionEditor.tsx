@@ -66,7 +66,7 @@ function ImageField({ label, value, onChange }: { label: string; value?: ImageCo
   return (
     <div className="space-y-1">
       <Label className="text-xs">{label}</Label>
-      <MediaUploader value={value?.url ?? null} onChange={(url) => onChange({ ...(value ?? {}), url: url ?? undefined })} bucket="public-assets" kind="image" folder="cms" />
+      <MediaUploader value={value?.url ?? null} onChange={(url) => onChange({ ...(value ?? {}), url: url ?? undefined })} bucket="content-media" kind="image" folder="cms" />
       <Input placeholder="Alt text" value={value?.alt ?? ""} onChange={(e) => onChange({ ...(value ?? {}), alt: e.target.value })} />
     </div>
   );
@@ -245,7 +245,7 @@ export function SectionEditor({ section, onChange }: Props) {
                 <Input placeholder="Role (EN)" value={it.role_en ?? ""} onChange={(e) => updateContent({ items: s.content.items.map((x) => x.id === it.id ? { ...x, role_en: e.target.value } : x) })} />
                 <Textarea rows={2} placeholder="الاقتباس (ع)" value={it.quote_ar ?? ""} onChange={(e) => updateContent({ items: s.content.items.map((x) => x.id === it.id ? { ...x, quote_ar: e.target.value } : x) })} />
                 <Textarea rows={2} placeholder="Quote (EN)" value={it.quote_en ?? ""} onChange={(e) => updateContent({ items: s.content.items.map((x) => x.id === it.id ? { ...x, quote_en: e.target.value } : x) })} />
-                <MediaUploader value={it.avatar ?? null} onChange={(url) => updateContent({ items: s.content.items.map((x) => x.id === it.id ? { ...x, avatar: url ?? undefined } : x) })} bucket="public-assets" kind="image" folder="cms/avatars" />
+                <MediaUploader value={it.avatar ?? null} onChange={(url) => updateContent({ items: s.content.items.map((x) => x.id === it.id ? { ...x, avatar: url ?? undefined } : x) })} bucket="content-media" kind="image" folder="cms/avatars" />
               </div>
             ))}
             <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent({ items: [...s.content.items, { id: nid("t"), name: "", quote_ar: "", quote_en: "" } as TestimonialItem] })}>
@@ -295,7 +295,7 @@ export function SectionEditor({ section, onChange }: Props) {
                   <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive"
                     onClick={() => updateContent({ images: s.content.images.filter((_, j) => j !== i) })}><Trash2 className="h-3 w-3" /></Button>
                 </div>
-                <MediaUploader value={im.url ?? null} onChange={(url) => updateContent({ images: s.content.images.map((x, j) => j === i ? { ...x, url: url ?? undefined } : x) })} bucket="public-assets" kind="image" folder="cms/gallery" />
+                <MediaUploader value={im.url ?? null} onChange={(url) => updateContent({ images: s.content.images.map((x, j) => j === i ? { ...x, url: url ?? undefined } : x) })} bucket="content-media" kind="image" folder="cms/gallery" />
                 <Input placeholder="Alt" value={im.alt ?? ""} onChange={(e) => updateContent({ images: s.content.images.map((x, j) => j === i ? { ...x, alt: e.target.value } : x) })} />
               </div>
             ))}
