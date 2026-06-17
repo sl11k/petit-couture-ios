@@ -53,6 +53,33 @@ function PageEditor() {
   };
 
   const selectedSection = ed.content.sections.find((s) => s.id === ed.selectedSectionId);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const handleDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIdx = ed.content.sections.findIndex((s) => s.id === active.id);
+    const newIdx = ed.content.sections.findIndex((s) => s.id === over.id);
+    if (oldIdx === -1 || newIdx === -1) return;
+    ed.updateContent((c) => ({ ...c, sections: arrayMove(c.sections, oldIdx, newIdx) }));
+  };
+
+  const convertLegacyToEditable = () => {
+    if (!confirm("سيتم استبدال قسم 'الصفحة الرئيسية الحالية' بأقسام جاهزة قابلة للتعديل (هيرو، مزايا، آراء، أسئلة، CTA). متابعة؟")) return;
+    const defaults: Section[] = [
+      createDefaultSection("hero"),
+      createDefaultSection("feature_grid"),
+      createDefaultSection("testimonials"),
+      createDefaultSection("faq"),
+      createDefaultSection("cta"),
+    ];
+    ed.updateContent((c) => ({
+      ...c,
+      sections: c.sections.flatMap((s) => (s.type === "legacy_home" ? defaults : [s])),
+    }));
+    ed.setSelectedSectionId(defaults[0].id);
+    toast.success("تم التحويل — كل قسم الآن قابل للتعديل بالكامل");
+  };
 
   if (ed.loading) {
     return <div className="p-8 text-center text-muted-foreground">جاري التحميل...</div>;
