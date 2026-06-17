@@ -173,8 +173,9 @@ function VisibilityFields({ s, onChange, notify }: { s: Section; onChange: Props
 export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Props) {
   const s = section;
 
-  const updateContent = (patch: any) =>
-    onChange((cur) => ({ ...cur, content: { ...(cur as any).content, ...patch } } as Section));
+  const updateContent = (patch: any, opts?: UpdateOpts) =>
+    onChange((cur) => ({ ...cur, content: { ...(cur as any).content, ...patch } } as Section), opts);
+
 
   return (
     <div className="space-y-4 text-sm">
