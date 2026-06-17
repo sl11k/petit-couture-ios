@@ -396,7 +396,7 @@ integrationsConfig.form = [
   { key: "api_secret", label: { ar: "API Secret", en: "API Secret" }, type: "text" },
   { key: "webhook_url", label: { ar: "رابط Webhook", en: "Webhook URL" }, type: "url" },
   { key: "webhook_secret", label: { ar: "سر Webhook", en: "Webhook secret" }, type: "text" },
-  { key: "config", label: { ar: "إعدادات إضافية (JSON)", en: "Extra config (JSON)" }, type: "json", defaultValue: {}, helpText: { ar: 'يمكن تركه فارغًا {}', en: 'Can be left as {}' } },
+  { key: "config", label: { ar: "إعدادات إضافية", en: "Extra config" }, type: "json", defaultValue: {}, helpText: { ar: 'يمكن تركه فارغًا {}', en: 'Can be left as {}' } },
 ];
 
 webhooksConfig.actions = { ...webhooksConfig.actions, create: true, edit: true, delete: true };
@@ -405,7 +405,7 @@ webhooksConfig.form = [
   { key: "url", label: { ar: "الرابط", en: "URL" }, type: "url", required: true },
   { key: "secret", label: { ar: "السر", en: "Secret" }, type: "text" },
   { key: "enabled", label: { ar: "مفعّل", en: "Enabled" }, type: "boolean", defaultValue: true },
-  { key: "events", label: { ar: "الأحداث (JSON array)", en: "Events (JSON array)" }, type: "json", helpText: { ar: 'مثال: ["order.created","order.paid"]', en: 'e.g. ["order.created","order.paid"]' } },
+  { key: "events", label: { ar: "الأحداث", en: "Events" }, type: "json", helpText: { ar: 'مثال: ["order.created","order.paid"]', en: 'e.g. ["order.created","order.paid"]' } },
 ];
 
 messagesConfig.actions = { ...messagesConfig.actions, edit: true };

@@ -288,5 +288,5 @@ shippingConfig.form = [
   { key: "supports_tracking", label: { ar: "يدعم التتبع", en: "Supports tracking" }, type: "boolean", defaultValue: true },
   { key: "supports_international", label: { ar: "يدعم الدولي", en: "Supports international" }, type: "boolean" },
   { key: "supports_webhook", label: { ar: "يدعم Webhook", en: "Supports webhook" }, type: "boolean" },
-  { key: "api_credentials", label: { ar: "بيانات الاعتماد (JSON)", en: "API credentials (JSON)" }, type: "json" },
+  { key: "api_credentials", label: { ar: "بيانات الاعتماد", en: "API credentials" }, type: "json" },
 ];
