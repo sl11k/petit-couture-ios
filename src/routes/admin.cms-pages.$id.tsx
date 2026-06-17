@@ -225,3 +225,54 @@ function PageEditor() {
     </div>
   );
 }
+
+function SortableSection({
+  section, device, selected, onSelect, onDuplicate, onDelete,
+}: {
+  section: Section;
+  device: Device;
+  selected: boolean;
+  onSelect: () => void;
+  onDuplicate: () => void;
+  onDelete: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn("relative group", selected && "ring-2 ring-primary ring-inset")}
+      onClick={(e) => { e.stopPropagation(); onSelect(); }}
+    >
+      <div className={cn(
+        "absolute top-2 end-2 z-10 flex items-center gap-1 rounded-md border border-border bg-background/95 backdrop-blur p-1 shadow-sm transition",
+        selected ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+      )}>
+        <button
+          {...attributes}
+          {...listeners}
+          title="اسحب لإعادة الترتيب"
+          onClick={(e) => e.stopPropagation()}
+          className="p-1 hover:bg-muted rounded cursor-grab active:cursor-grabbing touch-none"
+        >
+          <GripVertical className="h-3.5 w-3.5" />
+        </button>
+        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{section.type}</span>
+        <button title="تكرار" onClick={(e) => { e.stopPropagation(); onDuplicate(); }} className="p-1 hover:bg-muted rounded">
+          <Copy className="h-3 w-3" />
+        </button>
+        <button title="حذف" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-1 hover:bg-destructive/10 text-destructive rounded">
+          <Trash2 className="h-3 w-3" />
+        </button>
+      </div>
+      <div className={cn(!selected && "transition hover:outline hover:outline-1 hover:outline-primary/40 hover:outline-offset-[-1px]")}>
+        <PageRenderer content={{ sections: [section] }} device={device} />
+      </div>
+    </div>
+  );
+}
