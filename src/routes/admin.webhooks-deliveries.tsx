@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { PageHeader } from "@/features/admin/components/PageHeader";
+import { FriendlyDataView } from "@/features/admin/components/FriendlyDataEditor";
 import {
   Loader2, RefreshCw, Eye, ChevronLeft, ChevronRight, X, Webhook, RotateCcw,
 } from "lucide-react";
@@ -241,8 +242,10 @@ function PayloadDialog({ d, ep, onClose, ar }: { d: Delivery; ep: Endpoint | nul
             </div>
           )}
           <div>
-            <div className="text-xs text-muted-foreground mb-1">Payload</div>
-            <pre className="text-xs bg-muted p-3 rounded overflow-x-auto max-h-72" dir="ltr">{payloadStr}</pre>
+            <div className="text-xs text-muted-foreground mb-1">{t("البيانات المرسلة", "Sent data")}</div>
+            <div className="bg-muted p-3 rounded max-h-72 overflow-auto">
+              <FriendlyDataView value={d.payload} />
+            </div>
           </div>
           {d.response_body && (
             <div>

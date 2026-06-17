@@ -23,6 +23,7 @@ import { LookupField } from "./LookupField";
 import { VariantEditor, type VariantEntry } from "./VariantEditor";
 import { SizeSkuEditor, type SizeEntry } from "./SizeSkuEditor";
 import { AttributesEditor, type AttributeEntry } from "./AttributesEditor";
+import { FriendlyDataEditor } from "./FriendlyDataEditor";
 import type { Bilingual, FormFieldDef } from "../types";
 import { cn } from "@/lib/utils";
 
@@ -96,10 +97,8 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
         alreadyHandled = true;
         break;
       case "json":
-        s = z.string().refine(
-          (v) => { if (!v || v.trim() === "") return true; try { JSON.parse(v); return true; } catch { return false; } },
-          { message: ar ? "JSON غير صحيح" : "Invalid JSON" },
-        );
+        s = z.any();
+        alreadyHandled = true;
         break;
       case "select":
         s = z.string();
@@ -153,7 +152,7 @@ function coerceForDb(fields: FormFieldDef[], values: Record<string, any>) {
     }
     if (f.type === "number") v = Number(v);
     else if (f.type === "boolean") v = typeof v === "string" ? v === "true" : Boolean(v);
-    else if (f.type === "json") { try { v = JSON.parse(v); } catch { /* keep */ } }
+    else if (f.type === "json") { if (typeof v === "string") { try { v = JSON.parse(v); } catch { /* keep */ } } }
     out[f.key] = v;
   }
   return out;
@@ -171,7 +170,13 @@ function defaultsFrom(fields: FormFieldDef[], initial?: Record<string, any>) {
     if (f.type === "gallery" || f.type === "videoGallery") { out[f.key] = Array.isArray(v) ? v : []; continue; }
     if (f.type === "warehouseStock") { out[f.key] = Array.isArray(v) ? v : []; continue; }
     if (f.type === "productVariants" || f.type === "productSizes" || f.type === "productAttributes") { out[f.key] = Array.isArray(v) ? v : []; continue; }
-    if (f.type === "json" && v && typeof v !== "string") v = JSON.stringify(v, null, 2);
+    if (f.type === "json") {
+      if (typeof v === "string") {
+        try { v = JSON.parse(v); } catch { v = null; }
+      }
+      out[f.key] = v ?? null;
+      continue;
+    }
     if (f.type === "boolean") v = Boolean(v);
     if (v === undefined || v === null) v = f.type === "boolean" ? false : "";
     out[f.key] = v;
@@ -536,8 +541,10 @@ export function FormDialog({
                     <ProductMediaGallery value={Array.isArray(values[f.key]) ? values[f.key] : []} onChange={(urls) => setVal(f.key, urls)} bucket={f.bucket || "product-media"} folder={f.folder || (f.type === "videoGallery" ? "videos" : "gallery")} max={f.maxItems ?? (f.type === "videoGallery" ? 10 : 20)} kind={f.type === "videoGallery" ? "video" : "image"} />
                   ) : f.type === "warehouseStock" ? (
                     <WarehouseStockPicker value={Array.isArray(values[f.key]) ? values[f.key] : []} onChange={(v) => setVal(f.key, v)} existing={existingInventory} />
-                  ) : f.type === "textarea" || f.type === "json" ? (
-                    <Textarea id={f.key} rows={f.rows ?? (f.type === "json" ? 6 : 4)} value={values[f.key] ?? ""} onChange={(e) => setVal(f.key, e.target.value)} placeholder={ph} className={cn("text-sm", f.type === "json" && "font-mono text-xs")} />
+                  ) : f.type === "json" ? (
+                    <FriendlyDataEditor value={values[f.key]} onChange={(v) => setVal(f.key, v)} />
+                  ) : f.type === "textarea" ? (
+                    <Textarea id={f.key} rows={f.rows ?? 4} value={values[f.key] ?? ""} onChange={(e) => setVal(f.key, e.target.value)} placeholder={ph} className="text-sm" />
                   ) : f.type === "select" ? (
                     <select id={f.key} value={values[f.key] ?? ""} onChange={(e) => setVal(f.key, e.target.value)} className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm">
                       <option value="">—</option>

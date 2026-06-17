@@ -326,7 +326,7 @@ homeBuilderConfig.form = [
   { key: "source_ref", label: { ar: "المرجع (slug تصنيف مثلاً)", en: "Source ref (e.g. category slug)" }, type: "text" },
   { key: "position", label: { ar: "الترتيب", en: "Position" }, type: "number", min: 0, defaultValue: 0 },
   { key: "is_active", label: { ar: "نشط", en: "Active" }, type: "boolean", defaultValue: true },
-  { key: "config", label: { ar: "إعدادات (JSON)", en: "Config (JSON)" }, type: "json" },
+  { key: "config", label: { ar: "إعدادات", en: "Config" }, type: "json" },
 ];
 
 contentConfig.actions = { ...contentConfig.actions, create: true, edit: true, delete: true };
