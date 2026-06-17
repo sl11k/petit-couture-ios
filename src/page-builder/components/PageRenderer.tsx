@@ -226,8 +226,10 @@ function EditCustom({
   const Tag = as ?? "span";
   if (!ctx) {
     if (!value) return null;
+    if (isHTMLish(value)) return <Tag className={cn(className, "[&_a]:underline [&_a]:text-primary")} dangerouslySetInnerHTML={{ __html: sanitizeInlineHTML(value) }} />;
     return <Tag className={className}>{value}</Tag>;
   }
+
   return (
     <EditableText
       as={Tag}
