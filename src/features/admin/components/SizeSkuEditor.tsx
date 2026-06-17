@@ -243,6 +243,12 @@ export function SizeSkuEditor({
               </div>
 
               <div className="flex items-center justify-end gap-1.5">
+                <button type="button" onClick={() => move(idx, -1)} disabled={disabled || idx === 0} className="rounded p-1 text-muted-foreground hover:bg-muted disabled:opacity-30" aria-label={ar ? "تحريك للأعلى" : "Move up"} title={ar ? "تحريك للأعلى" : "Move up"}>
+                  <ArrowUp className="h-3.5 w-3.5" />
+                </button>
+                <button type="button" onClick={() => move(idx, 1)} disabled={disabled || idx === value.length - 1} className="rounded p-1 text-muted-foreground hover:bg-muted disabled:opacity-30" aria-label={ar ? "تحريك للأسفل" : "Move down"} title={ar ? "تحريك للأسفل" : "Move down"}>
+                  <ArrowDown className="h-3.5 w-3.5" />
+                </button>
                 <label className="flex items-center gap-1 text-[10px] text-muted-foreground" title={ar ? "متاح للبيع" : "Available for sale"}>
                   <input type="checkbox" checked={row.is_active ?? true} onChange={(e) => update(idx, { is_active: e.target.checked })} />
                   <span className="hidden sm:inline">{ar ? "متاح" : "Active"}</span>
