@@ -150,10 +150,13 @@ function SpacingFields({ s, onChange, notify }: { s: Section; onChange: Props["o
 function VisibilityFields({ s, onChange, notify }: { s: Section; onChange: Props["onChange"]; notify?: (l: string) => void }) {
   const v = s.settings?.visibility ?? {};
   const set = (k: "desktop" | "tablet" | "mobile", val: boolean) => {
-    onChange((cur) => ({ ...cur, settings: { ...cur.settings, visibility: { ...v, [k]: val } } } as Section));
     const dn = k === "desktop" ? "سطح المكتب" : k === "tablet" ? "تابلت" : "موبايل";
-    notify?.(`${val ? "تم إظهار" : "تم إخفاء"} القسم على ${dn}`);
+    const label = `${val ? "إظهار" : "إخفاء"} القسم على ${dn}`;
+    onChange((cur) => ({ ...cur, settings: { ...cur.settings, visibility: { ...v, [k]: val } } } as Section),
+      { label, key: `vis:${s.id}:${k}` });
+    notify?.(label);
   };
+
   return (
     <div className="space-y-2">
       <Label className="text-xs">الظهور</Label>
