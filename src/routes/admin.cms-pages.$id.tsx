@@ -252,7 +252,9 @@ function PageEditor() {
                       onSelect={() => ed.setSelectedSectionId(s.id)}
                       onDuplicate={() => { ed.duplicateSection(s.id); ed.notifyChange("تم تكرار القسم"); }}
                       onDelete={() => { if (confirm("حذف القسم؟")) { ed.removeSection(s.id); ed.notifyChange("تم حذف القسم"); } }}
+                      onSectionUpdate={ed.updateSection}
                     />
+
                   ))}
                 </SortableContext>
               </DndContext>
@@ -315,7 +317,7 @@ function PageEditor() {
 }
 
 function SortableSection({
-  section, device, selected, onSelect, onDuplicate, onDelete,
+  section, device, selected, onSelect, onDuplicate, onDelete, onSectionUpdate,
 }: {
   section: Section;
   device: Device;
@@ -323,7 +325,9 @@ function SortableSection({
   onSelect: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  onSectionUpdate: (id: string, updater: (s: Section) => Section, opts?: { label?: string; key?: string }) => void;
 }) {
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -359,7 +363,7 @@ function SortableSection({
         </button>
       </div>
       <div className={cn(!selected && "transition hover:outline hover:outline-1 hover:outline-primary/40 hover:outline-offset-[-1px]")}>
-        <PageRenderer content={{ sections: [section] }} device={device} />
+        <PageRenderer content={{ sections: [section] }} device={device} onSectionUpdate={onSectionUpdate} />
       </div>
     </div>
   );
