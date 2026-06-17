@@ -43,11 +43,7 @@ function formatValue(value: any, type: DetailFieldDef["type"], lang: string): Re
     case "longtext":
       return <span className="whitespace-pre-wrap text-sm">{value}</span>;
     case "json":
-      return (
-        <pre className="max-h-48 overflow-auto rounded-md bg-muted/30 p-2 text-[11px] font-mono leading-relaxed">
-          {typeof value === "string" ? value : JSON.stringify(value, null, 2)}
-        </pre>
-      );
+      return <FriendlyDataView value={value} />;
     case "address": {
       if (typeof value !== "object") return String(value);
       const parts = [value.line1, value.line2, value.city, value.region, value.country, value.postal_code]
