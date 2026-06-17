@@ -4,7 +4,7 @@
 // Each row = one size (e.g. "3 Years") with its OWN SKU, price and stock —
 // exactly what a product with 7-8 ages needs. Saves to `product_variants`
 // rows tagged `attributes.kind = "size"` (see syncProductSizes in FormDialog).
-import { Plus, Trash2, Wand2, Hash } from "lucide-react";
+import { Plus, Trash2, Wand2, Hash, ArrowUp, ArrowDown } from "lucide-react";
 import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { cn } from "@/lib/utils";
@@ -65,6 +65,14 @@ export function SizeSkuEditor({
   };
 
   const remove = (idx: number) => onChange(value.filter((_, i) => i !== idx));
+
+  const move = (idx: number, dir: -1 | 1) => {
+    const target = idx + dir;
+    if (target < 0 || target >= value.length) return;
+    const next = value.slice();
+    [next[idx], next[target]] = [next[target], next[idx]];
+    onChange(next);
+  };
 
   const add = () => {
     onChange([
@@ -235,6 +243,12 @@ export function SizeSkuEditor({
               </div>
 
               <div className="flex items-center justify-end gap-1.5">
+                <button type="button" onClick={() => move(idx, -1)} disabled={disabled || idx === 0} className="rounded p-1 text-muted-foreground hover:bg-muted disabled:opacity-30" aria-label={ar ? "تحريك للأعلى" : "Move up"} title={ar ? "تحريك للأعلى" : "Move up"}>
+                  <ArrowUp className="h-3.5 w-3.5" />
+                </button>
+                <button type="button" onClick={() => move(idx, 1)} disabled={disabled || idx === value.length - 1} className="rounded p-1 text-muted-foreground hover:bg-muted disabled:opacity-30" aria-label={ar ? "تحريك للأسفل" : "Move down"} title={ar ? "تحريك للأسفل" : "Move down"}>
+                  <ArrowDown className="h-3.5 w-3.5" />
+                </button>
                 <label className="flex items-center gap-1 text-[10px] text-muted-foreground" title={ar ? "متاح للبيع" : "Available for sale"}>
                   <input type="checkbox" checked={row.is_active ?? true} onChange={(e) => update(idx, { is_active: e.target.checked })} />
                   <span className="hidden sm:inline">{ar ? "متاح" : "Active"}</span>
