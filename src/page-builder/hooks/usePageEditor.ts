@@ -216,9 +216,12 @@ export function usePageEditor(pageId: string | undefined) {
 
   return {
     page, content, loading, saving, publishing, dirty,
+    lastSavedAt, autoSaveEnabled, setAutoSaveEnabled,
     selectedSectionId, setSelectedSectionId,
     updateContent, updateSection, addSection, removeSection, duplicateSection, moveSection,
-    updatePageMeta, undo, redo, saveDraft, publish,
+    updatePageMeta, undo, redo,
+    saveDraft: () => saveDraft(false),
+    publish,
     canUndo: historyRef.current.length > 0,
     canRedo: futureRef.current.length > 0,
   };
