@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { PageHeader } from "@/features/admin/components/PageHeader";
+import { FriendlyDataView } from "@/features/admin/components/FriendlyDataEditor";
 import {
   Loader2, RefreshCw, Eye, ChevronLeft, ChevronRight, X, Webhook, RotateCcw,
 } from "lucide-react";
