@@ -75,19 +75,59 @@ function ImageField({ label, value, onChange }: { label: string; value?: ImageCo
 
 function SpacingFields({ s, onChange }: { s: Section; onChange: Props["onChange"] }) {
   const sp = s.settings?.spacing ?? {};
+  const bg = s.settings?.backgroundColor ?? "";
+  const setSpacing = (k: "paddingTop" | "paddingBottom", val: number | undefined) =>
+    onChange((cur) => ({ ...cur, settings: { ...cur.settings, spacing: { ...sp, [k]: val } } } as Section));
+  const setBg = (val: string | undefined) =>
+    onChange((cur) => ({ ...cur, settings: { ...cur.settings, backgroundColor: val } } as Section));
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="space-y-3">
       <div>
-        <Label className="text-xs">Padding Top</Label>
-        <Input type="number" value={sp.paddingTop ?? ""} onChange={(e) => onChange((cur) => ({ ...cur, settings: { ...cur.settings, spacing: { ...sp, paddingTop: e.target.value ? Number(e.target.value) : undefined } } } as Section))} />
+        <div className="flex items-center justify-between">
+          <Label className="text-xs">Padding Top</Label>
+          <span className="text-xs text-muted-foreground">{sp.paddingTop ?? 0}px</span>
+        </div>
+        <input
+          type="range" min={0} max={200} step={4}
+          value={sp.paddingTop ?? 0}
+          onChange={(e) => setSpacing("paddingTop", Number(e.target.value) || undefined)}
+          className="w-full accent-primary"
+        />
       </div>
       <div>
-        <Label className="text-xs">Padding Bottom</Label>
-        <Input type="number" value={sp.paddingBottom ?? ""} onChange={(e) => onChange((cur) => ({ ...cur, settings: { ...cur.settings, spacing: { ...sp, paddingBottom: e.target.value ? Number(e.target.value) : undefined } } } as Section))} />
+        <div className="flex items-center justify-between">
+          <Label className="text-xs">Padding Bottom</Label>
+          <span className="text-xs text-muted-foreground">{sp.paddingBottom ?? 0}px</span>
+        </div>
+        <input
+          type="range" min={0} max={200} step={4}
+          value={sp.paddingBottom ?? 0}
+          onChange={(e) => setSpacing("paddingBottom", Number(e.target.value) || undefined)}
+          className="w-full accent-primary"
+        />
       </div>
-      <div className="col-span-2">
+      <div>
         <Label className="text-xs">لون الخلفية</Label>
-        <Input type="text" placeholder="#fff أو hsl(...)" value={s.settings?.backgroundColor ?? ""} onChange={(e) => onChange((cur) => ({ ...cur, settings: { ...cur.settings, backgroundColor: e.target.value || undefined } } as Section))} />
+        <div className="flex items-center gap-2 mt-1">
+          <input
+            type="color"
+            value={/^#[0-9a-fA-F]{6}$/.test(bg) ? bg : "#ffffff"}
+            onChange={(e) => setBg(e.target.value)}
+            className="h-9 w-12 cursor-pointer rounded border border-border bg-transparent"
+            aria-label="اختر لون"
+          />
+          <Input
+            placeholder="بدون لون"
+            value={bg}
+            onChange={(e) => setBg(e.target.value || undefined)}
+            className="flex-1"
+          />
+          {bg && (
+            <Button size="sm" variant="ghost" className="h-8 px-2" onClick={() => setBg(undefined)} title="مسح">
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
