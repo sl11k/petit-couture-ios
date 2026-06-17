@@ -153,10 +153,11 @@ function VisibilityFields({ s, onChange, notify }: { s: Section; onChange: Props
   const set = (k: "desktop" | "tablet" | "mobile", val: boolean) => {
     const dn = k === "desktop" ? "سطح المكتب" : k === "tablet" ? "تابلت" : "موبايل";
     const label = `${val ? "إظهار" : "إخفاء"} القسم على ${dn}`;
-    onChange((cur) => ({ ...cur, settings: { ...cur.settings, visibility: { ...v, [k]: val } } } as Section),
+    onChange((cur) => ({ ...cur, settings: { ...(cur.settings ?? {}), visibility: { ...(((cur.settings as any)?.visibility) ?? {}), [k]: val } } } as Section),
       { label, key: `vis:${s.id}:${k}` });
     notify?.(label);
   };
+
 
   return (
     <div className="space-y-2">
