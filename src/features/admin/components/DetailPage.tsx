@@ -13,6 +13,7 @@ import type {
 import { PageHeader } from "./PageHeader";
 import { StatusBadge } from "./StatusBadge";
 import { FormDialog } from "./FormDialog";
+import { FriendlyDataView } from "./FriendlyDataEditor";
 import { cn } from "@/lib/utils";
 
 function formatValue(value: any, type: DetailFieldDef["type"], lang: string): React.ReactNode {
