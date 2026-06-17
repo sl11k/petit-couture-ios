@@ -171,7 +171,6 @@ function PageEditor() {
                 </SortableContext>
               </DndContext>
             )}
-            )}
           </div>
         </main>
 
