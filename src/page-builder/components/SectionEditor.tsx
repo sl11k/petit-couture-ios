@@ -198,7 +198,7 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
               <option value="left">يسار</option><option value="center">وسط</option><option value="right">يمين</option>
             </select>
           </div>
-          <ImageField label="صورة الخلفية" value={s.content.image} onChange={(v, opts) => updateContent({ image: v }, opts)} />
+          <ImageField label="صورة الخلفية" value={s.content.image} onChange={(v) => updateContent({ image: v })} />
           <ButtonsEditor buttons={s.content.buttons} onChange={(b) => updateContent({ buttons: b })} />
         </>
       )}
@@ -214,7 +214,7 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
 
       {s.type === "image_text" && (
         <>
-          <ImageField label="الصورة" value={s.content.image} onChange={(v, opts) => updateContent({ image: v }, opts)} />
+          <ImageField label="الصورة" value={s.content.image} onChange={(v) => updateContent({ image: v })} />
           <div>
             <Label className="text-xs">جانب الصورة</Label>
             <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.imageSide ?? "left"}
