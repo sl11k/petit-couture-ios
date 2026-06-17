@@ -4,7 +4,7 @@
 // Each row = one size (e.g. "3 Years") with its OWN SKU, price and stock —
 // exactly what a product with 7-8 ages needs. Saves to `product_variants`
 // rows tagged `attributes.kind = "size"` (see syncProductSizes in FormDialog).
-import { Plus, Trash2, Wand2, Hash } from "lucide-react";
+import { Plus, Trash2, Wand2, Hash, ArrowUp, ArrowDown } from "lucide-react";
 import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { cn } from "@/lib/utils";
