@@ -137,6 +137,7 @@ import { Route as AdminLandingPagesIdRouteImport } from './routes/admin.landing-
 import { Route as AdminIntegrationsIdRouteImport } from './routes/admin.integrations.$id'
 import { Route as AdminCustomersIdRouteImport } from './routes/admin.customers.$id'
 import { Route as AdminCouponsIdRouteImport } from './routes/admin.coupons.$id'
+import { Route as AdminCmsPagesIdRouteImport } from './routes/admin.cms-pages.$id'
 import { Route as AdminCampaignsIdRouteImport } from './routes/admin.campaigns.$id'
 import { Route as AdminAuditIdRouteImport } from './routes/admin.audit.$id'
 import { Route as AccountReturnsNewRouteImport } from './routes/account.returns.new'
@@ -788,6 +789,11 @@ const AdminCouponsIdRoute = AdminCouponsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AdminCouponsRoute,
 } as any)
+const AdminCmsPagesIdRoute = AdminCmsPagesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminCmsPagesRoute,
+} as any)
 const AdminCampaignsIdRoute = AdminCampaignsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -922,6 +928,7 @@ export interface FileRoutesByFullPath {
   '/account/returns/new': typeof AccountReturnsNewRoute
   '/admin/audit/$id': typeof AdminAuditIdRoute
   '/admin/campaigns/$id': typeof AdminCampaignsIdRoute
+  '/admin/cms-pages/$id': typeof AdminCmsPagesIdRoute
   '/admin/coupons/$id': typeof AdminCouponsIdRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/integrations/$id': typeof AdminIntegrationsIdRoute
@@ -1045,6 +1052,7 @@ export interface FileRoutesByTo {
   '/account/returns/new': typeof AccountReturnsNewRoute
   '/admin/audit/$id': typeof AdminAuditIdRoute
   '/admin/campaigns/$id': typeof AdminCampaignsIdRoute
+  '/admin/cms-pages/$id': typeof AdminCmsPagesIdRoute
   '/admin/coupons/$id': typeof AdminCouponsIdRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/integrations/$id': typeof AdminIntegrationsIdRoute
@@ -1182,6 +1190,7 @@ export interface FileRoutesById {
   '/account/returns/new': typeof AccountReturnsNewRoute
   '/admin/audit/$id': typeof AdminAuditIdRoute
   '/admin/campaigns/$id': typeof AdminCampaignsIdRoute
+  '/admin/cms-pages/$id': typeof AdminCmsPagesIdRoute
   '/admin/coupons/$id': typeof AdminCouponsIdRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/integrations/$id': typeof AdminIntegrationsIdRoute
@@ -1320,6 +1329,7 @@ export interface FileRouteTypes {
     | '/account/returns/new'
     | '/admin/audit/$id'
     | '/admin/campaigns/$id'
+    | '/admin/cms-pages/$id'
     | '/admin/coupons/$id'
     | '/admin/customers/$id'
     | '/admin/integrations/$id'
@@ -1443,6 +1453,7 @@ export interface FileRouteTypes {
     | '/account/returns/new'
     | '/admin/audit/$id'
     | '/admin/campaigns/$id'
+    | '/admin/cms-pages/$id'
     | '/admin/coupons/$id'
     | '/admin/customers/$id'
     | '/admin/integrations/$id'
@@ -1579,6 +1590,7 @@ export interface FileRouteTypes {
     | '/account/returns/new'
     | '/admin/audit/$id'
     | '/admin/campaigns/$id'
+    | '/admin/cms-pages/$id'
     | '/admin/coupons/$id'
     | '/admin/customers/$id'
     | '/admin/integrations/$id'
@@ -2552,6 +2564,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCouponsIdRouteImport
       parentRoute: typeof AdminCouponsRoute
     }
+    '/admin/cms-pages/$id': {
+      id: '/admin/cms-pages/$id'
+      path: '/$id'
+      fullPath: '/admin/cms-pages/$id'
+      preLoaderRoute: typeof AdminCmsPagesIdRouteImport
+      parentRoute: typeof AdminCmsPagesRoute
+    }
     '/admin/campaigns/$id': {
       id: '/admin/campaigns/$id'
       path: '/$id'
@@ -2639,10 +2658,12 @@ const AdminCampaignsRouteWithChildren = AdminCampaignsRoute._addFileChildren(
 )
 
 interface AdminCmsPagesRouteChildren {
+  AdminCmsPagesIdRoute: typeof AdminCmsPagesIdRoute
   AdminCmsPagesIndexRoute: typeof AdminCmsPagesIndexRoute
 }
 
 const AdminCmsPagesRouteChildren: AdminCmsPagesRouteChildren = {
+  AdminCmsPagesIdRoute: AdminCmsPagesIdRoute,
   AdminCmsPagesIndexRoute: AdminCmsPagesIndexRoute,
 }
 
