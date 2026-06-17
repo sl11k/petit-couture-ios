@@ -29,6 +29,47 @@ type EditCtx = {
 };
 const EditContext = createContext<EditCtx | null>(null);
 
+// Tiny HTML sanitizer: keeps only inline formatting tags + safe links.
+const ALLOWED_TAGS = new Set(["B", "STRONG", "I", "EM", "U", "BR", "A", "SPAN"]);
+function sanitizeInlineHTML(html: string): string {
+  if (typeof window === "undefined") return html;
+  const wrap = document.createElement("div");
+  wrap.innerHTML = html;
+  const walk = (node: Node) => {
+    const children = Array.from(node.childNodes);
+    for (const child of children) {
+      if (child.nodeType === Node.ELEMENT_NODE) {
+        const el = child as HTMLElement;
+        if (!ALLOWED_TAGS.has(el.tagName)) {
+          // unwrap: replace with its text/children
+          while (el.firstChild) node.insertBefore(el.firstChild, el);
+          node.removeChild(el);
+          continue;
+        }
+        // Strip all attributes except href/target on <a>
+        for (const a of Array.from(el.attributes)) {
+          if (el.tagName === "A" && (a.name === "href" || a.name === "target" || a.name === "rel")) continue;
+          el.removeAttribute(a.name);
+        }
+        if (el.tagName === "A") {
+          const href = el.getAttribute("href") || "";
+          if (/^\s*javascript:/i.test(href)) el.removeAttribute("href");
+          if (el.getAttribute("target") === "_blank") el.setAttribute("rel", "noopener noreferrer");
+        }
+        walk(el);
+      } else if (child.nodeType !== Node.TEXT_NODE) {
+        node.removeChild(child);
+      }
+    }
+  };
+  walk(wrap);
+  return wrap.innerHTML;
+}
+
+function isHTMLish(s: string): boolean {
+  return /<\/?[a-z][\s\S]*?>/i.test(s);
+}
+
 function EditableText({
   value, onCommit, as: Tag = "span", className, multiline, placeholder, coalesceKey, label,
 }: {
@@ -47,12 +88,18 @@ function EditableText({
     const el = ref.current;
     if (!el) return;
     if (document.activeElement === el) return; // don't overwrite while focused
-    if (el.innerText !== value) el.innerText = value;
+    if (el.innerHTML !== value) el.innerHTML = value ?? "";
   }, [value]);
   const ctx = useContext(EditContext);
   void label;
   void coalesceKey;
   void ctx;
+
+  const exec = (cmd: string, arg?: string) => {
+    // contentEditable execCommand still works for B/I/U/createLink/unlink.
+    document.execCommand(cmd, false, arg);
+  };
+
   return (
     <Tag
       ref={ref as any}
@@ -64,17 +111,43 @@ function EditableText({
         className,
         "outline-none focus:outline-dashed focus:outline-2 focus:outline-primary/60 focus:outline-offset-2 rounded transition cursor-text",
         "hover:bg-primary/5 hover:outline hover:outline-1 hover:outline-primary/30 hover:outline-offset-2",
+        "[&_a]:underline [&_a]:text-primary",
         !value && "before:content-[attr(data-placeholder)] before:opacity-40 empty:before:inline",
       )}
       onClick={(e: any) => e.stopPropagation()}
       onMouseDown={(e: any) => e.stopPropagation()}
       onPaste={(e: any) => {
-        // Strip formatting on paste
         e.preventDefault();
+        const html = (e.clipboardData || (window as any).clipboardData).getData("text/html");
         const text = (e.clipboardData || (window as any).clipboardData).getData("text/plain");
-        document.execCommand("insertText", false, text);
+        if (html) {
+          const clean = sanitizeInlineHTML(html);
+          document.execCommand("insertHTML", false, clean);
+        } else {
+          document.execCommand("insertText", false, text);
+        }
       }}
       onKeyDown={(e: any) => {
+        const mod = e.ctrlKey || e.metaKey;
+        if (mod && !e.altKey) {
+          const k = e.key.toLowerCase();
+          if (k === "b") { e.preventDefault(); exec("bold"); return; }
+          if (k === "i") { e.preventDefault(); exec("italic"); return; }
+          if (k === "u") { e.preventDefault(); exec("underline"); return; }
+          if (k === "k") {
+            e.preventDefault();
+            const sel = window.getSelection();
+            const selected = sel?.toString();
+            if (!selected) return;
+            const existing = (sel?.anchorNode?.parentElement as HTMLAnchorElement)?.href || "";
+            const url = window.prompt("الرابط (اتركه فارغاً لإزالة)", existing);
+            if (url === null) return;
+            if (url === "") exec("unlink");
+            else exec("createLink", url);
+            return;
+          }
+          if (e.shiftKey && k === "x") { e.preventDefault(); exec("removeFormat"); return; }
+        }
         if (e.key === "Enter" && !e.shiftKey && !multiline) {
           e.preventDefault();
           (e.currentTarget as HTMLElement).blur();
@@ -84,12 +157,16 @@ function EditableText({
         }
       }}
       onBlur={(e: any) => {
-        const next = (e.currentTarget as HTMLElement).innerText;
+        const raw = (e.currentTarget as HTMLElement).innerHTML;
+        const clean = sanitizeInlineHTML(raw);
+        // Normalize: collapse to plain text if no formatting is present
+        const next = isHTMLish(clean) ? clean : (e.currentTarget as HTMLElement).innerText;
         if (next !== value) onCommit(next);
       }}
     />
   );
 }
+
 
 /** Inline-editable text bound to a top-level localized field on s.content */
 function EditT({
@@ -109,8 +186,10 @@ function EditT({
   const Tag = as ?? "span";
   if (!ctx) {
     if (!value) return null;
+    if (isHTMLish(value)) return <Tag className={cn(className, "[&_a]:underline [&_a]:text-primary")} dangerouslySetInnerHTML={{ __html: sanitizeInlineHTML(value) }} />;
     return <Tag className={className}>{value}</Tag>;
   }
+
   return (
     <EditableText
       as={Tag}
@@ -147,8 +226,10 @@ function EditCustom({
   const Tag = as ?? "span";
   if (!ctx) {
     if (!value) return null;
+    if (isHTMLish(value)) return <Tag className={cn(className, "[&_a]:underline [&_a]:text-primary")} dangerouslySetInnerHTML={{ __html: sanitizeInlineHTML(value) }} />;
     return <Tag className={className}>{value}</Tag>;
   }
+
   return (
     <EditableText
       as={Tag}
