@@ -13,6 +13,7 @@ type Props = {
   section: Section;
   onChange: (updater: (s: Section) => Section) => void;
   onConvertLegacy?: () => void;
+  notify?: (label: string) => void;
 };
 
 function nid(p: string) { return `${p}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`; }
