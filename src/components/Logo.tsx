@@ -1,5 +1,4 @@
-import logoAsset from "@/assets/lpp-logo.jpeg.asset.json";
-const logoSrc = logoAsset.url;
+import logoSrc from "@/assets/lpp-logo-transparent.png";
 
 type Props = { className?: string; height?: number; alt?: string };
 
