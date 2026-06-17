@@ -156,17 +156,6 @@ export function DesktopHeader() {
       {/* Category nav */}
       <nav className="border-t border-border/60">
         <div className="mx-auto max-w-[1480px] px-10 h-12 flex items-center justify-center gap-1">
-          <Link
-            to="/"
-            className={[
-              "px-4 h-9 inline-flex items-center rounded-xl text-[11.5px] tracking-luxury transition",
-              isActive("/")
-                ? "bg-foreground text-background"
-                : "text-foreground/70 hover:text-foreground hover:bg-cream-warm",
-            ].join(" ")}
-          >
-            {lang === "en" ? "BOUTIQUE" : "البوتيك"}
-          </Link>
           {dynamicFeatured.map((c) => {
             const active = location.pathname === `/category/${c.slug}`;
             return (
