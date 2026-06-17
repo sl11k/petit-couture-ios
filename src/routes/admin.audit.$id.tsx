@@ -5,6 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { PageHeader } from "@/features/admin/components/PageHeader";
 import { ArrowLeft, ArrowRight, ExternalLink, Loader2, User } from "lucide-react";
 import { StatusBadge } from "@/features/admin/components/StatusBadge";
+import { FriendlyDataView } from "@/features/admin/components/FriendlyDataEditor";
 
 export const Route = createFileRoute("/admin/audit/$id")({
   component: AuditDetailPage,
