@@ -5,6 +5,7 @@ import {
   type Product as StaticProduct,
 } from "@/data/categories";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { sortByAge } from "@/lib/ageSort";
 
 /**
  * Hooks that fetch real products from the `products` table by slug and merge
