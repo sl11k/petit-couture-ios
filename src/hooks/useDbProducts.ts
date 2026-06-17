@@ -5,6 +5,7 @@ import {
   type Product as StaticProduct,
 } from "@/data/categories";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { sortByAge } from "@/lib/ageSort";
 
 /**
  * Hooks that fetch real products from the `products` table by slug and merge
@@ -75,7 +76,7 @@ function mergeRowOntoBase(slug: string, row: DbRow | null, lang: "ar" | "en"): M
       ? [row.image_url]
       : base.images;
 
-  const sizes = arr<string>(row.sizes).filter(Boolean);
+  const sizes = sortByAge(arr<string>(row.sizes).filter(Boolean), (s: string) => s);
   const colorsRaw = arr<{ name?: string; hex?: string; image?: string } | string>(row.colors);
   const colors = colorsRaw
     .map((c) => {
@@ -165,7 +166,7 @@ export function useProductSizeVariants(productId: string | null): {
             price: r.price != null ? Number(r.price) : null,
             stock: Number(r.stock) || 0,
           }));
-        setVariants(rows);
+        setVariants(sortByAge(rows, (v) => v.size));
         setLoading(false);
       });
     return () => {

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { cn } from "@/lib/utils";
+import { sortByAge } from "@/lib/ageSort";
 
 export type ProductOption = {
   option_id: string;
@@ -66,6 +67,14 @@ export function ProductOptionsPicker({ productId, onImageChange, onSelectionChan
   const groups = useMemo(() => {
     const g: Record<string, ProductOption[]> = {};
     for (const r of inStock) (g[r.option_type || "_other"] ||= []).push(r);
+    // Age & size groups follow chronological order (6mo → 12mo → 2y → 10y …);
+    // other groups keep their admin-defined sort_order.
+    for (const key of Object.keys(g)) {
+      const k = key.toLowerCase();
+      if (k === "age" || k === "size") {
+        g[key] = sortByAge(g[key], (r) => (r.value_en || r.value_ar || ""));
+      }
+    }
     return g;
   }, [inStock]);
 
