@@ -148,7 +148,10 @@ function PageEditor() {
             {SECTION_TYPES.map((st) => (
               <button
                 key={st.type}
-                onClick={() => ed.addSection(createDefaultSection(st.type))}
+                onClick={() => {
+                  ed.addSection(createDefaultSection(st.type));
+                  ed.notifyChange(`تمت إضافة قسم "${ar ? st.label_ar : st.label_en}"`);
+                }}
                 className="flex flex-col items-center gap-1 rounded-md border border-border p-2 hover:bg-muted text-xs transition"
               >
                 <span className="text-xl">{st.icon}</span>
