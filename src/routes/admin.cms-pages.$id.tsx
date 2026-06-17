@@ -359,7 +359,7 @@ function SortableSection({
         </button>
       </div>
       <div className={cn(!selected && "transition hover:outline hover:outline-1 hover:outline-primary/40 hover:outline-offset-[-1px]")}>
-        <PageRenderer content={{ sections: [section] }} device={device} />
+        <PageRenderer content={{ sections: [section] }} device={device} onSectionUpdate={onSectionUpdate} />
       </div>
     </div>
   );
