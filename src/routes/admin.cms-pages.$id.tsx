@@ -148,8 +148,46 @@ function PageEditor() {
         </div>
 
         <div className="flex items-center gap-1">
-          <Button size="sm" variant="ghost" disabled={!ed.canUndo} onClick={ed.undo} title="تراجع"><Undo2 className="h-4 w-4" /></Button>
-          <Button size="sm" variant="ghost" disabled={!ed.canRedo} onClick={ed.redo} title="إعادة"><Redo2 className="h-4 w-4" /></Button>
+          <Button size="sm" variant="ghost" disabled={!ed.canUndo} onClick={ed.undo} title="تراجع (Ctrl+Z)"><Undo2 className="h-4 w-4" /></Button>
+          <Button size="sm" variant="ghost" disabled={!ed.canRedo} onClick={ed.redo} title="إعادة (Ctrl+Shift+Z)"><Redo2 className="h-4 w-4" /></Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button size="sm" variant="ghost" title="سجل التعديلات" disabled={ed.historyItems.length === 0}>
+                <Clock className="h-4 w-4" />
+                {ed.historyItems.length > 0 && (
+                  <span className="ms-1 text-[10px] tabular-nums text-muted-foreground">{ed.historyItems.length}</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-72 p-0">
+              <div className="px-3 py-2 border-b border-border text-xs font-medium flex items-center justify-between">
+                <span>سجل التعديلات</span>
+                <span className="text-[10px] text-muted-foreground">{ed.historyItems.length} خطوة</span>
+              </div>
+              <div className="max-h-72 overflow-y-auto">
+                {ed.historyItems.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-4">لا يوجد تعديلات بعد</p>
+                ) : ed.historyItems.map((h) => (
+                  <button
+                    key={h.index + ":" + h.ts}
+                    onClick={() => ed.jumpToHistory(h.index)}
+                    className="w-full text-start px-3 py-1.5 text-xs hover:bg-muted flex items-center justify-between gap-2 border-b border-border/40 last:border-0"
+                  >
+                    <span className="truncate">{h.label}</span>
+                    <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
+                      {new Date(h.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              {ed.canRedo && (
+                <div className="px-3 py-2 border-t border-border text-[10px] text-muted-foreground">
+                  يمكن إعادة {/* canRedo */} الخطوات الملغاة بزر الإعادة (Ctrl+Shift+Z)
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
+
 
           <div className="mx-2 flex rounded-md border border-border">
             <button onClick={() => setDevice("desktop")} className={cn("p-1.5", device === "desktop" && "bg-muted")} title="سطح المكتب"><Monitor className="h-3.5 w-3.5" /></button>
