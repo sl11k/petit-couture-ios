@@ -379,7 +379,7 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
 
       <div className="pt-3 border-t border-border">
         <h4 className="font-medium mb-2 text-xs">المسافات والخلفية</h4>
-        <SpacingFields s={s} onChange={onChange} />
+        <SpacingFields s={s} onChange={onChange} notify={notify} />
       </div>
 
       <div className="pt-3 border-t border-border">
