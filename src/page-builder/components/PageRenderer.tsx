@@ -209,13 +209,13 @@ function EditT({
   );
 }
 
-/** Editable text on an arbitrary path with a custom commit fn. */
+/** Editable text on an arbitrary path with a custom commit fn that receives the LIVE section. */
 function EditCustom({
   s, value, commit, as, className, multiline, placeholder, ckey,
 }: {
   s: Section;
   value: string;
-  commit: (next: string) => Section;
+  commit: (next: string, cur: Section) => Section;
   as?: any;
   className?: string;
   multiline?: boolean;
@@ -239,10 +239,11 @@ function EditCustom({
       placeholder={placeholder}
       coalesceKey={ckey}
       onCommit={(next) =>
-        ctx.updateSection(s.id, () => commit(next), { label: "تعديل نص", key: ckey })
+        ctx.updateSection(s.id, (cur) => commit(next, cur), { label: "تعديل نص", key: ckey })
       }
     />
   );
+
 }
 
 function sectionWrapStyle(s: Section): React.CSSProperties {
