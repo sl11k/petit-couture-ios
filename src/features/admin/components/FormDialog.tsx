@@ -540,8 +540,10 @@ export function FormDialog({
                     <ProductMediaGallery value={Array.isArray(values[f.key]) ? values[f.key] : []} onChange={(urls) => setVal(f.key, urls)} bucket={f.bucket || "product-media"} folder={f.folder || (f.type === "videoGallery" ? "videos" : "gallery")} max={f.maxItems ?? (f.type === "videoGallery" ? 10 : 20)} kind={f.type === "videoGallery" ? "video" : "image"} />
                   ) : f.type === "warehouseStock" ? (
                     <WarehouseStockPicker value={Array.isArray(values[f.key]) ? values[f.key] : []} onChange={(v) => setVal(f.key, v)} existing={existingInventory} />
-                  ) : f.type === "textarea" || f.type === "json" ? (
-                    <Textarea id={f.key} rows={f.rows ?? (f.type === "json" ? 6 : 4)} value={values[f.key] ?? ""} onChange={(e) => setVal(f.key, e.target.value)} placeholder={ph} className={cn("text-sm", f.type === "json" && "font-mono text-xs")} />
+                  ) : f.type === "json" ? (
+                    <FriendlyDataEditor value={values[f.key]} onChange={(v) => setVal(f.key, v)} />
+                  ) : f.type === "textarea" ? (
+                    <Textarea id={f.key} rows={f.rows ?? 4} value={values[f.key] ?? ""} onChange={(e) => setVal(f.key, e.target.value)} placeholder={ph} className="text-sm" />
                   ) : f.type === "select" ? (
                     <select id={f.key} value={values[f.key] ?? ""} onChange={(e) => setVal(f.key, e.target.value)} className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm">
                       <option value="">—</option>
