@@ -9,25 +9,29 @@ import type {
   Section, ButtonContent, FeatureCard, FaqItem, TestimonialItem, StatItem, ImageContent,
 } from "../schemas/pageSchema";
 
+type UpdateOpts = { label?: string; key?: string };
+
 type Props = {
   section: Section;
-  onChange: (updater: (s: Section) => Section) => void;
+  onChange: (updater: (s: Section) => Section, opts?: UpdateOpts) => void;
   onConvertLegacy?: () => void;
   notify?: (label: string) => void;
 };
 
 function nid(p: string) { return `${p}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`; }
 
-function TextField({ label, value, onChange, multiline }: { label: string; value?: string; onChange: (v: string) => void; multiline?: boolean }) {
+function TextField({ label, value, onChange, multiline, coalesceKey }: { label: string; value?: string; onChange: (v: string, opts?: UpdateOpts) => void; multiline?: boolean; coalesceKey?: string }) {
+  const key = coalesceKey ?? `text:${label}`;
   return (
     <div>
       <Label className="text-xs">{label}</Label>
       {multiline
-        ? <Textarea rows={3} value={value ?? ""} onChange={(e) => onChange(e.target.value)} />
-        : <Input value={value ?? ""} onChange={(e) => onChange(e.target.value)} />}
+        ? <Textarea rows={3} value={value ?? ""} onChange={(e) => onChange(e.target.value, { label: `تعديل ${label}`, key })} />
+        : <Input value={value ?? ""} onChange={(e) => onChange(e.target.value, { label: `تعديل ${label}`, key })} />}
     </div>
   );
 }
+
 
 function ButtonsEditor({ buttons, onChange }: { buttons?: ButtonContent[]; onChange: (b: ButtonContent[]) => void }) {
   const list = buttons ?? [];
