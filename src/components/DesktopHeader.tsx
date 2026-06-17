@@ -28,7 +28,7 @@ export function DesktopHeader() {
 
   // Featured nav: a curated subset of categories to keep the bar elegant.
   const featured = categories.slice(0, 7);
-  const [navItems, setNavItems] = useState<Array<{slug:string;name:string;href:string}>>([]);
+  const [navItems, setNavItems] = useState<Array<{slug:string; name_ar:string; name_en:string; href:string}>>([]);
   useEffect(() => {
     (async () => {
       try {
@@ -40,7 +40,8 @@ export function DesktopHeader() {
         if (Array.isArray(data) && data.length) {
           const rows = data.map((r: any) => ({
             slug: (r.href as string).replace(/^\//, "").replace(/^category\//, "") || "home",
-            name: r.label_ar || r.label_en || "",
+            name_ar: r.label_ar || r.label_en || "",
+            name_en: r.label_en || r.label_ar || "",
             href: r.href as string,
           }));
           setNavItems(rows);
@@ -48,7 +49,9 @@ export function DesktopHeader() {
       } catch (e) { console.error("[DesktopHeader] nav fetch failed", e); }
     })();
   }, []);
-  const dynamicFeatured = navItems.length > 0 ? navItems : featured.map((c) => ({ slug: c.slug, name: c.name, href: `/category/${c.slug}` }));
+  const dynamicFeatured = navItems.length > 0
+    ? navItems
+    : featured.map((c) => ({ slug: c.slug, name_ar: c.name, name_en: c.name, href: `/category/${c.slug}` }));
 
   const isActive = (path: string) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
@@ -179,8 +182,8 @@ export function DesktopHeader() {
                 ].join(" ")}
               >
                 {lang === "en"
-                  ? (t.categories[c.slug] ?? c.name).toUpperCase()
-                  : (t.categories[c.slug] ?? c.name)}
+                  ? (t.categories[c.slug] ?? c.name_en).toUpperCase()
+                  : (t.categories[c.slug] ?? c.name_ar)}
               </Link>
             );
           })}
