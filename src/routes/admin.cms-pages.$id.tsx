@@ -41,6 +41,33 @@ function PageEditor() {
     if (ed.selectedSectionId) setRightTab("section");
   }, [ed.selectedSectionId]);
 
+  // Keyboard shortcuts: Ctrl/Cmd+Z (undo), Ctrl/Cmd+Shift+Z or Ctrl+Y (redo)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const mod = e.ctrlKey || e.metaKey;
+      if (!mod) return;
+      const k = e.key.toLowerCase();
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      const isEditable = tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement | null)?.isContentEditable;
+      // allow Z/Y shortcuts even in inputs — that's the standard editor UX
+      if (k === "z" && !e.shiftKey) {
+        e.preventDefault();
+        ed.undo();
+      } else if ((k === "z" && e.shiftKey) || k === "y") {
+        e.preventDefault();
+        ed.redo();
+      } else if (k === "s" && !e.shiftKey) {
+        e.preventDefault();
+        ed.saveDraft();
+      } else {
+        void isEditable;
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [ed]);
+
+
   const loadVersions = async () => {
     if (!ed.page) return;
     const { data } = await supabase.from("cms_page_versions").select("*").eq("page_id", ed.page.id).order("created_at", { ascending: false }).limit(50);
