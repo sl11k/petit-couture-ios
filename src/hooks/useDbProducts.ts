@@ -75,7 +75,7 @@ function mergeRowOntoBase(slug: string, row: DbRow | null, lang: "ar" | "en"): M
       ? [row.image_url]
       : base.images;
 
-  const sizes = arr<string>(row.sizes).filter(Boolean);
+  const sizes = sortByAge(arr<string>(row.sizes).filter(Boolean), (s) => s);
   const colorsRaw = arr<{ name?: string; hex?: string; image?: string } | string>(row.colors);
   const colors = colorsRaw
     .map((c) => {
