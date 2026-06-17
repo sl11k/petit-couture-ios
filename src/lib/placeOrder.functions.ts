@@ -185,7 +185,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     }));
     let { error: itemsErr } = await supabaseAdmin
       .from("order_items")
-      .insert(items);
+      .insert(items as any);
     // Defensive: if the per-size SKU column hasn't been migrated yet on this
     // environment, retry without it so checkout never breaks on a timing gap.
     if (itemsErr && /sku/i.test(itemsErr.message)) {
