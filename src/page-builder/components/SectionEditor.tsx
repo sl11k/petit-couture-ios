@@ -83,16 +83,17 @@ function SpacingFields({ s, onChange, notify }: { s: Section; onChange: Props["o
   const bg = s.settings?.backgroundColor ?? "";
   const setSpacing = (k: "paddingTop" | "paddingBottom", val: number | undefined) => {
     const label = k === "paddingTop" ? `Padding Top → ${val ?? 0}px` : `Padding Bottom → ${val ?? 0}px`;
-    onChange((cur) => ({ ...cur, settings: { ...cur.settings, spacing: { ...sp, [k]: val } } } as Section),
+    onChange((cur) => ({ ...cur, settings: { ...(cur.settings ?? {}), spacing: { ...((cur.settings?.spacing) ?? {}), [k]: val } } } as Section),
       { label, key: `spacing:${s.id}:${k}` });
     notify?.(label);
   };
   const setBg = (val: string | undefined) => {
     const label = val ? `لون الخلفية → ${val}` : "إزالة لون الخلفية";
-    onChange((cur) => ({ ...cur, settings: { ...cur.settings, backgroundColor: val } } as Section),
+    onChange((cur) => ({ ...cur, settings: { ...(cur.settings ?? {}), backgroundColor: val } } as Section),
       { label, key: `bg:${s.id}` });
     notify?.(label);
   };
+
 
   return (
     <div className="space-y-3">
