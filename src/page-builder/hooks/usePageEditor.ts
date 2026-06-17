@@ -3,7 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { isPageContent, type CmsPage, type PageContent, EMPTY_PAGE_CONTENT, type Section } from "../schemas/pageSchema";
 
-const MAX_HISTORY = 50;
+const MAX_HISTORY = 100;
+const COALESCE_MS = 700;
+
+type HistoryEntry = { snap: PageContent; label: string; key?: string; ts: number };
+export type HistoryItem = { index: number; label: string; ts: number };
+
+export type UpdateOpts = { label?: string; key?: string };
 
 export function usePageEditor(pageId: string | undefined) {
   const [page, setPage] = useState<CmsPage | null>(null);
@@ -15,9 +21,11 @@ export function usePageEditor(pageId: string | undefined) {
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  // bumped on every history mutation so consumers re-render
+  const [histVer, setHistVer] = useState(0);
 
-  const historyRef = useRef<PageContent[]>([]);
-  const futureRef = useRef<PageContent[]>([]);
+  const historyRef = useRef<HistoryEntry[]>([]);
+  const futureRef = useRef<HistoryEntry[]>([]);
   const pageRef = useRef<CmsPage | null>(null);
   const contentRef = useRef<PageContent>(EMPTY_PAGE_CONTENT);
   useEffect(() => { pageRef.current = page; }, [page]);
@@ -46,6 +54,7 @@ export function usePageEditor(pageId: string | undefined) {
       setContent(initial);
       historyRef.current = [];
       futureRef.current = [];
+      setHistVer((v) => v + 1);
       setDirty(false);
       setLoading(false);
     })();
@@ -60,26 +69,39 @@ export function usePageEditor(pageId: string | undefined) {
     return () => window.removeEventListener("beforeunload", handler);
   }, [dirty]);
 
-  const pushHistory = useCallback((prev: PageContent) => {
-    historyRef.current.push(prev);
+  const pushHistory = useCallback((prev: PageContent, opts?: UpdateOpts) => {
+    const key = opts?.key;
+    const label = opts?.label ?? "تعديل";
+    const now = Date.now();
+    const last = historyRef.current[historyRef.current.length - 1];
+    if (key && last && last.key === key && now - last.ts < COALESCE_MS) {
+      // keep the older snapshot as the undo target; just refresh ts/label
+      last.ts = now;
+      last.label = label;
+      futureRef.current = [];
+      setHistVer((v) => v + 1);
+      return;
+    }
+    historyRef.current.push({ snap: prev, label, key, ts: now });
     if (historyRef.current.length > MAX_HISTORY) historyRef.current.shift();
     futureRef.current = [];
+    setHistVer((v) => v + 1);
   }, []);
 
-  const updateContent = useCallback((updater: (c: PageContent) => PageContent) => {
+  const updateContent = useCallback((updater: (c: PageContent) => PageContent, opts?: UpdateOpts) => {
     setContent((curr) => {
-      pushHistory(curr);
+      pushHistory(curr, opts);
       const next = updater(curr);
       setDirty(true);
       return next;
     });
   }, [pushHistory]);
 
-  const updateSection = useCallback((sectionId: string, updater: (s: Section) => Section) => {
+  const updateSection = useCallback((sectionId: string, updater: (s: Section) => Section, opts?: UpdateOpts) => {
     updateContent((c) => ({
       ...c,
       sections: c.sections.map((s) => (s.id === sectionId ? updater(s) : s)),
-    }));
+    }), opts);
   }, [updateContent]);
 
   const addSection = useCallback((s: Section, index?: number) => {
@@ -88,12 +110,12 @@ export function usePageEditor(pageId: string | undefined) {
       if (typeof index === "number") arr.splice(index, 0, s);
       else arr.push(s);
       return { ...c, sections: arr };
-    });
+    }, { label: `إضافة قسم: ${s.type}` });
     setSelectedSectionId(s.id);
   }, [updateContent]);
 
   const removeSection = useCallback((id: string) => {
-    updateContent((c) => ({ ...c, sections: c.sections.filter((s) => s.id !== id) }));
+    updateContent((c) => ({ ...c, sections: c.sections.filter((s) => s.id !== id) }), { label: "حذف قسم" });
     setSelectedSectionId((cur) => (cur === id ? null : cur));
   }, [updateContent]);
 
@@ -106,7 +128,7 @@ export function usePageEditor(pageId: string | undefined) {
       const arr = [...c.sections];
       arr.splice(idx + 1, 0, copy);
       return { ...c, sections: arr };
-    });
+    }, { label: "تكرار قسم" });
   }, [updateContent]);
 
   const moveSection = useCallback((fromIdx: number, toIdx: number) => {
@@ -115,16 +137,17 @@ export function usePageEditor(pageId: string | undefined) {
       const [moved] = arr.splice(fromIdx, 1);
       arr.splice(toIdx, 0, moved);
       return { ...c, sections: arr };
-    });
+    }, { label: "إعادة ترتيب الأقسام", key: "reorder" });
   }, [updateContent]);
 
   const undo = useCallback(() => {
     setContent((curr) => {
       const prev = historyRef.current.pop();
       if (!prev) return curr;
-      futureRef.current.push(curr);
+      futureRef.current.push({ snap: curr, label: prev.label, key: prev.key, ts: Date.now() });
       setDirty(true);
-      return prev;
+      setHistVer((v) => v + 1);
+      return prev.snap;
     });
   }, []);
 
@@ -132,9 +155,35 @@ export function usePageEditor(pageId: string | undefined) {
     setContent((curr) => {
       const next = futureRef.current.pop();
       if (!next) return curr;
-      historyRef.current.push(curr);
+      historyRef.current.push({ snap: curr, label: next.label, key: next.key, ts: Date.now() });
       setDirty(true);
-      return next;
+      setHistVer((v) => v + 1);
+      return next.snap;
+    });
+  }, []);
+
+  // Jump back to a specific history index (0 = oldest). Anything newer goes to future stack.
+  const jumpToHistory = useCallback((index: number) => {
+    setContent((curr) => {
+      const h = historyRef.current;
+      if (index < 0 || index >= h.length) return curr;
+      const target = h[index];
+      // Move entries above index (newer) + the current state onto future stack (reversed for proper redo order)
+      const removed = h.splice(index, h.length - index);
+      // removed[0] is the target snapshot; subsequent entries are newer.
+      // After jump, the current state should be target.snap, and undoing further goes to older snapshots already in h.
+      // Build future from removed[1..] + current
+      const newer = removed.slice(1).map((e) => e); // each e.snap is a previous content state newer than target
+      // To produce proper redo order: redo pops from end of futureRef.
+      // Future stack should be ordered so that the FIRST redo restores the oldest newer state.
+      // pop() returns last element, so place oldest at the end. newer is already oldest→newest, so push reversed.
+      futureRef.current = [
+        { snap: curr, label: "الحالة الحالية", key: undefined, ts: Date.now() },
+        ...newer.map((e) => ({ snap: e.snap, label: e.label, key: e.key, ts: e.ts })),
+      ].reverse();
+      setDirty(true);
+      setHistVer((v) => v + 1);
+      return target.snap;
     });
   }, []);
 
@@ -234,12 +283,23 @@ export function usePageEditor(pageId: string | undefined) {
     toast.success("تم النشر — التغييرات ظاهرة على الموقع الآن");
   }, [page, content]);
 
+  // Derive reactive history list for UI (most-recent first)
+  const historyItems: HistoryItem[] = (() => {
+    // referenced histVer to recompute
+    void histVer;
+    const h = historyRef.current;
+    // Each entry's snapshot represents the state BEFORE that labeled change.
+    // To "jump back to right after action X", we want to restore the snapshot AFTER X — which means jumping to index of the entry that was pushed by the NEXT change. Simpler: show labels as "undo to before X" — jumpToHistory(index) restores h[index].snap.
+    return h.map((e, i) => ({ index: i, label: e.label, ts: e.ts })).reverse();
+  })();
+
   return {
     page, content, loading, saving, publishing, dirty,
     lastSavedAt, autoSaveEnabled, setAutoSaveEnabled,
     selectedSectionId, setSelectedSectionId,
     updateContent, updateSection, addSection, removeSection, duplicateSection, moveSection,
-    updatePageMeta, undo, redo, notifyChange,
+    updatePageMeta, undo, redo, jumpToHistory, notifyChange,
+    historyItems,
     saveDraft: () => saveDraft(false),
     publish,
     canUndo: historyRef.current.length > 0,
