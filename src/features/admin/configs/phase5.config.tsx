@@ -1,4 +1,5 @@
 import type { AdminPageConfig } from "@/features/admin/types";
+import { ProductNameCell } from "@/features/admin/components/ProductNameCell";
 
 const yesNo = [
   { value: "true", label: { ar: "نعم", en: "Yes" } },
