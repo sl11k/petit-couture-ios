@@ -83,16 +83,17 @@ function SpacingFields({ s, onChange, notify }: { s: Section; onChange: Props["o
   const bg = s.settings?.backgroundColor ?? "";
   const setSpacing = (k: "paddingTop" | "paddingBottom", val: number | undefined) => {
     const label = k === "paddingTop" ? `Padding Top → ${val ?? 0}px` : `Padding Bottom → ${val ?? 0}px`;
-    onChange((cur) => ({ ...cur, settings: { ...cur.settings, spacing: { ...sp, [k]: val } } } as Section),
+    onChange((cur) => ({ ...cur, settings: { ...(cur.settings ?? {}), spacing: { ...((cur.settings?.spacing) ?? {}), [k]: val } } } as Section),
       { label, key: `spacing:${s.id}:${k}` });
     notify?.(label);
   };
   const setBg = (val: string | undefined) => {
     const label = val ? `لون الخلفية → ${val}` : "إزالة لون الخلفية";
-    onChange((cur) => ({ ...cur, settings: { ...cur.settings, backgroundColor: val } } as Section),
+    onChange((cur) => ({ ...cur, settings: { ...(cur.settings ?? {}), backgroundColor: val } } as Section),
       { label, key: `bg:${s.id}` });
     notify?.(label);
   };
+
 
   return (
     <div className="space-y-3">
@@ -152,10 +153,11 @@ function VisibilityFields({ s, onChange, notify }: { s: Section; onChange: Props
   const set = (k: "desktop" | "tablet" | "mobile", val: boolean) => {
     const dn = k === "desktop" ? "سطح المكتب" : k === "tablet" ? "تابلت" : "موبايل";
     const label = `${val ? "إظهار" : "إخفاء"} القسم على ${dn}`;
-    onChange((cur) => ({ ...cur, settings: { ...cur.settings, visibility: { ...v, [k]: val } } } as Section),
+    onChange((cur) => ({ ...cur, settings: { ...(cur.settings ?? {}), visibility: { ...(((cur.settings as any)?.visibility) ?? {}), [k]: val } } } as Section),
       { label, key: `vis:${s.id}:${k}` });
     notify?.(label);
   };
+
 
   return (
     <div className="space-y-2">
@@ -173,8 +175,18 @@ function VisibilityFields({ s, onChange, notify }: { s: Section; onChange: Props
 export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Props) {
   const s = section;
 
-  const updateContent = (patch: any, opts?: UpdateOpts) =>
-    onChange((cur) => ({ ...cur, content: { ...(cur as any).content, ...patch } } as Section), opts);
+  function updateContent(patch: Record<string, any>, opts?: UpdateOpts): void;
+  function updateContent(fn: (c: any) => Record<string, any>, opts?: UpdateOpts): void;
+  function updateContent(patchOrFn: any, opts?: UpdateOpts): void {
+    onChange((cur: Section) => {
+      const c: any = (cur as any).content ?? {};
+      const patch = typeof patchOrFn === "function" ? patchOrFn(c) : patchOrFn;
+      return { ...cur, content: { ...c, ...patch } } as Section;
+    }, opts);
+  }
+
+
+
 
 
   return (
@@ -247,16 +259,16 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">بطاقة #{i + 1}</span>
                   <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive"
-                    onClick={() => updateContent({ cards: s.content.cards.filter((x) => x.id !== c.id) })}><Trash2 className="h-3 w-3" /></Button>
+                    onClick={() => updateContent((ct: any) => ({ cards: ct.cards.filter((x: any) => x.id !== c.id) }))}><Trash2 className="h-3 w-3" /></Button>
                 </div>
-                <Input placeholder="عنوان (ع)" value={c.title_ar ?? ""} onChange={(e) => updateContent({ cards: s.content.cards.map((x) => x.id === c.id ? { ...x, title_ar: e.target.value } : x) })} />
-                <Input placeholder="Title (EN)" value={c.title_en ?? ""} onChange={(e) => updateContent({ cards: s.content.cards.map((x) => x.id === c.id ? { ...x, title_en: e.target.value } : x) })} />
-                <Textarea rows={2} placeholder="وصف (ع)" value={c.description_ar ?? ""} onChange={(e) => updateContent({ cards: s.content.cards.map((x) => x.id === c.id ? { ...x, description_ar: e.target.value } : x) })} />
-                <Textarea rows={2} placeholder="Description (EN)" value={c.description_en ?? ""} onChange={(e) => updateContent({ cards: s.content.cards.map((x) => x.id === c.id ? { ...x, description_en: e.target.value } : x) })} />
-                <Input placeholder="رابط" value={c.link ?? ""} onChange={(e) => updateContent({ cards: s.content.cards.map((x) => x.id === c.id ? { ...x, link: e.target.value } : x) })} />
+                <Input placeholder="عنوان (ع)" value={c.title_ar ?? ""} onChange={(e) => updateContent((ct: any) => ({ cards: ct.cards.map((x: any) => x.id === c.id ? { ...x, title_ar: e.target.value } : x) }))} />
+                <Input placeholder="Title (EN)" value={c.title_en ?? ""} onChange={(e) => updateContent((ct: any) => ({ cards: ct.cards.map((x: any) => x.id === c.id ? { ...x, title_en: e.target.value } : x) }))} />
+                <Textarea rows={2} placeholder="وصف (ع)" value={c.description_ar ?? ""} onChange={(e) => updateContent((ct: any) => ({ cards: ct.cards.map((x: any) => x.id === c.id ? { ...x, description_ar: e.target.value } : x) }))} />
+                <Textarea rows={2} placeholder="Description (EN)" value={c.description_en ?? ""} onChange={(e) => updateContent((ct: any) => ({ cards: ct.cards.map((x: any) => x.id === c.id ? { ...x, description_en: e.target.value } : x) }))} />
+                <Input placeholder="رابط" value={c.link ?? ""} onChange={(e) => updateContent((ct: any) => ({ cards: ct.cards.map((x: any) => x.id === c.id ? { ...x, link: e.target.value } : x) }))} />
               </div>
             ))}
-            <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent({ cards: [...s.content.cards, { id: nid("card"), title_ar: "بطاقة", title_en: "Card", description_ar: "", description_en: "" } as FeatureCard] })}>
+            <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent((ct: any) => ({ cards: [...ct.cards, { id: nid("card"), title_ar: "بطاقة", title_en: "Card", description_ar: "", description_en: "" } as FeatureCard] }))}>
               <Plus className="h-3 w-3 me-1" /> إضافة بطاقة
             </Button>
           </div>
@@ -274,15 +286,15 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">#{i + 1}</span>
                   <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive"
-                    onClick={() => updateContent({ items: s.content.items.filter((x) => x.id !== it.id) })}><Trash2 className="h-3 w-3" /></Button>
+                    onClick={() => updateContent((ct: any) => ({ items: ct.items.filter((x: any) => x.id !== it.id) }))}><Trash2 className="h-3 w-3" /></Button>
                 </div>
-                <Input placeholder="سؤال (ع)" value={it.question_ar ?? ""} onChange={(e) => updateContent({ items: s.content.items.map((x) => x.id === it.id ? { ...x, question_ar: e.target.value } : x) })} />
-                <Input placeholder="Question (EN)" value={it.question_en ?? ""} onChange={(e) => updateContent({ items: s.content.items.map((x) => x.id === it.id ? { ...x, question_en: e.target.value } : x) })} />
-                <Textarea rows={2} placeholder="إجابة (ع)" value={it.answer_ar ?? ""} onChange={(e) => updateContent({ items: s.content.items.map((x) => x.id === it.id ? { ...x, answer_ar: e.target.value } : x) })} />
-                <Textarea rows={2} placeholder="Answer (EN)" value={it.answer_en ?? ""} onChange={(e) => updateContent({ items: s.content.items.map((x) => x.id === it.id ? { ...x, answer_en: e.target.value } : x) })} />
+                <Input placeholder="سؤال (ع)" value={it.question_ar ?? ""} onChange={(e) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, question_ar: e.target.value } : x) }))} />
+                <Input placeholder="Question (EN)" value={it.question_en ?? ""} onChange={(e) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, question_en: e.target.value } : x) }))} />
+                <Textarea rows={2} placeholder="إجابة (ع)" value={it.answer_ar ?? ""} onChange={(e) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, answer_ar: e.target.value } : x) }))} />
+                <Textarea rows={2} placeholder="Answer (EN)" value={it.answer_en ?? ""} onChange={(e) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, answer_en: e.target.value } : x) }))} />
               </div>
             ))}
-            <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent({ items: [...s.content.items, { id: nid("q"), question_ar: "سؤال؟", question_en: "Question?", answer_ar: "", answer_en: "" } as FaqItem] })}>
+            <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent((ct: any) => ({ items: [...ct.items, { id: nid("q"), question_ar: "سؤال؟", question_en: "Question?", answer_ar: "", answer_en: "" } as FaqItem] }))}>
               <Plus className="h-3 w-3 me-1" /> إضافة سؤال
             </Button>
           </div>
@@ -300,17 +312,17 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">#{i + 1}</span>
                   <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive"
-                    onClick={() => updateContent({ items: s.content.items.filter((x) => x.id !== it.id) })}><Trash2 className="h-3 w-3" /></Button>
+                    onClick={() => updateContent((ct: any) => ({ items: ct.items.filter((x: any) => x.id !== it.id) }))}><Trash2 className="h-3 w-3" /></Button>
                 </div>
-                <Input placeholder="الاسم" value={it.name ?? ""} onChange={(e) => updateContent({ items: s.content.items.map((x) => x.id === it.id ? { ...x, name: e.target.value } : x) })} />
-                <Input placeholder="الدور (ع)" value={it.role_ar ?? ""} onChange={(e) => updateContent({ items: s.content.items.map((x) => x.id === it.id ? { ...x, role_ar: e.target.value } : x) })} />
-                <Input placeholder="Role (EN)" value={it.role_en ?? ""} onChange={(e) => updateContent({ items: s.content.items.map((x) => x.id === it.id ? { ...x, role_en: e.target.value } : x) })} />
-                <Textarea rows={2} placeholder="الاقتباس (ع)" value={it.quote_ar ?? ""} onChange={(e) => updateContent({ items: s.content.items.map((x) => x.id === it.id ? { ...x, quote_ar: e.target.value } : x) })} />
-                <Textarea rows={2} placeholder="Quote (EN)" value={it.quote_en ?? ""} onChange={(e) => updateContent({ items: s.content.items.map((x) => x.id === it.id ? { ...x, quote_en: e.target.value } : x) })} />
-                <MediaUploader value={it.avatar ?? null} onChange={(url) => updateContent({ items: s.content.items.map((x) => x.id === it.id ? { ...x, avatar: url ?? undefined } : x) })} bucket="content-media" kind="image" folder="cms/avatars" />
+                <Input placeholder="الاسم" value={it.name ?? ""} onChange={(e) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, name: e.target.value } : x) }))} />
+                <Input placeholder="الدور (ع)" value={it.role_ar ?? ""} onChange={(e) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, role_ar: e.target.value } : x) }))} />
+                <Input placeholder="Role (EN)" value={it.role_en ?? ""} onChange={(e) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, role_en: e.target.value } : x) }))} />
+                <Textarea rows={2} placeholder="الاقتباس (ع)" value={it.quote_ar ?? ""} onChange={(e) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, quote_ar: e.target.value } : x) }))} />
+                <Textarea rows={2} placeholder="Quote (EN)" value={it.quote_en ?? ""} onChange={(e) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, quote_en: e.target.value } : x) }))} />
+                <MediaUploader value={it.avatar ?? null} onChange={(url) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, avatar: url ?? undefined } : x) }))} bucket="content-media" kind="image" folder="cms/avatars" />
               </div>
             ))}
-            <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent({ items: [...s.content.items, { id: nid("t"), name: "", quote_ar: "", quote_en: "" } as TestimonialItem] })}>
+            <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent((ct: any) => ({ items: [...ct.items, { id: nid("t"), name: "", quote_ar: "", quote_en: "" } as TestimonialItem] }))}>
               <Plus className="h-3 w-3 me-1" /> إضافة رأي
             </Button>
           </div>
@@ -325,14 +337,14 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">#{i + 1}</span>
                 <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive"
-                  onClick={() => updateContent({ items: s.content.items.filter((x) => x.id !== it.id) })}><Trash2 className="h-3 w-3" /></Button>
+                  onClick={() => updateContent((ct: any) => ({ items: ct.items.filter((x: any) => x.id !== it.id) }))}><Trash2 className="h-3 w-3" /></Button>
               </div>
-              <Input placeholder="القيمة (مثل 100+)" value={it.value ?? ""} onChange={(e) => updateContent({ items: s.content.items.map((x) => x.id === it.id ? { ...x, value: e.target.value } : x) })} />
-              <Input placeholder="التسمية (ع)" value={it.label_ar ?? ""} onChange={(e) => updateContent({ items: s.content.items.map((x) => x.id === it.id ? { ...x, label_ar: e.target.value } : x) })} />
-              <Input placeholder="Label (EN)" value={it.label_en ?? ""} onChange={(e) => updateContent({ items: s.content.items.map((x) => x.id === it.id ? { ...x, label_en: e.target.value } : x) })} />
+              <Input placeholder="القيمة (مثل 100+)" value={it.value ?? ""} onChange={(e) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, value: e.target.value } : x) }))} />
+              <Input placeholder="التسمية (ع)" value={it.label_ar ?? ""} onChange={(e) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, label_ar: e.target.value } : x) }))} />
+              <Input placeholder="Label (EN)" value={it.label_en ?? ""} onChange={(e) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, label_en: e.target.value } : x) }))} />
             </div>
           ))}
-          <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent({ items: [...s.content.items, { id: nid("st"), value: "0", label_ar: "", label_en: "" } as StatItem] })}>
+          <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent((ct: any) => ({ items: [...ct.items, { id: nid("st"), value: "0", label_ar: "", label_en: "" } as StatItem] }))}>
             <Plus className="h-3 w-3 me-1" /> إضافة
           </Button>
         </div>
@@ -355,13 +367,13 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
               <div key={i} className="rounded-md border border-border p-2 space-y-1.5">
                 <div className="flex items-center justify-between"><span className="text-xs text-muted-foreground">#{i + 1}</span>
                   <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive"
-                    onClick={() => updateContent({ images: s.content.images.filter((_, j) => j !== i) })}><Trash2 className="h-3 w-3" /></Button>
+                    onClick={() => updateContent((c: any) => ({ images: c.images.filter((_: any, j: any) => j !== i) }))}><Trash2 className="h-3 w-3" /></Button>
                 </div>
-                <MediaUploader value={im.url ?? null} onChange={(url) => updateContent({ images: s.content.images.map((x, j) => j === i ? { ...x, url: url ?? undefined } : x) })} bucket="content-media" kind="image" folder="cms/gallery" />
-                <Input placeholder="Alt" value={im.alt ?? ""} onChange={(e) => updateContent({ images: s.content.images.map((x, j) => j === i ? { ...x, alt: e.target.value } : x) })} />
+                <MediaUploader value={im.url ?? null} onChange={(url) => updateContent((c: any) => ({ images: c.images.map((x: any, j: any) => j === i ? { ...x, url: url ?? undefined } : x) }))} bucket="content-media" kind="image" folder="cms/gallery" />
+                <Input placeholder="Alt" value={im.alt ?? ""} onChange={(e) => updateContent((c: any) => ({ images: c.images.map((x: any, j: any) => j === i ? { ...x, alt: e.target.value } : x) }))} />
               </div>
             ))}
-            <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent({ images: [...s.content.images, {}] })}><Plus className="h-3 w-3 me-1" /> إضافة صورة</Button>
+            <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent((c: any) => ({ images: [...c.images, {}] }))}><Plus className="h-3 w-3 me-1" /> إضافة صورة</Button>
           </div>
         </>
       )}

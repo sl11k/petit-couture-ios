@@ -209,13 +209,13 @@ function EditT({
   );
 }
 
-/** Editable text on an arbitrary path with a custom commit fn. */
+/** Editable text on an arbitrary path with a custom commit fn that receives the LIVE section. */
 function EditCustom({
   s, value, commit, as, className, multiline, placeholder, ckey,
 }: {
   s: Section;
   value: string;
-  commit: (next: string) => Section;
+  commit: (next: string, cur: Section) => Section;
   as?: any;
   className?: string;
   multiline?: boolean;
@@ -239,10 +239,11 @@ function EditCustom({
       placeholder={placeholder}
       coalesceKey={ckey}
       onCommit={(next) =>
-        ctx.updateSection(s.id, () => commit(next), { label: "تعديل نص", key: ckey })
+        ctx.updateSection(s.id, (cur) => commit(next, cur), { label: "تعديل نص", key: ckey })
       }
     />
   );
+
 }
 
 function sectionWrapStyle(s: Section): React.CSSProperties {
@@ -356,13 +357,13 @@ function RenderFeatureGrid({ s }: { s: FeatureGridSection }) {
                   s={s} as="h3" className="text-lg font-semibold mb-2" placeholder="عنوان البطاقة"
                   value={(c as any)[titleField] ?? ""}
                   ckey={`card:${s.id}:${c.id}:${titleField}`}
-                  commit={(next) => ({ ...s, content: { ...s.content, cards: s.content.cards.map((x) => x.id === c.id ? { ...x, [titleField]: next } as any : x) } })}
+                  commit={(next, cur: any) => ({ ...cur, content: { ...cur.content, cards: cur.content.cards.map((x: any) => x.id === c.id ? { ...x, [titleField]: next } as any : x) } })}
                 />
                 <EditCustom
                   s={s} as="p" className="text-sm opacity-75" multiline placeholder="وصف البطاقة"
                   value={(c as any)[descField] ?? ""}
                   ckey={`card:${s.id}:${c.id}:${descField}`}
-                  commit={(next) => ({ ...s, content: { ...s.content, cards: s.content.cards.map((x) => x.id === c.id ? { ...x, [descField]: next } as any : x) } })}
+                  commit={(next, cur: any) => ({ ...cur, content: { ...cur.content, cards: cur.content.cards.map((x: any) => x.id === c.id ? { ...x, [descField]: next } as any : x) } })}
                 />
                 {c.link && <a href={c.link} className="inline-block mt-3 text-sm underline">{ar ? "اعرف أكثر" : "Learn more"}</a>}
               </div>
@@ -394,7 +395,7 @@ function RenderFaq({ s }: { s: FaqSection }) {
                     s={s} as="span" placeholder="السؤال"
                     value={(it as any)[qf] ?? ""}
                     ckey={`faq:${s.id}:${it.id}:${qf}`}
-                    commit={(next) => ({ ...s, content: { ...s.content, items: s.content.items.map((x) => x.id === it.id ? { ...x, [qf]: next } as any : x) } })}
+                    commit={(next, cur: any) => ({ ...cur, content: { ...cur.content, items: cur.content.items.map((x: any) => x.id === it.id ? { ...x, [qf]: next } as any : x) } })}
                   />
                   <button onClick={() => setOpenId(open ? null : it.id)} className="ms-3 shrink-0" aria-label="toggle">
                     <ChevronDown className={cn("h-4 w-4 transition-transform", open && "rotate-180")} />
@@ -406,7 +407,7 @@ function RenderFaq({ s }: { s: FaqSection }) {
                       s={s} as="div" multiline className="whitespace-pre-wrap" placeholder="الإجابة"
                       value={(it as any)[af] ?? ""}
                       ckey={`faq:${s.id}:${it.id}:${af}`}
-                      commit={(next) => ({ ...s, content: { ...s.content, items: s.content.items.map((x) => x.id === it.id ? { ...x, [af]: next } as any : x) } })}
+                      commit={(next, cur: any) => ({ ...cur, content: { ...cur.content, items: cur.content.items.map((x: any) => x.id === it.id ? { ...x, [af]: next } as any : x) } })}
                     />
                   </div>
                 )}
@@ -436,7 +437,7 @@ function RenderTestimonials({ s }: { s: TestimonialsSection }) {
                   s={s} as="blockquote" className="text-foreground/90" multiline placeholder="الاقتباس"
                   value={(it as any)[qf] ?? ""}
                   ckey={`tm:${s.id}:${it.id}:${qf}`}
-                  commit={(next) => ({ ...s, content: { ...s.content, items: s.content.items.map((x) => x.id === it.id ? { ...x, [qf]: next } as any : x) } })}
+                  commit={(next, cur: any) => ({ ...cur, content: { ...cur.content, items: cur.content.items.map((x: any) => x.id === it.id ? { ...x, [qf]: next } as any : x) } })}
                 />
                 <figcaption className="mt-4 flex items-center gap-3">
                   {it.avatar && <img src={it.avatar} alt="" className="h-10 w-10 rounded-full object-cover" />}
@@ -445,13 +446,13 @@ function RenderTestimonials({ s }: { s: TestimonialsSection }) {
                       s={s} as="div" className="font-medium text-sm" placeholder="الاسم"
                       value={it.name ?? ""}
                       ckey={`tm:${s.id}:${it.id}:name`}
-                      commit={(next) => ({ ...s, content: { ...s.content, items: s.content.items.map((x) => x.id === it.id ? { ...x, name: next } as any : x) } })}
+                      commit={(next, cur: any) => ({ ...cur, content: { ...cur.content, items: cur.content.items.map((x: any) => x.id === it.id ? { ...x, name: next } as any : x) } })}
                     />
                     <EditCustom
                       s={s} as="div" className="text-xs opacity-60" placeholder="الدور"
                       value={(it as any)[rf] ?? ""}
                       ckey={`tm:${s.id}:${it.id}:${rf}`}
-                      commit={(next) => ({ ...s, content: { ...s.content, items: s.content.items.map((x) => x.id === it.id ? { ...x, [rf]: next } as any : x) } })}
+                      commit={(next, cur: any) => ({ ...cur, content: { ...cur.content, items: cur.content.items.map((x: any) => x.id === it.id ? { ...x, [rf]: next } as any : x) } })}
                     />
                   </div>
                 </figcaption>
@@ -512,13 +513,13 @@ function RenderStats({ s }: { s: StatsSection }) {
                 s={s} as="div" className="text-3xl md:text-4xl font-semibold" placeholder="0"
                 value={it.value ?? ""}
                 ckey={`stat:${s.id}:${it.id}:value`}
-                commit={(next) => ({ ...s, content: { ...s.content, items: s.content.items.map((x) => x.id === it.id ? { ...x, value: next } as any : x) } })}
+                commit={(next, cur: any) => ({ ...cur, content: { ...cur.content, items: cur.content.items.map((x: any) => x.id === it.id ? { ...x, value: next } as any : x) } })}
               />
               <EditCustom
                 s={s} as="div" className="text-sm opacity-70 mt-1" placeholder="التسمية"
                 value={(it as any)[lf] ?? ""}
                 ckey={`stat:${s.id}:${it.id}:${lf}`}
-                commit={(next) => ({ ...s, content: { ...s.content, items: s.content.items.map((x) => x.id === it.id ? { ...x, [lf]: next } as any : x) } })}
+                commit={(next, cur: any) => ({ ...cur, content: { ...cur.content, items: cur.content.items.map((x: any) => x.id === it.id ? { ...x, [lf]: next } as any : x) } })}
               />
             </div>
           );
