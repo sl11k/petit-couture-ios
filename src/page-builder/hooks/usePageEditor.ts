@@ -13,9 +13,15 @@ export function usePageEditor(pageId: string | undefined) {
   const [publishing, setPublishing] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
 
   const historyRef = useRef<PageContent[]>([]);
   const futureRef = useRef<PageContent[]>([]);
+  const pageRef = useRef<CmsPage | null>(null);
+  const contentRef = useRef<PageContent>(EMPTY_PAGE_CONTENT);
+  useEffect(() => { pageRef.current = page; }, [page]);
+  useEffect(() => { contentRef.current = content; }, [content]);
 
   // Load
   useEffect(() => {
@@ -137,7 +143,9 @@ export function usePageEditor(pageId: string | undefined) {
     setDirty(true);
   }, []);
 
-  const saveDraft = useCallback(async () => {
+  const saveDraft = useCallback(async (silent = false) => {
+    const page = pageRef.current;
+    const content = contentRef.current;
     if (!page) return;
     setSaving(true);
     const { error } = await supabase
@@ -157,10 +165,18 @@ export function usePageEditor(pageId: string | undefined) {
       })
       .eq("id", page.id);
     setSaving(false);
-    if (error) { toast.error("فشل حفظ المسودة: " + error.message); return; }
+    if (error) { if (!silent) toast.error("فشل حفظ المسودة: " + error.message); return; }
     setDirty(false);
-    toast.success("تم حفظ المسودة");
-  }, [page, content]);
+    setLastSavedAt(new Date());
+    if (!silent) toast.success("تم حفظ المسودة");
+  }, []);
+
+  // Auto-save draft 1.5s after the last change (silent).
+  useEffect(() => {
+    if (!autoSaveEnabled || !dirty || !page) return;
+    const t = setTimeout(() => { saveDraft(true); }, 1500);
+    return () => clearTimeout(t);
+  }, [content, page, dirty, autoSaveEnabled, saveDraft]);
 
   const publish = useCallback(async () => {
     if (!page) return;
@@ -200,9 +216,12 @@ export function usePageEditor(pageId: string | undefined) {
 
   return {
     page, content, loading, saving, publishing, dirty,
+    lastSavedAt, autoSaveEnabled, setAutoSaveEnabled,
     selectedSectionId, setSelectedSectionId,
     updateContent, updateSection, addSection, removeSection, duplicateSection, moveSection,
-    updatePageMeta, undo, redo, saveDraft, publish,
+    updatePageMeta, undo, redo,
+    saveDraft: () => saveDraft(false),
+    publish,
     canUndo: historyRef.current.length > 0,
     canRedo: futureRef.current.length > 0,
   };

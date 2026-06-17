@@ -99,7 +99,22 @@ function PageEditor() {
             <ArrowLeft className="h-4 w-4 me-1" /> رجوع
           </Button>
           <div className="text-sm font-medium truncate">{ar ? ed.page.title_ar : ed.page.title_en}</div>
-          {ed.dirty && <span className="text-xs text-amber-600 dark:text-amber-400">● غير محفوظ</span>}
+          {ed.saving ? (
+            <span className="text-xs text-muted-foreground animate-pulse">جاري الحفظ…</span>
+          ) : ed.dirty ? (
+            <span className="text-xs text-amber-600 dark:text-amber-400">● تغييرات غير محفوظة</span>
+          ) : ed.lastSavedAt ? (
+            <span className="text-xs text-emerald-600 dark:text-emerald-400">✓ محفوظ تلقائياً</span>
+          ) : null}
+          <label className="flex items-center gap-1 text-[11px] text-muted-foreground cursor-pointer select-none ms-2">
+            <input
+              type="checkbox"
+              checked={ed.autoSaveEnabled}
+              onChange={(e) => ed.setAutoSaveEnabled(e.target.checked)}
+              className="h-3 w-3 accent-primary"
+            />
+            حفظ تلقائي
+          </label>
         </div>
 
         <div className="flex items-center gap-1">
