@@ -23,6 +23,7 @@ import { LookupField } from "./LookupField";
 import { VariantEditor, type VariantEntry } from "./VariantEditor";
 import { SizeSkuEditor, type SizeEntry } from "./SizeSkuEditor";
 import { AttributesEditor, type AttributeEntry } from "./AttributesEditor";
+import { FriendlyDataEditor } from "./FriendlyDataEditor";
 import type { Bilingual, FormFieldDef } from "../types";
 import { cn } from "@/lib/utils";
 
