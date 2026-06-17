@@ -56,8 +56,8 @@ export function FriendlyDataEditor({
   value: AnyValue;
   onChange: (v: AnyValue) => void;
 }) {
-  const { language } = useLanguage();
-  const ar = language === "ar";
+  const { lang } = useLanguage();
+  const ar = lang === "ar";
   const shape = useMemo(() => detectShape(value), [value]);
 
   // Empty → ask user to pick mode
@@ -239,8 +239,8 @@ export function FriendlyDataEditor({
  * FriendlyDataView — يعرض قيمة كائن/مصفوفة بطريقة قابلة للقراءة بدل JSON.
  */
 export function FriendlyDataView({ value }: { value: AnyValue }) {
-  const { language } = useLanguage();
-  const ar = language === "ar";
+  const { lang } = useLanguage();
+  const ar = lang === "ar";
 
   if (value === null || value === undefined || value === "") {
     return <span className="text-muted-foreground">—</span>;
