@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { MediaUploader } from "@/features/admin/components/MediaUploader";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Sparkles } from "lucide-react";
 import type {
   Section, ButtonContent, FeatureCard, FaqItem, TestimonialItem, StatItem, ImageContent,
 } from "../schemas/pageSchema";
@@ -12,6 +12,7 @@ import type {
 type Props = {
   section: Section;
   onChange: (updater: (s: Section) => Section) => void;
+  onConvertLegacy?: () => void;
 };
 
 function nid(p: string) { return `${p}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`; }
@@ -109,7 +110,7 @@ function VisibilityFields({ s, onChange }: { s: Section; onChange: Props["onChan
   );
 }
 
-export function SectionEditor({ section, onChange }: Props) {
+export function SectionEditor({ section, onChange, onConvertLegacy }: Props) {
   const s = section;
 
   const updateContent = (patch: any) =>
@@ -315,7 +316,17 @@ export function SectionEditor({ section, onChange }: Props) {
       )}
 
       {s.type === "legacy_home" && (
-        <p className="text-xs text-muted-foreground">هذا قسم نظام يعرض الصفحة الرئيسية الحالية بتصميمها الكامل. لا توجد إعدادات قابلة للتعديل.</p>
+        <div className="space-y-3">
+          <div className="rounded-md border border-amber-300/40 bg-amber-50/50 dark:bg-amber-950/20 p-3 text-xs space-y-2">
+            <p className="font-medium">هذا قسم نظام يعرض تصميم الصفحة الرئيسية الحالية كاملاً.</p>
+            <p className="text-muted-foreground">لتعديل كل عنصر بشكل منفصل (عنوان، صور، أزرار، بطاقات...)، حوّله إلى أقسام قابلة للتعديل.</p>
+          </div>
+          {onConvertLegacy && (
+            <Button size="sm" className="w-full" onClick={onConvertLegacy}>
+              <Sparkles className="h-3.5 w-3.5 me-1" /> تحويل إلى أقسام قابلة للتعديل
+            </Button>
+          )}
+        </div>
       )}
 
       <div className="pt-3 border-t border-border">

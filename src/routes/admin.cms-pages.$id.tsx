@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Save, Upload, Undo2, Redo2, Eye, Monitor, Tablet, Smartphone, ChevronUp, ChevronDown, Copy, Trash2, Plus, Settings, Layers, History, MousePointerClick } from "lucide-react";
+import { ArrowLeft, Save, Upload, Undo2, Redo2, Eye, Monitor, Tablet, Smartphone, Copy, Trash2, Settings, Layers, History, MousePointerClick, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,10 @@ import { PageRenderer } from "@/page-builder/components/PageRenderer";
 import { SectionEditor } from "@/page-builder/components/SectionEditor";
 import { PageSettingsPanel } from "@/page-builder/components/PageSettingsPanel";
 import { SECTION_TYPES, createDefaultSection } from "@/page-builder/utils/pageDefaults";
+import { DndContext, PointerSensor, useSensor, useSensors, closestCenter, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import type { Section } from "@/page-builder/schemas/pageSchema";
 
 export const Route = createFileRoute("/admin/cms-pages/$id")({
   component: PageEditor,
@@ -49,6 +53,33 @@ function PageEditor() {
   };
 
   const selectedSection = ed.content.sections.find((s) => s.id === ed.selectedSectionId);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const handleDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIdx = ed.content.sections.findIndex((s) => s.id === active.id);
+    const newIdx = ed.content.sections.findIndex((s) => s.id === over.id);
+    if (oldIdx === -1 || newIdx === -1) return;
+    ed.updateContent((c) => ({ ...c, sections: arrayMove(c.sections, oldIdx, newIdx) }));
+  };
+
+  const convertLegacyToEditable = () => {
+    if (!confirm("سيتم استبدال قسم 'الصفحة الرئيسية الحالية' بأقسام جاهزة قابلة للتعديل (هيرو، مزايا، آراء، أسئلة، CTA). متابعة؟")) return;
+    const defaults: Section[] = [
+      createDefaultSection("hero"),
+      createDefaultSection("feature_grid"),
+      createDefaultSection("testimonials"),
+      createDefaultSection("faq"),
+      createDefaultSection("cta"),
+    ];
+    ed.updateContent((c) => ({
+      ...c,
+      sections: c.sections.flatMap((s) => (s.type === "legacy_home" ? defaults : [s])),
+    }));
+    ed.setSelectedSectionId(defaults[0].id);
+    toast.success("تم التحويل — كل قسم الآن قابل للتعديل بالكامل");
+  };
 
   if (ed.loading) {
     return <div className="p-8 text-center text-muted-foreground">جاري التحميل...</div>;
@@ -124,32 +155,21 @@ function PageEditor() {
                 <p className="text-sm">ابدأ بإضافة قسم من المكتبة على اليسار.</p>
               </div>
             ) : (
-              ed.content.sections.map((s, idx) => {
-                const selected = s.id === ed.selectedSectionId;
-                return (
-                  <div
-                    key={s.id}
-                    className={cn("relative group", selected && "ring-2 ring-primary ring-inset")}
-                    onClick={(e) => { e.stopPropagation(); ed.setSelectedSectionId(s.id); }}
-                  >
-                    {/* Section toolbar */}
-                    <div className={cn(
-                      "absolute top-2 end-2 z-10 flex items-center gap-1 rounded-md border border-border bg-background/95 backdrop-blur p-1 shadow-sm transition",
-                      selected ? "opacity-100" : "opacity-0 group-hover:opacity-100",
-                    )}>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{s.type}</span>
-                      <button title="أعلى" disabled={idx === 0} onClick={(e) => { e.stopPropagation(); ed.moveSection(idx, idx - 1); }} className="p-1 hover:bg-muted rounded disabled:opacity-30"><ChevronUp className="h-3 w-3" /></button>
-                      <button title="أسفل" disabled={idx === ed.content.sections.length - 1} onClick={(e) => { e.stopPropagation(); ed.moveSection(idx, idx + 1); }} className="p-1 hover:bg-muted rounded disabled:opacity-30"><ChevronDown className="h-3 w-3" /></button>
-                      <button title="تكرار" onClick={(e) => { e.stopPropagation(); ed.duplicateSection(s.id); }} className="p-1 hover:bg-muted rounded"><Copy className="h-3 w-3" /></button>
-                      <button title="حذف" onClick={(e) => { e.stopPropagation(); if (confirm("حذف القسم؟")) ed.removeSection(s.id); }} className="p-1 hover:bg-destructive/10 text-destructive rounded"><Trash2 className="h-3 w-3" /></button>
-                    </div>
-
-                    <div className={cn(!selected && "transition hover:outline hover:outline-1 hover:outline-primary/40 hover:outline-offset-[-1px]")}>
-                      <PageRenderer content={{ sections: [s] }} device={device} />
-                    </div>
-                  </div>
-                );
-              })
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={ed.content.sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+                  {ed.content.sections.map((s) => (
+                    <SortableSection
+                      key={s.id}
+                      section={s}
+                      device={device}
+                      selected={s.id === ed.selectedSectionId}
+                      onSelect={() => ed.setSelectedSectionId(s.id)}
+                      onDuplicate={() => ed.duplicateSection(s.id)}
+                      onDelete={() => { if (confirm("حذف القسم؟")) ed.removeSection(s.id); }}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
             )}
           </div>
         </main>
@@ -168,7 +188,11 @@ function PageEditor() {
           <div className="flex-1 overflow-y-auto p-3">
             {rightTab === "section" ? (
               selectedSection ? (
-                <SectionEditor section={selectedSection} onChange={(updater) => ed.updateSection(selectedSection.id, updater)} />
+                <SectionEditor
+                  section={selectedSection}
+                  onChange={(updater) => ed.updateSection(selectedSection.id, updater)}
+                  onConvertLegacy={selectedSection.type === "legacy_home" ? convertLegacyToEditable : undefined}
+                />
               ) : (
                 <p className="text-xs text-muted-foreground text-center mt-8">اختر قسماً من اللوحة لتعديله.</p>
               )
@@ -198,6 +222,57 @@ function PageEditor() {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function SortableSection({
+  section, device, selected, onSelect, onDuplicate, onDelete,
+}: {
+  section: Section;
+  device: Device;
+  selected: boolean;
+  onSelect: () => void;
+  onDuplicate: () => void;
+  onDelete: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn("relative group", selected && "ring-2 ring-primary ring-inset")}
+      onClick={(e) => { e.stopPropagation(); onSelect(); }}
+    >
+      <div className={cn(
+        "absolute top-2 end-2 z-10 flex items-center gap-1 rounded-md border border-border bg-background/95 backdrop-blur p-1 shadow-sm transition",
+        selected ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+      )}>
+        <button
+          {...attributes}
+          {...listeners}
+          title="اسحب لإعادة الترتيب"
+          onClick={(e) => e.stopPropagation()}
+          className="p-1 hover:bg-muted rounded cursor-grab active:cursor-grabbing touch-none"
+        >
+          <GripVertical className="h-3.5 w-3.5" />
+        </button>
+        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{section.type}</span>
+        <button title="تكرار" onClick={(e) => { e.stopPropagation(); onDuplicate(); }} className="p-1 hover:bg-muted rounded">
+          <Copy className="h-3 w-3" />
+        </button>
+        <button title="حذف" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-1 hover:bg-destructive/10 text-destructive rounded">
+          <Trash2 className="h-3 w-3" />
+        </button>
+      </div>
+      <div className={cn(!selected && "transition hover:outline hover:outline-1 hover:outline-primary/40 hover:outline-offset-[-1px]")}>
+        <PageRenderer content={{ sections: [section] }} device={device} />
+      </div>
     </div>
   );
 }
