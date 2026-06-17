@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Save, Upload, Undo2, Redo2, Eye, Monitor, Tablet, Smartphone, ChevronUp, ChevronDown, Copy, Trash2, Plus, Settings, Layers, History, MousePointerClick } from "lucide-react";
+import { ArrowLeft, Save, Upload, Undo2, Redo2, Eye, Monitor, Tablet, Smartphone, Copy, Trash2, Settings, Layers, History, MousePointerClick, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,10 @@ import { PageRenderer } from "@/page-builder/components/PageRenderer";
 import { SectionEditor } from "@/page-builder/components/SectionEditor";
 import { PageSettingsPanel } from "@/page-builder/components/PageSettingsPanel";
 import { SECTION_TYPES, createDefaultSection } from "@/page-builder/utils/pageDefaults";
+import { DndContext, PointerSensor, useSensor, useSensors, closestCenter, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import type { Section } from "@/page-builder/schemas/pageSchema";
 
 export const Route = createFileRoute("/admin/cms-pages/$id")({
   component: PageEditor,
