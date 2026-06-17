@@ -151,7 +151,7 @@ function coerceForDb(fields: FormFieldDef[], values: Record<string, any>) {
     }
     if (f.type === "number") v = Number(v);
     else if (f.type === "boolean") v = typeof v === "string" ? v === "true" : Boolean(v);
-    else if (f.type === "json") { try { v = JSON.parse(v); } catch { /* keep */ } }
+    else if (f.type === "json") { if (typeof v === "string") { try { v = JSON.parse(v); } catch { /* keep */ } } }
     out[f.key] = v;
   }
   return out;
