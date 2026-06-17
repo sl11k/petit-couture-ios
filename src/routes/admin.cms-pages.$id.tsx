@@ -252,7 +252,9 @@ function PageEditor() {
                       onSelect={() => ed.setSelectedSectionId(s.id)}
                       onDuplicate={() => { ed.duplicateSection(s.id); ed.notifyChange("تم تكرار القسم"); }}
                       onDelete={() => { if (confirm("حذف القسم؟")) { ed.removeSection(s.id); ed.notifyChange("تم حذف القسم"); } }}
+                      onSectionUpdate={ed.updateSection}
                     />
+
                   ))}
                 </SortableContext>
               </DndContext>
