@@ -316,7 +316,17 @@ export function SectionEditor({ section, onChange, onConvertLegacy }: Props) {
       )}
 
       {s.type === "legacy_home" && (
-        <p className="text-xs text-muted-foreground">هذا قسم نظام يعرض الصفحة الرئيسية الحالية بتصميمها الكامل. لا توجد إعدادات قابلة للتعديل.</p>
+        <div className="space-y-3">
+          <div className="rounded-md border border-amber-300/40 bg-amber-50/50 dark:bg-amber-950/20 p-3 text-xs space-y-2">
+            <p className="font-medium">هذا قسم نظام يعرض تصميم الصفحة الرئيسية الحالية كاملاً.</p>
+            <p className="text-muted-foreground">لتعديل كل عنصر بشكل منفصل (عنوان، صور، أزرار، بطاقات...)، حوّله إلى أقسام قابلة للتعديل.</p>
+          </div>
+          {onConvertLegacy && (
+            <Button size="sm" className="w-full" onClick={onConvertLegacy}>
+              <Sparkles className="h-3.5 w-3.5 me-1" /> تحويل إلى أقسام قابلة للتعديل
+            </Button>
+          )}
+        </div>
       )}
 
       <div className="pt-3 border-t border-border">
