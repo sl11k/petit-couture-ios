@@ -175,12 +175,13 @@ function VisibilityFields({ s, onChange, notify }: { s: Section; onChange: Props
 export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Props) {
   const s = section;
 
-  const updateContent = (patchOrFn: any, opts?: UpdateOpts) =>
-    onChange((cur) => {
-      const c = (cur as any).content ?? {};
-      const patch = typeof patchOrFn === "function" ? patchOrFn(c) : patchOrFn;
+  const updateContent = (patchOrFn: any | ((c: any) => any), opts?: UpdateOpts) =>
+    onChange((cur: Section) => {
+      const c: any = (cur as any).content ?? {};
+      const patch = typeof patchOrFn === "function" ? (patchOrFn as (c: any) => any)(c) : patchOrFn;
       return { ...cur, content: { ...c, ...patch } } as Section;
     }, opts);
+
 
 
 
