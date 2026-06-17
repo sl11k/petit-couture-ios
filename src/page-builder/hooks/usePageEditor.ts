@@ -138,10 +138,30 @@ export function usePageEditor(pageId: string | undefined) {
     });
   }, []);
 
+  // Debounced "last change" toast with quick-undo button.
+  const undoRef = useRef(undo);
+  useEffect(() => { undoRef.current = undo; }, [undo]);
+  const pendingLabelRef = useRef<string | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const notifyChange = useCallback((label: string) => {
+    pendingLabelRef.current = label;
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => {
+      const l = pendingLabelRef.current;
+      if (!l) return;
+      pendingLabelRef.current = null;
+      toast(l, {
+        duration: 3500,
+        action: { label: "تراجع", onClick: () => undoRef.current?.() },
+      });
+    }, 500);
+  }, []);
+
   const updatePageMeta = useCallback((patch: Partial<CmsPage>) => {
     setPage((p) => (p ? { ...p, ...patch } : p));
     setDirty(true);
   }, []);
+
 
   const saveDraft = useCallback(async (silent = false) => {
     const page = pageRef.current;
@@ -219,7 +239,7 @@ export function usePageEditor(pageId: string | undefined) {
     lastSavedAt, autoSaveEnabled, setAutoSaveEnabled,
     selectedSectionId, setSelectedSectionId,
     updateContent, updateSection, addSection, removeSection, duplicateSection, moveSection,
-    updatePageMeta, undo, redo,
+    updatePageMeta, undo, redo, notifyChange,
     saveDraft: () => saveDraft(false),
     publish,
     canUndo: historyRef.current.length > 0,

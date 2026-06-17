@@ -13,6 +13,7 @@ type Props = {
   section: Section;
   onChange: (updater: (s: Section) => Section) => void;
   onConvertLegacy?: () => void;
+  notify?: (label: string) => void;
 };
 
 function nid(p: string) { return `${p}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`; }
@@ -73,13 +74,17 @@ function ImageField({ label, value, onChange }: { label: string; value?: ImageCo
   );
 }
 
-function SpacingFields({ s, onChange }: { s: Section; onChange: Props["onChange"] }) {
+function SpacingFields({ s, onChange, notify }: { s: Section; onChange: Props["onChange"]; notify?: (l: string) => void }) {
   const sp = s.settings?.spacing ?? {};
   const bg = s.settings?.backgroundColor ?? "";
-  const setSpacing = (k: "paddingTop" | "paddingBottom", val: number | undefined) =>
+  const setSpacing = (k: "paddingTop" | "paddingBottom", val: number | undefined) => {
     onChange((cur) => ({ ...cur, settings: { ...cur.settings, spacing: { ...sp, [k]: val } } } as Section));
-  const setBg = (val: string | undefined) =>
+    notify?.(k === "paddingTop" ? `تغيّر Padding Top إلى ${val ?? 0}px` : `تغيّر Padding Bottom إلى ${val ?? 0}px`);
+  };
+  const setBg = (val: string | undefined) => {
     onChange((cur) => ({ ...cur, settings: { ...cur.settings, backgroundColor: val } } as Section));
+    notify?.(val ? `تغيّر لون الخلفية إلى ${val}` : "تمت إزالة لون الخلفية");
+  };
   return (
     <div className="space-y-3">
       <div>
@@ -133,10 +138,13 @@ function SpacingFields({ s, onChange }: { s: Section; onChange: Props["onChange"
   );
 }
 
-function VisibilityFields({ s, onChange }: { s: Section; onChange: Props["onChange"] }) {
+function VisibilityFields({ s, onChange, notify }: { s: Section; onChange: Props["onChange"]; notify?: (l: string) => void }) {
   const v = s.settings?.visibility ?? {};
-  const set = (k: "desktop" | "tablet" | "mobile", val: boolean) =>
+  const set = (k: "desktop" | "tablet" | "mobile", val: boolean) => {
     onChange((cur) => ({ ...cur, settings: { ...cur.settings, visibility: { ...v, [k]: val } } } as Section));
+    const dn = k === "desktop" ? "سطح المكتب" : k === "tablet" ? "تابلت" : "موبايل";
+    notify?.(`${val ? "تم إظهار" : "تم إخفاء"} القسم على ${dn}`);
+  };
   return (
     <div className="space-y-2">
       <Label className="text-xs">الظهور</Label>
@@ -150,7 +158,7 @@ function VisibilityFields({ s, onChange }: { s: Section; onChange: Props["onChan
   );
 }
 
-export function SectionEditor({ section, onChange, onConvertLegacy }: Props) {
+export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Props) {
   const s = section;
 
   const updateContent = (patch: any) =>
@@ -371,11 +379,11 @@ export function SectionEditor({ section, onChange, onConvertLegacy }: Props) {
 
       <div className="pt-3 border-t border-border">
         <h4 className="font-medium mb-2 text-xs">المسافات والخلفية</h4>
-        <SpacingFields s={s} onChange={onChange} />
+        <SpacingFields s={s} onChange={onChange} notify={notify} />
       </div>
 
       <div className="pt-3 border-t border-border">
-        <VisibilityFields s={s} onChange={onChange} />
+        <VisibilityFields s={s} onChange={onChange} notify={notify} />
       </div>
     </div>
   );

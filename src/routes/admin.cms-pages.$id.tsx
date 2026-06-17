@@ -62,6 +62,7 @@ function PageEditor() {
     const newIdx = ed.content.sections.findIndex((s) => s.id === over.id);
     if (oldIdx === -1 || newIdx === -1) return;
     ed.updateContent((c) => ({ ...c, sections: arrayMove(c.sections, oldIdx, newIdx) }));
+    ed.notifyChange("تمت إعادة ترتيب الأقسام");
   };
 
   const convertLegacyToEditable = () => {
@@ -148,7 +149,10 @@ function PageEditor() {
             {SECTION_TYPES.map((st) => (
               <button
                 key={st.type}
-                onClick={() => ed.addSection(createDefaultSection(st.type))}
+                onClick={() => {
+                  ed.addSection(createDefaultSection(st.type));
+                  ed.notifyChange(`تمت إضافة قسم "${ar ? st.label_ar : st.label_en}"`);
+                }}
                 className="flex flex-col items-center gap-1 rounded-md border border-border p-2 hover:bg-muted text-xs transition"
               >
                 <span className="text-xl">{st.icon}</span>
@@ -179,8 +183,8 @@ function PageEditor() {
                       device={device}
                       selected={s.id === ed.selectedSectionId}
                       onSelect={() => ed.setSelectedSectionId(s.id)}
-                      onDuplicate={() => ed.duplicateSection(s.id)}
-                      onDelete={() => { if (confirm("حذف القسم؟")) ed.removeSection(s.id); }}
+                      onDuplicate={() => { ed.duplicateSection(s.id); ed.notifyChange("تم تكرار القسم"); }}
+                      onDelete={() => { if (confirm("حذف القسم؟")) { ed.removeSection(s.id); ed.notifyChange("تم حذف القسم"); } }}
                     />
                   ))}
                 </SortableContext>
@@ -207,6 +211,7 @@ function PageEditor() {
                   section={selectedSection}
                   onChange={(updater) => ed.updateSection(selectedSection.id, updater)}
                   onConvertLegacy={selectedSection.type === "legacy_home" ? convertLegacyToEditable : undefined}
+                  notify={ed.notifyChange}
                 />
               ) : (
                 <p className="text-xs text-muted-foreground text-center mt-8">اختر قسماً من اللوحة لتعديله.</p>
