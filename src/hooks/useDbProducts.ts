@@ -166,7 +166,7 @@ export function useProductSizeVariants(productId: string | null): {
             price: r.price != null ? Number(r.price) : null,
             stock: Number(r.stock) || 0,
           }));
-        setVariants(rows);
+        setVariants(sortByAge(rows, (v) => v.size));
         setLoading(false);
       });
     return () => {
