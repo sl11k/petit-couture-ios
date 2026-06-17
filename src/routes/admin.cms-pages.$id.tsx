@@ -62,6 +62,7 @@ function PageEditor() {
     const newIdx = ed.content.sections.findIndex((s) => s.id === over.id);
     if (oldIdx === -1 || newIdx === -1) return;
     ed.updateContent((c) => ({ ...c, sections: arrayMove(c.sections, oldIdx, newIdx) }));
+    ed.notifyChange("تمت إعادة ترتيب الأقسام");
   };
 
   const convertLegacyToEditable = () => {
