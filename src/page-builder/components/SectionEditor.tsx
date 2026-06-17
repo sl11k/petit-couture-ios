@@ -74,13 +74,17 @@ function ImageField({ label, value, onChange }: { label: string; value?: ImageCo
   );
 }
 
-function SpacingFields({ s, onChange }: { s: Section; onChange: Props["onChange"] }) {
+function SpacingFields({ s, onChange, notify }: { s: Section; onChange: Props["onChange"]; notify?: (l: string) => void }) {
   const sp = s.settings?.spacing ?? {};
   const bg = s.settings?.backgroundColor ?? "";
-  const setSpacing = (k: "paddingTop" | "paddingBottom", val: number | undefined) =>
+  const setSpacing = (k: "paddingTop" | "paddingBottom", val: number | undefined) => {
     onChange((cur) => ({ ...cur, settings: { ...cur.settings, spacing: { ...sp, [k]: val } } } as Section));
-  const setBg = (val: string | undefined) =>
+    notify?.(k === "paddingTop" ? `تغيّر Padding Top إلى ${val ?? 0}px` : `تغيّر Padding Bottom إلى ${val ?? 0}px`);
+  };
+  const setBg = (val: string | undefined) => {
     onChange((cur) => ({ ...cur, settings: { ...cur.settings, backgroundColor: val } } as Section));
+    notify?.(val ? `تغيّر لون الخلفية إلى ${val}` : "تمت إزالة لون الخلفية");
+  };
   return (
     <div className="space-y-3">
       <div>
