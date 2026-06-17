@@ -13,9 +13,15 @@ export function usePageEditor(pageId: string | undefined) {
   const [publishing, setPublishing] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
 
   const historyRef = useRef<PageContent[]>([]);
   const futureRef = useRef<PageContent[]>([]);
+  const pageRef = useRef<CmsPage | null>(null);
+  const contentRef = useRef<PageContent>(EMPTY_PAGE_CONTENT);
+  useEffect(() => { pageRef.current = page; }, [page]);
+  useEffect(() => { contentRef.current = content; }, [content]);
 
   // Load
   useEffect(() => {
