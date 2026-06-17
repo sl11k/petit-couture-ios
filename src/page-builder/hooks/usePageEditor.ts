@@ -143,7 +143,9 @@ export function usePageEditor(pageId: string | undefined) {
     setDirty(true);
   }, []);
 
-  const saveDraft = useCallback(async () => {
+  const saveDraft = useCallback(async (silent = false) => {
+    const page = pageRef.current;
+    const content = contentRef.current;
     if (!page) return;
     setSaving(true);
     const { error } = await supabase
@@ -163,10 +165,18 @@ export function usePageEditor(pageId: string | undefined) {
       })
       .eq("id", page.id);
     setSaving(false);
-    if (error) { toast.error("فشل حفظ المسودة: " + error.message); return; }
+    if (error) { if (!silent) toast.error("فشل حفظ المسودة: " + error.message); return; }
     setDirty(false);
-    toast.success("تم حفظ المسودة");
-  }, [page, content]);
+    setLastSavedAt(new Date());
+    if (!silent) toast.success("تم حفظ المسودة");
+  }, []);
+
+  // Auto-save draft 1.5s after the last change (silent).
+  useEffect(() => {
+    if (!autoSaveEnabled || !dirty || !page) return;
+    const t = setTimeout(() => { saveDraft(true); }, 1500);
+    return () => clearTimeout(t);
+  }, [content, page, dirty, autoSaveEnabled, saveDraft]);
 
   const publish = useCallback(async () => {
     if (!page) return;
