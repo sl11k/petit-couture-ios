@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { MediaUploader } from "@/features/admin/components/MediaUploader";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Sparkles } from "lucide-react";
 import type {
   Section, ButtonContent, FeatureCard, FaqItem, TestimonialItem, StatItem, ImageContent,
 } from "../schemas/pageSchema";
@@ -12,6 +12,7 @@ import type {
 type Props = {
   section: Section;
   onChange: (updater: (s: Section) => Section) => void;
+  onConvertLegacy?: () => void;
 };
 
 function nid(p: string) { return `${p}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`; }
