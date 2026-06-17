@@ -151,8 +151,8 @@ export const productRelationsConfig: AdminPageConfig = {
   table: "product_relations",
   orderBy: { column: "created_at", ascending: false },
   columns: [
-    { key: "product_id", label: { ar: "المنتج الأصلي", en: "Source product" } },
-    { key: "related_product_id", label: { ar: "المرتبط به", en: "Related product" } },
+    { key: "product_id", label: { ar: "المنتج الأصلي", en: "Source product" }, render: (v) => <ProductNameCell productId={v} /> },
+    { key: "related_product_id", label: { ar: "المرتبط به", en: "Related product" }, render: (v) => <ProductNameCell productId={v} /> },
     { key: "relation_type", label: { ar: "نوع العلاقة", en: "Relation" }, type: "badge" },
     { key: "display_order", label: { ar: "الترتيب", en: "Order" }, type: "number", hideOnMobile: true },
   ],
