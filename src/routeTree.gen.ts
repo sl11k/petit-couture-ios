@@ -96,6 +96,7 @@ import { Route as AdminCreateOrderRouteImport } from './routes/admin.create-orde
 import { Route as AdminCouponsRouteImport } from './routes/admin.coupons'
 import { Route as AdminConversionRouteImport } from './routes/admin.conversion'
 import { Route as AdminContentRouteImport } from './routes/admin.content'
+import { Route as AdminCmsPagesRouteImport } from './routes/admin.cms-pages'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
 import { Route as AdminCampaignsRouteImport } from './routes/admin.campaigns'
 import { Route as AdminBundlesRouteImport } from './routes/admin.bundles'
@@ -115,6 +116,7 @@ import { Route as AdminLandingPagesIndexRouteImport } from './routes/admin.landi
 import { Route as AdminIntegrationsIndexRouteImport } from './routes/admin.integrations.index'
 import { Route as AdminCustomersIndexRouteImport } from './routes/admin.customers.index'
 import { Route as AdminCouponsIndexRouteImport } from './routes/admin.coupons.index'
+import { Route as AdminCmsPagesIndexRouteImport } from './routes/admin.cms-pages.index'
 import { Route as AdminCampaignsIndexRouteImport } from './routes/admin.campaigns.index'
 import { Route as AdminAuditIndexRouteImport } from './routes/admin.audit.index'
 import { Route as ApiV1ProductsRouteImport } from './routes/api.v1.products'
@@ -135,6 +137,7 @@ import { Route as AdminLandingPagesIdRouteImport } from './routes/admin.landing-
 import { Route as AdminIntegrationsIdRouteImport } from './routes/admin.integrations.$id'
 import { Route as AdminCustomersIdRouteImport } from './routes/admin.customers.$id'
 import { Route as AdminCouponsIdRouteImport } from './routes/admin.coupons.$id'
+import { Route as AdminCmsPagesIdRouteImport } from './routes/admin.cms-pages.$id'
 import { Route as AdminCampaignsIdRouteImport } from './routes/admin.campaigns.$id'
 import { Route as AdminAuditIdRouteImport } from './routes/admin.audit.$id'
 import { Route as AccountReturnsNewRouteImport } from './routes/account.returns.new'
@@ -580,6 +583,11 @@ const AdminContentRoute = AdminContentRouteImport.update({
   path: '/content',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCmsPagesRoute = AdminCmsPagesRouteImport.update({
+  id: '/cms-pages',
+  path: '/cms-pages',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
@@ -674,6 +682,11 @@ const AdminCouponsIndexRoute = AdminCouponsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminCouponsRoute,
+} as any)
+const AdminCmsPagesIndexRoute = AdminCmsPagesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminCmsPagesRoute,
 } as any)
 const AdminCampaignsIndexRoute = AdminCampaignsIndexRouteImport.update({
   id: '/',
@@ -776,6 +789,11 @@ const AdminCouponsIdRoute = AdminCouponsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AdminCouponsRoute,
 } as any)
+const AdminCmsPagesIdRoute = AdminCmsPagesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminCmsPagesRoute,
+} as any)
 const AdminCampaignsIdRoute = AdminCampaignsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -837,6 +855,7 @@ export interface FileRoutesByFullPath {
   '/admin/bundles': typeof AdminBundlesRoute
   '/admin/campaigns': typeof AdminCampaignsRouteWithChildren
   '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/cms-pages': typeof AdminCmsPagesRouteWithChildren
   '/admin/content': typeof AdminContentRoute
   '/admin/conversion': typeof AdminConversionRoute
   '/admin/coupons': typeof AdminCouponsRouteWithChildren
@@ -909,6 +928,7 @@ export interface FileRoutesByFullPath {
   '/account/returns/new': typeof AccountReturnsNewRoute
   '/admin/audit/$id': typeof AdminAuditIdRoute
   '/admin/campaigns/$id': typeof AdminCampaignsIdRoute
+  '/admin/cms-pages/$id': typeof AdminCmsPagesIdRoute
   '/admin/coupons/$id': typeof AdminCouponsIdRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/integrations/$id': typeof AdminIntegrationsIdRoute
@@ -929,6 +949,7 @@ export interface FileRoutesByFullPath {
   '/api/v1/products': typeof ApiV1ProductsRoute
   '/admin/audit/': typeof AdminAuditIndexRoute
   '/admin/campaigns/': typeof AdminCampaignsIndexRoute
+  '/admin/cms-pages/': typeof AdminCmsPagesIndexRoute
   '/admin/coupons/': typeof AdminCouponsIndexRoute
   '/admin/customers/': typeof AdminCustomersIndexRoute
   '/admin/integrations/': typeof AdminIntegrationsIndexRoute
@@ -1031,6 +1052,7 @@ export interface FileRoutesByTo {
   '/account/returns/new': typeof AccountReturnsNewRoute
   '/admin/audit/$id': typeof AdminAuditIdRoute
   '/admin/campaigns/$id': typeof AdminCampaignsIdRoute
+  '/admin/cms-pages/$id': typeof AdminCmsPagesIdRoute
   '/admin/coupons/$id': typeof AdminCouponsIdRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/integrations/$id': typeof AdminIntegrationsIdRoute
@@ -1051,6 +1073,7 @@ export interface FileRoutesByTo {
   '/api/v1/products': typeof ApiV1ProductsRoute
   '/admin/audit': typeof AdminAuditIndexRoute
   '/admin/campaigns': typeof AdminCampaignsIndexRoute
+  '/admin/cms-pages': typeof AdminCmsPagesIndexRoute
   '/admin/coupons': typeof AdminCouponsIndexRoute
   '/admin/customers': typeof AdminCustomersIndexRoute
   '/admin/integrations': typeof AdminIntegrationsIndexRoute
@@ -1094,6 +1117,7 @@ export interface FileRoutesById {
   '/admin/bundles': typeof AdminBundlesRoute
   '/admin/campaigns': typeof AdminCampaignsRouteWithChildren
   '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/cms-pages': typeof AdminCmsPagesRouteWithChildren
   '/admin/content': typeof AdminContentRoute
   '/admin/conversion': typeof AdminConversionRoute
   '/admin/coupons': typeof AdminCouponsRouteWithChildren
@@ -1166,6 +1190,7 @@ export interface FileRoutesById {
   '/account/returns/new': typeof AccountReturnsNewRoute
   '/admin/audit/$id': typeof AdminAuditIdRoute
   '/admin/campaigns/$id': typeof AdminCampaignsIdRoute
+  '/admin/cms-pages/$id': typeof AdminCmsPagesIdRoute
   '/admin/coupons/$id': typeof AdminCouponsIdRoute
   '/admin/customers/$id': typeof AdminCustomersIdRoute
   '/admin/integrations/$id': typeof AdminIntegrationsIdRoute
@@ -1186,6 +1211,7 @@ export interface FileRoutesById {
   '/api/v1/products': typeof ApiV1ProductsRoute
   '/admin/audit/': typeof AdminAuditIndexRoute
   '/admin/campaigns/': typeof AdminCampaignsIndexRoute
+  '/admin/cms-pages/': typeof AdminCmsPagesIndexRoute
   '/admin/coupons/': typeof AdminCouponsIndexRoute
   '/admin/customers/': typeof AdminCustomersIndexRoute
   '/admin/integrations/': typeof AdminIntegrationsIndexRoute
@@ -1230,6 +1256,7 @@ export interface FileRouteTypes {
     | '/admin/bundles'
     | '/admin/campaigns'
     | '/admin/categories'
+    | '/admin/cms-pages'
     | '/admin/content'
     | '/admin/conversion'
     | '/admin/coupons'
@@ -1302,6 +1329,7 @@ export interface FileRouteTypes {
     | '/account/returns/new'
     | '/admin/audit/$id'
     | '/admin/campaigns/$id'
+    | '/admin/cms-pages/$id'
     | '/admin/coupons/$id'
     | '/admin/customers/$id'
     | '/admin/integrations/$id'
@@ -1322,6 +1350,7 @@ export interface FileRouteTypes {
     | '/api/v1/products'
     | '/admin/audit/'
     | '/admin/campaigns/'
+    | '/admin/cms-pages/'
     | '/admin/coupons/'
     | '/admin/customers/'
     | '/admin/integrations/'
@@ -1424,6 +1453,7 @@ export interface FileRouteTypes {
     | '/account/returns/new'
     | '/admin/audit/$id'
     | '/admin/campaigns/$id'
+    | '/admin/cms-pages/$id'
     | '/admin/coupons/$id'
     | '/admin/customers/$id'
     | '/admin/integrations/$id'
@@ -1444,6 +1474,7 @@ export interface FileRouteTypes {
     | '/api/v1/products'
     | '/admin/audit'
     | '/admin/campaigns'
+    | '/admin/cms-pages'
     | '/admin/coupons'
     | '/admin/customers'
     | '/admin/integrations'
@@ -1486,6 +1517,7 @@ export interface FileRouteTypes {
     | '/admin/bundles'
     | '/admin/campaigns'
     | '/admin/categories'
+    | '/admin/cms-pages'
     | '/admin/content'
     | '/admin/conversion'
     | '/admin/coupons'
@@ -1558,6 +1590,7 @@ export interface FileRouteTypes {
     | '/account/returns/new'
     | '/admin/audit/$id'
     | '/admin/campaigns/$id'
+    | '/admin/cms-pages/$id'
     | '/admin/coupons/$id'
     | '/admin/customers/$id'
     | '/admin/integrations/$id'
@@ -1578,6 +1611,7 @@ export interface FileRouteTypes {
     | '/api/v1/products'
     | '/admin/audit/'
     | '/admin/campaigns/'
+    | '/admin/cms-pages/'
     | '/admin/coupons/'
     | '/admin/customers/'
     | '/admin/integrations/'
@@ -2243,6 +2277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminContentRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/cms-pages': {
+      id: '/admin/cms-pages'
+      path: '/cms-pages'
+      fullPath: '/admin/cms-pages'
+      preLoaderRoute: typeof AdminCmsPagesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/categories': {
       id: '/admin/categories'
       path: '/categories'
@@ -2375,6 +2416,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/coupons/'
       preLoaderRoute: typeof AdminCouponsIndexRouteImport
       parentRoute: typeof AdminCouponsRoute
+    }
+    '/admin/cms-pages/': {
+      id: '/admin/cms-pages/'
+      path: '/'
+      fullPath: '/admin/cms-pages/'
+      preLoaderRoute: typeof AdminCmsPagesIndexRouteImport
+      parentRoute: typeof AdminCmsPagesRoute
     }
     '/admin/campaigns/': {
       id: '/admin/campaigns/'
@@ -2516,6 +2564,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCouponsIdRouteImport
       parentRoute: typeof AdminCouponsRoute
     }
+    '/admin/cms-pages/$id': {
+      id: '/admin/cms-pages/$id'
+      path: '/$id'
+      fullPath: '/admin/cms-pages/$id'
+      preLoaderRoute: typeof AdminCmsPagesIdRouteImport
+      parentRoute: typeof AdminCmsPagesRoute
+    }
     '/admin/campaigns/$id': {
       id: '/admin/campaigns/$id'
       path: '/$id'
@@ -2600,6 +2655,20 @@ const AdminCampaignsRouteChildren: AdminCampaignsRouteChildren = {
 
 const AdminCampaignsRouteWithChildren = AdminCampaignsRoute._addFileChildren(
   AdminCampaignsRouteChildren,
+)
+
+interface AdminCmsPagesRouteChildren {
+  AdminCmsPagesIdRoute: typeof AdminCmsPagesIdRoute
+  AdminCmsPagesIndexRoute: typeof AdminCmsPagesIndexRoute
+}
+
+const AdminCmsPagesRouteChildren: AdminCmsPagesRouteChildren = {
+  AdminCmsPagesIdRoute: AdminCmsPagesIdRoute,
+  AdminCmsPagesIndexRoute: AdminCmsPagesIndexRoute,
+}
+
+const AdminCmsPagesRouteWithChildren = AdminCmsPagesRoute._addFileChildren(
+  AdminCmsPagesRouteChildren,
 )
 
 interface AdminCouponsRouteChildren {
@@ -2760,6 +2829,7 @@ interface AdminRouteChildren {
   AdminBundlesRoute: typeof AdminBundlesRoute
   AdminCampaignsRoute: typeof AdminCampaignsRouteWithChildren
   AdminCategoriesRoute: typeof AdminCategoriesRoute
+  AdminCmsPagesRoute: typeof AdminCmsPagesRouteWithChildren
   AdminContentRoute: typeof AdminContentRoute
   AdminConversionRoute: typeof AdminConversionRoute
   AdminCouponsRoute: typeof AdminCouponsRouteWithChildren
@@ -2831,6 +2901,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminBundlesRoute: AdminBundlesRoute,
   AdminCampaignsRoute: AdminCampaignsRouteWithChildren,
   AdminCategoriesRoute: AdminCategoriesRoute,
+  AdminCmsPagesRoute: AdminCmsPagesRouteWithChildren,
   AdminContentRoute: AdminContentRoute,
   AdminConversionRoute: AdminConversionRoute,
   AdminCouponsRoute: AdminCouponsRouteWithChildren,
