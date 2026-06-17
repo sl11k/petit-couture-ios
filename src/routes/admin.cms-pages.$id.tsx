@@ -210,6 +210,7 @@ function PageEditor() {
                   section={selectedSection}
                   onChange={(updater) => ed.updateSection(selectedSection.id, updater)}
                   onConvertLegacy={selectedSection.type === "legacy_home" ? convertLegacyToEditable : undefined}
+                  notify={ed.notifyChange}
                 />
               ) : (
                 <p className="text-xs text-muted-foreground text-center mt-8">اختر قسماً من اللوحة لتعديله.</p>
