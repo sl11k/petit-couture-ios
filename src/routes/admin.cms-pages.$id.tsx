@@ -155,32 +155,22 @@ function PageEditor() {
                 <p className="text-sm">ابدأ بإضافة قسم من المكتبة على اليسار.</p>
               </div>
             ) : (
-              ed.content.sections.map((s, idx) => {
-                const selected = s.id === ed.selectedSectionId;
-                return (
-                  <div
-                    key={s.id}
-                    className={cn("relative group", selected && "ring-2 ring-primary ring-inset")}
-                    onClick={(e) => { e.stopPropagation(); ed.setSelectedSectionId(s.id); }}
-                  >
-                    {/* Section toolbar */}
-                    <div className={cn(
-                      "absolute top-2 end-2 z-10 flex items-center gap-1 rounded-md border border-border bg-background/95 backdrop-blur p-1 shadow-sm transition",
-                      selected ? "opacity-100" : "opacity-0 group-hover:opacity-100",
-                    )}>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{s.type}</span>
-                      <button title="أعلى" disabled={idx === 0} onClick={(e) => { e.stopPropagation(); ed.moveSection(idx, idx - 1); }} className="p-1 hover:bg-muted rounded disabled:opacity-30"><ChevronUp className="h-3 w-3" /></button>
-                      <button title="أسفل" disabled={idx === ed.content.sections.length - 1} onClick={(e) => { e.stopPropagation(); ed.moveSection(idx, idx + 1); }} className="p-1 hover:bg-muted rounded disabled:opacity-30"><ChevronDown className="h-3 w-3" /></button>
-                      <button title="تكرار" onClick={(e) => { e.stopPropagation(); ed.duplicateSection(s.id); }} className="p-1 hover:bg-muted rounded"><Copy className="h-3 w-3" /></button>
-                      <button title="حذف" onClick={(e) => { e.stopPropagation(); if (confirm("حذف القسم؟")) ed.removeSection(s.id); }} className="p-1 hover:bg-destructive/10 text-destructive rounded"><Trash2 className="h-3 w-3" /></button>
-                    </div>
-
-                    <div className={cn(!selected && "transition hover:outline hover:outline-1 hover:outline-primary/40 hover:outline-offset-[-1px]")}>
-                      <PageRenderer content={{ sections: [s] }} device={device} />
-                    </div>
-                  </div>
-                );
-              })
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={ed.content.sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+                  {ed.content.sections.map((s) => (
+                    <SortableSection
+                      key={s.id}
+                      section={s}
+                      device={device}
+                      selected={s.id === ed.selectedSectionId}
+                      onSelect={() => ed.setSelectedSectionId(s.id)}
+                      onDuplicate={() => ed.duplicateSection(s.id)}
+                      onDelete={() => { if (confirm("حذف القسم؟")) ed.removeSection(s.id); }}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
+            )}
             )}
           </div>
         </main>
