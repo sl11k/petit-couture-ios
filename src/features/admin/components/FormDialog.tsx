@@ -169,7 +169,13 @@ function defaultsFrom(fields: FormFieldDef[], initial?: Record<string, any>) {
     if (f.type === "gallery" || f.type === "videoGallery") { out[f.key] = Array.isArray(v) ? v : []; continue; }
     if (f.type === "warehouseStock") { out[f.key] = Array.isArray(v) ? v : []; continue; }
     if (f.type === "productVariants" || f.type === "productSizes" || f.type === "productAttributes") { out[f.key] = Array.isArray(v) ? v : []; continue; }
-    if (f.type === "json" && v && typeof v !== "string") v = JSON.stringify(v, null, 2);
+    if (f.type === "json") {
+      if (typeof v === "string") {
+        try { v = JSON.parse(v); } catch { v = null; }
+      }
+      out[f.key] = v ?? null;
+      continue;
+    }
     if (f.type === "boolean") v = Boolean(v);
     if (v === undefined || v === null) v = f.type === "boolean" ? false : "";
     out[f.key] = v;
