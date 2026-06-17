@@ -254,16 +254,16 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">بطاقة #{i + 1}</span>
                   <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive"
-                    onClick={() => updateContent((c) => ({ cards: c.cards.filter((x) => x.id !== c.id) }))}><Trash2 className="h-3 w-3" /></Button>
+                    onClick={() => updateContent((ct) => ({ cards: ct.cards.filter((x) => x.id !== c.id) }))}><Trash2 className="h-3 w-3" /></Button>
                 </div>
-                <Input placeholder="عنوان (ع)" value={c.title_ar ?? ""} onChange={(e) => updateContent((c) => ({ cards: c.cards.map((x) => x.id === c.id ? { ...x, title_ar: e.target.value } : x) }))} />
-                <Input placeholder="Title (EN)" value={c.title_en ?? ""} onChange={(e) => updateContent((c) => ({ cards: c.cards.map((x) => x.id === c.id ? { ...x, title_en: e.target.value } : x) }))} />
-                <Textarea rows={2} placeholder="وصف (ع)" value={c.description_ar ?? ""} onChange={(e) => updateContent((c) => ({ cards: c.cards.map((x) => x.id === c.id ? { ...x, description_ar: e.target.value } : x) }))} />
-                <Textarea rows={2} placeholder="Description (EN)" value={c.description_en ?? ""} onChange={(e) => updateContent((c) => ({ cards: c.cards.map((x) => x.id === c.id ? { ...x, description_en: e.target.value } : x) }))} />
-                <Input placeholder="رابط" value={c.link ?? ""} onChange={(e) => updateContent((c) => ({ cards: c.cards.map((x) => x.id === c.id ? { ...x, link: e.target.value } : x) }))} />
+                <Input placeholder="عنوان (ع)" value={c.title_ar ?? ""} onChange={(e) => updateContent((ct) => ({ cards: ct.cards.map((x) => x.id === c.id ? { ...x, title_ar: e.target.value } : x) }))} />
+                <Input placeholder="Title (EN)" value={c.title_en ?? ""} onChange={(e) => updateContent((ct) => ({ cards: ct.cards.map((x) => x.id === c.id ? { ...x, title_en: e.target.value } : x) }))} />
+                <Textarea rows={2} placeholder="وصف (ع)" value={c.description_ar ?? ""} onChange={(e) => updateContent((ct) => ({ cards: ct.cards.map((x) => x.id === c.id ? { ...x, description_ar: e.target.value } : x) }))} />
+                <Textarea rows={2} placeholder="Description (EN)" value={c.description_en ?? ""} onChange={(e) => updateContent((ct) => ({ cards: ct.cards.map((x) => x.id === c.id ? { ...x, description_en: e.target.value } : x) }))} />
+                <Input placeholder="رابط" value={c.link ?? ""} onChange={(e) => updateContent((ct) => ({ cards: ct.cards.map((x) => x.id === c.id ? { ...x, link: e.target.value } : x) }))} />
               </div>
             ))}
-            <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent((c) => ({ cards: [...c.cards, { id: nid("card"), title_ar: "بطاقة", title_en: "Card", description_ar: "", description_en: "" } as FeatureCard] }))}>
+            <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent((ct) => ({ cards: [...ct.cards, { id: nid("card"), title_ar: "بطاقة", title_en: "Card", description_ar: "", description_en: "" } as FeatureCard] }))}>
               <Plus className="h-3 w-3 me-1" /> إضافة بطاقة
             </Button>
           </div>
@@ -281,15 +281,15 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">#{i + 1}</span>
                   <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive"
-                    onClick={() => updateContent((c) => ({ items: c.items.filter((x) => x.id !== it.id) }))}><Trash2 className="h-3 w-3" /></Button>
+                    onClick={() => updateContent((ct) => ({ items: ct.items.filter((x) => x.id !== it.id) }))}><Trash2 className="h-3 w-3" /></Button>
                 </div>
-                <Input placeholder="سؤال (ع)" value={it.question_ar ?? ""} onChange={(e) => updateContent((c) => ({ items: c.items.map((x) => x.id === it.id ? { ...x, question_ar: e.target.value } : x) }))} />
-                <Input placeholder="Question (EN)" value={it.question_en ?? ""} onChange={(e) => updateContent((c) => ({ items: c.items.map((x) => x.id === it.id ? { ...x, question_en: e.target.value } : x) }))} />
-                <Textarea rows={2} placeholder="إجابة (ع)" value={it.answer_ar ?? ""} onChange={(e) => updateContent((c) => ({ items: c.items.map((x) => x.id === it.id ? { ...x, answer_ar: e.target.value } : x) }))} />
-                <Textarea rows={2} placeholder="Answer (EN)" value={it.answer_en ?? ""} onChange={(e) => updateContent((c) => ({ items: c.items.map((x) => x.id === it.id ? { ...x, answer_en: e.target.value } : x) }))} />
+                <Input placeholder="سؤال (ع)" value={it.question_ar ?? ""} onChange={(e) => updateContent((ct) => ({ items: ct.items.map((x) => x.id === it.id ? { ...x, question_ar: e.target.value } : x) }))} />
+                <Input placeholder="Question (EN)" value={it.question_en ?? ""} onChange={(e) => updateContent((ct) => ({ items: ct.items.map((x) => x.id === it.id ? { ...x, question_en: e.target.value } : x) }))} />
+                <Textarea rows={2} placeholder="إجابة (ع)" value={it.answer_ar ?? ""} onChange={(e) => updateContent((ct) => ({ items: ct.items.map((x) => x.id === it.id ? { ...x, answer_ar: e.target.value } : x) }))} />
+                <Textarea rows={2} placeholder="Answer (EN)" value={it.answer_en ?? ""} onChange={(e) => updateContent((ct) => ({ items: ct.items.map((x) => x.id === it.id ? { ...x, answer_en: e.target.value } : x) }))} />
               </div>
             ))}
-            <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent((c) => ({ items: [...c.items, { id: nid("q"), question_ar: "سؤال؟", question_en: "Question?", answer_ar: "", answer_en: "" } as FaqItem] }))}>
+            <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent((ct) => ({ items: [...ct.items, { id: nid("q"), question_ar: "سؤال؟", question_en: "Question?", answer_ar: "", answer_en: "" } as FaqItem] }))}>
               <Plus className="h-3 w-3 me-1" /> إضافة سؤال
             </Button>
           </div>
@@ -307,17 +307,17 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">#{i + 1}</span>
                   <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive"
-                    onClick={() => updateContent((c) => ({ items: c.items.filter((x) => x.id !== it.id) }))}><Trash2 className="h-3 w-3" /></Button>
+                    onClick={() => updateContent((ct) => ({ items: ct.items.filter((x) => x.id !== it.id) }))}><Trash2 className="h-3 w-3" /></Button>
                 </div>
-                <Input placeholder="الاسم" value={it.name ?? ""} onChange={(e) => updateContent((c) => ({ items: c.items.map((x) => x.id === it.id ? { ...x, name: e.target.value } : x) }))} />
-                <Input placeholder="الدور (ع)" value={it.role_ar ?? ""} onChange={(e) => updateContent((c) => ({ items: c.items.map((x) => x.id === it.id ? { ...x, role_ar: e.target.value } : x) }))} />
-                <Input placeholder="Role (EN)" value={it.role_en ?? ""} onChange={(e) => updateContent((c) => ({ items: c.items.map((x) => x.id === it.id ? { ...x, role_en: e.target.value } : x) }))} />
-                <Textarea rows={2} placeholder="الاقتباس (ع)" value={it.quote_ar ?? ""} onChange={(e) => updateContent((c) => ({ items: c.items.map((x) => x.id === it.id ? { ...x, quote_ar: e.target.value } : x) }))} />
-                <Textarea rows={2} placeholder="Quote (EN)" value={it.quote_en ?? ""} onChange={(e) => updateContent((c) => ({ items: c.items.map((x) => x.id === it.id ? { ...x, quote_en: e.target.value } : x) }))} />
-                <MediaUploader value={it.avatar ?? null} onChange={(url) => updateContent((c) => ({ items: c.items.map((x) => x.id === it.id ? { ...x, avatar: url ?? undefined } : x) }))} bucket="content-media" kind="image" folder="cms/avatars" />
+                <Input placeholder="الاسم" value={it.name ?? ""} onChange={(e) => updateContent((ct) => ({ items: ct.items.map((x) => x.id === it.id ? { ...x, name: e.target.value } : x) }))} />
+                <Input placeholder="الدور (ع)" value={it.role_ar ?? ""} onChange={(e) => updateContent((ct) => ({ items: ct.items.map((x) => x.id === it.id ? { ...x, role_ar: e.target.value } : x) }))} />
+                <Input placeholder="Role (EN)" value={it.role_en ?? ""} onChange={(e) => updateContent((ct) => ({ items: ct.items.map((x) => x.id === it.id ? { ...x, role_en: e.target.value } : x) }))} />
+                <Textarea rows={2} placeholder="الاقتباس (ع)" value={it.quote_ar ?? ""} onChange={(e) => updateContent((ct) => ({ items: ct.items.map((x) => x.id === it.id ? { ...x, quote_ar: e.target.value } : x) }))} />
+                <Textarea rows={2} placeholder="Quote (EN)" value={it.quote_en ?? ""} onChange={(e) => updateContent((ct) => ({ items: ct.items.map((x) => x.id === it.id ? { ...x, quote_en: e.target.value } : x) }))} />
+                <MediaUploader value={it.avatar ?? null} onChange={(url) => updateContent((ct) => ({ items: ct.items.map((x) => x.id === it.id ? { ...x, avatar: url ?? undefined } : x) }))} bucket="content-media" kind="image" folder="cms/avatars" />
               </div>
             ))}
-            <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent((c) => ({ items: [...c.items, { id: nid("t"), name: "", quote_ar: "", quote_en: "" } as TestimonialItem] }))}>
+            <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent((ct) => ({ items: [...ct.items, { id: nid("t"), name: "", quote_ar: "", quote_en: "" } as TestimonialItem] }))}>
               <Plus className="h-3 w-3 me-1" /> إضافة رأي
             </Button>
           </div>
@@ -332,14 +332,14 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">#{i + 1}</span>
                 <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive"
-                  onClick={() => updateContent((c) => ({ items: c.items.filter((x) => x.id !== it.id) }))}><Trash2 className="h-3 w-3" /></Button>
+                  onClick={() => updateContent((ct) => ({ items: ct.items.filter((x) => x.id !== it.id) }))}><Trash2 className="h-3 w-3" /></Button>
               </div>
-              <Input placeholder="القيمة (مثل 100+)" value={it.value ?? ""} onChange={(e) => updateContent((c) => ({ items: c.items.map((x) => x.id === it.id ? { ...x, value: e.target.value } : x) }))} />
-              <Input placeholder="التسمية (ع)" value={it.label_ar ?? ""} onChange={(e) => updateContent((c) => ({ items: c.items.map((x) => x.id === it.id ? { ...x, label_ar: e.target.value } : x) }))} />
-              <Input placeholder="Label (EN)" value={it.label_en ?? ""} onChange={(e) => updateContent((c) => ({ items: c.items.map((x) => x.id === it.id ? { ...x, label_en: e.target.value } : x) }))} />
+              <Input placeholder="القيمة (مثل 100+)" value={it.value ?? ""} onChange={(e) => updateContent((ct) => ({ items: ct.items.map((x) => x.id === it.id ? { ...x, value: e.target.value } : x) }))} />
+              <Input placeholder="التسمية (ع)" value={it.label_ar ?? ""} onChange={(e) => updateContent((ct) => ({ items: ct.items.map((x) => x.id === it.id ? { ...x, label_ar: e.target.value } : x) }))} />
+              <Input placeholder="Label (EN)" value={it.label_en ?? ""} onChange={(e) => updateContent((ct) => ({ items: ct.items.map((x) => x.id === it.id ? { ...x, label_en: e.target.value } : x) }))} />
             </div>
           ))}
-          <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent((c) => ({ items: [...c.items, { id: nid("st"), value: "0", label_ar: "", label_en: "" } as StatItem] }))}>
+          <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent((ct) => ({ items: [...ct.items, { id: nid("st"), value: "0", label_ar: "", label_en: "" } as StatItem] }))}>
             <Plus className="h-3 w-3 me-1" /> إضافة
           </Button>
         </div>
