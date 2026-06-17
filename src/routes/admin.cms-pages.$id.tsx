@@ -188,7 +188,11 @@ function PageEditor() {
           <div className="flex-1 overflow-y-auto p-3">
             {rightTab === "section" ? (
               selectedSection ? (
-                <SectionEditor section={selectedSection} onChange={(updater) => ed.updateSection(selectedSection.id, updater)} />
+                <SectionEditor
+                  section={selectedSection}
+                  onChange={(updater) => ed.updateSection(selectedSection.id, updater)}
+                  onConvertLegacy={selectedSection.type === "legacy_home" ? convertLegacyToEditable : undefined}
+                />
               ) : (
                 <p className="text-xs text-muted-foreground text-center mt-8">اختر قسماً من اللوحة لتعديله.</p>
               )
