@@ -239,7 +239,7 @@ export function usePageEditor(pageId: string | undefined) {
     lastSavedAt, autoSaveEnabled, setAutoSaveEnabled,
     selectedSectionId, setSelectedSectionId,
     updateContent, updateSection, addSection, removeSection, duplicateSection, moveSection,
-    updatePageMeta, undo, redo,
+    updatePageMeta, undo, redo, notifyChange,
     saveDraft: () => saveDraft(false),
     publish,
     canUndo: historyRef.current.length > 0,
