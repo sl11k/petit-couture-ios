@@ -185,12 +185,12 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
 
       {s.type === "hero" && (
         <>
-          <TextField label="Eyebrow (ع)" value={s.content.eyebrow_ar} onChange={(v) => updateContent({ eyebrow_ar: v })} />
-          <TextField label="Eyebrow (EN)" value={s.content.eyebrow_en} onChange={(v) => updateContent({ eyebrow_en: v })} />
-          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v) => updateContent({ title_ar: v })} />
-          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v) => updateContent({ title_en: v })} />
-          <TextField label="العنوان الفرعي (ع)" multiline value={s.content.subtitle_ar} onChange={(v) => updateContent({ subtitle_ar: v })} />
-          <TextField label="Subtitle (EN)" multiline value={s.content.subtitle_en} onChange={(v) => updateContent({ subtitle_en: v })} />
+          <TextField label="Eyebrow (ع)" value={s.content.eyebrow_ar} onChange={(v, opts) => updateContent({ eyebrow_ar: v }, opts)} />
+          <TextField label="Eyebrow (EN)" value={s.content.eyebrow_en} onChange={(v, opts) => updateContent({ eyebrow_en: v }, opts)} />
+          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
+          <TextField label="العنوان الفرعي (ع)" multiline value={s.content.subtitle_ar} onChange={(v, opts) => updateContent({ subtitle_ar: v }, opts)} />
+          <TextField label="Subtitle (EN)" multiline value={s.content.subtitle_en} onChange={(v, opts) => updateContent({ subtitle_en: v }, opts)} />
           <div>
             <Label className="text-xs">المحاذاة</Label>
             <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.alignment ?? "center"}
@@ -198,23 +198,23 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
               <option value="left">يسار</option><option value="center">وسط</option><option value="right">يمين</option>
             </select>
           </div>
-          <ImageField label="صورة الخلفية" value={s.content.image} onChange={(v) => updateContent({ image: v })} />
+          <ImageField label="صورة الخلفية" value={s.content.image} onChange={(v, opts) => updateContent({ image: v }, opts)} />
           <ButtonsEditor buttons={s.content.buttons} onChange={(b) => updateContent({ buttons: b })} />
         </>
       )}
 
       {s.type === "text_block" && (
         <>
-          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v) => updateContent({ title_ar: v })} />
-          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v) => updateContent({ title_en: v })} />
-          <TextField label="النص (ع)" multiline value={s.content.body_ar} onChange={(v) => updateContent({ body_ar: v })} />
-          <TextField label="Body (EN)" multiline value={s.content.body_en} onChange={(v) => updateContent({ body_en: v })} />
+          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
+          <TextField label="النص (ع)" multiline value={s.content.body_ar} onChange={(v, opts) => updateContent({ body_ar: v }, opts)} />
+          <TextField label="Body (EN)" multiline value={s.content.body_en} onChange={(v, opts) => updateContent({ body_en: v }, opts)} />
         </>
       )}
 
       {s.type === "image_text" && (
         <>
-          <ImageField label="الصورة" value={s.content.image} onChange={(v) => updateContent({ image: v })} />
+          <ImageField label="الصورة" value={s.content.image} onChange={(v, opts) => updateContent({ image: v }, opts)} />
           <div>
             <Label className="text-xs">جانب الصورة</Label>
             <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.imageSide ?? "left"}
@@ -222,17 +222,17 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
               <option value="left">يسار</option><option value="right">يمين</option>
             </select>
           </div>
-          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v) => updateContent({ title_ar: v })} />
-          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v) => updateContent({ title_en: v })} />
-          <TextField label="النص (ع)" multiline value={s.content.body_ar} onChange={(v) => updateContent({ body_ar: v })} />
-          <TextField label="Body (EN)" multiline value={s.content.body_en} onChange={(v) => updateContent({ body_en: v })} />
+          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
+          <TextField label="النص (ع)" multiline value={s.content.body_ar} onChange={(v, opts) => updateContent({ body_ar: v }, opts)} />
+          <TextField label="Body (EN)" multiline value={s.content.body_en} onChange={(v, opts) => updateContent({ body_en: v }, opts)} />
         </>
       )}
 
       {s.type === "feature_grid" && (
         <>
-          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v) => updateContent({ title_ar: v })} />
-          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v) => updateContent({ title_en: v })} />
+          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
           <div>
             <Label className="text-xs">عدد الأعمدة</Label>
             <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.columns ?? 3}
@@ -265,8 +265,8 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
 
       {s.type === "faq" && (
         <>
-          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v) => updateContent({ title_ar: v })} />
-          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v) => updateContent({ title_en: v })} />
+          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
           <div className="space-y-2">
             <Label className="text-xs">الأسئلة</Label>
             {s.content.items.map((it, i) => (
@@ -291,8 +291,8 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
 
       {s.type === "testimonials" && (
         <>
-          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v) => updateContent({ title_ar: v })} />
-          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v) => updateContent({ title_en: v })} />
+          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
           <div className="space-y-2">
             <Label className="text-xs">الآراء</Label>
             {s.content.items.map((it, i) => (
@@ -340,8 +340,8 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
 
       {s.type === "gallery" && (
         <>
-          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v) => updateContent({ title_ar: v })} />
-          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v) => updateContent({ title_en: v })} />
+          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
           <div>
             <Label className="text-xs">عدد الأعمدة</Label>
             <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.columns ?? 3}
@@ -368,10 +368,10 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
 
       {s.type === "cta" && (
         <>
-          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v) => updateContent({ title_ar: v })} />
-          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v) => updateContent({ title_en: v })} />
-          <TextField label="الوصف (ع)" multiline value={s.content.subtitle_ar} onChange={(v) => updateContent({ subtitle_ar: v })} />
-          <TextField label="Subtitle (EN)" multiline value={s.content.subtitle_en} onChange={(v) => updateContent({ subtitle_en: v })} />
+          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
+          <TextField label="الوصف (ع)" multiline value={s.content.subtitle_ar} onChange={(v, opts) => updateContent({ subtitle_ar: v }, opts)} />
+          <TextField label="Subtitle (EN)" multiline value={s.content.subtitle_en} onChange={(v, opts) => updateContent({ subtitle_en: v }, opts)} />
           <ButtonsEditor buttons={s.content.buttons} onChange={(b) => updateContent({ buttons: b })} />
         </>
       )}
