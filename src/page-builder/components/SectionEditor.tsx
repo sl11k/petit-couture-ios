@@ -383,7 +383,7 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
       </div>
 
       <div className="pt-3 border-t border-border">
-        <VisibilityFields s={s} onChange={onChange} />
+        <VisibilityFields s={s} onChange={onChange} notify={notify} />
       </div>
     </div>
   );
