@@ -182,8 +182,8 @@ function PageEditor() {
                       device={device}
                       selected={s.id === ed.selectedSectionId}
                       onSelect={() => ed.setSelectedSectionId(s.id)}
-                      onDuplicate={() => ed.duplicateSection(s.id)}
-                      onDelete={() => { if (confirm("حذف القسم؟")) ed.removeSection(s.id); }}
+                      onDuplicate={() => { ed.duplicateSection(s.id); ed.notifyChange("تم تكرار القسم"); }}
+                      onDelete={() => { if (confirm("حذف القسم؟")) { ed.removeSection(s.id); ed.notifyChange("تم حذف القسم"); } }}
                     />
                   ))}
                 </SortableContext>
