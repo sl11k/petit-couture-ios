@@ -207,9 +207,9 @@ function AuditDetailPage() {
                     <div className="mb-1 text-[11px] uppercase text-muted-foreground">
                       {ar ? "قبل" : "Before"}
                     </div>
-                    <pre className="max-h-80 overflow-auto rounded-md bg-muted/30 p-2 text-[11px] font-mono">
-                      {JSON.stringify(row.old_data, null, 2)}
-                    </pre>
+                    <div className="max-h-80 overflow-auto rounded-md bg-muted/30 p-3">
+                      <FriendlyDataView value={row.old_data} />
+                    </div>
                   </div>
                 )}
                 {row.new_data && (
@@ -217,9 +217,9 @@ function AuditDetailPage() {
                     <div className="mb-1 text-[11px] uppercase text-muted-foreground">
                       {ar ? "بعد" : "After"}
                     </div>
-                    <pre className="max-h-80 overflow-auto rounded-md bg-muted/30 p-2 text-[11px] font-mono">
-                      {JSON.stringify(row.new_data, null, 2)}
-                    </pre>
+                    <div className="max-h-80 overflow-auto rounded-md bg-muted/30 p-3">
+                      <FriendlyDataView value={row.new_data} />
+                    </div>
                   </div>
                 )}
               </div>
