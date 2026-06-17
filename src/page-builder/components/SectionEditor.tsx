@@ -110,7 +110,7 @@ function VisibilityFields({ s, onChange }: { s: Section; onChange: Props["onChan
   );
 }
 
-export function SectionEditor({ section, onChange }: Props) {
+export function SectionEditor({ section, onChange, onConvertLegacy }: Props) {
   const s = section;
 
   const updateContent = (patch: any) =>
