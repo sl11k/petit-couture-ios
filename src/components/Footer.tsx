@@ -5,6 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { fetchStorefrontSettings, type StorefrontSettings } from "@/lib/storefront";
 import { BrandLogo, BRAND_NAME } from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
+import { useDbCategories } from "@/hooks/useDbCategories";
 
 type ContentPageLink = { slug: string; title_ar: string; title_en: string };
 
@@ -13,6 +14,7 @@ export function Footer() {
   const ar = lang === "ar";
   const [settings, setSettings] = useState<StorefrontSettings | null>(null);
   const [pages, setPages] = useState<ContentPageLink[]>([]);
+  const dbCats = useDbCategories();
 
   useEffect(() => {
     fetchStorefrontSettings().then(setSettings).catch(() => {/* noop */});
@@ -56,10 +58,22 @@ export function Footer() {
               {ar ? "تسوّق" : "Shop"}
             </h3>
             <ul className="space-y-2 text-[13px]">
-              <li><Link to="/category/$slug" params={{ slug: "new-in" }} className="hover:text-gold transition">{ar ? "وصل حديثًا" : "New In"}</Link></li>
-              <li><Link to="/category/$slug" params={{ slug: "best-sellers" }} className="hover:text-gold transition">{ar ? "الأكثر مبيعاً" : "Best Sellers"}</Link></li>
-              <li><Link to="/category/$slug" params={{ slug: "dresses" }} className="hover:text-gold transition">{ar ? "فساتين" : "Dresses"}</Link></li>
-              <li><Link to="/category/$slug" params={{ slug: "shoes" }} className="hover:text-gold transition">{ar ? "أحذية" : "Shoes"}</Link></li>
+              {dbCats.length > 0 ? (
+                dbCats.slice(0, 8).map((c) => (
+                  <li key={c.slug}>
+                    <Link to="/category/$slug" params={{ slug: c.slug }} className="hover:text-gold transition">
+                      {ar ? c.name_ar : c.name_en}
+                    </Link>
+                  </li>
+                ))
+              ) : (
+                <>
+                  <li><Link to="/category/$slug" params={{ slug: "new-in" }} className="hover:text-gold transition">{ar ? "وصل حديثًا" : "New In"}</Link></li>
+                  <li><Link to="/category/$slug" params={{ slug: "best-sellers" }} className="hover:text-gold transition">{ar ? "الأكثر مبيعاً" : "Best Sellers"}</Link></li>
+                  <li><Link to="/category/$slug" params={{ slug: "dresses" }} className="hover:text-gold transition">{ar ? "فساتين" : "Dresses"}</Link></li>
+                  <li><Link to="/category/$slug" params={{ slug: "shoes" }} className="hover:text-gold transition">{ar ? "أحذية" : "Shoes"}</Link></li>
+                </>
+              )}
             </ul>
           </div>
 
