@@ -1,5 +1,6 @@
 import { useLanguage } from "@/i18n/LanguageContext";
 import { HomeScreen } from "@/components/HomeScreen";
+import { supabase } from "@/integrations/supabase/client";
 import type {
   Section,
   PageContent,
@@ -12,10 +13,11 @@ import type {
   CtaSection,
   GallerySection,
   StatsSection,
+  ReviewsSection,
   ButtonContent,
 } from "../schemas/pageSchema";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function pick(ar: boolean, valAr?: string, valEn?: string) {
