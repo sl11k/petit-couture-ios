@@ -45,6 +45,9 @@ export function FreeShippingProgress({ subtotal, threshold }: Props) {
           style={{ width: `${pct}%` }}
         />
       </div>
+      <Link to="/shipping" className="mt-2 inline-block text-[11.5px] text-gold-deep underline-offset-2 hover:underline">
+        {ar ? "تفاصيل الشحن والشحن الدولي →" : "Shipping details & international →"}
+      </Link>
     </div>
   );
 }
