@@ -486,14 +486,14 @@ export function FormDialog({
         catch (err: any) { setSaving(false); console.error("[FormDialog] attributes sync failed", err); toast.error(err?.message || (ar ? "تعذر حفظ التصنيفات الفرعية" : "Failed to save attributes")); return; }
       }
 
-      setSaving(false);
       toast.success(ar ? (mode === "create" ? "تم الإنشاء" : "تم الحفظ") : mode === "create" ? "Created" : "Saved");
       onSaved();
       onClose();
     } catch (err: any) {
-      setSaving(false);
       console.error("[FormDialog] unexpected error during save", err);
       toast.error(err?.message || (ar ? "حدث خطأ غير متوقع أثناء الحفظ" : "Unexpected error during save"));
+    } finally {
+      setSaving(false);
     }
   };
 
