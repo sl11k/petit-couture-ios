@@ -55,6 +55,8 @@ export function createDefaultSection(type: SectionType): Section {
       return { id, type: "testimonials", content: { title_ar: "آراء العملاء", title_en: "Testimonials", items: [
         { id: newId("t"), name: "سارة", role_ar: "عميلة", role_en: "Customer", quote_ar: "تجربة رائعة!", quote_en: "Amazing experience!" },
       ] } };
+    case "reviews":
+      return { id, type: "reviews", content: { title_ar: "تقييمات عملائنا", title_en: "Customer Reviews", limit: 6, minRating: 4, columns: 3 } };
     case "faq":
       return { id, type: "faq", content: { title_ar: "أسئلة شائعة", title_en: "FAQ", items: [
         { id: newId("q"), question_ar: "سؤال؟", question_en: "Question?", answer_ar: "إجابة.", answer_en: "Answer." },
