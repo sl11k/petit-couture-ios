@@ -28,6 +28,7 @@ import {
 import { getProductForCategory, categories, productsByCategory } from "@/data/categories";
 import { useDbProductBySlug, useDbRelatedProducts, useProductSizeVariants } from "@/hooks/useDbProducts";
 import { useProductExtras } from "@/hooks/useProductExtras";
+import { FrequentlyBoughtTogether } from "@/components/product/FrequentlyBoughtTogether";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useBag } from "@/state/BagContext";
@@ -898,6 +899,18 @@ function ProductDetails() {
               {t.askWhatsapp}
             </button>
           </section>
+
+          <FrequentlyBoughtTogether
+            productId={productId}
+            currentProduct={{
+              slug: product.slug,
+              name: product.name,
+              brand: product.brand ?? "",
+              price: product.price,
+              image: product.images?.[0] ?? "",
+              currency: product.currency ?? "SAR",
+            }}
+          />
 
           {dbOffers.length > 0 && (
             <section className="px-5 mt-6">
