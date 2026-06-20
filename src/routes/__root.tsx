@@ -20,8 +20,13 @@ import { startWebVitals } from "@/lib/perf";
 import { GlobalErrorBoundary, OfflineBanner } from "@/components/ErrorDisplay";
 import { flushErrorBuffer } from "@/lib/errors";
 import { checkAdminOutlets } from "@/dev/checkAdminOutlets";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import appCss from "../styles.css?url";
+
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
+});
 
 // Dev-only: warn about /admin parent routes missing <Outlet />.
 if (import.meta.env.DEV) checkAdminOutlets();
