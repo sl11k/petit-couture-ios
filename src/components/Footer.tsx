@@ -14,6 +14,7 @@ export function Footer() {
   const ar = lang === "ar";
   const [settings, setSettings] = useState<StorefrontSettings | null>(null);
   const [pages, setPages] = useState<ContentPageLink[]>([]);
+  const dbCats = useDbCategories();
 
   useEffect(() => {
     fetchStorefrontSettings().then(setSettings).catch(() => {/* noop */});
