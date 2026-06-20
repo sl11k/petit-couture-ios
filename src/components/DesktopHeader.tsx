@@ -74,7 +74,7 @@ export function DesktopHeader() {
       <div className="bg-cream-warm border-b border-gold-soft/60">
         <div className="mx-auto max-w-[1480px] px-10 h-9 flex items-center justify-between text-[11px] tracking-soft text-foreground/75 gap-6">
           <span className="tracking-luxury text-gold-deep whitespace-nowrap">{t.brandTagline}</span>
-          <AnnouncementBar messages={t.announcements} className="flex-1 min-w-0" />
+          <AnnouncementBar messages={useDbAnnouncements(t.announcements, lang as "ar" | "en")} className="flex-1 min-w-0" />
           <div className="flex items-center gap-4 whitespace-nowrap">
             <CurrencySelector />
             <button
