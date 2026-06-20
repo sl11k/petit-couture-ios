@@ -5,6 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { fetchStorefrontSettings, type StorefrontSettings } from "@/lib/storefront";
 import { BrandLogo, BRAND_NAME } from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
+import { useDbCategories } from "@/hooks/useDbCategories";
 
 type ContentPageLink = { slug: string; title_ar: string; title_en: string };
 
