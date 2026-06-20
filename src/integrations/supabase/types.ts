@@ -3608,27 +3608,42 @@ export type Database = {
       product_relations: {
         Row: {
           created_at: string
+          discount_amount: number | null
+          discount_percent: number | null
           display_order: number
           id: string
+          is_active: boolean
           product_id: string
           related_product_id: string
           relation_type: string
+          title_ar: string | null
+          title_en: string | null
         }
         Insert: {
           created_at?: string
+          discount_amount?: number | null
+          discount_percent?: number | null
           display_order?: number
           id?: string
+          is_active?: boolean
           product_id: string
           related_product_id: string
           relation_type: string
+          title_ar?: string | null
+          title_en?: string | null
         }
         Update: {
           created_at?: string
+          discount_amount?: number | null
+          discount_percent?: number | null
           display_order?: number
           id?: string
+          is_active?: boolean
           product_id?: string
           related_product_id?: string
           relation_type?: string
+          title_ar?: string | null
+          title_en?: string | null
         }
         Relationships: [
           {
