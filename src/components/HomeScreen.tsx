@@ -13,6 +13,7 @@ import { useImpression } from "@/hooks/useImpression";
 import { BrandLogo } from "@/components/Logo";
 import { usePriceFormatter } from "@/state/CurrencyContext";
 import { useDbCategories } from "@/hooks/useDbCategories";
+import { HomeReviews } from "@/components/HomeReviews";
 
 import {
   fetchAnnouncements,
@@ -421,6 +422,9 @@ export function HomeScreen() {
             .map((s) => (
               <DynamicSection key={s.id} section={s} products={sectionProducts[s.id] ?? []} ar={ar} />
             ))}
+
+          {/* Live customer reviews — auto-populates from /admin/reviews approvals */}
+          <HomeReviews limit={6} />
         </main>
       </div>
 
