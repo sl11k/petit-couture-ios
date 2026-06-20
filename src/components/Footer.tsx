@@ -58,10 +58,22 @@ export function Footer() {
               {ar ? "تسوّق" : "Shop"}
             </h3>
             <ul className="space-y-2 text-[13px]">
-              <li><Link to="/category/$slug" params={{ slug: "new-in" }} className="hover:text-gold transition">{ar ? "وصل حديثًا" : "New In"}</Link></li>
-              <li><Link to="/category/$slug" params={{ slug: "best-sellers" }} className="hover:text-gold transition">{ar ? "الأكثر مبيعاً" : "Best Sellers"}</Link></li>
-              <li><Link to="/category/$slug" params={{ slug: "dresses" }} className="hover:text-gold transition">{ar ? "فساتين" : "Dresses"}</Link></li>
-              <li><Link to="/category/$slug" params={{ slug: "shoes" }} className="hover:text-gold transition">{ar ? "أحذية" : "Shoes"}</Link></li>
+              {dbCats.length > 0 ? (
+                dbCats.slice(0, 8).map((c) => (
+                  <li key={c.slug}>
+                    <Link to="/category/$slug" params={{ slug: c.slug }} className="hover:text-gold transition">
+                      {ar ? c.name_ar : c.name_en}
+                    </Link>
+                  </li>
+                ))
+              ) : (
+                <>
+                  <li><Link to="/category/$slug" params={{ slug: "new-in" }} className="hover:text-gold transition">{ar ? "وصل حديثًا" : "New In"}</Link></li>
+                  <li><Link to="/category/$slug" params={{ slug: "best-sellers" }} className="hover:text-gold transition">{ar ? "الأكثر مبيعاً" : "Best Sellers"}</Link></li>
+                  <li><Link to="/category/$slug" params={{ slug: "dresses" }} className="hover:text-gold transition">{ar ? "فساتين" : "Dresses"}</Link></li>
+                  <li><Link to="/category/$slug" params={{ slug: "shoes" }} className="hover:text-gold transition">{ar ? "أحذية" : "Shoes"}</Link></li>
+                </>
+              )}
             </ul>
           </div>
 
