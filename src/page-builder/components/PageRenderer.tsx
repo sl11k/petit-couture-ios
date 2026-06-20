@@ -551,6 +551,8 @@ function RenderSection({ s }: { s: Section }) {
       return <RenderGallery s={s} />;
     case "stats":
       return <RenderStats s={s} />;
+    case "reviews":
+      return <RenderReviews s={s} />;
     default:
       return null;
   }
