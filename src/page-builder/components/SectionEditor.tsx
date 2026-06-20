@@ -266,7 +266,7 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
                 <Input placeholder="Title (EN)" value={c.title_en ?? ""} onChange={(e) => updateContent((ct: any) => ({ cards: ct.cards.map((x: any) => x.id === c.id ? { ...x, title_en: e.target.value } : x) }))} />
                 <Textarea rows={2} placeholder="وصف (ع)" value={c.description_ar ?? ""} onChange={(e) => updateContent((ct: any) => ({ cards: ct.cards.map((x: any) => x.id === c.id ? { ...x, description_ar: e.target.value } : x) }))} />
                 <Textarea rows={2} placeholder="Description (EN)" value={c.description_en ?? ""} onChange={(e) => updateContent((ct: any) => ({ cards: ct.cards.map((x: any) => x.id === c.id ? { ...x, description_en: e.target.value } : x) }))} />
-                <Input placeholder="رابط" value={c.link ?? ""} onChange={(e) => updateContent((ct: any) => ({ cards: ct.cards.map((x: any) => x.id === c.id ? { ...x, link: e.target.value } : x) }))} />
+                <LinkPicker value={c.link} onChange={(url) => updateContent((ct: any) => ({ cards: ct.cards.map((x: any) => x.id === c.id ? { ...x, link: url } : x) }))} placeholder="رابط البطاقة" />
               </div>
             ))}
             <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent((ct: any) => ({ cards: [...ct.cards, { id: nid("card"), title_ar: "بطاقة", title_en: "Card", description_ar: "", description_en: "" } as FeatureCard] }))}>
