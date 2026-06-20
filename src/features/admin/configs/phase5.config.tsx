@@ -528,8 +528,8 @@ export const reviewsConfig: AdminPageConfig = {
         { value: "rejected", label: { ar: "مرفوض", en: "Rejected" } },
         { value: "spam", label: { ar: "سبام", en: "Spam" } },
       ], defaultValue: "pending" },
-    { key: "verified_purchase", label: { ar: "شراء موثّق", en: "Verified purchase" }, type: "boolean" },
-    { key: "images", label: { ar: "الصور", en: "Images" }, type: "json" },
+    { key: "verified_purchase", label: { ar: "شراء موثّق", en: "Verified purchase" }, type: "boolean", defaultValue: false },
+    { key: "images", label: { ar: "الصور (روابط JSON)", en: "Images (JSON array)" }, type: "json", defaultValue: [] },
   ],
   actions: { create: true, edit: true, delete: true, export: true },
 };
