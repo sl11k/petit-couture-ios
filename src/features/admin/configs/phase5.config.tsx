@@ -154,9 +154,16 @@ export const productRelationsConfig: AdminPageConfig = {
     { key: "product_id", label: { ar: "المنتج الأصلي", en: "Source product" }, render: (v) => <ProductNameCell productId={v} /> },
     { key: "related_product_id", label: { ar: "المرتبط به", en: "Related product" }, render: (v) => <ProductNameCell productId={v} /> },
     { key: "relation_type", label: { ar: "نوع العلاقة", en: "Relation" }, type: "badge" },
+    { key: "discount_percent", label: { ar: "خصم %", en: "Disc %" }, type: "number" },
+    { key: "discount_amount", label: { ar: "خصم ثابت", en: "Disc amount" }, type: "number", hideOnMobile: true },
+    { key: "is_active", label: { ar: "نشط", en: "Active" }, type: "boolean" },
     { key: "display_order", label: { ar: "الترتيب", en: "Order" }, type: "number", hideOnMobile: true },
   ],
   filters: [
+    { key: "is_active", type: "select", label: { ar: "الحالة", en: "Status" }, options: [
+      { value: "true", label: { ar: "نشط", en: "Active" } },
+      { value: "false", label: { ar: "موقوف", en: "Inactive" } },
+    ] },
     {
       key: "relation_type", type: "select", label: { ar: "نوع العلاقة", en: "Relation" },
       options: [
@@ -174,7 +181,7 @@ export const productRelationsConfig: AdminPageConfig = {
       type: "lookup",
       required: true,
       lookup: productLookup,
-      helpText: { ar: "ابحث عن المنتج الذي تظهر علاقاته في الصفحة", en: "Search for the product whose relations appear on its page" },
+      helpText: { ar: "ابحث عن المنتج الذي تظهر علاقاته في صفحته", en: "Search for the product whose relations appear on its page" },
     },
     {
       key: "related_product_id",
@@ -182,7 +189,7 @@ export const productRelationsConfig: AdminPageConfig = {
       type: "lookup",
       required: true,
       lookup: productLookup,
-      helpText: { ar: "المنتج الذي سيُعرض كاقتراح", en: "The product that will be shown as a suggestion" },
+      helpText: { ar: "المنتج الذي سيُعرض كاقتراح للشراء معه", en: "The product that will be shown as a bundle suggestion" },
     },
     { key: "relation_type", label: { ar: "نوع العلاقة", en: "Relation type" }, type: "select", required: true,
       options: [
@@ -191,6 +198,15 @@ export const productRelationsConfig: AdminPageConfig = {
         { value: "upsell", label: { ar: "ترقية (نسخة أفضل / أغلى)", en: "Upsell (a better/pricier version)" } },
         { value: "alternative", label: { ar: "بديل", en: "Alternative" } },
       ], defaultValue: "related" },
+    { key: "discount_percent", label: { ar: "نسبة الخصم %", en: "Discount %" }, type: "number", min: 0, max: 100,
+      helpText: { ar: "خصم يُطبّق على المنتج المرتبط عند الشراء مع المنتج الأصلي (مثال: 20 = 20%)", en: "Discount applied to the related product when bought with the source (e.g. 20 = 20%)" } },
+    { key: "discount_amount", label: { ar: "خصم ثابت (ر.س)", en: "Fixed discount (SAR)" }, type: "number", min: 0,
+      helpText: { ar: "بديلاً عن النسبة — مبلغ خصم ثابت بالعملة", en: "Alternative to percent — a fixed currency discount" } },
+    { key: "title_ar", label: { ar: "عنوان العرض (AR)", en: "Offer label (AR)" }, type: "text", maxLength: 100,
+      placeholder: { ar: "مثال: وفّر 20% عند الشراء معاً", en: "" } },
+    { key: "title_en", label: { ar: "عنوان العرض (EN)", en: "Offer label (EN)" }, type: "text", maxLength: 100,
+      placeholder: { ar: "", en: "e.g. Save 20% when bought together" } },
+    { key: "is_active", label: { ar: "مُفعّل", en: "Active" }, type: "boolean", defaultValue: true },
     { key: "display_order", label: { ar: "ترتيب الظهور", en: "Display order" }, type: "number", defaultValue: 0,
       helpText: { ar: "أرقام أقل تظهر أولاً", en: "Lower numbers appear first" } },
   ],
