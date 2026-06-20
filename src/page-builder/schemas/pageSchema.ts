@@ -195,6 +195,19 @@ export type StatsSection = {
   settings?: CommonSectionSettings;
 };
 
+export type ReviewsSection = {
+  id: string;
+  type: "reviews";
+  content: {
+    title_ar?: string;
+    title_en?: string;
+    limit?: number;
+    minRating?: number;
+    columns?: 2 | 3 | 4;
+  };
+  settings?: CommonSectionSettings;
+};
+
 export type Section =
   | LegacyHomeSection
   | HeroSection
@@ -205,7 +218,8 @@ export type Section =
   | TestimonialsSection
   | CtaSection
   | GallerySection
-  | StatsSection;
+  | StatsSection
+  | ReviewsSection;
 
 export type SectionType = Section["type"];
 
