@@ -900,6 +900,18 @@ function ProductDetails() {
             </button>
           </section>
 
+          <FrequentlyBoughtTogether
+            productId={productId}
+            currentProduct={{
+              slug: product.slug,
+              name: ar ? (product.name_ar ?? product.name) : (product.name_en ?? product.name),
+              brand: product.brand ?? "",
+              price: product.price,
+              image: product.images?.[0] ?? "",
+              currency: product.currency ?? "SAR",
+            }}
+          />
+
           {dbOffers.length > 0 && (
             <section className="px-5 mt-6">
               <h2 className="font-serif text-[18px] text-foreground mb-2">{ar ? "عروض خاصة" : "Special offers"}</h2>
