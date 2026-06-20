@@ -13,6 +13,7 @@ import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TrackOrderRouteImport } from './routes/track-order'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ShippingRouteImport } from './routes/shipping'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -163,6 +164,11 @@ const TrackOrderRoute = TrackOrderRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShippingRoute = ShippingRouteImport.update({
+  id: '/shipping',
+  path: '/shipping',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchRoute = SearchRouteImport.update({
@@ -841,6 +847,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/search': typeof SearchRoute
+  '/shipping': typeof ShippingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track-order': typeof TrackOrderRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -977,6 +984,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/search': typeof SearchRoute
+  '/shipping': typeof ShippingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track-order': typeof TrackOrderRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -1103,6 +1111,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/search': typeof SearchRoute
+  '/shipping': typeof ShippingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track-order': typeof TrackOrderRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -1242,6 +1251,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/robots.txt'
     | '/search'
+    | '/shipping'
     | '/sitemap.xml'
     | '/track-order'
     | '/unsubscribe'
@@ -1378,6 +1388,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/robots.txt'
     | '/search'
+    | '/shipping'
     | '/sitemap.xml'
     | '/track-order'
     | '/unsubscribe'
@@ -1503,6 +1514,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/robots.txt'
     | '/search'
+    | '/shipping'
     | '/sitemap.xml'
     | '/track-order'
     | '/unsubscribe'
@@ -1641,6 +1653,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SearchRoute: typeof SearchRoute
+  ShippingRoute: typeof ShippingRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TrackOrderRoute: typeof TrackOrderRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
@@ -1694,6 +1707,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shipping': {
+      id: '/shipping'
+      path: '/shipping'
+      fullPath: '/shipping'
+      preLoaderRoute: typeof ShippingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search': {
@@ -2992,6 +3012,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SearchRoute: SearchRoute,
+  ShippingRoute: ShippingRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TrackOrderRoute: TrackOrderRoute,
   UnsubscribeRoute: UnsubscribeRoute,

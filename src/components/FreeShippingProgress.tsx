@@ -1,4 +1,5 @@
 import { Truck } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePriceFormatter } from "@/state/CurrencyContext";
 
