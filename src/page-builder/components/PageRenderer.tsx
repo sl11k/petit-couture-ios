@@ -590,7 +590,7 @@ function RenderReviews({ s }: { s: ReviewsSection }) {
   );
 }
 
-
+function RenderSection({ s }: { s: Section }) {
   switch (s.type) {
     case "legacy_home":
       return <HomeScreen />;
