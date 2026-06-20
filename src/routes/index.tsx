@@ -4,6 +4,7 @@ import { HomeScreen } from "@/components/HomeScreen";
 import { PageRenderer } from "@/page-builder/components/PageRenderer";
 import { isPageContent, type PageContent } from "@/page-builder/schemas/pageSchema";
 import { supabase } from "@/integrations/supabase/client";
+import { EditPageButton } from "@/components/EditPageButton";
 import {
   buildMeta,
   organizationJsonLd,
@@ -53,7 +54,7 @@ function Index() {
     return () => { cancelled = true; };
   }, []);
 
-  if (!loaded) return <HomeScreen />;
-  if (content) return <PageRenderer content={content} />;
-  return <HomeScreen />;
+  if (!loaded) return (<><HomeScreen /><EditPageButton slug="home" /></>);
+  if (content) return (<><PageRenderer content={content} /><EditPageButton slug="home" /></>);
+  return (<><HomeScreen /><EditPageButton slug="home" /></>);
 }
