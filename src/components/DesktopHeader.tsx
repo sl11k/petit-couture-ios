@@ -10,6 +10,7 @@ import { useDbCategories } from "@/hooks/useDbCategories";
 import { BrandLogo } from "@/components/Logo";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { AnnouncementBar } from "@/components/AnnouncementBar";
+import { useDbAnnouncements } from "@/hooks/useDbAnnouncements";
 
 /**
  * Wide luxury header shown only on desktop (lg+).
