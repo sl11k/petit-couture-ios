@@ -904,7 +904,7 @@ function ProductDetails() {
             productId={productId}
             currentProduct={{
               slug: product.slug,
-              name: ar ? (product.name_ar ?? product.name) : (product.name_en ?? product.name),
+              name: product.name,
               brand: product.brand ?? "",
               price: product.price,
               image: product.images?.[0] ?? "",
