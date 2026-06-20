@@ -62,8 +62,9 @@ const SHIPPING_METHODS: Array<{
   eta_en: string;
   fee: number;
 }> = [
-  { id: "standard", label_ar: "توصيل قياسي", label_en: "Standard", eta_ar: "٣–٥ أيام عمل", eta_en: "3–5 business days", fee: 25 },
-  { id: "express", label_ar: "توصيل سريع", label_en: "Express", eta_ar: "خلال ٢٤ ساعة", eta_en: "Within 24 hours", fee: 45 },
+  { id: "standard", label_ar: "توصيل قياسي داخل السعودية", label_en: "Standard (KSA)", eta_ar: "٣–٥ أيام عمل", eta_en: "3–5 business days", fee: 25 },
+  { id: "express", label_ar: "توصيل سريع داخل السعودية", label_en: "Express (KSA)", eta_ar: "خلال ٢٤ ساعة", eta_en: "Within 24 hours", fee: 45 },
+  { id: "international", label_ar: "شحن دولي (دول الخليج)", label_en: "International (GCC)", eta_ar: "٧–١٤ يوم عمل", eta_en: "7–14 business days", fee: 120 },
   { id: "pickup", label_ar: "استلام من الفرع", label_en: "Store pickup", eta_ar: "جاهز خلال ساعتين", eta_en: "Ready in 2 hours", fee: 0 },
 ];
 

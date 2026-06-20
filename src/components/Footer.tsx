@@ -86,6 +86,7 @@ export function Footer() {
               <li><Link to="/help" className="hover:text-gold transition">{ar ? "الأسئلة الشائعة" : "FAQ"}</Link></li>
               <li><Link to="/contact" className="hover:text-gold transition">{ar ? "تواصل معنا" : "Contact us"}</Link></li>
               <li><Link to="/track-order" className="hover:text-gold transition">{ar ? "تتبع الطلب" : "Track order"}</Link></li>
+              <li><Link to="/shipping" className="hover:text-gold transition">{ar ? "الشحن والتوصيل" : "Shipping & Delivery"}</Link></li>
               <li><Link to="/privacy" className="hover:text-gold transition">{ar ? "الخصوصية" : "Privacy"}</Link></li>
               {pages.map((p) => (
                 <li key={p.slug}>
