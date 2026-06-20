@@ -29,6 +29,7 @@ export function DesktopHeader() {
 
   // Featured nav: a curated subset of categories to keep the bar elegant.
   const featured = categories.slice(0, 7);
+  const dbCats = useDbCategories();
   const [navItems, setNavItems] = useState<Array<{slug:string; name_ar:string; name_en:string; href:string}>>([]);
   useEffect(() => {
     (async () => {
@@ -52,7 +53,9 @@ export function DesktopHeader() {
   }, []);
   const dynamicFeatured = navItems.length > 0
     ? navItems
-    : featured.map((c) => ({ slug: c.slug, name_ar: c.name, name_en: c.name, href: `/category/${c.slug}` }));
+    : dbCats.length > 0
+      ? dbCats.slice(0, 8).map((c) => ({ slug: c.slug, name_ar: c.name_ar, name_en: c.name_en, href: `/category/${c.slug}` }))
+      : featured.map((c) => ({ slug: c.slug, name_ar: c.name, name_en: c.name, href: `/category/${c.slug}` }));
 
   const isActive = (path: string) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
