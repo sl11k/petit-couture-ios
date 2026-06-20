@@ -231,11 +231,25 @@ export function MobileBottomNav() {
 
 /** Category menu groups shown inside the Menu sheet */
 function CategoryMenu({ onNavigate, ar }: { onNavigate: () => void; ar: boolean }) {
-  const groups: {
+  const dbCats = useDbCategories();
+
+  const dbGroup = dbCats.length > 0
+    ? [{
+        title: ar ? "كل التصنيفات" : "All Categories",
+        icon: Crown,
+        items: dbCats.map((c) => ({
+          label: ar ? c.name_ar : c.name_en,
+          to: "/category/$slug",
+          params: { slug: c.slug },
+        })),
+      }]
+    : [];
+
+  const fallback: {
     title: string;
     icon: typeof Baby;
     items: { label: string; to: string; params?: any }[];
-  }[] = [
+  }[] = dbCats.length > 0 ? [] : [
     {
       title: ar ? "التسوق حسب العمر" : "Shop by Age",
       icon: Baby,
@@ -283,6 +297,8 @@ function CategoryMenu({ onNavigate, ar }: { onNavigate: () => void; ar: boolean 
       ],
     },
   ];
+
+  const groups = [...dbGroup, ...fallback];
 
   return (
     <div className="px-2 pb-8">
