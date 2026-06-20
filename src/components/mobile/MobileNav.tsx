@@ -26,6 +26,7 @@ import {
   SheetTrigger,
   SheetClose,
 } from "@/components/ui/sheet";
+import { useDbCategories } from "@/hooks/useDbCategories";
 
 /**
  * MobileHeader — هيدر مدمج للجوال:
