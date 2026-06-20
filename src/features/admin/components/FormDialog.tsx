@@ -142,9 +142,11 @@ function coerceForDb(fields: FormFieldDef[], values: Record<string, any>) {
       out[f.key] = Array.isArray(v) ? v : [];
       continue;
     }
-    if (v === "" || v === undefined) {
+    if (v === "" || v === undefined || v === null) {
       if (f.defaultValue !== undefined && f.defaultValue !== null && f.defaultValue !== "") {
         out[f.key] = f.defaultValue;
+      } else if (f.type === "json") {
+        out[f.key] = [];
       } else {
         out[f.key] = null;
       }
