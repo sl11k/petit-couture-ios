@@ -330,6 +330,37 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
         </>
       )}
 
+      {s.type === "reviews" && (
+        <>
+          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
+          <div>
+            <Label className="text-xs">عدد التقييمات</Label>
+            <Input type="number" min={1} max={24} value={s.content.limit ?? 6}
+              onChange={(e) => updateContent({ limit: Math.max(1, Math.min(24, Number(e.target.value) || 6)) })} />
+          </div>
+          <div>
+            <Label className="text-xs">أقل تقييم يظهر (نجوم)</Label>
+            <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+              value={s.content.minRating ?? 4}
+              onChange={(e) => updateContent({ minRating: Number(e.target.value) })}>
+              {[1,2,3,4,5].map((n) => <option key={n} value={n}>{n} ★ فأكثر</option>)}
+            </select>
+          </div>
+          <div>
+            <Label className="text-xs">عدد الأعمدة</Label>
+            <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+              value={s.content.columns ?? 3}
+              onChange={(e) => updateContent({ columns: Number(e.target.value) as 2 | 3 | 4 })}>
+              <option value={2}>2</option><option value={3}>3</option><option value={4}>4</option>
+            </select>
+          </div>
+          <div className="text-[11px] text-muted-foreground bg-muted/40 rounded p-2">
+            يعرض تلقائياً التقييمات المعتمدة من <strong>إدارة التقييمات</strong>. أضف تقييمات بحالة "مقبول" لتظهر هنا.
+          </div>
+        </>
+      )}
+
       {s.type === "stats" && (
         <div className="space-y-2">
           <Label className="text-xs">العناصر</Label>
