@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Plus, ShoppingBag, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRelatedOffers, type RelatedOffer } from "@/hooks/useRelatedOffers";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePriceFormatter } from "@/state/CurrencyContext";
@@ -28,12 +28,12 @@ export function FrequentlyBoughtTogether({ productId, currentProduct }: Props) {
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  // Default-select all on first render of offers
-  useMemo(() => {
-    if (offers.length && selected.size === 0) {
+  // Default-select all when offers load
+  useEffect(() => {
+    if (offers.length) {
       setSelected(new Set(offers.map((o) => o.id)));
     }
-  }, [offers.length]);
+  }, [offers]);
 
   if (loading || offers.length === 0) return null;
 
