@@ -1,101 +1,65 @@
 
-# Visual Page Builder / Pages CMS — خطة البناء
-
-نظام كامل متعدد الصفحات (Pages CMS) مع محرر بصري شبيه بـ Webflow/Framer مصغّر داخل لوحة الأدمن. هذا مشروع ضخم لا يمكن إنجازه في رسالة واحدة. سأبنيه على 5 مراحل، كل مرحلة قابلة للاستخدام بحد ذاتها، وننتقل للمرحلة التالية بعد موافقتك.
-
-## ملاحظة مهمة قبل البداية
-
-المشروع الحالي يحتوي أصلاً على نظام إدارة محتوى جزئي للصفحة الرئيسية عبر جداول: `home_sections`, `featured_categories`, `popular_picks`, `storefront_banners`, `announcement_messages`, `content_pages`. الـ Builder الجديد **لن يحذف هذي الجداول** — سيضيف طبقة `pages` + `page_versions` فوقها، وعند عرض الصفحة الرئيسية: إذا فيه `published_content` نعرضه، وإلا نرجع للسلوك الحالي (fallback) عشان ما نكسر شي.
+طلبك يحتوي على 8 مشاكل كبيرة، بعضها إصلاحات و بعضها ميزات جديدة. سأنفذها على **3 مراحل** لضمان الجودة (لو نفّذتها كلها مرة وحدة راح يطلع خربان مثل ما حذرتني).
 
 ---
 
-## المرحلة 1 — البنية التحتية (Schema + DB + Public Renderer)
+## 🔴 المرحلة 1 — إصلاحات الواجهة الفورية (هذه الجلسة)
 
-**الهدف:** قاعدة البيانات + عرض الصفحات المنشورة على الموقع (بدون editor بعد).
+### 1. الشريط الإعلاني (Carousel تلقائي)
+- `DesktopHeader.tsx` حالياً يعرض `t.announcements[0]` فقط (إعلان ثابت).
+- **الإصلاح:** أنشئ مكوّن `AnnouncementBar` يدور تلقائياً كل 4 ثوانٍ بين كل الرسائل من `t.announcements` مع انتقال ناعم (fade).
 
-### Migration
-- جدول `cms_pages`: `id, slug (unique), title_ar, title_en, type (home|about|contact|custom), status (draft|published), draft_content jsonb, published_content jsonb, seo_title_ar/en, seo_description_ar/en, og_image_url, noindex bool, canonical_url, created_by, created_at, updated_at, published_at`
-- جدول `cms_page_versions`: `id, page_id fk, content jsonb, version_label, created_by, created_at`
-- RLS: قراءة عامة للـ `published_content` فقط (anon)، كتابة/قراءة كاملة للأدوار `super_admin/admin/content_manager`
-- GRANT statements لكل جدول
-- Trigger `updated_at`
+### 2. روابط الهيدر — قائمة منسدلة عند Hover
+- إضافة قائمتين منسدلتين رئيسيتين قبل التصنيفات:
+  - **تسوّق حسب العمر** → 4 فئات عمرية (مولود جديد، طفل صغير، طفل، أطفال أكبر)
+  - **الفئات** → كل التصنيفات النشطة من قاعدة البيانات مرتّبة بـ display_order
+- تستخدم `NavigationMenu` من shadcn (موجود في المشروع) لدعم hover/keyboard/screen-reader.
+- كل عنصر يربط بـ `/category/$slug` الموجود فعلاً.
 
-### كود
-- `src/page-builder/schemas/pageSchema.ts` — TypeScript types: `PageContent`, `Section` (union مع `HeroSection | TextBlock | FeatureGrid | Testimonials | FAQ | CTA | Gallery | ImageText | Stats | RawHomeLegacy`), `Settings`, `ResponsiveSettings`
-- `src/page-builder/components/sections/*.tsx` — مكوّن render لكل نوع section (8-10 ملفات)
-- `src/page-builder/components/PageRenderer.tsx` — يستقبل `PageContent` ويعرض الـ sections
-- تعديل `src/routes/index.tsx`: يقرأ `cms_pages` where `slug='home' and status='published'`. إذا موجود → `<PageRenderer/>`. إذا لا → `<HomeScreen/>` الحالي (fallback).
-- Seed migration: إنشاء صفحة `home` بمحتوى افتراضي يستخدم section نوع `legacy_home` يعرض `HomeScreen` كما هو (عشان لا يتغير شي بصرياً قبل أن يبدأ التعديل).
-
----
-
-## المرحلة 2 — Pages List + Page Settings + Save/Publish
-
-**الهدف:** أدمن يقدر يفتح قائمة الصفحات، يعدّل بيانات الصفحة (title, slug, SEO)، حفظ + نشر.
-
-- `src/routes/admin.cms-pages.index.tsx` — جدول الصفحات: عنوان، slug، حالة، آخر تعديل، أزرار (تعديل، معاينة، نسخ، حذف، إصدارات).
-- `src/routes/admin.cms-pages.$id.tsx` — shell للمحرر (يحتوي top bar + sidebars فارغة + canvas يعرض PageRenderer للـ draft).
-- `src/page-builder/components/PageSettingsPanel.tsx` — title, slug, SEO, og_image, noindex.
-- `src/page-builder/hooks/usePageEditor.ts` — يحمّل `draft_content`، يحتفظ بـ in-memory state، يوفّر `save()` و `publish()` و undo/redo (history stack).
-- زر Save Draft → يحدّث `draft_content`. Publish → ينسخ `draft_content` إلى `published_content`، يكتب row في `cms_page_versions`.
-- Sidebar item جديد "Page Builder".
-- حماية: لازم `canAccessAdmin` + permission `cms.edit`.
+### 3. إصلاح روابط الهيدر المعطلة
+- مراجعة كل عناصر `header_nav_items` والتأكد أن كل href يطابق route موجود.
+- إصلاح أي 404 برابط `/category/$slug` الصحيح.
 
 ---
 
-## المرحلة 3 — Section Library + Drag & Drop
+## 🟡 المرحلة 2 — التقييمات + الصفحة الرئيسية (الجلسة التالية)
 
-**الهدف:** إضافة sections، إعادة ترتيبها، حذفها.
+### 4. التقييمات
+- التأكد أن قسم "التقييمات الحقيقية" يظهر فعلاً في الصفحة الرئيسية.
+- اختبار حفظ تقييم جديد من `/admin/reviews` بدون hang.
+- ربط التقييمات بصفحة المنتج (نجمات + عدد المراجعات).
 
-- `src/page-builder/components/SectionLibrary.tsx` — قائمة أنواع الأقسام مع أيقونات. ضغط → إضافة section بمحتوى افتراضي.
-- `src/page-builder/utils/pageDefaults.ts` — default content لكل نوع.
-- `src/page-builder/components/SortableSection.tsx` — wrapper drag handle (using `@dnd-kit/sortable`).
-- زر "حذف" / "تكرار" / "إخفاء" على كل section في الـ canvas.
-- تثبيت dependency: `@dnd-kit/core @dnd-kit/sortable`.
-
----
-
-## المرحلة 4 — Click-to-Edit + Right Sidebar (التعديل البصري)
-
-**الهدف:** ضغط على عنصر داخل الـ canvas → يفتح في الـ right sidebar حقول تعديله.
-
-- في كل section component داخل `PageRenderer`، يكون فيه `editing` context. كل عنصر قابل للتعديل يلتف بـ `<Editable id="title">`.
-- `EditorCanvas` يحقن iframe-like context: hover outline + click selection.
-- `src/page-builder/components/EditorSidebar.tsx` — يعرض حقول الـ section المحدّد حسب نوعه (schema-driven: نعرّف لكل نوع section قائمة حقوله).
-- حقول: نص، صورة (يستخدم `MediaUploader` الموجود)، زر (label/url/variant)، لون، spacing، alignment، visibility.
-- Live update فوري: تعديل الحقل → state يتحدّث → canvas يعيد render.
-- `DevicePreviewToggle`: desktop/tablet/mobile (يغيّر max-width على الـ canvas).
-- تحذير "تغييرات غير محفوظة" عند مغادرة الصفحة.
+### 5. الصفحة الرئيسية + تعديل مباشر
+- زر "تعديل هذه الصفحة" يظهر للأدمن فقط على الصفحة الرئيسية → يفتح `/admin/cms-pages/$id` للصفحة المنشورة.
 
 ---
 
-## المرحلة 5 — Version History + تفكيك HomeScreen + Polish
+## 🟢 المرحلة 3 — ميزة جديدة: المنتجات المرتبطة بخصومات (الجلسة الثالثة)
 
-**الهدف:** ميزات نهائية + تحويل الصفحة الرئيسية الحالية لـ schema حقيقي.
+### 6. نظام "اشترِ A تحصل على خصم على B"
+- جدول جديد `product_offers_link` (قاعدة بيانات):
+  - `trigger_product_id` (المنتج اللي لو شريته…)
+  - `discounted_product_id` (تحصل خصم على هذا)
+  - `discount_type` (percent / fixed)
+  - `discount_value`
+  - `is_active`, `starts_at`, `expires_at`
+- صفحة إدارة: `/admin/product-offers` (موجودة جزئياً — توسعها).
+- في صفحة المنتج: قسم "اشتريهم سوا ووفّر" يعرض المنتجات المرتبطة بسعرها المخفّض.
+- في السلة: تطبيق الخصم تلقائياً لما يضيف الزبون كلا المنتجَين.
 
-- `VersionHistoryModal.tsx`: قائمة الإصدارات، معاينة، استعادة.
-- تفكيك `HomeScreen` الحالي:
-  - Hero (banners) → section `hero`
-  - Announcements → section `announcement_bar`
-  - Featured categories → section `featured_categories` (يبقى يقرأ من `featured_categories` table)
-  - Popular picks → section `popular_picks`
-  - Home sections → section `product_grid`
-  - يعني الـ Builder يدير **ترتيب وإظهار** الأقسام، والبيانات تبقى تأتي من جداولها الحالية (hybrid). هذا يحافظ على عمل لوحات الأدمن الحالية لإدارة المنتجات/الفئات.
-- Polish: validation (slug unique, title required)، unsaved warning، keyboard shortcuts (Cmd+S, Cmd+Z)، loading states.
+### 7. صفحة Checkout
+- مراجعة الـ flow كامل: شحن، دفع، تأكيد.
+- إصلاح أي مشاكل validation أو UX.
+
+### 8. الشحن
+- **شحن مجاني:** عتبة قابلة للتعديل من `/admin/shipping-rates` (مثلاً > 400 ريال).
+- **شحن دولي:** zone جديد + rate لكل بلد.
+- عرض السعر الصحيح في السلة والـ checkout حسب عنوان الزبون.
 
 ---
 
-## القيود والمقايضات
+## 🚀 ابدأ بالمرحلة 1 الآن؟
 
-- **لن أبني Live editing بشكل iframe معزول حقيقي** — التعديل يتم في نفس React tree مع طبقة overlay للـ selection. هذا أبسط وأسرع ولا فرق وظيفي.
-- **Inline text editing داخل الـ canvas** سيكون contentEditable بسيط (مرحلة 4)، التعديل الأساسي عبر الـ right sidebar.
-- **Drag بين الـ section library والـ canvas** سيكون click-to-add أولاً، drag-from-library لاحقاً إذا طلبت.
-- **Per-device responsive overrides** سيشمل: padding، إخفاء section، text alignment. لن يشمل overrides كاملة لكل حقل (تعقيد كبير جداً).
+كل مرحلة لها commit مستقل + اختبار قبل الانتقال للتالية. هذا يضمن أن كل شي يشتغل قبل ما نكمل.
 
----
-
-## الخطوة التالية
-
-أبدأ **المرحلة 1** الآن (DB migration + PageRenderer + integration مع `/`). بعد ما توافق على المرحلة 1 وتشتغل، ننتقل للمرحلة 2.
-
-هل أبدأ بالمرحلة 1؟
+**رد بـ "نعم" أو "ابدأ" لتنفيذ المرحلة 1 (الشريط الإعلاني + قوائم منسدلة + إصلاح روابط الهيدر).**
