@@ -48,7 +48,7 @@ function ButtonsEditor({ buttons, onChange }: { buttons?: ButtonContent[]; onCha
           </div>
           <Input placeholder="نص (عربي)" value={b.label_ar ?? ""} onChange={(e) => onChange(list.map((x, j) => j === i ? { ...x, label_ar: e.target.value } : x))} />
           <Input placeholder="Label (English)" value={b.label_en ?? ""} onChange={(e) => onChange(list.map((x, j) => j === i ? { ...x, label_en: e.target.value } : x))} />
-          <Input placeholder="رابط (URL)" value={b.url ?? ""} onChange={(e) => onChange(list.map((x, j) => j === i ? { ...x, url: e.target.value } : x))} />
+          <LinkPicker value={b.url} onChange={(url) => onChange(list.map((x, j) => j === i ? { ...x, url } : x))} placeholder="رابط الزر" />
           <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
             value={b.variant ?? "primary"}
             onChange={(e) => onChange(list.map((x, j) => j === i ? { ...x, variant: e.target.value as any } : x))}>
