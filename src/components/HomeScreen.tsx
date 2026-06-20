@@ -125,6 +125,7 @@ export function HomeScreen() {
 
   // Popular cards: dynamic if popular_picks exist; otherwise show mock ONLY when no real
   // products/categories have been added by the admin yet.
+  const dbCats = useDbCategories();
   const popularCards = popular.length > 0
     ? popular.map((p) => ({
         key: p.id,
@@ -133,15 +134,23 @@ export function HomeScreen() {
         label: ar ? p.label_ar : p.label_en,
         wishId: `popular:${p.id}`,
       }))
-    : (hasAnyProducts || hasAnyCategories)
-      ? []
-      : categories.map((c) => ({
+    : dbCats.length > 0
+      ? dbCats.map((c) => ({
           key: c.slug,
           href: `/category/${c.slug}`,
-          img: c.img,
-          label: t.categories[c.slug] ?? c.name,
+          img: c.image_url ?? "",
+          label: ar ? c.name_ar : c.name_en,
           wishId: `category:${c.slug}`,
-        }));
+        }))
+      : (hasAnyProducts || hasAnyCategories)
+        ? []
+        : categories.map((c) => ({
+            key: c.slug,
+            href: `/category/${c.slug}`,
+            img: c.img,
+            label: t.categories[c.slug] ?? c.name,
+            wishId: `category:${c.slug}`,
+          }));
 
   const currentBanner = banners[bannerIdx];
 
