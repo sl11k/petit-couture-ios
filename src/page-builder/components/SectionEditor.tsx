@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { MediaUploader } from "@/features/admin/components/MediaUploader";
 import { Plus, Trash2, Sparkles } from "lucide-react";
+import { LinkPicker } from "./LinkPicker";
 import type {
   Section, ButtonContent, FeatureCard, FaqItem, TestimonialItem, StatItem, ImageContent,
 } from "../schemas/pageSchema";
