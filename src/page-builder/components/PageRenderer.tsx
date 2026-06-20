@@ -1,5 +1,6 @@
 import { useLanguage } from "@/i18n/LanguageContext";
 import { HomeScreen } from "@/components/HomeScreen";
+import { supabase } from "@/integrations/supabase/client";
 import type {
   Section,
   PageContent,
@@ -12,10 +13,11 @@ import type {
   CtaSection,
   GallerySection,
   StatsSection,
+  ReviewsSection,
   ButtonContent,
 } from "../schemas/pageSchema";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function pick(ar: boolean, valAr?: string, valEn?: string) {
@@ -529,6 +531,65 @@ function RenderStats({ s }: { s: StatsSection }) {
   );
 }
 
+type LiveReview = { id: string; rating: number; title: string | null; body: string | null; customer_name: string | null; created_at: string };
+
+function RenderReviews({ s }: { s: ReviewsSection }) {
+  const { lang } = useLanguage();
+  const ar = lang === "ar";
+  const [items, setItems] = useState<LiveReview[]>([]);
+  const [loading, setLoading] = useState(true);
+  const limit = Math.max(1, Math.min(24, s.content.limit ?? 6));
+  const minRating = Math.max(1, Math.min(5, s.content.minRating ?? 1));
+  const columns = s.content.columns ?? 3;
+
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("reviews")
+        .select("id,rating,title,body,customer_name,created_at")
+        .eq("status", "approved")
+        .gte("rating", minRating)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (!cancel) { setItems((data as LiveReview[]) ?? []); setLoading(false); }
+    })();
+    return () => { cancel = true; };
+  }, [limit, minRating]);
+
+  const title = pick(ar, s.content.title_ar, s.content.title_en);
+  const colCls = columns === 2 ? "md:grid-cols-2" : columns === 4 ? "md:grid-cols-2 lg:grid-cols-4" : "md:grid-cols-2 lg:grid-cols-3";
+
+  return (
+    <section className="py-12 px-4">
+      <div className="max-w-6xl mx-auto">
+        {title && <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">{title}</h2>}
+        {loading ? (
+          <div className="text-center text-sm text-muted-foreground">{ar ? "جارٍ التحميل…" : "Loading…"}</div>
+        ) : items.length === 0 ? (
+          <div className="text-center text-sm text-muted-foreground">{ar ? "لا توجد تقييمات بعد." : "No reviews yet."}</div>
+        ) : (
+          <div className={cn("grid grid-cols-1 gap-4", colCls)}>
+            {items.map((r) => (
+              <article key={r.id} className="rounded-lg border border-border bg-card p-4 shadow-sm">
+                <div className="flex items-center gap-0.5 mb-2" aria-label={`${r.rating}/5`}>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} className={cn("h-4 w-4", i < r.rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30")} />
+                  ))}
+                </div>
+                {r.title && <h3 className="font-semibold mb-1">{r.title}</h3>}
+                {r.body && <p className="text-sm text-muted-foreground mb-3 line-clamp-4">{r.body}</p>}
+                <div className="text-xs text-muted-foreground">— {r.customer_name || (ar ? "عميل" : "Customer")}</div>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function RenderSection({ s }: { s: Section }) {
   switch (s.type) {
     case "legacy_home":
@@ -551,6 +612,8 @@ function RenderSection({ s }: { s: Section }) {
       return <RenderGallery s={s} />;
     case "stats":
       return <RenderStats s={s} />;
+    case "reviews":
+      return <RenderReviews s={s} />;
     default:
       return null;
   }

@@ -13,6 +13,7 @@ export const SECTION_TYPES: { type: SectionType; label_ar: string; label_en: str
   { type: "feature_grid",  label_ar: "بطاقات مزايا",            label_en: "Feature grid",  icon: "🔲" },
   { type: "stats",         label_ar: "إحصائيات",                label_en: "Stats",         icon: "📊" },
   { type: "testimonials",  label_ar: "آراء العملاء",            label_en: "Testimonials",  icon: "💬" },
+  { type: "reviews",       label_ar: "تقييمات حقيقية",          label_en: "Live reviews",  icon: "⭐" },
   { type: "faq",           label_ar: "أسئلة شائعة",             label_en: "FAQ",           icon: "❓" },
   { type: "gallery",       label_ar: "معرض صور",                label_en: "Gallery",       icon: "🖼️" },
   { type: "cta",           label_ar: "دعوة للإجراء",            label_en: "CTA",           icon: "🎯" },
@@ -54,6 +55,8 @@ export function createDefaultSection(type: SectionType): Section {
       return { id, type: "testimonials", content: { title_ar: "آراء العملاء", title_en: "Testimonials", items: [
         { id: newId("t"), name: "سارة", role_ar: "عميلة", role_en: "Customer", quote_ar: "تجربة رائعة!", quote_en: "Amazing experience!" },
       ] } };
+    case "reviews":
+      return { id, type: "reviews", content: { title_ar: "تقييمات عملائنا", title_en: "Customer Reviews", limit: 6, minRating: 4, columns: 3 } };
     case "faq":
       return { id, type: "faq", content: { title_ar: "أسئلة شائعة", title_en: "FAQ", items: [
         { id: newId("q"), question_ar: "سؤال؟", question_en: "Question?", answer_ar: "إجابة.", answer_en: "Answer." },

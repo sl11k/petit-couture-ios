@@ -142,9 +142,11 @@ function coerceForDb(fields: FormFieldDef[], values: Record<string, any>) {
       out[f.key] = Array.isArray(v) ? v : [];
       continue;
     }
-    if (v === "" || v === undefined) {
+    if (v === "" || v === undefined || v === null) {
       if (f.defaultValue !== undefined && f.defaultValue !== null && f.defaultValue !== "") {
         out[f.key] = f.defaultValue;
+      } else if (f.type === "json") {
+        out[f.key] = [];
       } else {
         out[f.key] = null;
       }
@@ -484,14 +486,14 @@ export function FormDialog({
         catch (err: any) { setSaving(false); console.error("[FormDialog] attributes sync failed", err); toast.error(err?.message || (ar ? "تعذر حفظ التصنيفات الفرعية" : "Failed to save attributes")); return; }
       }
 
-      setSaving(false);
       toast.success(ar ? (mode === "create" ? "تم الإنشاء" : "تم الحفظ") : mode === "create" ? "Created" : "Saved");
       onSaved();
       onClose();
     } catch (err: any) {
-      setSaving(false);
       console.error("[FormDialog] unexpected error during save", err);
       toast.error(err?.message || (ar ? "حدث خطأ غير متوقع أثناء الحفظ" : "Unexpected error during save"));
+    } finally {
+      setSaving(false);
     }
   };
 
