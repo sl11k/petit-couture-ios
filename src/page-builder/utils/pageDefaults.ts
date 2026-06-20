@@ -13,6 +13,7 @@ export const SECTION_TYPES: { type: SectionType; label_ar: string; label_en: str
   { type: "feature_grid",  label_ar: "بطاقات مزايا",            label_en: "Feature grid",  icon: "🔲" },
   { type: "stats",         label_ar: "إحصائيات",                label_en: "Stats",         icon: "📊" },
   { type: "testimonials",  label_ar: "آراء العملاء",            label_en: "Testimonials",  icon: "💬" },
+  { type: "reviews",       label_ar: "تقييمات حقيقية",          label_en: "Live reviews",  icon: "⭐" },
   { type: "faq",           label_ar: "أسئلة شائعة",             label_en: "FAQ",           icon: "❓" },
   { type: "gallery",       label_ar: "معرض صور",                label_en: "Gallery",       icon: "🖼️" },
   { type: "cta",           label_ar: "دعوة للإجراء",            label_en: "CTA",           icon: "🎯" },
