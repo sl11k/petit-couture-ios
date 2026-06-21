@@ -173,6 +173,7 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
       if (btn && btn.getAttribute("type") === "submit") {
         e.preventDefault();
         e.stopPropagation();
+      }
       // Track the clicked element as "selected" so the Style popover can act on it
       // even when it isn't an editable text leaf (sections, footer rows, headers).
       if (target && root && root.contains(target)) {
