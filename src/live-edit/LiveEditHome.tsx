@@ -24,7 +24,7 @@ import { SECTION_TYPES } from "@/page-builder/utils/pageDefaults";
 export function LiveEditCanvas({ fallback }: { fallback: React.ReactNode }) {
   const { pageId, stop } = useLiveEdit();
   const ed = usePageEditor(pageId ?? undefined);
-  const { lang, toggleLanguage } = useLanguage();
+  const { lang, toggle: toggleLanguage } = useLanguage();
   const ar = lang === "ar";
 
   // Warn on close if dirty
