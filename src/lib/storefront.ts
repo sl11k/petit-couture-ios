@@ -121,11 +121,12 @@ export async function fetchPopularPicks(activeOnly = true): Promise<PopularPick[
         .map((r: any) => {
           const p = productMap.get(r.product_id);
           if (!p) return null;
+          const firstImage = Array.isArray(p.images) ? p.images[0] : (p.images && typeof p.images === "object" ? Object.values(p.images)[0] : null);
           return {
             id: r.id,
             label_ar: p.name_ar ?? "",
             label_en: p.name_en ?? "",
-            image_url: p.image_url ?? p.main_image_url ?? "",
+            image_url: p.image_url ?? (typeof firstImage === "string" ? firstImage : (firstImage as any)?.url) ?? "",
             link_url: p.slug ? `/product/${p.slug}` : `/product/${r.product_id}`,
             sort_order: r.display_order,
             is_active: r.is_active,
