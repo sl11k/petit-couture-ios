@@ -24,6 +24,7 @@ import { VariantEditor, type VariantEntry } from "./VariantEditor";
 import { SizeSkuEditor, type SizeEntry } from "./SizeSkuEditor";
 import { AttributesEditor, type AttributeEntry } from "./AttributesEditor";
 import { FriendlyDataEditor } from "./FriendlyDataEditor";
+import { LinkPicker } from "@/page-builder/components/LinkPicker";
 import type { Bilingual, FormFieldDef } from "../types";
 import { cn } from "@/lib/utils";
 
