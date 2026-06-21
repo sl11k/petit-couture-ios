@@ -19,6 +19,7 @@ import { CustomCssEditor } from "./CustomCssEditor";
 import { AbVariantManager } from "./AbVariantManager";
 import { useInlineQuickEdit } from "./InlineQuickEdit";
 import { cn } from "@/lib/utils";
+import { SiteInlineEditor } from "./SiteInlineEditor";
 
 /**
  * Renders the page in live-edit mode. All text becomes inline editable
