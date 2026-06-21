@@ -126,58 +126,74 @@ function PagesList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-xl font-semibold">محرر الصفحات</h1>
-          <p className="text-sm text-muted-foreground">عدّل صفحات الموقع بصرياً وانشرها مباشرة.</p>
+          <h1 className="text-xl font-semibold">{ar ? "محرر الصفحات" : "Page editor"}</h1>
+          <p className="text-sm text-muted-foreground">
+            {ar
+              ? "عدّل الرئيسية، صفحة المنتج، بطاقة المنتج، صفحة الفئة، وصفحة الدفع — مباشرةً على الموقع."
+              : "Edit Home, Product, Product card, Category, and Checkout — live on the site."}
+          </p>
         </div>
-        <Button onClick={() => setNewOpen(true)}><Plus className="h-4 w-4 me-1" /> صفحة جديدة</Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={seedSystemPages}>
+            <Wand2 className="h-4 w-4 me-1" /> {ar ? "إضافة الصفحات الأساسية" : "Add system pages"}
+          </Button>
+          <Button onClick={() => setNewOpen(true)}><Plus className="h-4 w-4 me-1" /> {ar ? "صفحة جديدة" : "New page"}</Button>
+        </div>
       </div>
 
       <div className="rounded-lg border border-border bg-card overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-xs">
             <tr>
-              <th className="text-start p-3">العنوان</th>
-              <th className="text-start p-3">الرابط</th>
-              <th className="text-start p-3">النوع</th>
-              <th className="text-start p-3">الحالة</th>
-              <th className="text-start p-3">آخر تعديل</th>
-              <th className="text-end p-3">إجراءات</th>
+              <th className="text-start p-3">{ar ? "العنوان" : "Title"}</th>
+              <th className="text-start p-3">{ar ? "الرابط" : "Path"}</th>
+              <th className="text-start p-3">{ar ? "النوع" : "Type"}</th>
+              <th className="text-start p-3">{ar ? "الحالة" : "Status"}</th>
+              <th className="text-start p-3">{ar ? "آخر تعديل" : "Updated"}</th>
+              <th className="text-end p-3">{ar ? "إجراءات" : "Actions"}</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">جاري التحميل…</td></tr>
+              <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">{ar ? "جاري التحميل…" : "Loading…"}</td></tr>
             ) : rows.length === 0 ? (
-              <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">لا توجد صفحات.</td></tr>
-            ) : rows.map((r) => (
+              <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">{ar ? "لا توجد صفحات." : "No pages."}</td></tr>
+            ) : rows.map((r) => {
+              const live = livePathFor(r);
+              const sep = live.includes("?") ? "&" : "?";
+              const editHref = `${live}${sep}edit=1`;
+              return (
               <tr key={r.id} className="border-t border-border hover:bg-muted/30">
                 <td className="p-3 font-medium">{ar ? r.title_ar : r.title_en}</td>
-                <td className="p-3 text-muted-foreground"><code>/{r.slug === "home" ? "" : r.slug}</code></td>
+                <td className="p-3 text-muted-foreground"><code>{live}</code></td>
                 <td className="p-3 text-xs">{r.type}</td>
                 <td className="p-3">
                   <span className={`inline-block rounded-full px-2 py-0.5 text-xs ${r.status === "published" ? "bg-green-500/10 text-green-700 dark:text-green-400" : "bg-amber-500/10 text-amber-700 dark:text-amber-400"}`}>
-                    {r.status === "published" ? "منشورة" : "مسودة"}
+                    {r.status === "published" ? (ar ? "منشورة" : "Published") : (ar ? "مسودة" : "Draft")}
                   </span>
                 </td>
                 <td className="p-3 text-xs text-muted-foreground">{new Date(r.updated_at).toLocaleString()}</td>
                 <td className="p-3">
                   <div className="flex items-center justify-end gap-1">
-                    <Button size="sm" variant="ghost" asChild>
-                      <Link to="/admin/cms-pages/$id" params={{ id: r.id }}><Edit className="h-3.5 w-3.5" /></Link>
+                    <Button size="sm" variant="default" asChild title={ar ? "تعديل مباشر على الموقع" : "Edit on site"}>
+                      <a href={editHref} target="_blank" rel="noreferrer"><Edit className="h-3.5 w-3.5 me-1" />{ar ? "تعديل مباشر" : "Edit live"}</a>
                     </Button>
-                    <Button size="sm" variant="ghost" asChild>
-                      <a href={r.slug === "home" ? "/" : `/page/${r.slug}`} target="_blank" rel="noreferrer"><ExternalLink className="h-3.5 w-3.5" /></a>
+                    <Button size="sm" variant="ghost" asChild title={ar ? "محرر متقدم" : "Advanced editor"}>
+                      <Link to="/admin/cms-pages/$id" params={{ id: r.id }}><Wand2 className="h-3.5 w-3.5" /></Link>
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => duplicatePage(r)}><Copy className="h-3.5 w-3.5" /></Button>
+                    <Button size="sm" variant="ghost" asChild title={ar ? "فتح في تبويب" : "Open"}>
+                      <a href={live} target="_blank" rel="noreferrer"><ExternalLink className="h-3.5 w-3.5" /></a>
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => duplicatePage(r)} title={ar ? "نسخ" : "Duplicate"}><Copy className="h-3.5 w-3.5" /></Button>
                     {!r.is_system && (
-                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deletePage(r)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deletePage(r)} title={ar ? "حذف" : "Delete"}><Trash2 className="h-3.5 w-3.5" /></Button>
                     )}
                   </div>
                 </td>
               </tr>
-            ))}
+            );})}
           </tbody>
         </table>
       </div>
