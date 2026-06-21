@@ -33,24 +33,27 @@ export function EditPageButton({ slug = "home" }: { slug?: string }) {
     return () => { cancelled = true; };
   }, [isAdmin, slug]);
 
-  if (loading || !isAdmin) return null;
-  // Hide the floating button while editing — the toolbar handles exit.
-  if (live.enabled) return null;
-
   const start = async () => {
     let id = pageId;
     if (!id) {
-      // auto-create a draft page if missing (only for home)
+      const titleMap: Record<string, { ar: string; en: string; type: string }> = {
+        home: { ar: "الصفحة الرئيسية", en: "Home", type: "home" },
+        product: { ar: "صفحة المنتج", en: "Product page", type: "product" },
+        product_card: { ar: "بطاقة المنتج", en: "Product card", type: "product_card" },
+        checkout: { ar: "صفحة الدفع", en: "Checkout", type: "checkout" },
+        category: { ar: "صفحة الفئة", en: "Category page", type: "category" },
+      };
+      const meta = titleMap[slug] ?? { ar: slug, en: slug, type: "custom" };
       const { data, error } = await supabase
         .from("cms_pages")
         .insert({
           slug,
-          title_ar: slug === "home" ? "الصفحة الرئيسية" : slug,
-          title_en: slug === "home" ? "Home" : slug,
-          type: slug === "home" ? "home" : "custom",
+          title_ar: meta.ar,
+          title_en: meta.en,
+          type: meta.type,
           status: "draft",
           draft_content: { sections: [] } as any,
-          is_system: slug === "home",
+          is_system: ["home", "product", "product_card", "checkout", "category"].includes(slug),
         })
         .select("id")
         .maybeSingle();
@@ -60,6 +63,20 @@ export function EditPageButton({ slug = "home" }: { slug?: string }) {
     }
     if (id) live.start(slug, id);
   };
+
+  // Auto-start when URL contains ?edit=1 (admin-only)
+  useEffect(() => {
+    if (!isAdmin || live.enabled) return;
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("edit") === "1") {
+      const t = setTimeout(() => { start(); }, 200);
+      return () => clearTimeout(t);
+    }
+  }, [isAdmin, live.enabled, pageId]);
+
+  if (loading || !isAdmin) return null;
+  if (live.enabled) return null;
 
   return (
     <button
