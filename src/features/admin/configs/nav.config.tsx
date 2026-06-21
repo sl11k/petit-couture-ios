@@ -166,7 +166,16 @@ export const seasonPicksConfig: AdminPageConfig = {
   table: "season_picks",
   orderBy: { column: "display_order", ascending: true },
   columns: [
-    { key: "product_id", label: { ar: "المنتج", en: "Product" }, render: (v) => <ProductNameCell productId={v} /> },
+    { key: "product_id", label: { ar: "البطاقة", en: "Card" }, render: (v, row: any) => {
+      if (v) return <ProductNameCell productId={v} />;
+      const label = row?.label_ar || row?.label_en || row?.link_url || "—";
+      return (
+        <span className="inline-flex items-center gap-2">
+          {row?.image_url && <img src={row.image_url} alt="" className="h-7 w-7 shrink-0 rounded object-cover" loading="lazy" />}
+          <span className="truncate">{label}</span>
+        </span>
+      );
+    } },
     { key: "title_ar", label: { ar: "العنوان", en: "Heading" }, hideOnMobile: true },
     { key: "badge_ar", label: { ar: "الشارة", en: "Badge" }, type: "badge", hideOnMobile: true },
     { key: "display_order", label: { ar: "#", en: "#" }, type: "number", width: "w-16" },
