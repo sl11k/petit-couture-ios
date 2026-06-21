@@ -81,15 +81,13 @@ export async function fetchFeaturedCategories(activeOnly = true): Promise<Featur
     if (Array.isArray(data) && data.length) {
       return data.map((r: any) => ({
         id: r.id,
-        title: r.title_ar,
-        title_ar: r.title_ar,
-        title_en: r.title_en,
+        label_ar: r.title_ar,
+        label_en: r.title_en,
         image_url: r.image_url,
-        category_id: r.category_id,
-        href: r.href || (r.category_id ? `/category/${r.category_id}` : "/"),
+        link_url: r.href || (r.category_id ? `/category/${r.category_id}` : "/"),
         sort_order: r.display_order,
         is_active: r.is_active,
-      })) as unknown as FeaturedCategory[];
+      })) as FeaturedCategory[];
     }
   } catch (e) {
     console.warn("[storefront] shop_by_category_items unavailable, falling back", e);
