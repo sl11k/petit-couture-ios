@@ -61,10 +61,8 @@ function Index() {
 
   const live = useLiveEdit();
   useApplyOverrides("/");
-  if (live.enabled) {
-    return <LiveEditCanvas fallback={content ? <PageRenderer content={content} /> : <HomeScreen />} />;
-  }
-  if (!loaded) return (<><div data-live-root><HomeScreen /></div><EditPageButton slug="home" /></>);
-  if (content) return (<><div data-live-root><PageRenderer content={content} /></div><EditPageButton slug="home" /></>);
-  return (<><div data-live-root><HomeScreen /></div><EditPageButton slug="home" /></>);
+  // Always render the ORIGINAL HomeScreen design — edits happen inline via overrides.
+  const original = <div data-live-root><HomeScreen /></div>;
+  if (live.enabled) return <LiveEditCanvas fallback={original} />;
+  return (<>{original}<EditPageButton slug="home" /></>);
 }
