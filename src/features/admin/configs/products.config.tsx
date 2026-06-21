@@ -79,8 +79,20 @@ productsConfig.form = [
   { key: "warehouse_stock", label: { ar: "توزيع المخزون على المستودعات", en: "Stock per warehouse" }, type: "warehouseStock", fullWidth: true, helpText: { ar: "اختر المستودعات التي يتوفر فيها المنتج وحدد الكمية لكل مستودع", en: "Pick the warehouses that carry this product and set the quantity for each" } },
   { key: "weight", label: { ar: "الوزن (كجم)", en: "Weight (kg)" }, type: "number", min: 0, step: 0.01 },
 
-  { key: "image_url", label: { ar: "الصورة الرئيسية", en: "Main image" }, type: "image", bucket: "product-media", folder: "main", helpText: { ar: "ارفع صورة من جهازك أو الصق رابطاً", en: "Upload from your device or paste a URL" } },
-  { key: "images", label: { ar: "معرض الصور", en: "Image gallery" }, type: "gallery", bucket: "product-media", folder: "gallery", maxItems: 20 },
+  {
+    key: "images",
+    label: { ar: "صور المنتج (اسحب لإعادة الترتيب — الأولى هي الرئيسية)", en: "Product images (drag to reorder — first is main)" },
+    type: "gallery",
+    bucket: "product-media",
+    folder: "gallery",
+    maxItems: 20,
+    fullWidth: true,
+    syncMainTo: "image_url",
+    helpText: {
+      ar: "ارفع كل صور المنتج هنا. أول صورة هي الصورة الرئيسية اللي تظهر في كرت المنتج وأعلى الصفحة، وبقية الصور تظهر في معرض المنتج. تقدر تسحب لإعادة الترتيب.",
+      en: "Upload all product images here. The first image becomes the main shown on the card and gallery cover; reorder by drag.",
+    },
+  },
   { key: "video_url", label: { ar: "الفيديو الرئيسي", en: "Main video" }, type: "video", bucket: "product-media", folder: "videos" },
   { key: "videos", label: { ar: "معرض الفيديوهات", en: "Video gallery" }, type: "videoGallery", bucket: "product-media", folder: "videos", maxItems: 10 },
   { key: "image_alt", label: { ar: "وصف الصورة (alt)", en: "Image alt" }, type: "text" },

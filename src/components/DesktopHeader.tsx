@@ -4,9 +4,9 @@ import { Heart, Search, ShoppingBag, User, ChevronDown } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useBag } from "@/state/BagContext";
-import { categories } from "@/data/categories";
+
 import { supabase } from "@/integrations/supabase/client";
-import { useDbCategories } from "@/hooks/useDbCategories";
+import { useDbCategoryTree } from "@/hooks/useDbCategories";
 import { BrandLogo } from "@/components/Logo";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { AnnouncementBar } from "@/components/AnnouncementBar";
@@ -25,8 +25,7 @@ export function DesktopHeader() {
   const wishCount = mounted ? wishlist.count : 0;
   const bagCount = mounted ? bag.count : 0;
 
-  const featured = categories.slice(0, 7);
-  const dbCats = useDbCategories();
+  const tree = useDbCategoryTree();
   const [navItems, setNavItems] = useState<Array<{slug:string; name_ar:string; name_en:string; href:string}>>([]);
   useEffect(() => {
     (async () => {
@@ -48,11 +47,6 @@ export function DesktopHeader() {
       } catch (e) { console.error("[DesktopHeader] nav fetch failed", e); }
     })();
   }, []);
-  const dynamicFeatured = navItems.length > 0
-    ? navItems
-    : dbCats.length > 0
-      ? dbCats.slice(0, 8).map((c) => ({ slug: c.slug, name_ar: c.name_ar, name_en: c.name_en, href: `/category/${c.slug}` }))
-      : featured.map((c) => ({ slug: c.slug, name_ar: c.name, name_en: c.name, href: `/category/${c.slug}` }));
 
   const isActive = (path: string) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
@@ -175,17 +169,42 @@ export function DesktopHeader() {
               label: isRTL ? g.ar : g.en,
             }))}
           />
-          {/* Categories — hover dropdown of all DB categories */}
-          <HoverDropdown
-            label={isRTL ? "الفئات" : "CATEGORIES"}
-            items={dbCats.map((c) => ({
-              slug: c.slug,
-              label: isRTL ? c.name_ar : c.name_en,
-            }))}
-            columns={dbCats.length > 8 ? 2 : 1}
-          />
 
-          {dynamicFeatured.slice(0, 6).map((c) => {
+          {/* Custom header_nav_items override, if any */}
+          {navItems.map((c) => {
+            const active = location.pathname === c.href;
+            return (
+              <Link
+                key={c.href}
+                to={c.href as any}
+                className={[
+                  "px-4 h-9 inline-flex items-center rounded-xl text-[11.5px] tracking-luxury transition",
+                  active ? "bg-foreground text-background" : "text-foreground/70 hover:text-foreground hover:bg-cream-warm",
+                ].join(" ")}
+              >
+                {lang === "en" ? c.name_en.toUpperCase() : c.name_ar}
+              </Link>
+            );
+          })}
+
+          {/* Top-level DB categories. If a category has children, render as dropdown. */}
+          {navItems.length === 0 && tree.slice(0, 8).map((c) => {
+            const label = lang === "en"
+              ? (t.categories[c.slug] ?? c.name_en).toUpperCase()
+              : (t.categories[c.slug] ?? c.name_ar);
+            if (c.children.length > 0) {
+              return (
+                <HoverDropdown
+                  key={c.slug}
+                  label={label}
+                  parentHref={`/category/${c.slug}`}
+                  items={c.children.map((ch) => ({
+                    slug: ch.slug,
+                    label: isRTL ? ch.name_ar : ch.name_en,
+                  }))}
+                />
+              );
+            }
             const active = location.pathname === `/category/${c.slug}`;
             return (
               <Link
@@ -194,14 +213,10 @@ export function DesktopHeader() {
                 params={{ slug: c.slug }}
                 className={[
                   "px-4 h-9 inline-flex items-center rounded-xl text-[11.5px] tracking-luxury transition",
-                  active
-                    ? "bg-foreground text-background"
-                    : "text-foreground/70 hover:text-foreground hover:bg-cream-warm",
+                  active ? "bg-foreground text-background" : "text-foreground/70 hover:text-foreground hover:bg-cream-warm",
                 ].join(" ")}
               >
-                {lang === "en"
-                  ? (t.categories[c.slug] ?? c.name_en).toUpperCase()
-                  : (t.categories[c.slug] ?? c.name_ar)}
+                {label}
               </Link>
             );
           })}
@@ -219,10 +234,13 @@ function HoverDropdown({
   label,
   items,
   columns = 1,
+  parentHref,
 }: {
   label: string;
   items: Array<{ slug: string; label: string }>;
   columns?: 1 | 2;
+  /** If provided, the trigger label itself navigates to this URL (the parent category). */
+  parentHref?: string;
 }) {
   const [open, setOpen] = useState(false);
   if (!items || items.length === 0) {
@@ -238,15 +256,27 @@ function HoverDropdown({
         if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false);
       }}
     >
-      <button
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        className="px-4 h-9 inline-flex items-center gap-1 rounded-xl text-[11.5px] tracking-luxury text-foreground/70 hover:text-foreground hover:bg-cream-warm transition"
-      >
-        {label}
-        <ChevronDown className="h-3 w-3 opacity-60" />
-      </button>
+      {parentHref ? (
+        <Link
+          to={parentHref as any}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          className="px-4 h-9 inline-flex items-center gap-1 rounded-xl text-[11.5px] tracking-luxury text-foreground/70 hover:text-foreground hover:bg-cream-warm transition"
+        >
+          {label}
+          <ChevronDown className="h-3 w-3 opacity-60" />
+        </Link>
+      ) : (
+        <button
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          className="px-4 h-9 inline-flex items-center gap-1 rounded-xl text-[11.5px] tracking-luxury text-foreground/70 hover:text-foreground hover:bg-cream-warm transition"
+        >
+          {label}
+          <ChevronDown className="h-3 w-3 opacity-60" />
+        </button>
+      )}
       {open && (
         <div
           role="menu"
