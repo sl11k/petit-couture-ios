@@ -51,12 +51,19 @@ export function usePageEditor(pageId: string | undefined) {
       }
       const p = data as unknown as CmsPage;
       setPage(p);
-      const initial = isPageContent(p.draft_content) ? p.draft_content : EMPTY_PAGE_CONTENT;
+      let initial = isPageContent(p.draft_content) ? p.draft_content : EMPTY_PAGE_CONTENT;
+      // If both draft and published are empty, seed with starter design so the canvas isn't blank.
+      const pubEmpty = !isPageContent(p.published_content) || (p.published_content?.sections?.length ?? 0) === 0;
+      if (initial.sections.length === 0 && pubEmpty) {
+        initial = { sections: getDefaultSectionsForPage(p.type) };
+        setDirty(true); // mark dirty so it saves; user can undo to revert to empty
+      } else {
+        setDirty(false);
+      }
       setContent(initial);
       historyRef.current = [];
       futureRef.current = [];
       setHistVer((v) => v + 1);
-      setDirty(false);
       setLoading(false);
     })();
     return () => { cancelled = true; };
