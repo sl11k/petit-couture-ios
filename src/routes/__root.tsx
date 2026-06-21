@@ -181,6 +181,7 @@ function StorefrontShell({
   isAdmin: boolean;
 }) {
   const { lang } = useLanguage();
+  useCustomCss();
   // Admin pages have their own AdminTranslateScope inside AdminShell.
   // Wrap storefront only — translates Arabic → English (or vice versa) at runtime
   // using the bulk dictionary in src/i18n/adminDict.ts.
