@@ -35,6 +35,7 @@ type DbProduct = {
   stock: number | null;
   sales_count: number | null;
   created_at: string;
+  sizes: unknown;
 };
 
 async function loadCategory(slug: string): Promise<{
