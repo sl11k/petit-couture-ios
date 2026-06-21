@@ -84,11 +84,12 @@ function mergeRowOntoBase(slug: string, row: DbRow | null, lang: "ar" | "en"): M
     base.description;
 
   const imgs = arr<string>(row.images).filter(Boolean);
-  const images = imgs.length
-    ? imgs
-    : row.image_url
-      ? [row.image_url]
-      : base.images;
+  // Combine main image_url with images[]; dedupe to avoid showing the same picture twice.
+  const combined = [
+    ...(row.image_url ? [row.image_url] : []),
+    ...imgs,
+  ].filter((v, i, a) => v && a.indexOf(v) === i);
+  const images = combined.length ? combined : base.images;
 
   const sizes = sortByAge(arr<string>(row.sizes).filter(Boolean), (s: string) => s);
   const colorsRaw = arr<{ name?: string; hex?: string; image?: string } | string>(row.colors);
