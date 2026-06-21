@@ -46,6 +46,20 @@ type MergedProduct = StaticProduct & {
 
 function arr<T = unknown>(v: unknown): T[] {
   if (Array.isArray(v)) return v as T[];
+  if (typeof v === "string") {
+    const s = v.trim();
+    if (!s) return [];
+    if (s.startsWith("[") || s.startsWith("{")) {
+      try {
+        const p = JSON.parse(s);
+        if (Array.isArray(p)) return p as T[];
+        if (p && typeof p === "object") return [p as T];
+      } catch { /* ignore */ }
+    }
+    if (s.includes(",")) return s.split(",").map((x) => x.trim()).filter(Boolean) as unknown as T[];
+    return [s as unknown as T];
+  }
+  if (v && typeof v === "object") return [v as T];
   return [];
 }
 
