@@ -514,6 +514,8 @@ function ProductDetails() {
         </div>
       </div>
     );
+  }
+
 
   return (
     <div className="min-h-screen w-full bg-cream flex justify-center" dir={ar ? "rtl" : "ltr"}>
