@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { EditPageButton } from "@/components/EditPageButton";
 import { useLiveEdit } from "@/live-edit/LiveEditContext";
 import { LiveEditCanvas } from "@/live-edit/LiveEditHome";
+import { pickAbVariant } from "@/live-edit/AbVariantManager";
 import {
   buildMeta,
   organizationJsonLd,
