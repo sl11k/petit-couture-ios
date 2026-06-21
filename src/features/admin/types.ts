@@ -23,6 +23,7 @@ export type FormFieldType =
   | "image" | "video" | "gallery" | "url" | "email" | "tel" | "color" | "json"
   | "videoGallery" | "warehouseStock"
   | "lookup"
+  | "link"
   | "productVariants"
   | "productSizes"
   | "productAttributes";
