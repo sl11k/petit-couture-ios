@@ -86,7 +86,6 @@ import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
 import { Route as AdminIntegrationsRouteImport } from './routes/admin.integrations'
 import { Route as AdminIncompleteRouteImport } from './routes/admin.incomplete'
 import { Route as AdminIncomingWebhooksRouteImport } from './routes/admin.incoming-webhooks'
-import { Route as AdminHomeBuilderRouteImport } from './routes/admin.home-builder'
 import { Route as AdminHelpRouteImport } from './routes/admin.help'
 import { Route as AdminHeaderNavRouteImport } from './routes/admin.header-nav'
 import { Route as AdminFeaturedCategoriesRouteImport } from './routes/admin.featured-categories'
@@ -534,11 +533,6 @@ const AdminIncomingWebhooksRoute = AdminIncomingWebhooksRouteImport.update({
   path: '/incoming-webhooks',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminHomeBuilderRoute = AdminHomeBuilderRouteImport.update({
-  id: '/home-builder',
-  path: '/home-builder',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminHelpRoute = AdminHelpRouteImport.update({
   id: '/help',
   path: '/help',
@@ -873,7 +867,6 @@ export interface FileRoutesByFullPath {
   '/admin/featured-categories': typeof AdminFeaturedCategoriesRoute
   '/admin/header-nav': typeof AdminHeaderNavRoute
   '/admin/help': typeof AdminHelpRoute
-  '/admin/home-builder': typeof AdminHomeBuilderRoute
   '/admin/incoming-webhooks': typeof AdminIncomingWebhooksRoute
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRouteWithChildren
@@ -1005,7 +998,6 @@ export interface FileRoutesByTo {
   '/admin/featured-categories': typeof AdminFeaturedCategoriesRoute
   '/admin/header-nav': typeof AdminHeaderNavRoute
   '/admin/help': typeof AdminHelpRoute
-  '/admin/home-builder': typeof AdminHomeBuilderRoute
   '/admin/incoming-webhooks': typeof AdminIncomingWebhooksRoute
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/inventory': typeof AdminInventoryRoute
@@ -1137,7 +1129,6 @@ export interface FileRoutesById {
   '/admin/featured-categories': typeof AdminFeaturedCategoriesRoute
   '/admin/header-nav': typeof AdminHeaderNavRoute
   '/admin/help': typeof AdminHelpRoute
-  '/admin/home-builder': typeof AdminHomeBuilderRoute
   '/admin/incoming-webhooks': typeof AdminIncomingWebhooksRoute
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRouteWithChildren
@@ -1277,7 +1268,6 @@ export interface FileRouteTypes {
     | '/admin/featured-categories'
     | '/admin/header-nav'
     | '/admin/help'
-    | '/admin/home-builder'
     | '/admin/incoming-webhooks'
     | '/admin/incomplete'
     | '/admin/integrations'
@@ -1409,7 +1399,6 @@ export interface FileRouteTypes {
     | '/admin/featured-categories'
     | '/admin/header-nav'
     | '/admin/help'
-    | '/admin/home-builder'
     | '/admin/incoming-webhooks'
     | '/admin/incomplete'
     | '/admin/inventory'
@@ -1540,7 +1529,6 @@ export interface FileRouteTypes {
     | '/admin/featured-categories'
     | '/admin/header-nav'
     | '/admin/help'
-    | '/admin/home-builder'
     | '/admin/incoming-webhooks'
     | '/admin/incomplete'
     | '/admin/integrations'
@@ -2220,13 +2208,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIncomingWebhooksRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/home-builder': {
-      id: '/admin/home-builder'
-      path: '/home-builder'
-      fullPath: '/admin/home-builder'
-      preLoaderRoute: typeof AdminHomeBuilderRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/help': {
       id: '/admin/help'
       path: '/help'
@@ -2860,7 +2841,6 @@ interface AdminRouteChildren {
   AdminFeaturedCategoriesRoute: typeof AdminFeaturedCategoriesRoute
   AdminHeaderNavRoute: typeof AdminHeaderNavRoute
   AdminHelpRoute: typeof AdminHelpRoute
-  AdminHomeBuilderRoute: typeof AdminHomeBuilderRoute
   AdminIncomingWebhooksRoute: typeof AdminIncomingWebhooksRoute
   AdminIncompleteRoute: typeof AdminIncompleteRoute
   AdminIntegrationsRoute: typeof AdminIntegrationsRouteWithChildren
@@ -2932,7 +2912,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminFeaturedCategoriesRoute: AdminFeaturedCategoriesRoute,
   AdminHeaderNavRoute: AdminHeaderNavRoute,
   AdminHelpRoute: AdminHelpRoute,
-  AdminHomeBuilderRoute: AdminHomeBuilderRoute,
   AdminIncomingWebhooksRoute: AdminIncomingWebhooksRoute,
   AdminIncompleteRoute: AdminIncompleteRoute,
   AdminIntegrationsRoute: AdminIntegrationsRouteWithChildren,
@@ -3040,12 +3019,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
