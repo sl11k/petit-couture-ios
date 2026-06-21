@@ -76,6 +76,30 @@ export function createDefaultSection(type: SectionType): Section {
         alignment: "center",
         buttons: [{ label_ar: "ابدأ", label_en: "Start", url: "/", variant: "primary" }],
       } };
+    case "button":
+      return { id, type: "button", content: {
+        button: { label_ar: "اضغط هنا", label_en: "Click here", url: "/", variant: "primary" },
+        alignment: "center", size: "md", shape: "rounded", fullWidth: false,
+      } };
+    case "banner":
+      return { id, type: "banner", content: {
+        title_ar: "عنوان البنر", title_en: "Banner title",
+        subtitle_ar: "نص فرعي", subtitle_en: "Subtitle",
+        button: { label_ar: "اعرف المزيد", label_en: "Learn more", url: "/", variant: "primary" },
+        height: "md", overlay: 0.35, alignment: "center", shape: "rounded", textColor: "#ffffff",
+        image: { url: "", alt: "" },
+      } };
+    case "product_grid":
+      return { id, type: "product_grid", content: {
+        title_ar: "منتجاتنا", title_en: "Our products",
+        source: "newest", limit: 8, columns: 4, cardShape: "rounded", showPrice: true,
+      } };
+    case "divider":
+      return { id, type: "divider", content: { style: "solid", color: "#e5e7eb", thickness: 1, width: 100 } };
+    case "spacer":
+      return { id, type: "spacer", content: { height: 40 } };
+    case "html":
+      return { id, type: "html", content: { html: "<div style=\"padding:16px;text-align:center;\">HTML مخصص — عدّل من اللوحة اليمنى</div>" } };
     default:
       throw new Error(`Unknown section type: ${type}`);
   }
