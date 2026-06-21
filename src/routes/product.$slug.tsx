@@ -100,7 +100,7 @@ export const Route = createFileRoute("/product/$slug")({
       jsonLd,
     });
   },
-  component: ProductDetails,
+  component: () => (<><ProductDetails /><EditPageButton slug="product" /></>),
 });
 
 type TabKey = "description" | "specs" | "care" | "shipping";
