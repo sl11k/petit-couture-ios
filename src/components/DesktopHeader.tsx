@@ -6,7 +6,7 @@ import { useWishlist } from "@/state/WishlistContext";
 import { useBag } from "@/state/BagContext";
 import { categories } from "@/data/categories";
 import { supabase } from "@/integrations/supabase/client";
-import { useDbCategories } from "@/hooks/useDbCategories";
+import { useDbCategories, useDbCategoryTree } from "@/hooks/useDbCategories";
 import { BrandLogo } from "@/components/Logo";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { AnnouncementBar } from "@/components/AnnouncementBar";
