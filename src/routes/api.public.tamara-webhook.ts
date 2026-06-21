@@ -194,9 +194,21 @@ export const Route = createFileRoute("/api/public/tamara-webhook")({
             updated_at: new Date().toISOString(),
           };
           if (newOrderStatus) update.status = newOrderStatus;
-          await (supabaseAdmin.from("orders") as any)
+          const { data: updated } = await (supabaseAdmin.from("orders") as any)
             .update(update)
-            .eq("order_number", orderNumber);
+            .eq("order_number", orderNumber)
+            .select("id, user_id")
+            .maybeSingle();
+
+          if (newPaymentStatus === "paid" && updated?.id) {
+            try {
+              const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
+              const res = await createOtoShipmentForOrder(updated.id, updated.user_id ?? null);
+              if (!res.ok) console.error("[tamara-webhook] OTO auto-create failed:", res.error);
+            } catch (e: any) {
+              console.error("[tamara-webhook] OTO auto-create threw:", e?.message || e);
+            }
+          }
         }
 
         return Response.json({ received: true, status: newPaymentStatus });

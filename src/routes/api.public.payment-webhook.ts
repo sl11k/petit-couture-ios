@@ -183,7 +183,7 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
 
           // Update order status
           if (orderId && (status === "captured" || status === "paid")) {
-            await supabaseAdmin
+            const { data: updated } = await supabaseAdmin
               .from("orders")
               .update({
                 payment_status: "paid",
@@ -192,7 +192,20 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
                 last_transaction_id: txnId,
                 captured_amount: payload.amount,
               })
-              .eq("id", orderId);
+              .eq("id", orderId)
+              .select("id, user_id")
+              .maybeSingle();
+
+            // Trigger OTO shipment now that payment is confirmed (idempotent).
+            if (updated?.id) {
+              try {
+                const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
+                const res = await createOtoShipmentForOrder(updated.id, updated.user_id ?? null);
+                if (!res.ok) console.error("[payment-webhook] OTO auto-create failed:", res.error);
+              } catch (e: any) {
+                console.error("[payment-webhook] OTO auto-create threw:", e?.message || e);
+              }
+            }
           } else if (orderId && status === "failed") {
             await supabaseAdmin
               .from("orders")
