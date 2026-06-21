@@ -219,9 +219,9 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
       </div>
 
       {/* Floating toolbar */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[80] flex items-center gap-1 rounded-full border border-border bg-background/95 backdrop-blur px-3 py-2 shadow-2xl">
+      <div data-lpe-ui className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[80] flex items-center gap-1 rounded-full border border-border bg-background/95 backdrop-blur px-3 py-2 shadow-2xl">
         <span className="text-[11px] text-muted-foreground me-2">
-          تحرير مباشر {dirtyCount > 0 ? `● ${dirtyCount} تغيير` : ""}
+          تحرير مباشر (هيدر · محتوى · فوتر) {dirtyCount > 0 ? `● ${dirtyCount} تغيير` : ""}
         </span>
         <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="رابط للنص المحدد" onClick={editLink}>
           <LinkIcon className="h-4 w-4" />
