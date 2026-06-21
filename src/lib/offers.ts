@@ -181,7 +181,7 @@ export async function applyCouponCode(code: string, ctx: ApplyContext): Promise<
 export async function fetchAutoOffers(ctx: ApplyContext): Promise<ApplyResult[]> {
   const { data } = await supabase
     .from("coupons")
-    .select("*")
+    .select(COUPON_PUBLIC_COLS)
     .eq("is_active", true)
     .eq("auto_apply", true)
     .order("priority", { ascending: true });
