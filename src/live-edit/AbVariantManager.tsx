@@ -156,6 +156,7 @@ export async function pickAbVariant(pageSlug: string, fallback: PageContent): Pr
       try { localStorage.setItem(key, pick); } catch { /* ignore */ }
     }
     // fire-and-forget view counter
+    const col = pick === "a" ? "views_a" : "views_b";
     void supabase
       .from("ab_tests")
       .update({ [col]: ((data as any)[col] ?? 0) + 1 } as any)
