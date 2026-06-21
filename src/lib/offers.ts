@@ -41,10 +41,13 @@ export type ApplyResult = {
   coupon?: { id: string; code: string; name?: string | null };
 };
 
+const COUPON_PUBLIC_COLS =
+  "id, code, description, discount_type, discount_value, min_subtotal, max_uses, used_count, starts_at, expires_at, is_active, created_at, updated_at, name, offer_type, bxgy_config, bundle_config, per_customer_limit, first_order_only, allowed_cities, allowed_payment_methods, allowed_shipping_zones, included_product_ids, excluded_product_ids, included_category_ids, no_combine, auto_apply, priority";
+
 export async function fetchActiveCoupon(code: string) {
   const { data, error } = await supabase
     .from("coupons")
-    .select("*")
+    .select(COUPON_PUBLIC_COLS)
     .eq("code", code.toUpperCase())
     .eq("is_active", true)
     .maybeSingle();
@@ -178,7 +181,7 @@ export async function applyCouponCode(code: string, ctx: ApplyContext): Promise<
 export async function fetchAutoOffers(ctx: ApplyContext): Promise<ApplyResult[]> {
   const { data } = await supabase
     .from("coupons")
-    .select("*")
+    .select(COUPON_PUBLIC_COLS)
     .eq("is_active", true)
     .eq("auto_apply", true)
     .order("priority", { ascending: true });
