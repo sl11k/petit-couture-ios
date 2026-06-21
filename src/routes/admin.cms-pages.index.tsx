@@ -62,6 +62,28 @@ function PagesList() {
 
   useEffect(() => { load(); }, []);
 
+  // Ensure all built-in system pages exist as editable rows.
+  const seedSystemPages = async () => {
+    const { data: existing } = await supabase.from("cms_pages").select("slug").in("slug", SYSTEM_PAGES.map((p) => p.slug));
+    const existingSlugs = new Set(((existing as { slug: string }[]) ?? []).map((r) => r.slug));
+    const missing = SYSTEM_PAGES.filter((p) => !existingSlugs.has(p.slug));
+    if (missing.length === 0) { toast.info(ar ? "الصفحات الأساسية موجودة" : "System pages already exist"); return; }
+    const { error } = await supabase.from("cms_pages").insert(
+      missing.map((p) => ({
+        slug: p.slug,
+        title_ar: p.title_ar,
+        title_en: p.title_en,
+        type: p.type,
+        status: "draft",
+        is_system: true,
+        draft_content: { sections: [] } as any,
+      })),
+    );
+    if (error) { toast.error(error.message); return; }
+    toast.success(ar ? `تمت إضافة ${missing.length} صفحة` : `Added ${missing.length} pages`);
+    load();
+  };
+
   const createPage = async () => {
     if (!newTitle.trim() || !newSlug.trim()) { toast.error("العنوان والرابط مطلوبان"); return; }
     const slug = newSlug.toLowerCase().replace(/[^a-z0-9-]/g, "-");
