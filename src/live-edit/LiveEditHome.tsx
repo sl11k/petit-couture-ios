@@ -26,10 +26,13 @@ import { cn } from "@/lib/utils";
  * admin undo/redo, switch language, save draft, publish, or exit.
  */
 export function LiveEditCanvas({ fallback }: { fallback: React.ReactNode }) {
-  const { pageId, stop } = useLiveEdit();
+  const { pageId, slug, stop } = useLiveEdit();
   const ed = usePageEditor(pageId ?? undefined);
   const { lang, toggle: toggleLanguage } = useLanguage();
   const ar = lang === "ar";
+  const qe = useInlineQuickEdit();
+  const [cssOpen, setCssOpen] = useState(false);
+  const [abOpen, setAbOpen] = useState(false);
 
   // Warn on close if dirty
   useEffect(() => {
