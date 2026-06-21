@@ -69,6 +69,8 @@ export type FormFieldDef = {
   folder?: string;
   maxItems?: number;
   lookup?: LookupConfig;
+  /** For gallery fields: also write the first item's URL to this sibling column on save. */
+  syncMainTo?: string;
 };
 
 export type RowAction<T = any> = {
