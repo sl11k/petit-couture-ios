@@ -142,7 +142,7 @@ function PageEditor() {
   const deviceWidth = device === "desktop" ? "100%" : device === "tablet" ? "768px" : "390px";
 
   return (
-    <div className="fixed inset-0 z-30 flex flex-col bg-background" dir={ar ? "rtl" : "ltr"}>
+    <div className="fixed inset-0 z-[70] flex flex-col bg-background" dir={ar ? "rtl" : "ltr"}>
       {/* Top bar */}
       <header className="flex h-12 items-center justify-between border-b border-border bg-card px-3 gap-2">
         <div className="flex items-center gap-2 min-w-0">
