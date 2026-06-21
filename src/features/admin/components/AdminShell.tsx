@@ -3,10 +3,12 @@ import { useAuth } from "@/state/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Menu, LogOut, Globe, Sparkles } from "lucide-react";
+import { Menu, LogOut, Globe, Sparkles, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminSidebar } from "../sidebar/AdminSidebar";
 import { AdminTour, hasCompletedAdminTour } from "../tour/AdminTour";
+
+const COLLAPSE_KEY = "admin:sidebar:collapsed";
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const { user, ready } = useAuth();
@@ -15,7 +17,17 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const ar = lang === "ar";
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(COLLAPSE_KEY) === "1";
+  });
   const [tourOpen, setTourOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(COLLAPSE_KEY, collapsed ? "1" : "0");
+    }
+  }, [collapsed]);
 
   // Auto-start the tour on first admin visit.
   useEffect(() => {
