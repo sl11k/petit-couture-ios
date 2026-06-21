@@ -14,7 +14,7 @@ import { PageRenderer } from "@/page-builder/components/PageRenderer";
 import { SectionEditor } from "@/page-builder/components/SectionEditor";
 import { PageSettingsPanel } from "@/page-builder/components/PageSettingsPanel";
 import { SECTION_TYPES, createDefaultSection } from "@/page-builder/utils/pageDefaults";
-import { DndContext, PointerSensor, useSensor, useSensors, closestCenter, type DragEndEvent } from "@dnd-kit/core";
+import { DndContext, PointerSensor, useSensor, useSensors, closestCenter, useDraggable, useDroppable, type DragEndEvent, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Section } from "@/page-builder/schemas/pageSchema";
