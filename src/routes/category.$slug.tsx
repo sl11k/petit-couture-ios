@@ -1,4 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { EditPageButton } from "@/components/EditPageButton";
 import { useEffect, useMemo, useState } from "react";
 import { Heart, ChevronLeft, SlidersHorizontal, ArrowUpDown, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
