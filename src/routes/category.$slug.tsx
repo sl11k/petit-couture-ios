@@ -159,7 +159,7 @@ export const Route = createFileRoute("/category/$slug")({
       <p>{(error as Error).message}</p>
     </div>
   ),
-  component: CategoryView,
+  component: () => (<><CategoryView /><EditPageButton slug="category" /></>),
 });
 
 function CategoryView() {
