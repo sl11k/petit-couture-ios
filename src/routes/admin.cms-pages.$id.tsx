@@ -393,3 +393,34 @@ function SortableSection({
     </div>
   );
 }
+
+function PaletteItem({ type, icon, label, onClick }: { type: string; icon: string; label: string; onClick: () => void }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `palette-${type}`,
+    data: { source: "palette", sectionType: type },
+  });
+  return (
+    <button
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      onClick={onClick}
+      className={cn(
+        "flex flex-col items-center gap-1 rounded-md border border-border p-2 hover:bg-muted text-xs transition cursor-grab active:cursor-grabbing touch-none",
+        isDragging && "opacity-50",
+      )}
+    >
+      <span className="text-xl">{icon}</span>
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function CanvasDropZone({ id, children }: { id: string; children: React.ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({ id });
+  return (
+    <div ref={setNodeRef} className={cn(isOver && "bg-primary/5 outline outline-2 outline-primary/40")}>
+      {children}
+    </div>
+  );
+}
