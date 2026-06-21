@@ -5,8 +5,6 @@ import { PageRenderer } from "@/page-builder/components/PageRenderer";
 import { isPageContent, type PageContent } from "@/page-builder/schemas/pageSchema";
 import { supabase } from "@/integrations/supabase/client";
 import { EditPageButton } from "@/components/EditPageButton";
-import { useLiveEdit } from "@/live-edit/LiveEditContext";
-import { LiveEditCanvas } from "@/live-edit/LiveEditHome";
 import { pickAbVariant } from "@/live-edit/AbVariantManager";
 import { useApplyOverrides } from "@/live-edit/useApplyOverrides";
 import {
@@ -59,10 +57,9 @@ function Index() {
     return () => { cancelled = true; };
   }, []);
 
-  const live = useLiveEdit();
   useApplyOverrides("/");
-  // Always render the ORIGINAL HomeScreen design — edits happen inline via overrides.
-  const original = <div data-live-root><HomeScreen /></div>;
-  if (live.enabled) return <LiveEditCanvas fallback={original} />;
-  return (<>{original}<EditPageButton slug="home" /></>);
+  // Always render the ORIGINAL HomeScreen design. When live-edit is on,
+  // the root shell wraps everything (header + content + footer) with the
+  // inline editor — so this page just renders normally.
+  return (<><HomeScreen /><EditPageButton slug="home" /></>);
 }

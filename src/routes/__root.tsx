@@ -21,8 +21,9 @@ import { GlobalErrorBoundary, OfflineBanner } from "@/components/ErrorDisplay";
 import { flushErrorBuffer } from "@/lib/errors";
 import { checkAdminOutlets } from "@/dev/checkAdminOutlets";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { LiveEditProvider } from "@/live-edit/LiveEditContext";
+import { LiveEditProvider, useLiveEdit } from "@/live-edit/LiveEditContext";
 import { InlineQuickEditProvider } from "@/live-edit/InlineQuickEdit";
+import { SiteInlineEditor } from "@/live-edit/SiteInlineEditor";
 import { useCustomCss } from "@/hooks/useCustomCss";
 
 import appCss from "../styles.css?url";
@@ -181,6 +182,8 @@ function StorefrontShell({
   isAdmin: boolean;
 }) {
   const { lang } = useLanguage();
+  const live = useLiveEdit();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   useCustomCss();
   // Admin pages have their own AdminTranslateScope inside AdminShell.
   // Wrap storefront only — translates Arabic → English (or vice versa) at runtime
@@ -207,10 +210,17 @@ function StorefrontShell({
     </div>
   );
 
-  if (isAdmin || lang === "ar") return wrapped;
+  // When live-edit is active on a storefront page, wrap the ENTIRE shell
+  // (header + content + footer) so every element becomes editable and link
+  // clicks are intercepted instead of navigating away.
+  const maybeLive = live.enabled && !isAdmin
+    ? <SiteInlineEditor key={pathname} pagePath={pathname}>{wrapped}</SiteInlineEditor>
+    : wrapped;
+
+  if (isAdmin || lang === "ar") return maybeLive;
   return (
     <TranslateScope enabled toLang={lang} scopeKey={lang}>
-      {wrapped}
+      {maybeLive}
     </TranslateScope>
   );
 }

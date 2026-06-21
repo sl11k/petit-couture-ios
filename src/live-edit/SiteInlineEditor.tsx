@@ -145,16 +145,40 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
     const mo = new MutationObserver(() => attach());
     mo.observe(root, { childList: true, subtree: true });
 
-    // Suppress all navigation while editing
+    // Suppress ALL navigation while editing — capture phase on document,
+    // so TanStack Link onClick handlers never fire. Also stop button submits.
     const blockNav = (e: MouseEvent) => {
-      const a = (e.target as HTMLElement).closest("a");
-      if (a && root.contains(a)) e.preventDefault();
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      // Allow clicks inside the live-edit toolbar / sheets / dialogs
+      if (target.closest("[data-lpe-ui]")) return;
+      if (target.closest("[role=dialog]")) return;
+      const a = target.closest("a");
+      if (a) {
+        e.preventDefault();
+        e.stopPropagation();
+        // If anchor wraps a non-text element (image/icon), open href editor
+        if (selected?.kind !== "text") {
+          const url = window.prompt("الرابط:", (a as HTMLAnchorElement).href);
+          if (url && url !== (a as HTMLAnchorElement).href) {
+            const sel = computeSelector(root!, a);
+            (a as HTMLAnchorElement).href = url;
+            setField(sel, "href", url);
+          }
+        }
+        return;
+      }
+      const btn = target.closest("button");
+      if (btn && btn.getAttribute("type") === "submit") {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     };
-    root.addEventListener("click", blockNav, true);
+    document.addEventListener("click", blockNav, true);
 
     return () => {
       mo.disconnect();
-      root.removeEventListener("click", blockNav, true);
+      document.removeEventListener("click", blockNav, true);
     };
   }, []);
 
@@ -195,9 +219,9 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
       </div>
 
       {/* Floating toolbar */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[80] flex items-center gap-1 rounded-full border border-border bg-background/95 backdrop-blur px-3 py-2 shadow-2xl">
+      <div data-lpe-ui className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[80] flex items-center gap-1 rounded-full border border-border bg-background/95 backdrop-blur px-3 py-2 shadow-2xl">
         <span className="text-[11px] text-muted-foreground me-2">
-          تحرير مباشر {dirtyCount > 0 ? `● ${dirtyCount} تغيير` : ""}
+          تحرير مباشر (هيدر · محتوى · فوتر) {dirtyCount > 0 ? `● ${dirtyCount} تغيير` : ""}
         </span>
         <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="رابط للنص المحدد" onClick={editLink}>
           <LinkIcon className="h-4 w-4" />
