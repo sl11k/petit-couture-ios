@@ -2,6 +2,7 @@
 //
 // Admin pages for the three storefront navigation surfaces:
 //   1. headerNavConfig          → top header links (البوتيك / فساتين / ...)
+
 //   2. shopByCategoryConfig     → homepage tile grid "تسوقي حسب الفئة"
 //   3. seasonPicksConfig        → curated row "الأكثر شهرة - مختارات الموسم"
 //
@@ -165,7 +166,16 @@ export const seasonPicksConfig: AdminPageConfig = {
   table: "season_picks",
   orderBy: { column: "display_order", ascending: true },
   columns: [
-    { key: "product_id", label: { ar: "المنتج", en: "Product" }, render: (v) => <ProductNameCell productId={v} /> },
+    { key: "product_id", label: { ar: "البطاقة", en: "Card" }, render: (v, row: any) => {
+      if (v) return <ProductNameCell productId={v} />;
+      const label = row?.label_ar || row?.label_en || row?.link_url || "—";
+      return (
+        <span className="inline-flex items-center gap-2">
+          {row?.image_url && <img src={row.image_url} alt="" className="h-7 w-7 shrink-0 rounded object-cover" loading="lazy" />}
+          <span className="truncate">{label}</span>
+        </span>
+      );
+    } },
     { key: "title_ar", label: { ar: "العنوان", en: "Heading" }, hideOnMobile: true },
     { key: "badge_ar", label: { ar: "الشارة", en: "Badge" }, type: "badge", hideOnMobile: true },
     { key: "display_order", label: { ar: "#", en: "#" }, type: "number", width: "w-16" },
@@ -198,13 +208,13 @@ export const seasonPicksConfig: AdminPageConfig = {
     },
     {
       key: "link_url",
-      label: { ar: "رابط البطاقة عند الضغط (اختياري)", en: "Card link URL (optional)" },
-      type: "text",
+      label: { ar: "الرابط عند الضغط (اختياري)", en: "Card link (optional)" },
+      type: "link",
       required: false,
-      placeholder: { ar: "/category/dresses أو /landing/sale", en: "/category/dresses or /landing/sale" },
+      placeholder: { ar: "اختر صفحة أو تصنيف أو منتج…", en: "Pick a page, category, product…" },
       helpText: {
-        ar: "أي رابط داخلي مثل /category/xxx أو /landing/xxx. مطلوب عندما لا تختار منتجاً.",
-        en: "Any internal link, e.g. /category/xxx or /landing/xxx. Required when no product is selected.",
+        ar: "اختر تصنيفاً أو صفحة جاهزة أو الصق رابطاً. مطلوب عندما لا تختار منتجاً.",
+        en: "Pick a category/page or paste a URL. Required when no product is selected.",
       },
     },
     {
