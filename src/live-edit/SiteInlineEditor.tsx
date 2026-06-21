@@ -277,6 +277,15 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
       </div>
 
       <HistoryPanel open={historyOpen} onOpenChange={setHistoryOpen} pagePath={pagePath} />
+
+      {styleOpen && selected?.el && (
+        <StylePopover
+          el={selected.el}
+          initial={selectedStyleInitial}
+          onChange={onStyleChange}
+          onClose={() => setStyleOpen(false)}
+        />
+      )}
     </>
   );
 }
