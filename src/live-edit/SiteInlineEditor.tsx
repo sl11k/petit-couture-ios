@@ -43,6 +43,7 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [selected, setSelected] = useState<{ el: HTMLElement; kind: "text" | "image" | "link" } | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const setField = (selector: string, prop: OverrideProp, value: any) => {
     setDraft((d) => ({ ...d, [keyOf(selector, prop, lang)]: { selector, prop, lang, value } }));
