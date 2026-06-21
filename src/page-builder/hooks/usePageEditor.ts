@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { isPageContent, type CmsPage, type PageContent, EMPTY_PAGE_CONTENT, type Section } from "../schemas/pageSchema";
+import { getDefaultSectionsForPage } from "../utils/pageDefaults";
 
 const MAX_HISTORY = 100;
 const COALESCE_MS = 700;
