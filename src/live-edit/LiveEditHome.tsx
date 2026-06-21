@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { usePageEditor } from "@/page-builder/hooks/usePageEditor";
 import { PageRenderer } from "@/page-builder/components/PageRenderer";
-import { HomeScreen } from "@/components/HomeScreen";
+
 import { createDefaultSection } from "@/page-builder/utils/pageDefaults";
 import { useLiveEdit } from "./LiveEditContext";
 import { useLanguage } from "@/i18n/LanguageContext";
