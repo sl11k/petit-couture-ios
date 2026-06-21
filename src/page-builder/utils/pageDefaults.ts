@@ -104,3 +104,91 @@ export function createDefaultSection(type: SectionType): Section {
       throw new Error(`Unknown section type: ${type}`);
   }
 }
+
+/**
+ * Starter sections for a fresh page so the editor canvas isn't blank when opened.
+ * Tailored per page type so admins can edit a real design instead of building from zero.
+ */
+export function getDefaultSectionsForPage(pageType: string): Section[] {
+  const mk = (t: SectionType, mutate?: (s: any) => void): Section => {
+    const s = createDefaultSection(t) as any;
+    if (mutate) mutate(s);
+    return s as Section;
+  };
+  switch (pageType) {
+    case "home":
+      return [
+        mk("hero", (s) => {
+          s.content.eyebrow_ar = "مرحباً بكم"; s.content.eyebrow_en = "Welcome";
+          s.content.title_ar = "اكتشفي تشكيلتنا الجديدة"; s.content.title_en = "Discover our new collection";
+          s.content.subtitle_ar = "أزياء أنيقة لكل المناسبات بجودة عالية وأسعار مميزة.";
+          s.content.subtitle_en = "Elegant fashion for every occasion with premium quality.";
+          s.content.buttons = [
+            { label_ar: "تسوقي الآن", label_en: "Shop now", url: "/category/all", variant: "primary" },
+            { label_ar: "اعرفي أكثر", label_en: "Learn more", url: "/our-story", variant: "secondary" },
+          ];
+        }),
+        mk("banner", (s) => {
+          s.content.title_ar = "تخفيضات الموسم"; s.content.title_en = "Season sale";
+          s.content.subtitle_ar = "خصومات تصل إلى 50%"; s.content.subtitle_en = "Up to 50% off";
+          s.content.button = { label_ar: "تسوقي العروض", label_en: "Shop deals", url: "/category/sale", variant: "primary" };
+        }),
+        mk("product_grid", (s) => {
+          s.content.title_ar = "الأكثر مبيعاً"; s.content.title_en = "Best sellers";
+          s.content.source = "newest"; s.content.limit = 8; s.content.columns = 4;
+        }),
+        mk("feature_grid", (s) => {
+          s.content.title_ar = "لماذا نحن"; s.content.title_en = "Why choose us";
+          const t = Date.now();
+          s.content.cards = [
+            { id: `c-${t}-1`, title_ar: "شحن سريع", title_en: "Fast shipping", description_ar: "توصيل خلال 1-3 أيام عمل.", description_en: "Delivery in 1-3 business days." },
+            { id: `c-${t}-2`, title_ar: "إرجاع سهل", title_en: "Easy returns", description_ar: "إرجاع خلال 14 يوم.", description_en: "14-day returns." },
+            { id: `c-${t}-3`, title_ar: "دعم 24/7", title_en: "24/7 support", description_ar: "نحن هنا للمساعدة.", description_en: "We're here to help." },
+          ];
+        }),
+        mk("reviews"),
+        mk("cta", (s) => {
+          s.content.title_ar = "انضمي إلى عائلتنا"; s.content.title_en = "Join our family";
+          s.content.subtitle_ar = "اشتركي للحصول على عروض حصرية."; s.content.subtitle_en = "Subscribe for exclusive deals.";
+          s.content.buttons = [{ label_ar: "اشتركي", label_en: "Subscribe", url: "/", variant: "primary" }];
+        }),
+      ];
+    case "product":
+    case "product_card":
+      return [
+        mk("text_block", (s) => {
+          s.content.title_ar = "تخطيط صفحة المنتج"; s.content.title_en = "Product page layout";
+          s.content.body_ar = "هذه الأقسام تظهر تحت تفاصيل المنتج. أضيفي بلوكات لتخصيص الصفحة.";
+          s.content.body_en = "These sections render below the product details.";
+        }),
+        mk("product_grid", (s) => {
+          s.content.title_ar = "قد يعجبك أيضاً"; s.content.title_en = "You may also like";
+          s.content.limit = 4; s.content.columns = 4;
+        }),
+        mk("reviews"),
+      ];
+    case "category":
+      return [
+        mk("banner", (s) => {
+          s.content.title_ar = "تشكيلتنا"; s.content.title_en = "Our collection";
+          s.content.subtitle_ar = "اكتشفي أحدث القطع"; s.content.subtitle_en = "Discover the latest pieces";
+          s.content.height = "sm";
+        }),
+      ];
+    case "checkout":
+      return [
+        mk("feature_grid", (s) => {
+          s.content.title_ar = "ضماناتنا"; s.content.title_en = "Our guarantees";
+          s.content.columns = 3;
+          const t = Date.now();
+          s.content.cards = [
+            { id: `c-${t}-1`, title_ar: "دفع آمن", title_en: "Secure payment", description_ar: "تشفير SSL.", description_en: "SSL encryption." },
+            { id: `c-${t}-2`, title_ar: "ضمان الجودة", title_en: "Quality guarantee", description_ar: "منتجات أصلية.", description_en: "Authentic products." },
+            { id: `c-${t}-3`, title_ar: "إرجاع مجاني", title_en: "Free returns", description_ar: "خلال 14 يوم.", description_en: "Within 14 days." },
+          ];
+        }),
+      ];
+    default:
+      return [mk("hero"), mk("text_block"), mk("cta")];
+  }
+}
