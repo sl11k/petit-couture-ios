@@ -177,11 +177,46 @@ export const seasonPicksConfig: AdminPageConfig = {
   form: [
     {
       key: "product_id",
-      label: { ar: "المنتج", en: "Product" },
+      label: { ar: "المنتج (اختياري)", en: "Product (optional)" },
       type: "lookup",
-      required: true,
+      required: false,
       lookup: productLookup,
-      helpText: { ar: "ابحث عن المنتج بالاسم أو SKU", en: "Search by product name or SKU" },
+      helpText: {
+        ar: "اربط البطاقة بمنتج لعرض اسمه وصورته تلقائياً. اتركه فارغاً إذا كنت تريد صورة ورابطاً مخصصاً.",
+        en: "Link a product to auto-show its name/image. Leave empty for a custom image + link.",
+      },
+    },
+    {
+      key: "image_url",
+      label: { ar: "صورة مخصصة (إذا لم تختر منتجاً)", en: "Custom image (if no product)" },
+      type: "image",
+      required: false,
+      helpText: {
+        ar: "تُستخدم عندما لا تختار منتجاً. تظهر كصورة البطاقة في الصفحة الرئيسية.",
+        en: "Used when no product is selected. Becomes the card image on the home page.",
+      },
+    },
+    {
+      key: "link_url",
+      label: { ar: "رابط البطاقة عند الضغط (اختياري)", en: "Card link URL (optional)" },
+      type: "text",
+      required: false,
+      placeholder: { ar: "/category/dresses أو /landing/sale", en: "/category/dresses or /landing/sale" },
+      helpText: {
+        ar: "أي رابط داخلي مثل /category/xxx أو /landing/xxx. مطلوب عندما لا تختار منتجاً.",
+        en: "Any internal link, e.g. /category/xxx or /landing/xxx. Required when no product is selected.",
+      },
+    },
+    {
+      key: "label_ar",
+      label: { ar: "اسم البطاقة (عربي) — اختياري", en: "Card label (AR) — optional" },
+      type: "text",
+      helpText: { ar: "يظهر تحت الصورة. إذا اخترت منتجاً سيُستخدم اسم المنتج تلقائياً.", en: "Shown under the image. Falls back to product name." },
+    },
+    {
+      key: "label_en",
+      label: { ar: "اسم البطاقة (إنجليزي) — اختياري", en: "Card label (EN) — optional" },
+      type: "text",
     },
     {
       key: "title_ar",
