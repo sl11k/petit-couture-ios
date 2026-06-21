@@ -1,57 +1,110 @@
-# محرر مباشر على الصفحة (Live Inline Editor)
 
 ## الهدف
-لما تكون مسجل دخول كمشرف، تضغط زر "تحرير الصفحة" فيتحول الموقع لوضع تحرير: تنقر على أي نص/صورة/زر/قسم وتعدله مباشرة وتشوف النتيجة فوراً، وفي الأخير تضغط "حفظ" أو "نشر".
+إصلاح 4 مشاكل أساسية أبلغت بها، بالترتيب التالي.
 
-## نطاق هذه المرحلة
-- **الصفحة الرئيسية** (مبنية أصلاً على `cms_pages` + `PageRenderer`).
-- **الهيدر والفوتر** (شريط الإعلانات، روابط القائمة، شعار، روابط الفوتر، السوشيال).
-- **الصفحات الثابتة** (`/page/$slug` — نفس المحرك يشتغل عليها).
-- **صفحة التصنيف وصفحة المنتج**: تحرير العناوين/الأوصاف وأزرار الـ CTA فقط في هذه المرحلة (الباقي يحرَّر من لوحة المنتجات/التصنيفات).
+---
 
-## ما يمكن تحريره مباشرة
-1. **النصوص** — `contentEditable` على أي عنوان/فقرة/زر/رابط (عربي + إنجليزي عبر تبديل اللغة).
-2. **الألوان والخطوط** — لوحة جانبية تظهر للعنصر المحدد: لون الخلفية، لون النص، حجم الخط، الوزن، نصف القطر، الحشو.
-3. **الصور** — نقر على أي صورة → اختر من المعرض/ارفع جديدة/الصق رابط.
-4. **الروابط** — `LinkPicker` الموجود (صفحات/تصنيفات/منتجات/خارجي).
-5. **الترتيب والإخفاء** — مقابض سحب/إفلات على الأقسام + زر إخفاء/إظهار + حذف.
+### 1) إيقاف وميض الصفحة القديمة قبل الجديدة
+**السبب**: `Index` و `product.$slug` و `category.$slug` يعرضون التصميم القديم فوراً ثم يبدّلونه لما تنتهي `useEffect` من جلب `cms_pages.published_content`. هذا يخلق الوميض.
 
-## طريقة العمل (UX)
-- زر عائم "تحرير الصفحة ✏️" يظهر للمشرف فقط (موجود `EditPageButton`).
-- بالضغط: تدخل وضع التحرير، الصفحة نفسها تصير قابلة للتحرير (لا ينقلك لصفحة أخرى).
-- شريط علوي عائم فيه: تراجع/إعادة، حفظ مسودة، نشر، خروج، تبديل ar/en، عرض موبايل/سطح.
-- لوحة جانبية يمنى تظهر عند اختيار عنصر (نص/قسم/صورة) فيها التحكمات.
-- كل تغيير ينعكس فوراً في الـ DOM (state محلي)، ولا يُحفظ في قاعدة البيانات إلا بزر "حفظ".
+**الحل**:
+- نقل جلب `cms_pages` من `useEffect` إلى `loader` في الراوت (مع `queryClient.ensureQueryData`) حتى يكون المحتوى جاهز قبل الرندر الأول.
+- إضافة `pendingComponent` يعرض skeleton مطابق للتخطيط بدلاً من التصميم القديم.
+- في الصفحات اللي ما عندها CMS override، نتخطى الجلب كلياً.
 
-## التنفيذ التقني
-- **EditModeContext** جديد: `{ enabled, selection, draft, setField, undo, redo, save, publish }`.
-- **`<Editable />`** wrapper يلف أي نص: في وضع التحرير يصير `contentEditable` ويبث التغييرات لـ context. في الوضع العادي يرندر نص عادي.
-- **`<EditableImage />`** و **`<EditableSection />`** و **`<EditableStyle />`** — نفس الفكرة.
-- **`LiveEditOverlay`** — يحتوي شريط الأدوات + اللوحة الجانبية + ربط Drag-and-Drop للأقسام.
-- المسودة كاملة تُحفظ في `cms_pages.draft_content` (الرئيسية + ثابتة) و`site_settings`/`storefront_settings` (الهيدر/الفوتر/الإعلانات).
-- النشر يكتب `published_content` ويُحدث الإصدار في `cms_page_versions` / `site_revisions`.
+---
 
-## ملفات ستُنشأ/تُعدَّل (ملخص)
-- جديدة:
-  - `src/live-edit/EditModeContext.tsx`
-  - `src/live-edit/components/LiveEditOverlay.tsx`
-  - `src/live-edit/components/EditToolbar.tsx`
-  - `src/live-edit/components/InspectorPanel.tsx`
-  - `src/live-edit/components/Editable.tsx`
-  - `src/live-edit/components/EditableImage.tsx`
-  - `src/live-edit/components/EditableSection.tsx`
-  - `src/live-edit/hooks/useLiveDraft.ts`
-  - `src/live-edit/persistence.ts` (حفظ/نشر/إصدارات)
-- مُعدَّلة:
-  - `src/routes/__root.tsx` — تركيب `EditModeProvider` و`LiveEditOverlay`.
-  - `src/components/EditPageButton.tsx` — يُفعّل وضع التحرير بدل ما يفتح لوحة الأدمن.
-  - `src/page-builder/components/PageRenderer.tsx` — يلف الأقسام بـ `EditableSection` ويستخدم `Editable` للنصوص.
-  - `src/components/DesktopHeader.tsx` و`src/components/Footer.tsx` و`src/components/AnnouncementBar.tsx` — تلف عناصرها القابلة للتحرير.
-  - `src/components/HomeScreen.tsx` — يربط كل نص بمصدره من القاعدة عبر `Editable`.
+### 2) صور المنتج (تظهر صورة واحدة فقط)
+**السبب المحتمل**: عمود `images` في DB قد يُحفظ كـ string بدل array، أو الـ PDP يقرأ `image_url` فقط بدل `images`.
 
-## خارج النطاق (مراحل قادمة)
-- تحرير منتجات/تصنيفات داخل البطاقة (يبقى في لوحة الأدمن).
-- محرر CSS متقدم/كود مخصص.
-- إصدارات A/B للصفحات داخل المحرر المباشر.
+**الحل**:
+- مراجعة `useDbProductBySlug` للتأكد من معالجة `images` (jsonb) صح + fallback لـ `image_url`.
+- مراجعة gallery component في `product.$slug.tsx` للتأكد من map صحيح على المصفوفة.
+- لو الـ admin يحفظ بصيغة خاطئة، إصلاح `MediaUploader` / `ProductMediaGallery` ليحفظ array دائماً.
+- إضافة فحص في `mergeRowOntoBase` يعالج الحالات: array، string JSON، CSV string.
 
-ابدأ التنفيذ؟
+---
+
+### 3) التصنيف حسب العمر داخل صفحة الفئة
+**السبب**: فلاتر العمر إما ما تُطبَّق على query DB، أو الـ sizes ما تُقرأ صح من DB.
+
+**الحل**:
+- إضافة فلتر عمر واضح في `category.$slug.tsx` (chips أعلى الشبكة: 0-3 أشهر، 3-6، 6-12، 1-2 سنة…).
+- استخدام `sortByAge` + فلترة المنتجات بناءً على `sizes` الفعلية.
+- لو ما فيه منتجات في عمر معيّن، إخفاء الشريحة بدل عرضها فارغة.
+
+---
+
+### 4) محرر مباشر شامل (المهم)
+**الحالي**: المحرر يعدّل نصوص/صور/روابط فقط داخل الـ HomeScreen، لكن:
+- ما يلمس الهيدر/الفوتر (الكلام تحت الـ logo، روابط الفوتر…)
+- ما يعدّل الألوان أو الخلفيات
+- ما يضيف/يحذف/يرتّب عناصر
+
+**الحل** — توسيع `SiteInlineEditor` ليكون محرراً كاملاً:
+
+#### أ) تغطية الهيدر والفوتر
+- نقل `<SiteInlineEditor>` ليلف كل التطبيق من `__root.tsx` بدل index فقط، حتى يطال `DesktopHeader` + `MobileNav` + `Footer` + `AnnouncementBar`.
+- إضافة `pagePath` ديناميكي حسب الراوت الحالي، مع namespace خاص (`global:header`, `global:footer`) للعناصر المشتركة حتى التعديل ينعكس على كل الصفحات.
+
+#### ب) تعديل الـ style
+- Side panel ينفتح عند اختيار عنصر، يعرض:
+  - **النص**: حجم الخط، الوزن، لون النص، محاذاة
+  - **الخلفية**: لون / صورة / gradient
+  - **المسافات**: padding، margin
+  - **الحدود**: لون، عرض، radius
+- يُحفظ كـ `prop: "style"` في `live_overrides` بـ value = jsonb للستايلات، ويُطبَّق عبر inline style attribute.
+
+#### ج) إضافة/حذف/ترتيب عناصر (block editor)
+- لكل قسم في `HomeScreen` و `Footer` نضيف `data-lpe-section="hero"` (مثلاً).
+- يظهر toolbar فوق القسم: ↑ تحريك لأعلى، ↓ تحريك لأسفل، × حذف، + إضافة بلوك جديد.
+- البلوكات المتاحة للإضافة: نص، صورة، زر، شبكة منتجات، بانر، فاصل.
+- يُحفظ في جدول جديد `page_blocks` (page_path, position, type, props, status).
+
+#### د) Color picker للهوية
+- زر "ألوان الموقع" في toolbar يفتح dialog يعدّل CSS variables الأساسية (`--primary`, `--background`…) ويحفظها في `site_settings`، تنعكس فوراً على كل الموقع.
+
+---
+
+## التفاصيل التقنية
+
+### ملفات جديدة
+- `src/live-edit/StyleEditor.tsx` — لوحة جانبية لتعديل style العنصر
+- `src/live-edit/BlockToolbar.tsx` — أزرار ↑↓×+ فوق الأقسام
+- `src/live-edit/AddBlockDialog.tsx` — اختيار نوع البلوك الجديد
+- `src/live-edit/ColorThemeEditor.tsx` — محرر ألوان الموقع
+- `src/live-edit/blocks/` — مكوّنات البلوكات (Text, Image, Button, ProductGrid, Banner)
+
+### تعديلات
+- `src/routes/__root.tsx` — لفّ كل شيء بـ `SiteInlineEditor` مع `pagePath` ديناميكي
+- `src/routes/index.tsx` + `product.$slug.tsx` + `category.$slug.tsx` — نقل الـ fetch إلى loader + pending skeleton
+- `src/hooks/useDbProducts.ts` — معالجة `images` لكل الصيغ
+- `src/components/Footer.tsx` + `DesktopHeader.tsx` — إضافة `data-lpe-section` markers
+- `src/components/HomeScreen.tsx` — تقسيم لأقسام قابلة للحذف/الإضافة
+
+### جدول جديد
+```sql
+create table public.page_blocks (
+  id uuid primary key default gen_random_uuid(),
+  page_path text not null,
+  section_key text not null,
+  position int not null default 0,
+  block_type text not null,
+  props jsonb not null default '{}',
+  status text not null default 'draft',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+```
+مع RLS: قراءة عامة للـ published، كتابة للأدمن فقط.
+
+---
+
+## الحجم
+هذا شغل ضخم — حوالي 15-20 ملف جديد/معدّل + migration. سأنفّذه على دفعتين:
+
+**الدفعة 1 (هذه الجلسة)**: إصلاح الوميض + صور المنتج + فلتر العمر + توسيع المحرر ليغطي الهيدر/الفوتر مع تعديل style أساسي (لون، خلفية، حجم خط).
+
+**الدفعة 2 (بعد ما تأكد على الأولى)**: block editor كامل (إضافة/حذف/ترتيب) + color theme editor.
+
+موافق نبدأ بالدفعة 1؟
