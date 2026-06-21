@@ -104,12 +104,12 @@ export async function fetchPopularPicks(activeOnly = true): Promise<PopularPick[
   try {
     let q = (supabase as any)
       .from("season_picks")
-      .select("id, product_id, display_order, is_active");
+      .select("id, product_id, image_url, link_url, label_ar, label_en, display_order, is_active");
     if (activeOnly) q = q.eq("is_active", true);
     const { data } = await q.order("display_order", { ascending: true });
     if (Array.isArray(data) && data.length) {
       const productIds = Array.from(new Set(data.map((r: any) => r.product_id).filter(Boolean)));
-      let productMap = new Map<string, any>();
+      const productMap = new Map<string, any>();
       if (productIds.length) {
         const { data: prods } = await (supabase as any)
           .from("products")
@@ -119,15 +119,32 @@ export async function fetchPopularPicks(activeOnly = true): Promise<PopularPick[
       }
       return data
         .map((r: any) => {
-          const p = productMap.get(r.product_id);
-          if (!p) return null;
-          const firstImage = Array.isArray(p.images) ? p.images[0] : (p.images && typeof p.images === "object" ? Object.values(p.images)[0] : null);
+          const p = r.product_id ? productMap.get(r.product_id) : null;
+          // Custom (no product): require an image + link
+          if (!p) {
+            if (!r.image_url || !r.link_url) return null;
+            return {
+              id: r.id,
+              label_ar: r.label_ar ?? "",
+              label_en: r.label_en ?? r.label_ar ?? "",
+              image_url: r.image_url,
+              link_url: r.link_url,
+              sort_order: r.display_order,
+              is_active: r.is_active,
+            } as PopularPick;
+          }
+          // Product-backed: fall back to product fields when row fields are empty
+          const firstImage = Array.isArray(p.images)
+            ? p.images[0]
+            : (p.images && typeof p.images === "object" ? Object.values(p.images)[0] : null);
+          const productImg =
+            p.image_url ?? (typeof firstImage === "string" ? firstImage : (firstImage as any)?.url) ?? "";
           return {
             id: r.id,
-            label_ar: p.name_ar ?? "",
-            label_en: p.name_en ?? "",
-            image_url: p.image_url ?? (typeof firstImage === "string" ? firstImage : (firstImage as any)?.url) ?? "",
-            link_url: p.slug ? `/product/${p.slug}` : `/product/${r.product_id}`,
+            label_ar: r.label_ar || p.name_ar || "",
+            label_en: r.label_en || p.name_en || "",
+            image_url: r.image_url || productImg,
+            link_url: r.link_url || (p.slug ? `/product/${p.slug}` : `/product/${r.product_id}`),
             sort_order: r.display_order,
             is_active: r.is_active,
           } as PopularPick;
