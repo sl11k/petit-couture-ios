@@ -315,7 +315,8 @@ function PageEditor() {
             )}
           </div>
         </aside>
-      </div>
+        </div>
+      </DndContext>
 
       {/* Versions dialog */}
       <Dialog open={versionsOpen} onOpenChange={setVersionsOpen}>
