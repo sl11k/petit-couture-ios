@@ -56,6 +56,10 @@ function Index() {
     return () => { cancelled = true; };
   }, []);
 
+  const live = useLiveEdit();
+  if (live.enabled) {
+    return <LiveEditCanvas fallback={content ? <PageRenderer content={content} /> : <HomeScreen />} />;
+  }
   if (!loaded) return (<><HomeScreen /><EditPageButton slug="home" /></>);
   if (content) return (<><PageRenderer content={content} /><EditPageButton slug="home" /></>);
   return (<><HomeScreen /><EditPageButton slug="home" /></>);
