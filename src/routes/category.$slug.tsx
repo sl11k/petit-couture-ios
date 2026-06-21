@@ -8,6 +8,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { categories as seedCategories, productsByCategory } from "@/data/categories";
 import { usePriceFormatter } from "@/state/CurrencyContext";
+import { AGE_ORDER, ageBucketLabel, sizeToAgeBucket, type AgeBucket } from "@/lib/ageSort";
 import { buildMeta, breadcrumbJsonLd, collectionJsonLd, canonical } from "@/lib/seo";
 
 type DbCategory = {
