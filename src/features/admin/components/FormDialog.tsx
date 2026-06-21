@@ -172,7 +172,19 @@ function defaultsFrom(fields: FormFieldDef[], initial?: Record<string, any>) {
       else out[f.key] = v ?? "";
       continue;
     }
-    if (f.type === "gallery" || f.type === "videoGallery") { out[f.key] = Array.isArray(v) ? v : []; continue; }
+    if (f.type === "gallery" || f.type === "videoGallery") {
+      let urls = Array.isArray(v) ? v.filter((u: any) => typeof u === "string" && u) : [];
+      // If this gallery is linked to a "main" column and we have a main URL not
+      // already inside the gallery, prepend it so editing surfaces all images.
+      if (f.syncMainTo) {
+        const mainUrl = initial?.[f.syncMainTo];
+        if (typeof mainUrl === "string" && mainUrl && !urls.includes(mainUrl)) {
+          urls = [mainUrl, ...urls];
+        }
+      }
+      out[f.key] = urls;
+      continue;
+    }
     if (f.type === "warehouseStock") { out[f.key] = Array.isArray(v) ? v : []; continue; }
     if (f.type === "productVariants" || f.type === "productSizes" || f.type === "productAttributes") { out[f.key] = Array.isArray(v) ? v : []; continue; }
     if (f.type === "json") {
