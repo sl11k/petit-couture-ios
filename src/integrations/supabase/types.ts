@@ -2018,6 +2018,48 @@ export type Database = {
         }
         Relationships: []
       }
+      live_overrides: {
+        Row: {
+          created_at: string
+          draft_value: Json | null
+          id: string
+          lang: string
+          page_path: string
+          prop: string
+          published_at: string | null
+          published_value: Json | null
+          selector: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          draft_value?: Json | null
+          id?: string
+          lang?: string
+          page_path: string
+          prop: string
+          published_at?: string | null
+          published_value?: Json | null
+          selector: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          draft_value?: Json | null
+          id?: string
+          lang?: string
+          page_path?: string
+          prop?: string
+          published_at?: string | null
+          published_value?: Json | null
+          selector?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       loyalty_accounts: {
         Row: {
           balance: number
