@@ -833,6 +833,7 @@ export type Database = {
       }
       cms_pages: {
         Row: {
+          ab_test_id: string | null
           canonical_url: string | null
           created_at: string
           created_by: string | null
@@ -855,6 +856,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ab_test_id?: string | null
           canonical_url?: string | null
           created_at?: string
           created_by?: string | null
@@ -877,6 +879,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ab_test_id?: string | null
           canonical_url?: string | null
           created_at?: string
           created_by?: string | null
@@ -898,7 +901,15 @@ export type Database = {
           type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cms_pages_ab_test_id_fkey"
+            columns: ["ab_test_id"]
+            isOneToOne: false
+            referencedRelation: "ab_tests"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contact_submissions: {
         Row: {
@@ -5207,6 +5218,7 @@ export type Database = {
           company_legal_name: string | null
           currency_code: string | null
           currency_symbol: string | null
+          custom_css: string | null
           default_language: string
           favicon_url: string | null
           first_order_coupon_code: string | null
@@ -5297,6 +5309,7 @@ export type Database = {
           company_legal_name?: string | null
           currency_code?: string | null
           currency_symbol?: string | null
+          custom_css?: string | null
           default_language?: string
           favicon_url?: string | null
           first_order_coupon_code?: string | null
@@ -5387,6 +5400,7 @@ export type Database = {
           company_legal_name?: string | null
           currency_code?: string | null
           currency_symbol?: string | null
+          custom_css?: string | null
           default_language?: string
           favicon_url?: string | null
           first_order_coupon_code?: string | null
