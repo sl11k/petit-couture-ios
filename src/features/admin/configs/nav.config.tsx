@@ -125,12 +125,11 @@ export const shopByCategoryConfig: AdminPageConfig = {
     { key: "title_en", label: { ar: "العنوان بالإنجليزية", en: "Title (EN)" }, type: "text", required: true, maxLength: 80 },
     {
       key: "image_url",
-      label: { ar: "صورة البلاطة (مربعة)", en: "Tile image (square)" },
+      label: { ar: "صورة البلاطة (اختياري)", en: "Tile image (optional)" },
       type: "image",
-      required: true,
       bucket: "category-media",
       folder: "shop-by-category",
-      helpText: { ar: "يفضّل صورة مربعة عالية الجودة", en: "A high-quality square image is preferred" },
+      helpText: { ar: "اتركيها فارغة إذا تريدين زرّاً نصياً فقط", en: "Leave empty for a text-only button" },
     },
     {
       key: "category_id",
