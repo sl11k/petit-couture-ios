@@ -301,6 +301,31 @@ function CategoryView() {
         onOnSaleChange={setOnSaleOnly}
       />
 
+      {/* Age filter chips */}
+      {ageBuckets.length > 0 && (
+        <div className="sticky top-[6.5rem] z-10 bg-background/95 backdrop-blur border-b border-border">
+          <div className="max-w-[1200px] mx-auto px-4 py-2.5 flex gap-2 overflow-x-auto scrollbar-none">
+            <button
+              type="button"
+              onClick={() => setAgeFilter(null)}
+              className={`shrink-0 h-9 px-3.5 rounded-full text-[12.5px] tracking-soft border transition ${ageFilter === null ? "bg-foreground text-background border-foreground" : "bg-background text-foreground border-border hover:border-foreground/40"}`}
+            >
+              {ar ? "كل الأعمار" : "All ages"}
+            </button>
+            {ageBuckets.map((b) => (
+              <button
+                key={b}
+                type="button"
+                onClick={() => setAgeFilter((cur) => (cur === b ? null : b))}
+                className={`shrink-0 h-9 px-3.5 rounded-full text-[12.5px] tracking-soft border transition ${ageFilter === b ? "bg-foreground text-background border-foreground" : "bg-background text-foreground border-border hover:border-foreground/40"}`}
+              >
+                {ageBucketLabel(b as AgeBucket, ar ? "ar" : "en")}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Products grid */}
       <section className="px-4 sm:px-6 py-6 sm:py-10 max-w-[1200px] mx-auto">
         {sortedProducts.length === 0 ? (
