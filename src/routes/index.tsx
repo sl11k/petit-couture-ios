@@ -46,9 +46,10 @@ function Index() {
         .eq("status", "published")
         .maybeSingle();
       if (cancelled) return;
-      const pc = (data as any)?.published_content;
+      let pc = (data as any)?.published_content;
       if (isPageContent(pc) && pc.sections.length > 0) {
-        // Skip pure legacy-only pages — let HomeScreen render directly to keep behavior identical.
+        // A/B variant pick (sticky per visitor)
+        pc = await pickAbVariant("home", pc);
         const onlyLegacy = pc.sections.length === 1 && pc.sections[0].type === "legacy_home";
         setContent(onlyLegacy ? null : pc);
       }
