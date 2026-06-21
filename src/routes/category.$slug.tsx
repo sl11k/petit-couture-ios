@@ -194,16 +194,35 @@ function CategoryView() {
   const [priceMax, setPriceMax] = useState<number>(priceBounds[1]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [onSaleOnly, setOnSaleOnly] = useState(false);
+  const [ageFilter, setAgeFilter] = useState<string | null>(null);
   useEffect(() => { setPriceMax(priceBounds[1]); }, [priceBounds[1]]);
+
+  // Build the set of age buckets available across products
+  const ageBuckets = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of products as DbProduct[]) {
+      const sizes = Array.isArray(p.sizes) ? (p.sizes as string[]) : [];
+      for (const s of sizes) {
+        const bucket = sizeToAgeBucket(String(s));
+        if (bucket) set.add(bucket);
+      }
+    }
+    return AGE_ORDER.filter((b) => set.has(b));
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
     return (products as DbProduct[]).filter((p) => {
       if ((p.price ?? 0) > priceMax) return false;
       if (inStockOnly && (p.stock ?? 0) <= 0) return false;
       if (onSaleOnly && !(p.compare_at_price && p.price && p.compare_at_price > p.price)) return false;
+      if (ageFilter) {
+        const sizes = Array.isArray(p.sizes) ? (p.sizes as string[]) : [];
+        const buckets = sizes.map((s) => sizeToAgeBucket(String(s))).filter(Boolean) as string[];
+        if (!buckets.includes(ageFilter)) return false;
+      }
       return true;
     });
-  }, [products, priceMax, inStockOnly, onSaleOnly]);
+  }, [products, priceMax, inStockOnly, onSaleOnly, ageFilter]);
 
   const sortedProducts = useMemo(() => {
     const arr = [...filteredProducts];
