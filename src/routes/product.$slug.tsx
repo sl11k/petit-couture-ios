@@ -109,7 +109,7 @@ type TabKey = "description" | "specs" | "care" | "shipping";
 function ProductDetails() {
   const { slug } = Route.useParams();
   const router = useRouter();
-  const { product, productId, loading: productLoading } = useDbProductBySlug(slug);
+  const { product, productId, loading: productLoading, fromDb } = useDbProductBySlug(slug);
   const { bySize: sizeVariantBySize } = useProductSizeVariants(productId);
   const { reviews: dbReviews, bundles: dbBundles, offers: dbOffers } = useProductExtras(slug);
   const { isRTL, lang } = useLanguage();
@@ -498,6 +498,24 @@ function ProductDetails() {
       </div>
     );
   }
+
+  // Strict DB-only: if no product row, show a clear not-found instead of seed fallback.
+  if (!fromDb) {
+    return (
+      <div className="min-h-[70vh] grid place-items-center px-6 text-center" dir={ar ? "rtl" : "ltr"}>
+        <div>
+          <h1 className="text-2xl font-medium">{ar ? "المنتج غير متوفر" : "Product not found"}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {ar ? "هذه الصفحة لم تعد متاحة أو لم يتم إضافتها بعد." : "This page is no longer available."}
+          </p>
+          <Link to="/" className="inline-block mt-5 underline text-primary">
+            {ar ? "العودة للرئيسية" : "Back to home"}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen w-full bg-cream flex justify-center" dir={ar ? "rtl" : "ltr"}>
