@@ -6,8 +6,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Edit, ExternalLink, Copy, Trash2 } from "lucide-react";
+import { Plus, Edit, ExternalLink, Copy, Trash2, Wand2 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+
+// System pages that map to live storefront routes. Editing them opens
+// the live route with inline-edit enabled (?edit=1).
+const SYSTEM_PAGES: { slug: string; title_ar: string; title_en: string; type: string; livePath: string }[] = [
+  { slug: "home", title_ar: "الصفحة الرئيسية", title_en: "Home", type: "home", livePath: "/" },
+  { slug: "product", title_ar: "صفحة المنتج", title_en: "Product page", type: "product", livePath: "/product/sample" },
+  { slug: "product_card", title_ar: "بطاقة المنتج", title_en: "Product card", type: "product_card", livePath: "/" },
+  { slug: "category", title_ar: "صفحة الفئة", title_en: "Category page", type: "category", livePath: "/category/all" },
+  { slug: "checkout", title_ar: "صفحة الدفع", title_en: "Checkout", type: "checkout", livePath: "/checkout" },
+];
+
+function livePathFor(row: { slug: string; type?: string }): string {
+  const sys = SYSTEM_PAGES.find((s) => s.slug === row.slug);
+  if (sys) return sys.livePath;
+  if (row.slug === "home") return "/";
+  return `/page/${row.slug}`;
+}
 
 type Row = {
   id: string;
