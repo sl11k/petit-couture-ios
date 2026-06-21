@@ -86,7 +86,28 @@ function PageEditor() {
 
   const handleDragEnd = (e: DragEndEvent) => {
     const { active, over } = e;
-    if (!over || active.id === over.id) return;
+    if (!over) return;
+    const activeData = active.data.current as any;
+    const overData = over.data.current as any;
+
+    // 1. Dragging from palette → insert at drop position
+    if (activeData?.source === "palette") {
+      const newSection = createDefaultSection(activeData.sectionType);
+      const sections = ed.content.sections;
+      let insertIdx = sections.length;
+      if (overData?.type === "section") {
+        insertIdx = sections.findIndex((s) => s.id === over.id);
+        if (insertIdx === -1) insertIdx = sections.length;
+      } else if (over.id === "canvas-empty" || over.id === "canvas-end") {
+        insertIdx = sections.length;
+      }
+      ed.addSection(newSection, insertIdx);
+      ed.notifyChange(`تمت إضافة بلوك`);
+      return;
+    }
+
+    // 2. Reordering existing sections
+    if (active.id === over.id) return;
     const oldIdx = ed.content.sections.findIndex((s) => s.id === active.id);
     const newIdx = ed.content.sections.findIndex((s) => s.id === over.id);
     if (oldIdx === -1 || newIdx === -1) return;
