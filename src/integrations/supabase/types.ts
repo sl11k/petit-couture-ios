@@ -4646,8 +4646,12 @@ export type Database = {
           created_at: string
           display_order: number
           id: string
+          image_url: string | null
           is_active: boolean
-          product_id: string
+          label_ar: string | null
+          label_en: string | null
+          link_url: string | null
+          product_id: string | null
           subtitle_ar: string | null
           subtitle_en: string | null
           title_ar: string
@@ -4659,8 +4663,12 @@ export type Database = {
           created_at?: string
           display_order?: number
           id?: string
+          image_url?: string | null
           is_active?: boolean
-          product_id: string
+          label_ar?: string | null
+          label_en?: string | null
+          link_url?: string | null
+          product_id?: string | null
           subtitle_ar?: string | null
           subtitle_en?: string | null
           title_ar?: string
@@ -4672,8 +4680,12 @@ export type Database = {
           created_at?: string
           display_order?: number
           id?: string
+          image_url?: string | null
           is_active?: boolean
-          product_id?: string
+          label_ar?: string | null
+          label_en?: string | null
+          link_url?: string | null
+          product_id?: string | null
           subtitle_ar?: string | null
           subtitle_en?: string | null
           title_ar?: string
