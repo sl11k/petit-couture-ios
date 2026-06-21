@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useRouter, useNavigate } from "@tanstack/react-router";
+import { EditPageButton } from "@/components/EditPageButton";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
