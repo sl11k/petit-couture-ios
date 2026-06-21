@@ -59,10 +59,9 @@ function Index() {
     return () => { cancelled = true; };
   }, []);
 
-  const live = useLiveEdit();
   useApplyOverrides("/");
-  // Always render the ORIGINAL HomeScreen design — edits happen inline via overrides.
-  const original = <div data-live-root><HomeScreen /></div>;
-  if (live.enabled) return <LiveEditCanvas fallback={original} />;
-  return (<>{original}<EditPageButton slug="home" /></>);
+  // Always render the ORIGINAL HomeScreen design. When live-edit is on,
+  // the root shell wraps everything (header + content + footer) with the
+  // inline editor — so this page just renders normally.
+  return (<><HomeScreen /><EditPageButton slug="home" /></>);
 }
