@@ -66,7 +66,7 @@ async function loadCategory(slug: string): Promise<{
       const { data } = await supabase
         .from("products")
         .select(
-          "id, slug, name_ar, name_en, price, compare_at_price, image_url, stock, sales_count, created_at",
+          "id, slug, name_ar, name_en, price, compare_at_price, image_url, stock, sales_count, created_at, sizes",
         )
         .in("id", ids)
         .eq("is_active", true);
@@ -77,7 +77,7 @@ async function loadCategory(slug: string): Promise<{
       const { data } = await supabase
         .from("products")
         .select(
-          "id, slug, name_ar, name_en, price, compare_at_price, image_url, stock, sales_count, created_at",
+          "id, slug, name_ar, name_en, price, compare_at_price, image_url, stock, sales_count, created_at, sizes",
         )
         .eq("category_id", category.id)
         .eq("is_active", true)
