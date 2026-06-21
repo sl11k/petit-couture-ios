@@ -88,7 +88,7 @@ export const ADMIN_NAV: NavGroup[] = [
       { to: "/admin/shop-by-category", label: { ar: "تسوقي حسب الفئة", en: "Shop by category" }, icon: FolderTree },
       { to: "/admin/season-picks", label: { ar: "مختارات الموسم", en: "Season picks" }, icon: Sparkles },
       { to: "/admin/storefront", label: { ar: "بانرات المتجر", en: "Storefront banners" }, icon: Layout },
-      { to: "/admin/home-builder", label: { ar: "محرر الرئيسية", en: "Home builder" }, icon: Layout },
+      
       { to: "/admin/cms-pages", label: { ar: "محرر الصفحات", en: "Page builder" }, icon: Sparkles },
       { to: "/admin/featured-categories", label: { ar: "أقسام مميزة", en: "Featured categories" }, icon: FolderTree },
       { to: "/admin/popular-picks", label: { ar: "الأكثر رواجاً", en: "Popular picks" }, icon: Activity },

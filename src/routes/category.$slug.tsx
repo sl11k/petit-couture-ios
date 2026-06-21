@@ -1,4 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { EditPageButton } from "@/components/EditPageButton";
 import { useEffect, useMemo, useState } from "react";
 import { Heart, ChevronLeft, SlidersHorizontal, ArrowUpDown, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -158,7 +159,7 @@ export const Route = createFileRoute("/category/$slug")({
       <p>{(error as Error).message}</p>
     </div>
   ),
-  component: CategoryView,
+  component: () => (<><CategoryView /><EditPageButton slug="category" /></>),
 });
 
 function CategoryView() {

@@ -6,8 +6,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Edit, ExternalLink, Copy, Trash2 } from "lucide-react";
+import { Plus, Edit, ExternalLink, Copy, Trash2, Wand2 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+
+// System pages that map to live storefront routes. Editing them opens
+// the live route with inline-edit enabled (?edit=1).
+const SYSTEM_PAGES: { slug: string; title_ar: string; title_en: string; type: string; livePath: string }[] = [
+  { slug: "home", title_ar: "الصفحة الرئيسية", title_en: "Home", type: "home", livePath: "/" },
+  { slug: "product", title_ar: "صفحة المنتج", title_en: "Product page", type: "product", livePath: "/product/sample" },
+  { slug: "product_card", title_ar: "بطاقة المنتج", title_en: "Product card", type: "product_card", livePath: "/" },
+  { slug: "category", title_ar: "صفحة الفئة", title_en: "Category page", type: "category", livePath: "/category/all" },
+  { slug: "checkout", title_ar: "صفحة الدفع", title_en: "Checkout", type: "checkout", livePath: "/checkout" },
+];
+
+function livePathFor(row: { slug: string; type?: string }): string {
+  const sys = SYSTEM_PAGES.find((s) => s.slug === row.slug);
+  if (sys) return sys.livePath;
+  if (row.slug === "home") return "/";
+  return `/page/${row.slug}`;
+}
 
 type Row = {
   id: string;
@@ -44,6 +61,28 @@ function PagesList() {
   };
 
   useEffect(() => { load(); }, []);
+
+  // Ensure all built-in system pages exist as editable rows.
+  const seedSystemPages = async () => {
+    const { data: existing } = await supabase.from("cms_pages").select("slug").in("slug", SYSTEM_PAGES.map((p) => p.slug));
+    const existingSlugs = new Set(((existing as { slug: string }[]) ?? []).map((r) => r.slug));
+    const missing = SYSTEM_PAGES.filter((p) => !existingSlugs.has(p.slug));
+    if (missing.length === 0) { toast.info(ar ? "الصفحات الأساسية موجودة" : "System pages already exist"); return; }
+    const { error } = await supabase.from("cms_pages").insert(
+      missing.map((p) => ({
+        slug: p.slug,
+        title_ar: p.title_ar,
+        title_en: p.title_en,
+        type: p.type,
+        status: "draft",
+        is_system: true,
+        draft_content: { sections: [] } as any,
+      })),
+    );
+    if (error) { toast.error(error.message); return; }
+    toast.success(ar ? `تمت إضافة ${missing.length} صفحة` : `Added ${missing.length} pages`);
+    load();
+  };
 
   const createPage = async () => {
     if (!newTitle.trim() || !newSlug.trim()) { toast.error("العنوان والرابط مطلوبان"); return; }
@@ -87,58 +126,74 @@ function PagesList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-xl font-semibold">محرر الصفحات</h1>
-          <p className="text-sm text-muted-foreground">عدّل صفحات الموقع بصرياً وانشرها مباشرة.</p>
+          <h1 className="text-xl font-semibold">{ar ? "محرر الصفحات" : "Page editor"}</h1>
+          <p className="text-sm text-muted-foreground">
+            {ar
+              ? "عدّل الرئيسية، صفحة المنتج، بطاقة المنتج، صفحة الفئة، وصفحة الدفع — مباشرةً على الموقع."
+              : "Edit Home, Product, Product card, Category, and Checkout — live on the site."}
+          </p>
         </div>
-        <Button onClick={() => setNewOpen(true)}><Plus className="h-4 w-4 me-1" /> صفحة جديدة</Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={seedSystemPages}>
+            <Wand2 className="h-4 w-4 me-1" /> {ar ? "إضافة الصفحات الأساسية" : "Add system pages"}
+          </Button>
+          <Button onClick={() => setNewOpen(true)}><Plus className="h-4 w-4 me-1" /> {ar ? "صفحة جديدة" : "New page"}</Button>
+        </div>
       </div>
 
       <div className="rounded-lg border border-border bg-card overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-xs">
             <tr>
-              <th className="text-start p-3">العنوان</th>
-              <th className="text-start p-3">الرابط</th>
-              <th className="text-start p-3">النوع</th>
-              <th className="text-start p-3">الحالة</th>
-              <th className="text-start p-3">آخر تعديل</th>
-              <th className="text-end p-3">إجراءات</th>
+              <th className="text-start p-3">{ar ? "العنوان" : "Title"}</th>
+              <th className="text-start p-3">{ar ? "الرابط" : "Path"}</th>
+              <th className="text-start p-3">{ar ? "النوع" : "Type"}</th>
+              <th className="text-start p-3">{ar ? "الحالة" : "Status"}</th>
+              <th className="text-start p-3">{ar ? "آخر تعديل" : "Updated"}</th>
+              <th className="text-end p-3">{ar ? "إجراءات" : "Actions"}</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">جاري التحميل…</td></tr>
+              <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">{ar ? "جاري التحميل…" : "Loading…"}</td></tr>
             ) : rows.length === 0 ? (
-              <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">لا توجد صفحات.</td></tr>
-            ) : rows.map((r) => (
+              <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">{ar ? "لا توجد صفحات." : "No pages."}</td></tr>
+            ) : rows.map((r) => {
+              const live = livePathFor(r);
+              const sep = live.includes("?") ? "&" : "?";
+              const editHref = `${live}${sep}edit=1`;
+              return (
               <tr key={r.id} className="border-t border-border hover:bg-muted/30">
                 <td className="p-3 font-medium">{ar ? r.title_ar : r.title_en}</td>
-                <td className="p-3 text-muted-foreground"><code>/{r.slug === "home" ? "" : r.slug}</code></td>
+                <td className="p-3 text-muted-foreground"><code>{live}</code></td>
                 <td className="p-3 text-xs">{r.type}</td>
                 <td className="p-3">
                   <span className={`inline-block rounded-full px-2 py-0.5 text-xs ${r.status === "published" ? "bg-green-500/10 text-green-700 dark:text-green-400" : "bg-amber-500/10 text-amber-700 dark:text-amber-400"}`}>
-                    {r.status === "published" ? "منشورة" : "مسودة"}
+                    {r.status === "published" ? (ar ? "منشورة" : "Published") : (ar ? "مسودة" : "Draft")}
                   </span>
                 </td>
                 <td className="p-3 text-xs text-muted-foreground">{new Date(r.updated_at).toLocaleString()}</td>
                 <td className="p-3">
                   <div className="flex items-center justify-end gap-1">
-                    <Button size="sm" variant="ghost" asChild>
-                      <Link to="/admin/cms-pages/$id" params={{ id: r.id }}><Edit className="h-3.5 w-3.5" /></Link>
+                    <Button size="sm" variant="default" asChild title={ar ? "تعديل مباشر على الموقع" : "Edit on site"}>
+                      <a href={editHref} target="_blank" rel="noreferrer"><Edit className="h-3.5 w-3.5 me-1" />{ar ? "تعديل مباشر" : "Edit live"}</a>
                     </Button>
-                    <Button size="sm" variant="ghost" asChild>
-                      <a href={r.slug === "home" ? "/" : `/page/${r.slug}`} target="_blank" rel="noreferrer"><ExternalLink className="h-3.5 w-3.5" /></a>
+                    <Button size="sm" variant="ghost" asChild title={ar ? "محرر متقدم" : "Advanced editor"}>
+                      <Link to="/admin/cms-pages/$id" params={{ id: r.id }}><Wand2 className="h-3.5 w-3.5" /></Link>
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => duplicatePage(r)}><Copy className="h-3.5 w-3.5" /></Button>
+                    <Button size="sm" variant="ghost" asChild title={ar ? "فتح في تبويب" : "Open"}>
+                      <a href={live} target="_blank" rel="noreferrer"><ExternalLink className="h-3.5 w-3.5" /></a>
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => duplicatePage(r)} title={ar ? "نسخ" : "Duplicate"}><Copy className="h-3.5 w-3.5" /></Button>
                     {!r.is_system && (
-                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deletePage(r)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deletePage(r)} title={ar ? "حذف" : "Delete"}><Trash2 className="h-3.5 w-3.5" /></Button>
                     )}
                   </div>
                 </td>
               </tr>
-            ))}
+            );})}
           </tbody>
         </table>
       </div>

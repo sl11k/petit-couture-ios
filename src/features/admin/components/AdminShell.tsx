@@ -3,10 +3,12 @@ import { useAuth } from "@/state/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Menu, LogOut, Globe, Sparkles } from "lucide-react";
+import { Menu, LogOut, Globe, Sparkles, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminSidebar } from "../sidebar/AdminSidebar";
 import { AdminTour, hasCompletedAdminTour } from "../tour/AdminTour";
+
+const COLLAPSE_KEY = "admin:sidebar:collapsed";
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const { user, ready } = useAuth();
@@ -15,7 +17,17 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const ar = lang === "ar";
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(COLLAPSE_KEY) === "1";
+  });
   const [tourOpen, setTourOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(COLLAPSE_KEY, collapsed ? "1" : "0");
+    }
+  }, [collapsed]);
 
   // Auto-start the tour on first admin visit.
   useEffect(() => {
@@ -55,16 +67,26 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-background" dir={ar ? "rtl" : "ltr"}>
-      <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} collapsed={collapsed} />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 items-center justify-between border-b border-border bg-card px-4">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="rounded p-1.5 hover:bg-muted lg:hidden"
-            aria-label="Open menu"
-          >
-            <Menu className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="rounded p-1.5 hover:bg-muted lg:hidden"
+              aria-label="Open menu"
+            >
+              <Menu className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setCollapsed((v) => !v)}
+              className="hidden rounded p-1.5 hover:bg-muted lg:inline-flex"
+              aria-label={collapsed ? (ar ? "توسيع" : "Expand") : (ar ? "طي" : "Collapse")}
+              title={collapsed ? (ar ? "توسيع الشريط الجانبي" : "Expand sidebar") : (ar ? "طي الشريط الجانبي" : "Collapse sidebar")}
+            >
+              {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+            </button>
+          </div>
           <div className="flex-1" />
           <div className="flex items-center gap-2">
             <button
