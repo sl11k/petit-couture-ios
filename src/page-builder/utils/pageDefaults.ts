@@ -8,15 +8,21 @@ function newId(prefix: string) {
 
 export const SECTION_TYPES: { type: SectionType; label_ar: string; label_en: string; icon: string }[] = [
   { type: "hero",          label_ar: "هيرو",                    label_en: "Hero",          icon: "🦸" },
+  { type: "banner",        label_ar: "بنر",                     label_en: "Banner",        icon: "🖼️" },
+  { type: "button",        label_ar: "زر",                      label_en: "Button",        icon: "🔘" },
   { type: "text_block",    label_ar: "كتلة نصية",               label_en: "Text block",    icon: "📝" },
-  { type: "image_text",    label_ar: "صورة + نص",               label_en: "Image + Text",  icon: "🖼️" },
+  { type: "image_text",    label_ar: "صورة + نص",               label_en: "Image + Text",  icon: "🌄" },
+  { type: "product_grid",  label_ar: "شبكة منتجات",             label_en: "Product grid",  icon: "🛍️" },
   { type: "feature_grid",  label_ar: "بطاقات مزايا",            label_en: "Feature grid",  icon: "🔲" },
   { type: "stats",         label_ar: "إحصائيات",                label_en: "Stats",         icon: "📊" },
   { type: "testimonials",  label_ar: "آراء العملاء",            label_en: "Testimonials",  icon: "💬" },
   { type: "reviews",       label_ar: "تقييمات حقيقية",          label_en: "Live reviews",  icon: "⭐" },
   { type: "faq",           label_ar: "أسئلة شائعة",             label_en: "FAQ",           icon: "❓" },
-  { type: "gallery",       label_ar: "معرض صور",                label_en: "Gallery",       icon: "🖼️" },
+  { type: "gallery",       label_ar: "معرض صور",                label_en: "Gallery",       icon: "🎞️" },
   { type: "cta",           label_ar: "دعوة للإجراء",            label_en: "CTA",           icon: "🎯" },
+  { type: "divider",       label_ar: "فاصل",                    label_en: "Divider",       icon: "➖" },
+  { type: "spacer",        label_ar: "مسافة",                   label_en: "Spacer",        icon: "↕️" },
+  { type: "html",          label_ar: "HTML مخصص",               label_en: "Custom HTML",   icon: "</>" },
 ];
 
 export function createDefaultSection(type: SectionType): Section {
@@ -70,6 +76,30 @@ export function createDefaultSection(type: SectionType): Section {
         alignment: "center",
         buttons: [{ label_ar: "ابدأ", label_en: "Start", url: "/", variant: "primary" }],
       } };
+    case "button":
+      return { id, type: "button", content: {
+        button: { label_ar: "اضغط هنا", label_en: "Click here", url: "/", variant: "primary" },
+        alignment: "center", size: "md", shape: "rounded", fullWidth: false,
+      } };
+    case "banner":
+      return { id, type: "banner", content: {
+        title_ar: "عنوان البنر", title_en: "Banner title",
+        subtitle_ar: "نص فرعي", subtitle_en: "Subtitle",
+        button: { label_ar: "اعرف المزيد", label_en: "Learn more", url: "/", variant: "primary" },
+        height: "md", overlay: 0.35, alignment: "center", shape: "rounded", textColor: "#ffffff",
+        image: { url: "", alt: "" },
+      } };
+    case "product_grid":
+      return { id, type: "product_grid", content: {
+        title_ar: "منتجاتنا", title_en: "Our products",
+        source: "newest", limit: 8, columns: 4, cardShape: "rounded", showPrice: true,
+      } };
+    case "divider":
+      return { id, type: "divider", content: { style: "solid", color: "#e5e7eb", thickness: 1, width: 100 } };
+    case "spacer":
+      return { id, type: "spacer", content: { height: 40 } };
+    case "html":
+      return { id, type: "html", content: { html: "<div style=\"padding:16px;text-align:center;\">HTML مخصص — عدّل من اللوحة اليمنى</div>" } };
     default:
       throw new Error(`Unknown section type: ${type}`);
   }

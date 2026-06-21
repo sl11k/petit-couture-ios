@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { ArrowLeft, Save, Upload, Undo2, Redo2, Eye, Monitor, Tablet, Smartphone, Copy, Trash2, Settings, Layers, History, MousePointerClick, GripVertical, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -14,7 +14,7 @@ import { PageRenderer } from "@/page-builder/components/PageRenderer";
 import { SectionEditor } from "@/page-builder/components/SectionEditor";
 import { PageSettingsPanel } from "@/page-builder/components/PageSettingsPanel";
 import { SECTION_TYPES, createDefaultSection } from "@/page-builder/utils/pageDefaults";
-import { DndContext, PointerSensor, useSensor, useSensors, closestCenter, type DragEndEvent } from "@dnd-kit/core";
+import { DndContext, PointerSensor, useSensor, useSensors, closestCenter, useDraggable, useDroppable, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Section } from "@/page-builder/schemas/pageSchema";
@@ -86,7 +86,28 @@ function PageEditor() {
 
   const handleDragEnd = (e: DragEndEvent) => {
     const { active, over } = e;
-    if (!over || active.id === over.id) return;
+    if (!over) return;
+    const activeData = active.data.current as any;
+    const overData = over.data.current as any;
+
+    // 1. Dragging from palette → insert at drop position
+    if (activeData?.source === "palette") {
+      const newSection = createDefaultSection(activeData.sectionType);
+      const sections = ed.content.sections;
+      let insertIdx = sections.length;
+      if (overData?.type === "section") {
+        insertIdx = sections.findIndex((s) => s.id === over.id);
+        if (insertIdx === -1) insertIdx = sections.length;
+      } else if (over.id === "canvas-empty" || over.id === "canvas-end") {
+        insertIdx = sections.length;
+      }
+      ed.addSection(newSection, insertIdx);
+      ed.notifyChange(`تمت إضافة بلوك`);
+      return;
+    }
+
+    // 2. Reordering existing sections
+    if (active.id === over.id) return;
     const oldIdx = ed.content.sections.findIndex((s) => s.id === active.id);
     const newIdx = ed.content.sections.findIndex((s) => s.id === over.id);
     if (oldIdx === -1 || newIdx === -1) return;
@@ -208,40 +229,42 @@ function PageEditor() {
         </div>
       </header>
 
-      <div className="flex flex-1 min-h-0">
-        {/* Left: section library */}
-        <aside className="w-56 border-e border-border bg-card overflow-y-auto p-3">
-          <h3 className="text-xs font-semibold mb-2 text-muted-foreground uppercase">مكتبة الأقسام</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {SECTION_TYPES.map((st) => (
-              <button
-                key={st.type}
-                onClick={() => {
-                  ed.addSection(createDefaultSection(st.type));
-                  ed.notifyChange(`تمت إضافة قسم "${ar ? st.label_ar : st.label_en}"`);
-                }}
-                className="flex flex-col items-center gap-1 rounded-md border border-border p-2 hover:bg-muted text-xs transition"
-              >
-                <span className="text-xl">{st.icon}</span>
-                <span>{ar ? st.label_ar : st.label_en}</span>
-              </button>
-            ))}
-          </div>
-        </aside>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <div className="flex flex-1 min-h-0">
+          {/* Left: section library (draggable palette) */}
+          <aside className="w-56 border-e border-border bg-card overflow-y-auto p-3">
+            <h3 className="text-xs font-semibold mb-2 text-muted-foreground uppercase">مكتبة البلوكات</h3>
+            <p className="text-[10px] text-muted-foreground mb-2">اسحب البلوك للصفحة أو انقر للإضافة في النهاية</p>
+            <div className="grid grid-cols-2 gap-2">
+              {SECTION_TYPES.map((st) => (
+                <PaletteItem
+                  key={st.type}
+                  type={st.type}
+                  icon={st.icon}
+                  label={ar ? st.label_ar : st.label_en}
+                  onClick={() => {
+                    ed.addSection(createDefaultSection(st.type));
+                    ed.notifyChange(`تمت إضافة "${ar ? st.label_ar : st.label_en}"`);
+                  }}
+                />
+              ))}
+            </div>
+          </aside>
 
-        {/* Center: canvas */}
-        <main className="flex-1 overflow-auto bg-muted/30 p-4">
-          <div
-            className="mx-auto bg-background shadow-lg rounded-lg overflow-hidden transition-all"
-            style={{ width: deviceWidth, maxWidth: "100%" }}
-          >
-            {ed.content.sections.length === 0 ? (
-              <div className="p-16 text-center text-muted-foreground">
-                <MousePointerClick className="h-10 w-10 mx-auto mb-3 opacity-40" />
-                <p className="text-sm">ابدأ بإضافة قسم من المكتبة على اليسار.</p>
-              </div>
-            ) : (
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          {/* Center: canvas */}
+          <main className="flex-1 overflow-auto bg-muted/30 p-4">
+            <div
+              className="mx-auto bg-background shadow-lg rounded-lg overflow-hidden transition-all"
+              style={{ width: deviceWidth, maxWidth: "100%" }}
+            >
+              {ed.content.sections.length === 0 ? (
+                <CanvasDropZone id="canvas-empty">
+                  <div className="p-16 text-center text-muted-foreground">
+                    <MousePointerClick className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                    <p className="text-sm">اسحب بلوكاً من اليمين، أو انقر عليه للإضافة.</p>
+                  </div>
+                </CanvasDropZone>
+              ) : (
                 <SortableContext items={ed.content.sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
                   {ed.content.sections.map((s) => (
                     <SortableSection
@@ -254,13 +277,14 @@ function PageEditor() {
                       onDelete={() => { if (confirm("حذف القسم؟")) { ed.removeSection(s.id); ed.notifyChange("تم حذف القسم"); } }}
                       onSectionUpdate={ed.updateSection}
                     />
-
                   ))}
+                  <CanvasDropZone id="canvas-end">
+                    <div className="h-10 border-t-2 border-dashed border-transparent hover:border-primary/40 transition" />
+                  </CanvasDropZone>
                 </SortableContext>
-              </DndContext>
-            )}
-          </div>
-        </main>
+              )}
+            </div>
+          </main>
 
         {/* Right: properties */}
         <aside className="w-80 border-s border-border bg-card flex flex-col">
@@ -291,7 +315,8 @@ function PageEditor() {
             )}
           </div>
         </aside>
-      </div>
+        </div>
+      </DndContext>
 
       {/* Versions dialog */}
       <Dialog open={versionsOpen} onOpenChange={setVersionsOpen}>
@@ -328,7 +353,7 @@ function SortableSection({
   onSectionUpdate: (id: string, updater: (s: Section) => Section, opts?: { label?: string; key?: string }) => void;
 }) {
 
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id, data: { type: "section" } });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -365,6 +390,37 @@ function SortableSection({
       <div className={cn(!selected && "transition hover:outline hover:outline-1 hover:outline-primary/40 hover:outline-offset-[-1px]")}>
         <PageRenderer content={{ sections: [section] }} device={device} onSectionUpdate={onSectionUpdate} />
       </div>
+    </div>
+  );
+}
+
+function PaletteItem({ type, icon, label, onClick }: { type: string; icon: string; label: string; onClick: () => void }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `palette-${type}`,
+    data: { source: "palette", sectionType: type },
+  });
+  return (
+    <button
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      onClick={onClick}
+      className={cn(
+        "flex flex-col items-center gap-1 rounded-md border border-border p-2 hover:bg-muted text-xs transition cursor-grab active:cursor-grabbing touch-none",
+        isDragging && "opacity-50",
+      )}
+    >
+      <span className="text-xl">{icon}</span>
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function CanvasDropZone({ id, children }: { id: string; children: ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({ id });
+  return (
+    <div ref={setNodeRef} className={cn(isOver && "bg-primary/5 outline outline-2 outline-primary/40")}>
+      {children}
     </div>
   );
 }

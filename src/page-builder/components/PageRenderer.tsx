@@ -15,8 +15,14 @@ import type {
   StatsSection,
   ReviewsSection,
   ButtonContent,
+  ButtonSection,
+  BannerSection,
+  ProductGridSection,
+  DividerSection,
+  SpacerSection,
+  HtmlSection,
 } from "../schemas/pageSchema";
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -590,32 +596,192 @@ function RenderReviews({ s }: { s: ReviewsSection }) {
   );
 }
 
+function buttonClasses(variant: string | undefined, size: string | undefined, shape: string | undefined, fullWidth?: boolean) {
+  const v = variant === "secondary" ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+    : variant === "ghost" ? "bg-transparent text-foreground hover:bg-muted"
+    : "bg-primary text-primary-foreground hover:bg-primary/90";
+  const sz = size === "sm" ? "px-3 py-1.5 text-xs"
+    : size === "lg" ? "px-6 py-3 text-base"
+    : size === "xl" ? "px-8 py-4 text-lg"
+    : "px-4 py-2 text-sm";
+  const sh = shape === "pill" ? "rounded-full" : shape === "square" ? "rounded-none" : "rounded-md";
+  return cn("inline-flex items-center justify-center font-medium transition shadow-sm", v, sz, sh, fullWidth && "w-full");
+}
+
+function RenderButton({ s }: { s: ButtonSection }) {
+  const { lang } = useLanguage();
+  const ar = lang === "ar";
+  const c = s.content;
+  const b = c.button ?? {};
+  const label = pick(ar, b.label_ar, b.label_en) || (ar ? "زر" : "Button");
+  const align = c.alignment === "left" ? "text-start" : c.alignment === "right" ? "text-end" : "text-center";
+  return (
+    <section style={sectionStyle(s)} className={align + " px-4"}>
+      <a href={b.url || "#"} target={b.newTab ? "_blank" : undefined} rel={b.newTab ? "noopener noreferrer" : undefined}
+         className={buttonClasses(b.variant, c.size, c.shape, c.fullWidth)}>{label}</a>
+    </section>
+  );
+}
+
+function RenderBanner({ s }: { s: BannerSection }) {
+  const { lang } = useLanguage();
+  const ar = lang === "ar";
+  const c = s.content;
+  const h = c.height === "sm" ? "h-48" : c.height === "lg" ? "h-96" : c.height === "xl" ? "h-[32rem]" : "h-72";
+  const align = c.alignment === "left" ? "items-start text-start" : c.alignment === "right" ? "items-end text-end" : "items-center text-center";
+  const shape = c.shape === "pill" ? "rounded-full" : c.shape === "square" ? "rounded-none" : "rounded-2xl";
+  const overlay = c.overlay ?? 0.35;
+  const img = c.image?.url;
+  const title = pick(ar, c.title_ar, c.title_en);
+  const subtitle = pick(ar, c.subtitle_ar, c.subtitle_en);
+  const b = c.button;
+  const btnLabel = b ? pick(ar, b.label_ar, b.label_en) : "";
+  return (
+    <section style={sectionStyle(s)} className="px-4">
+      <div className={cn("relative w-full overflow-hidden flex flex-col justify-center mx-auto max-w-6xl", h, shape, align)}
+           style={{ backgroundImage: img ? `url(${img})` : undefined, backgroundSize: "cover", backgroundPosition: "center", color: c.textColor || "#fff" }}>
+        {img && <div className="absolute inset-0" style={{ background: `rgba(0,0,0,${overlay})` }} />}
+        <div className="relative p-8 max-w-3xl">
+          {title && <h2 className="text-3xl md:text-4xl font-bold mb-2">{title}</h2>}
+          {subtitle && <p className="text-base md:text-lg opacity-90 mb-4">{subtitle}</p>}
+          {b && btnLabel && (
+            <a href={b.url || "#"} target={b.newTab ? "_blank" : undefined} rel={b.newTab ? "noopener noreferrer" : undefined}
+               className={buttonClasses(b.variant, "lg", "rounded")}>{btnLabel}</a>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function RenderProductGrid({ s }: { s: ProductGridSection }) {
+  const { lang } = useLanguage();
+  const ar = lang === "ar";
+  const c = s.content;
+  const [items, setItems] = useState<Array<{ id: string; slug: string; name: string; image: string | null; price: number | null; currency: string | null }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  const keyDeps = useMemo(() => JSON.stringify({ src: c.source, cat: c.categorySlug, slugs: c.productSlugs, lim: c.limit }), [c.source, c.categorySlug, c.productSlugs, c.limit]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const lim = Math.max(1, Math.min(48, c.limit ?? 8));
+      let q = supabase.from("products")
+        .select("id, slug, name_ar, name_en, image_url, price, currency, status, is_active")
+        .eq("status", "active").eq("is_active", true).limit(lim);
+      if (c.source === "manual" && c.productSlugs && c.productSlugs.length > 0) {
+        q = q.in("slug", c.productSlugs);
+      } else if (c.source === "category" && c.categorySlug) {
+        const { data: cat } = await supabase.from("categories").select("id").eq("slug", c.categorySlug).maybeSingle();
+        if (cat?.id) {
+          const { data: rels } = await supabase.from("category_products").select("product_id").eq("category_id", cat.id).limit(lim);
+          const ids = (rels ?? []).map((r: any) => r.product_id);
+          if (ids.length === 0) { if (!cancelled) { setItems([]); setLoading(false); } return; }
+          q = supabase.from("products")
+            .select("id, slug, name_ar, name_en, image_url, price, currency, status, is_active")
+            .eq("status", "active").eq("is_active", true).in("id", ids).limit(lim);
+        }
+      } else {
+        q = q.order("created_at", { ascending: false });
+      }
+      const { data } = await q;
+      if (cancelled) return;
+      setItems((data ?? []).map((r: any) => ({
+        id: r.id, slug: r.slug,
+        name: (ar ? r.name_ar : r.name_en) || r.name_en || r.name_ar || "",
+        image: r.image_url, price: r.price, currency: r.currency,
+      })));
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [keyDeps, ar]);
+
+  const cols = c.columns ?? 4;
+  const colCls = cols === 2 ? "grid-cols-2" : cols === 3 ? "grid-cols-2 md:grid-cols-3" : cols === 5 ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-5" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4";
+  const cardRound = c.cardShape === "square" ? "rounded-none" : "rounded-xl";
+  const title = pick(ar, c.title_ar, c.title_en);
+  return (
+    <section style={sectionStyle(s)} className="px-4 py-6">
+      <div className="max-w-6xl mx-auto">
+        {title && <h2 className="text-2xl font-bold mb-4 text-center">{title}</h2>}
+        {loading ? (
+          <div className={cn("grid gap-3", colCls)}>{Array.from({ length: cols }).map((_, i) => (<div key={i} className={cn("aspect-square bg-muted animate-pulse", cardRound)} />))}</div>
+        ) : items.length === 0 ? (
+          <p className="text-center text-muted-foreground text-sm py-8">{ar ? "لا توجد منتجات" : "No products"}</p>
+        ) : (
+          <div className={cn("grid gap-3", colCls)}>
+            {items.map((p) => (
+              <a key={p.id} href={`/product/${p.slug}`} className={cn("block overflow-hidden border border-border bg-card hover:shadow-md transition", cardRound)}>
+                {p.image ? (
+                  <img src={p.image} alt={p.name} loading="lazy" className="w-full aspect-square object-cover" />
+                ) : (<div className="aspect-square bg-muted" />)}
+                <div className="p-2.5">
+                  <div className="text-sm font-medium line-clamp-2">{p.name}</div>
+                  {c.showPrice !== false && p.price != null && (
+                    <div className="text-sm text-primary font-semibold mt-1">{p.price} {p.currency || "SAR"}</div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function RenderDivider({ s }: { s: DividerSection }) {
+  const c = s.content;
+  return (
+    <section style={sectionStyle(s)} className="px-4 py-2 flex justify-center">
+      <div style={{
+        width: `${c.width ?? 100}%`,
+        borderTopWidth: `${c.thickness ?? 1}px`,
+        borderTopStyle: (c.style ?? "solid") as any,
+        borderTopColor: c.color ?? "#e5e7eb",
+      }} />
+    </section>
+  );
+}
+
+function RenderSpacer({ s }: { s: SpacerSection }) {
+  return <div style={{ height: `${s.content.height ?? 40}px`, ...sectionStyle(s) }} />;
+}
+
+function RenderHtml({ s }: { s: HtmlSection }) {
+  return <section style={sectionStyle(s)} className="px-4" dangerouslySetInnerHTML={{ __html: s.content.html ?? "" }} />;
+}
+
+function sectionStyle(s: Section): React.CSSProperties {
+  return {
+    paddingTop: s.settings?.spacing?.paddingTop,
+    paddingBottom: s.settings?.spacing?.paddingBottom,
+    backgroundColor: s.settings?.backgroundColor,
+  };
+}
+
 function RenderSection({ s }: { s: Section }) {
   switch (s.type) {
-    case "legacy_home":
-      return <HomeScreen />;
-    case "hero":
-      return <RenderHero s={s} />;
-    case "text_block":
-      return <RenderTextBlock s={s} />;
-    case "image_text":
-      return <RenderImageText s={s} />;
-    case "feature_grid":
-      return <RenderFeatureGrid s={s} />;
-    case "faq":
-      return <RenderFaq s={s} />;
-    case "testimonials":
-      return <RenderTestimonials s={s} />;
-    case "cta":
-      return <RenderCta s={s} />;
-    case "gallery":
-      return <RenderGallery s={s} />;
-    case "stats":
-      return <RenderStats s={s} />;
-    case "reviews":
-      return <RenderReviews s={s} />;
-    default:
-      return null;
+    case "legacy_home":   return <HomeScreen />;
+    case "hero":          return <RenderHero s={s} />;
+    case "text_block":    return <RenderTextBlock s={s} />;
+    case "image_text":    return <RenderImageText s={s} />;
+    case "feature_grid":  return <RenderFeatureGrid s={s} />;
+    case "faq":           return <RenderFaq s={s} />;
+    case "testimonials":  return <RenderTestimonials s={s} />;
+    case "cta":           return <RenderCta s={s} />;
+    case "gallery":       return <RenderGallery s={s} />;
+    case "stats":         return <RenderStats s={s} />;
+    case "reviews":       return <RenderReviews s={s} />;
+    case "button":        return <RenderButton s={s} />;
+    case "banner":        return <RenderBanner s={s} />;
+    case "product_grid":  return <RenderProductGrid s={s} />;
+    case "divider":       return <RenderDivider s={s} />;
+    case "spacer":        return <RenderSpacer s={s} />;
+    case "html":          return <RenderHtml s={s} />;
+    default:              return null;
   }
 }
 

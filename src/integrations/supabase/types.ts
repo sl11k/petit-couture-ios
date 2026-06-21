@@ -3074,6 +3074,56 @@ export type Database = {
         }
         Relationships: []
       }
+      page_blocks: {
+        Row: {
+          block_type: string
+          created_at: string
+          created_by: string | null
+          id: string
+          page_path: string
+          parent_block_id: string | null
+          position: number
+          props: Json
+          published_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          block_type: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          page_path: string
+          parent_block_id?: string | null
+          position?: number
+          props?: Json
+          published_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          block_type?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          page_path?: string
+          parent_block_id?: string | null
+          position?: number
+          props?: Json
+          published_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_blocks_parent_block_id_fkey"
+            columns: ["parent_block_id"]
+            isOneToOne: false
+            referencedRelation: "page_blocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       password_history: {
         Row: {
           created_at: string
