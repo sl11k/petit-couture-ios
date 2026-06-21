@@ -202,6 +202,9 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
         <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="رابط للنص المحدد" onClick={editLink}>
           <LinkIcon className="h-4 w-4" />
         </Button>
+        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="سجل التعديلات والمقارنة" onClick={() => setHistoryOpen(true)}>
+          <HistoryIcon className="h-4 w-4" />
+        </Button>
         <div className="w-px h-6 bg-border mx-1" />
         <Button size="sm" variant="outline" className="h-8" onClick={onSave} disabled={saving || !dirtyCount}>
           <Save className="h-3.5 w-3.5 me-1" /> {saving ? "..." : "حفظ"}
@@ -223,6 +226,8 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
           <X className="h-4 w-4" />
         </Button>
       </div>
+
+      <HistoryPanel open={historyOpen} onOpenChange={setHistoryOpen} pagePath={pagePath} />
     </>
   );
 }
