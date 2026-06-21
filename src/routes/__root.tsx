@@ -149,11 +149,13 @@ function RootComponent() {
               <WishlistProvider>
                 <BagProvider>
                   <AddressProvider>
-                    <StorefrontShell
-                      showStoreChrome={showStoreChrome}
-                      hideFooter={hideFooter}
-                      isAdmin={isAdmin}
-                    />
+                    <LiveEditProvider>
+                      <StorefrontShell
+                        showStoreChrome={showStoreChrome}
+                        hideFooter={hideFooter}
+                        isAdmin={isAdmin}
+                      />
+                    </LiveEditProvider>
                   </AddressProvider>
                 </BagProvider>
               </WishlistProvider>
