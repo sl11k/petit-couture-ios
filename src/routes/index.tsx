@@ -5,6 +5,8 @@ import { PageRenderer } from "@/page-builder/components/PageRenderer";
 import { isPageContent, type PageContent } from "@/page-builder/schemas/pageSchema";
 import { supabase } from "@/integrations/supabase/client";
 import { EditPageButton } from "@/components/EditPageButton";
+import { useLiveEdit } from "@/live-edit/LiveEditContext";
+import { LiveEditCanvas } from "@/live-edit/LiveEditHome";
 import {
   buildMeta,
   organizationJsonLd,
