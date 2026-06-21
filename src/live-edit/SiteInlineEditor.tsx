@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { Save, Upload, X, Image as ImageIcon, Link as LinkIcon, Type } from "lucide-react";
+import { Save, Upload, X, Link as LinkIcon, History as HistoryIcon } from "lucide-react";
+import { HistoryPanel } from "./HistoryPanel";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useLiveEdit } from "./LiveEditContext";
