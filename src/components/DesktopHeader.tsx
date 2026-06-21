@@ -25,7 +25,6 @@ export function DesktopHeader() {
   const wishCount = mounted ? wishlist.count : 0;
   const bagCount = mounted ? bag.count : 0;
 
-  const dbCats = useDbCategories();
   const tree = useDbCategoryTree();
   const [navItems, setNavItems] = useState<Array<{slug:string; name_ar:string; name_en:string; href:string}>>([]);
   useEffect(() => {
