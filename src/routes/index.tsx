@@ -8,6 +8,7 @@ import { EditPageButton } from "@/components/EditPageButton";
 import { useLiveEdit } from "@/live-edit/LiveEditContext";
 import { LiveEditCanvas } from "@/live-edit/LiveEditHome";
 import { pickAbVariant } from "@/live-edit/AbVariantManager";
+import { useApplyOverrides } from "@/live-edit/useApplyOverrides";
 import {
   buildMeta,
   organizationJsonLd,
