@@ -104,25 +104,34 @@ export async function fetchPopularPicks(activeOnly = true): Promise<PopularPick[
   try {
     let q = (supabase as any)
       .from("season_picks")
-      .select("id, title_ar, title_en, subtitle_ar, subtitle_en, product_id, badge_ar, badge_en, display_order, is_active");
+      .select("id, product_id, display_order, is_active");
     if (activeOnly) q = q.eq("is_active", true);
     const { data } = await q.order("display_order", { ascending: true });
     if (Array.isArray(data) && data.length) {
-      return data.map((r: any) => ({
-        id: r.id,
-        title: r.title_ar,
-        title_ar: r.title_ar,
-        title_en: r.title_en,
-        subtitle: r.subtitle_ar,
-        subtitle_ar: r.subtitle_ar,
-        subtitle_en: r.subtitle_en,
-        product_id: r.product_id,
-        badge: r.badge_ar,
-        badge_ar: r.badge_ar,
-        badge_en: r.badge_en,
-        sort_order: r.display_order,
-        is_active: r.is_active,
-      })) as unknown as PopularPick[];
+      const productIds = Array.from(new Set(data.map((r: any) => r.product_id).filter(Boolean)));
+      let productMap = new Map<string, any>();
+      if (productIds.length) {
+        const { data: prods } = await (supabase as any)
+          .from("products")
+          .select("id, slug, name_ar, name_en, image_url, main_image_url")
+          .in("id", productIds);
+        (prods ?? []).forEach((p: any) => productMap.set(p.id, p));
+      }
+      return data
+        .map((r: any) => {
+          const p = productMap.get(r.product_id);
+          if (!p) return null;
+          return {
+            id: r.id,
+            label_ar: p.name_ar ?? "",
+            label_en: p.name_en ?? "",
+            image_url: p.image_url ?? p.main_image_url ?? "",
+            link_url: p.slug ? `/product/${p.slug}` : `/product/${r.product_id}`,
+            sort_order: r.display_order,
+            is_active: r.is_active,
+          } as PopularPick;
+        })
+        .filter(Boolean) as PopularPick[];
     }
   } catch (e) {
     console.warn("[storefront] season_picks unavailable, falling back", e);
