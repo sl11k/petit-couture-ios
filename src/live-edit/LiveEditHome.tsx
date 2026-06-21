@@ -136,6 +136,22 @@ export function LiveEditCanvas({ fallback }: { fallback: React.ReactNode }) {
           </DropdownMenuContent>
         </DropdownMenu>
 
+        <Button
+          size="sm"
+          variant="ghost"
+          className={cn("h-8 w-8 p-0", qe.enabled && "bg-primary/15 text-primary")}
+          title="تعديل سريع للمنتج/التصنيف بالنقر"
+          onClick={() => qe.setEnabled(!qe.enabled)}
+        >
+          <MousePointerClick className="h-4 w-4" />
+        </Button>
+        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="محرر CSS مخصص" onClick={() => setCssOpen(true)}>
+          <Code2 className="h-4 w-4" />
+        </Button>
+        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="اختبار A/B" onClick={() => setAbOpen(true)}>
+          <FlaskConical className="h-4 w-4" />
+        </Button>
+
         <div className="w-px h-6 bg-border mx-1" />
         <Button size="sm" variant="outline" className="h-8" onClick={ed.saveDraft} disabled={ed.saving}>
           <Save className="h-3.5 w-3.5 me-1" /> {ed.saving ? "..." : "حفظ"}
@@ -150,12 +166,16 @@ export function LiveEditCanvas({ fallback }: { fallback: React.ReactNode }) {
           title="خروج"
           onClick={() => {
             if (ed.dirty && !confirm("هناك تغييرات غير محفوظة. الخروج بدون حفظ؟")) return;
+            qe.setEnabled(false);
             stop();
           }}
         >
           <X className="h-4 w-4" />
         </Button>
       </div>
+
+      <CustomCssEditor open={cssOpen} onOpenChange={setCssOpen} />
+      <AbVariantManager open={abOpen} onOpenChange={setAbOpen} pageSlug={slug ?? "home"} currentContent={ed.content} />
     </>
   );
 }
