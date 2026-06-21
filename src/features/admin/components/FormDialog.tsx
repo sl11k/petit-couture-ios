@@ -140,7 +140,9 @@ function coerceForDb(fields: FormFieldDef[], values: Record<string, any>) {
       continue;
     }
     if (f.type === "gallery" || f.type === "videoGallery") {
-      out[f.key] = Array.isArray(v) ? v : [];
+      const urls = Array.isArray(v) ? v.filter((u) => typeof u === "string" && u) : [];
+      out[f.key] = urls;
+      if (f.syncMainTo) out[f.syncMainTo] = urls[0] ?? null;
       continue;
     }
     if (v === "" || v === undefined || v === null) {
