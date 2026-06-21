@@ -8,15 +8,21 @@ function newId(prefix: string) {
 
 export const SECTION_TYPES: { type: SectionType; label_ar: string; label_en: string; icon: string }[] = [
   { type: "hero",          label_ar: "هيرو",                    label_en: "Hero",          icon: "🦸" },
+  { type: "banner",        label_ar: "بنر",                     label_en: "Banner",        icon: "🖼️" },
+  { type: "button",        label_ar: "زر",                      label_en: "Button",        icon: "🔘" },
   { type: "text_block",    label_ar: "كتلة نصية",               label_en: "Text block",    icon: "📝" },
-  { type: "image_text",    label_ar: "صورة + نص",               label_en: "Image + Text",  icon: "🖼️" },
+  { type: "image_text",    label_ar: "صورة + نص",               label_en: "Image + Text",  icon: "🌄" },
+  { type: "product_grid",  label_ar: "شبكة منتجات",             label_en: "Product grid",  icon: "🛍️" },
   { type: "feature_grid",  label_ar: "بطاقات مزايا",            label_en: "Feature grid",  icon: "🔲" },
   { type: "stats",         label_ar: "إحصائيات",                label_en: "Stats",         icon: "📊" },
   { type: "testimonials",  label_ar: "آراء العملاء",            label_en: "Testimonials",  icon: "💬" },
   { type: "reviews",       label_ar: "تقييمات حقيقية",          label_en: "Live reviews",  icon: "⭐" },
   { type: "faq",           label_ar: "أسئلة شائعة",             label_en: "FAQ",           icon: "❓" },
-  { type: "gallery",       label_ar: "معرض صور",                label_en: "Gallery",       icon: "🖼️" },
+  { type: "gallery",       label_ar: "معرض صور",                label_en: "Gallery",       icon: "🎞️" },
   { type: "cta",           label_ar: "دعوة للإجراء",            label_en: "CTA",           icon: "🎯" },
+  { type: "divider",       label_ar: "فاصل",                    label_en: "Divider",       icon: "➖" },
+  { type: "spacer",        label_ar: "مسافة",                   label_en: "Spacer",        icon: "↕️" },
+  { type: "html",          label_ar: "HTML مخصص",               label_en: "Custom HTML",   icon: "</>" },
 ];
 
 export function createDefaultSection(type: SectionType): Section {
