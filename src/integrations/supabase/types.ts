@@ -2060,6 +2060,59 @@ export type Database = {
         }
         Relationships: []
       }
+      live_overrides_history: {
+        Row: {
+          actor_email: string | null
+          actor_id: string | null
+          change_kind: string
+          created_at: string
+          id: string
+          lang: string
+          new_value: Json | null
+          old_value: Json | null
+          override_id: string | null
+          page_path: string
+          prop: string
+          selector: string
+        }
+        Insert: {
+          actor_email?: string | null
+          actor_id?: string | null
+          change_kind: string
+          created_at?: string
+          id?: string
+          lang: string
+          new_value?: Json | null
+          old_value?: Json | null
+          override_id?: string | null
+          page_path: string
+          prop: string
+          selector: string
+        }
+        Update: {
+          actor_email?: string | null
+          actor_id?: string | null
+          change_kind?: string
+          created_at?: string
+          id?: string
+          lang?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          override_id?: string | null
+          page_path?: string
+          prop?: string
+          selector?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_overrides_history_override_id_fkey"
+            columns: ["override_id"]
+            isOneToOne: false
+            referencedRelation: "live_overrides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       loyalty_accounts: {
         Row: {
           balance: number
