@@ -165,7 +165,7 @@ export const seasonPicksConfig: AdminPageConfig = {
   table: "season_picks",
   orderBy: { column: "display_order", ascending: true },
   columns: [
-    { key: "product_id", label: { ar: "المنتج", en: "Product" } },
+    { key: "product_id", label: { ar: "المنتج", en: "Product" }, render: (v) => <ProductNameCell productId={v} /> },
     { key: "title_ar", label: { ar: "العنوان", en: "Heading" }, hideOnMobile: true },
     { key: "badge_ar", label: { ar: "الشارة", en: "Badge" }, type: "badge", hideOnMobile: true },
     { key: "display_order", label: { ar: "#", en: "#" }, type: "number", width: "w-16" },
