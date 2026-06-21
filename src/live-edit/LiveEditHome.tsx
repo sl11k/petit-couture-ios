@@ -61,35 +61,17 @@ export function LiveEditCanvas({ fallback }: { fallback: React.ReactNode }) {
     return <div className="p-12 text-center text-muted-foreground text-sm">جاري تحميل المحرر…</div>;
   }
 
-  const sections = ed.content?.sections ?? [];
-  const onlyLegacy = sections.length === 1 && sections[0].type === "legacy_home";
-  const empty = sections.length === 0;
+  // Always edit the ORIGINAL design directly via inline DOM editing.
+  // No sections, no template conversion — what you see is what you edit.
+  return (
+    <SiteInlineEditor pagePath={typeof window !== "undefined" ? window.location.pathname : "/"}>
+      {fallback}
+    </SiteInlineEditor>
+  );
+}
 
-  const convertLegacy = () => {
-    const defaults = [
-      createDefaultSection("hero"),
-      createDefaultSection("feature_grid"),
-      createDefaultSection("testimonials"),
-      createDefaultSection("faq"),
-      createDefaultSection("cta"),
-    ];
-    ed.updateContent((c) => ({
-      ...c,
-      sections: c.sections.flatMap((s) => (s.type === "legacy_home" ? defaults : [s])),
-    }), { label: "تحويل إلى أقسام قابلة للتعديل" });
-    toast.success("تم — كل قسم قابل للتعديل الآن");
-  };
-
-  // If using the legacy/empty template, switch into direct DOM inline editing
-  // over the existing design instead of forcing section conversion.
-  if (empty || onlyLegacy) {
-    return (
-      <SiteInlineEditor pagePath={typeof window !== "undefined" ? window.location.pathname : "/"}>
-        {fallback}
-      </SiteInlineEditor>
-    );
-  }
-
+// Legacy section-based UI kept below but no longer reachable.
+function _UnusedLegacyToolbar({ ed, ar, toggleLanguage, qe, setCssOpen, setAbOpen, stop, slug }: any) {
   return (
     <>
       <div className="pb-24">
