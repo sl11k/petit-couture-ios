@@ -235,10 +235,13 @@ function HoverDropdown({
   label,
   items,
   columns = 1,
+  parentHref,
 }: {
   label: string;
   items: Array<{ slug: string; label: string }>;
   columns?: 1 | 2;
+  /** If provided, the trigger label itself navigates to this URL (the parent category). */
+  parentHref?: string;
 }) {
   const [open, setOpen] = useState(false);
   if (!items || items.length === 0) {
@@ -254,15 +257,27 @@ function HoverDropdown({
         if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false);
       }}
     >
-      <button
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        className="px-4 h-9 inline-flex items-center gap-1 rounded-xl text-[11.5px] tracking-luxury text-foreground/70 hover:text-foreground hover:bg-cream-warm transition"
-      >
-        {label}
-        <ChevronDown className="h-3 w-3 opacity-60" />
-      </button>
+      {parentHref ? (
+        <Link
+          to={parentHref as any}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          className="px-4 h-9 inline-flex items-center gap-1 rounded-xl text-[11.5px] tracking-luxury text-foreground/70 hover:text-foreground hover:bg-cream-warm transition"
+        >
+          {label}
+          <ChevronDown className="h-3 w-3 opacity-60" />
+        </Link>
+      ) : (
+        <button
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          className="px-4 h-9 inline-flex items-center gap-1 rounded-xl text-[11.5px] tracking-luxury text-foreground/70 hover:text-foreground hover:bg-cream-warm transition"
+        >
+          {label}
+          <ChevronDown className="h-3 w-3 opacity-60" />
+        </button>
+      )}
       {open && (
         <div
           role="menu"
