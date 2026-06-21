@@ -80,25 +80,21 @@ export function LiveEditCanvas({ fallback }: { fallback: React.ReactNode }) {
     toast.success("تم — كل قسم قابل للتعديل الآن");
   };
 
+  // If using the legacy/empty template, switch into direct DOM inline editing
+  // over the existing design instead of forcing section conversion.
+  if (empty || onlyLegacy) {
+    return (
+      <SiteInlineEditor pagePath={typeof window !== "undefined" ? window.location.pathname : "/"}>
+        {fallback}
+      </SiteInlineEditor>
+    );
+  }
+
   return (
     <>
-      {/* Canvas — if legacy/empty, show the real homepage with a friendly prompt overlay */}
-      {empty || onlyLegacy ? (
-        <div className="relative">
-          {fallback}
-          <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[60] max-w-md w-[90%] rounded-2xl border border-border bg-card/95 backdrop-blur p-5 shadow-2xl text-center">
-            <h3 className="text-base font-semibold mb-2">حوّل الصفحة لمحرر مباشر</h3>
-            <p className="text-xs text-muted-foreground mb-3">
-              الصفحة الرئيسية تعرض حالياً القالب الجاهز. اضغط الزر لتحويلها لأقسام قابلة للتعديل بشكل كامل (هيرو، مزايا، آراء، أسئلة، CTA).
-            </p>
-            <Button size="sm" onClick={convertLegacy}>تحويل الآن</Button>
-          </div>
-        </div>
-      ) : (
-        <div className="pb-24">
-          <PageRenderer content={ed.content} onSectionUpdate={ed.updateSection} />
-        </div>
-      )}
+      <div className="pb-24">
+        <PageRenderer content={ed.content} onSectionUpdate={ed.updateSection} />
+      </div>
 
       {/* Floating toolbar */}
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[70] flex items-center gap-1 rounded-full border border-border bg-background/95 backdrop-blur px-2 py-1.5 shadow-2xl">
