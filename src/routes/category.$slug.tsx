@@ -8,6 +8,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { categories as seedCategories, productsByCategory } from "@/data/categories";
 import { usePriceFormatter } from "@/state/CurrencyContext";
+import { AGE_ORDER, ageBucketLabel, sizeToAgeBucket, type AgeBucket } from "@/lib/ageSort";
 import { buildMeta, breadcrumbJsonLd, collectionJsonLd, canonical } from "@/lib/seo";
 
 type DbCategory = {
@@ -35,6 +36,7 @@ type DbProduct = {
   stock: number | null;
   sales_count: number | null;
   created_at: string;
+  sizes: unknown;
 };
 
 async function loadCategory(slug: string): Promise<{
@@ -65,7 +67,7 @@ async function loadCategory(slug: string): Promise<{
       const { data } = await supabase
         .from("products")
         .select(
-          "id, slug, name_ar, name_en, price, compare_at_price, image_url, stock, sales_count, created_at",
+          "id, slug, name_ar, name_en, price, compare_at_price, image_url, stock, sales_count, created_at, sizes",
         )
         .in("id", ids)
         .eq("is_active", true);
@@ -76,7 +78,7 @@ async function loadCategory(slug: string): Promise<{
       const { data } = await supabase
         .from("products")
         .select(
-          "id, slug, name_ar, name_en, price, compare_at_price, image_url, stock, sales_count, created_at",
+          "id, slug, name_ar, name_en, price, compare_at_price, image_url, stock, sales_count, created_at, sizes",
         )
         .eq("category_id", category.id)
         .eq("is_active", true)
@@ -193,16 +195,35 @@ function CategoryView() {
   const [priceMax, setPriceMax] = useState<number>(priceBounds[1]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [onSaleOnly, setOnSaleOnly] = useState(false);
+  const [ageFilter, setAgeFilter] = useState<string | null>(null);
   useEffect(() => { setPriceMax(priceBounds[1]); }, [priceBounds[1]]);
+
+  // Build the set of age buckets available across products
+  const ageBuckets = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of products as DbProduct[]) {
+      const sizes = Array.isArray(p.sizes) ? (p.sizes as string[]) : [];
+      for (const s of sizes) {
+        const bucket = sizeToAgeBucket(String(s));
+        if (bucket) set.add(bucket);
+      }
+    }
+    return AGE_ORDER.filter((b) => set.has(b));
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
     return (products as DbProduct[]).filter((p) => {
       if ((p.price ?? 0) > priceMax) return false;
       if (inStockOnly && (p.stock ?? 0) <= 0) return false;
       if (onSaleOnly && !(p.compare_at_price && p.price && p.compare_at_price > p.price)) return false;
+      if (ageFilter) {
+        const sizes = Array.isArray(p.sizes) ? (p.sizes as string[]) : [];
+        const buckets = sizes.map((s) => sizeToAgeBucket(String(s))).filter(Boolean) as string[];
+        if (!buckets.includes(ageFilter)) return false;
+      }
       return true;
     });
-  }, [products, priceMax, inStockOnly, onSaleOnly]);
+  }, [products, priceMax, inStockOnly, onSaleOnly, ageFilter]);
 
   const sortedProducts = useMemo(() => {
     const arr = [...filteredProducts];
@@ -279,6 +300,31 @@ function CategoryView() {
         onSaleOnly={onSaleOnly}
         onOnSaleChange={setOnSaleOnly}
       />
+
+      {/* Age filter chips */}
+      {ageBuckets.length > 0 && (
+        <div className="sticky top-[6.5rem] z-10 bg-background/95 backdrop-blur border-b border-border">
+          <div className="max-w-[1200px] mx-auto px-4 py-2.5 flex gap-2 overflow-x-auto scrollbar-none">
+            <button
+              type="button"
+              onClick={() => setAgeFilter(null)}
+              className={`shrink-0 h-9 px-3.5 rounded-full text-[12.5px] tracking-soft border transition ${ageFilter === null ? "bg-foreground text-background border-foreground" : "bg-background text-foreground border-border hover:border-foreground/40"}`}
+            >
+              {ar ? "كل الأعمار" : "All ages"}
+            </button>
+            {ageBuckets.map((b) => (
+              <button
+                key={b}
+                type="button"
+                onClick={() => setAgeFilter((cur) => (cur === b ? null : b))}
+                className={`shrink-0 h-9 px-3.5 rounded-full text-[12.5px] tracking-soft border transition ${ageFilter === b ? "bg-foreground text-background border-foreground" : "bg-background text-foreground border-border hover:border-foreground/40"}`}
+              >
+                {ageBucketLabel(b as AgeBucket, ar ? "ar" : "en")}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Products grid */}
       <section className="px-4 sm:px-6 py-6 sm:py-10 max-w-[1200px] mx-auto">
@@ -459,51 +505,13 @@ function FilterSortBar({
   );
 }
 
-function EmptyState({
-  ar,
-  slug,
-  showFallback,
-}: {
-  ar: boolean;
-  slug: string;
-  showFallback: boolean;
-}) {
-  const fmt = usePriceFormatter();
-  if (!showFallback) {
-    return (
-      <div className="text-center py-16">
-        <p className="text-muted-foreground">
-          {ar ? "لا توجد منتجات في هذا التصنيف بعد." : "No products in this category yet."}
-        </p>
-      </div>
-    );
-  }
-  // Seed preview card (so the page is never empty before admin adds products)
-  const seedProduct = productsByCategory["best-sellers"];
+function EmptyState({ ar }: { ar: boolean; slug: string; showFallback: boolean }) {
   return (
-    <>
-      <p className="text-sm text-muted-foreground mb-4">
-        {ar ? "عيّنة معروضة. يضيف المسؤول منتجات حقيقية من لوحة الإدارة." : "Preview shown. Admin adds real products from the dashboard."}
+    <div className="text-center py-16">
+      <p className="text-muted-foreground">
+        {ar ? "لا توجد منتجات في هذا التصنيف بعد." : "No products in this category yet."}
       </p>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-        <Link to="/product/$slug" params={{ slug }} className="group block">
-          <LazyImage
-            src={seedProduct.images[0]}
-            alt={seedProduct.name}
-            width={500}
-            height={625}
-            aspect="4/5"
-            className="w-full aspect-[4/5] object-cover rounded-md group-hover:opacity-90 transition"
-          />
-          <div className="mt-2.5">
-            <p className="text-sm text-foreground line-clamp-1">{seedProduct.name}</p>
-            <p className="text-[13px] text-gold-deep mt-0.5">
-              {fmt(seedProduct.price)}
-            </p>
-          </div>
-        </Link>
-      </div>
-    </>
+    </div>
   );
 }
 

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { Save, Upload, X, Link as LinkIcon, History as HistoryIcon } from "lucide-react";
+import { Save, Upload, X, Link as LinkIcon, History as HistoryIcon, Palette } from "lucide-react";
 import { HistoryPanel } from "./HistoryPanel";
+import { StylePopover, type StyleValue } from "./StylePopover";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useLiveEdit } from "./LiveEditContext";
@@ -173,6 +174,11 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
         e.preventDefault();
         e.stopPropagation();
       }
+      // Track the clicked element as "selected" so the Style popover can act on it
+      // even when it isn't an editable text leaf (sections, footer rows, headers).
+      if (target && root && root.contains(target)) {
+        setSelected({ el: target, kind: target.tagName === "IMG" ? "image" : "text" });
+      }
     };
     document.addEventListener("click", blockNav, true);
 
@@ -210,6 +216,27 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
     }
   };
 
+  const [styleOpen, setStyleOpen] = useState(false);
+  const openStyleEditor = () => {
+    if (!selected?.el) {
+      toast.message("اختر عنصراً أولاً");
+      return;
+    }
+    setStyleOpen(true);
+  };
+  const selectedStyleInitial: StyleValue = (() => {
+    if (!selected?.el) return {};
+    const sel = computeSelector(rootRef.current!, selected.el);
+    const key = keyOf(sel, "style", lang);
+    const saved = draft[key]?.value;
+    return (saved && typeof saved === "object" ? saved : {}) as StyleValue;
+  })();
+  const onStyleChange = (next: StyleValue) => {
+    if (!selected?.el) return;
+    const sel = computeSelector(rootRef.current!, selected.el);
+    setField(sel, "style", next);
+  };
+
   const dirtyCount = Object.keys(draft).length;
 
   return (
@@ -225,6 +252,9 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
         </span>
         <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="رابط للنص المحدد" onClick={editLink}>
           <LinkIcon className="h-4 w-4" />
+        </Button>
+        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="نمط العنصر (لون/خلفية/حجم)" onClick={openStyleEditor}>
+          <Palette className="h-4 w-4" />
         </Button>
         <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="سجل التعديلات والمقارنة" onClick={() => setHistoryOpen(true)}>
           <HistoryIcon className="h-4 w-4" />
@@ -252,6 +282,15 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
       </div>
 
       <HistoryPanel open={historyOpen} onOpenChange={setHistoryOpen} pagePath={pagePath} />
+
+      {styleOpen && selected?.el && (
+        <StylePopover
+          el={selected.el}
+          initial={selectedStyleInitial}
+          onChange={onStyleChange}
+          onClose={() => setStyleOpen(false)}
+        />
+      )}
     </>
   );
 }

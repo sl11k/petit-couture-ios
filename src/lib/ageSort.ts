@@ -74,3 +74,58 @@ export function sortByAge<T>(items: T[], getLabel: (t: T) => string): T[] {
     })
     .map((x) => x.item);
 }
+
+/** Age buckets used by storefront category filters. */
+export const AGE_ORDER = [
+  "0-3m",
+  "3-6m",
+  "6-12m",
+  "1-2y",
+  "2-4y",
+  "4-6y",
+  "6-8y",
+  "8-12y",
+] as const;
+
+export type AgeBucket = (typeof AGE_ORDER)[number];
+
+const AGE_BUCKET_LABELS_AR: Record<AgeBucket, string> = {
+  "0-3m": "0-3 أشهر",
+  "3-6m": "3-6 أشهر",
+  "6-12m": "6-12 شهر",
+  "1-2y": "1-2 سنة",
+  "2-4y": "2-4 سنوات",
+  "4-6y": "4-6 سنوات",
+  "6-8y": "6-8 سنوات",
+  "8-12y": "8-12 سنة",
+};
+
+const AGE_BUCKET_LABELS_EN: Record<AgeBucket, string> = {
+  "0-3m": "0-3 mo",
+  "3-6m": "3-6 mo",
+  "6-12m": "6-12 mo",
+  "1-2y": "1-2 yr",
+  "2-4y": "2-4 yr",
+  "4-6y": "4-6 yr",
+  "6-8y": "6-8 yr",
+  "8-12y": "8-12 yr",
+};
+
+export function ageBucketLabel(b: AgeBucket | string, lang: "ar" | "en" = "ar"): string {
+  const map = lang === "ar" ? AGE_BUCKET_LABELS_AR : AGE_BUCKET_LABELS_EN;
+  return (map as Record<string, string>)[b] ?? b;
+}
+
+/** Map any size/age label to one of the AGE_ORDER buckets. */
+export function sizeToAgeBucket(label: string): AgeBucket | null {
+  const months = ageLabelToMonths(label);
+  if (months == null) return null;
+  if (months <= 3) return "0-3m";
+  if (months <= 6) return "3-6m";
+  if (months <= 12) return "6-12m";
+  if (months <= 24) return "1-2y";
+  if (months <= 48) return "2-4y";
+  if (months <= 72) return "4-6y";
+  if (months <= 96) return "6-8y";
+  return "8-12y";
+}

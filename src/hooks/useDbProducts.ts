@@ -46,6 +46,20 @@ type MergedProduct = StaticProduct & {
 
 function arr<T = unknown>(v: unknown): T[] {
   if (Array.isArray(v)) return v as T[];
+  if (typeof v === "string") {
+    const s = v.trim();
+    if (!s) return [];
+    if (s.startsWith("[") || s.startsWith("{")) {
+      try {
+        const p = JSON.parse(s);
+        if (Array.isArray(p)) return p as T[];
+        if (p && typeof p === "object") return [p as T];
+      } catch { /* ignore */ }
+    }
+    if (s.includes(",")) return s.split(",").map((x) => x.trim()).filter(Boolean) as unknown as T[];
+    return [s as unknown as T];
+  }
+  if (v && typeof v === "object") return [v as T];
   return [];
 }
 
@@ -70,11 +84,12 @@ function mergeRowOntoBase(slug: string, row: DbRow | null, lang: "ar" | "en"): M
     base.description;
 
   const imgs = arr<string>(row.images).filter(Boolean);
-  const images = imgs.length
-    ? imgs
-    : row.image_url
-      ? [row.image_url]
-      : base.images;
+  // Combine main image_url with images[]; dedupe to avoid showing the same picture twice.
+  const combined = [
+    ...(row.image_url ? [row.image_url] : []),
+    ...imgs,
+  ].filter((v, i, a) => v && a.indexOf(v) === i);
+  const images = combined.length ? combined : base.images;
 
   const sizes = sortByAge(arr<string>(row.sizes).filter(Boolean), (s: string) => s);
   const colorsRaw = arr<{ name?: string; hex?: string; image?: string } | string>(row.colors);
