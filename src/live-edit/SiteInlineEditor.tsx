@@ -248,6 +248,9 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
         <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="رابط للنص المحدد" onClick={editLink}>
           <LinkIcon className="h-4 w-4" />
         </Button>
+        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="نمط العنصر (لون/خلفية/حجم)" onClick={openStyleEditor}>
+          <Palette className="h-4 w-4" />
+        </Button>
         <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="سجل التعديلات والمقارنة" onClick={() => setHistoryOpen(true)}>
           <HistoryIcon className="h-4 w-4" />
         </Button>
