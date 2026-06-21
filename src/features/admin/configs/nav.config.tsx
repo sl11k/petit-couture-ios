@@ -77,12 +77,12 @@ export const headerNavConfig: AdminPageConfig = {
     {
       key: "href",
       label: { ar: "الرابط", en: "URL" },
-      type: "text",
+      type: "link",
       required: true,
-      placeholder: { ar: "/ أو /category/dresses", en: "/ or /category/dresses" },
+      placeholder: { ar: "اختر صفحة أو تصنيف أو منتج…", en: "Pick a page, category, product…" },
       helpText: {
-        ar: "ابدأ بـ / للروابط الداخلية، أو ضع رابطاً كاملاً للخارجية",
-        en: "Start with / for internal links, full URL for external",
+        ar: "اختر صفحة جاهزة أو تصنيفاً أو منتجاً، أو الصق رابطاً خارجياً.",
+        en: "Pick an internal page/category/product, or paste an external URL.",
       },
     },
     { key: "open_in_new", label: { ar: "افتح في تبويب جديد", en: "Open in new tab" }, type: "boolean", defaultValue: false },
