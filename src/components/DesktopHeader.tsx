@@ -4,7 +4,7 @@ import { Heart, Search, ShoppingBag, User, ChevronDown } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useWishlist } from "@/state/WishlistContext";
 import { useBag } from "@/state/BagContext";
-import { categories } from "@/data/categories";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useDbCategories, useDbCategoryTree } from "@/hooks/useDbCategories";
 import { BrandLogo } from "@/components/Logo";
