@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePageEditor } from "@/page-builder/hooks/usePageEditor";
 import { PageRenderer } from "@/page-builder/components/PageRenderer";
 
@@ -6,7 +6,7 @@ import { createDefaultSection } from "@/page-builder/utils/pageDefaults";
 import { useLiveEdit } from "./LiveEditContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { Save, Upload, X, Undo2, Redo2, Languages, Plus } from "lucide-react";
+import { Save, Upload, X, Undo2, Redo2, Languages, Plus, Code2, FlaskConical, MousePointerClick } from "lucide-react";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -15,6 +15,10 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { SECTION_TYPES } from "@/page-builder/utils/pageDefaults";
+import { CustomCssEditor } from "./CustomCssEditor";
+import { AbVariantManager } from "./AbVariantManager";
+import { useInlineQuickEdit } from "./InlineQuickEdit";
+import { cn } from "@/lib/utils";
 
 /**
  * Renders the page in live-edit mode. All text becomes inline editable
