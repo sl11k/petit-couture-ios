@@ -152,11 +152,13 @@ function RootComponent() {
                 <BagProvider>
                   <AddressProvider>
                     <LiveEditProvider>
-                      <StorefrontShell
-                        showStoreChrome={showStoreChrome}
-                        hideFooter={hideFooter}
-                        isAdmin={isAdmin}
-                      />
+                      <InlineQuickEditProvider>
+                        <StorefrontShell
+                          showStoreChrome={showStoreChrome}
+                          hideFooter={hideFooter}
+                          isAdmin={isAdmin}
+                        />
+                      </InlineQuickEditProvider>
                     </LiveEditProvider>
                   </AddressProvider>
                 </BagProvider>
