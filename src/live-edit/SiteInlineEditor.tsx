@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { Save, Upload, X, Image as ImageIcon, Link as LinkIcon, Type } from "lucide-react";
+import { Save, Upload, X, Link as LinkIcon, History as HistoryIcon } from "lucide-react";
+import { HistoryPanel } from "./HistoryPanel";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useLiveEdit } from "./LiveEditContext";
@@ -42,6 +43,7 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [selected, setSelected] = useState<{ el: HTMLElement; kind: "text" | "image" | "link" } | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const setField = (selector: string, prop: OverrideProp, value: any) => {
     setDraft((d) => ({ ...d, [keyOf(selector, prop, lang)]: { selector, prop, lang, value } }));
@@ -200,6 +202,9 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
         <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="رابط للنص المحدد" onClick={editLink}>
           <LinkIcon className="h-4 w-4" />
         </Button>
+        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="سجل التعديلات والمقارنة" onClick={() => setHistoryOpen(true)}>
+          <HistoryIcon className="h-4 w-4" />
+        </Button>
         <div className="w-px h-6 bg-border mx-1" />
         <Button size="sm" variant="outline" className="h-8" onClick={onSave} disabled={saving || !dirtyCount}>
           <Save className="h-3.5 w-3.5 me-1" /> {saving ? "..." : "حفظ"}
@@ -221,6 +226,8 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
           <X className="h-4 w-4" />
         </Button>
       </div>
+
+      <HistoryPanel open={historyOpen} onOpenChange={setHistoryOpen} pagePath={pagePath} />
     </>
   );
 }
