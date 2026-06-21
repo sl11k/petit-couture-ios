@@ -145,16 +145,40 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
     const mo = new MutationObserver(() => attach());
     mo.observe(root, { childList: true, subtree: true });
 
-    // Suppress all navigation while editing
+    // Suppress ALL navigation while editing — capture phase on document,
+    // so TanStack Link onClick handlers never fire. Also stop button submits.
     const blockNav = (e: MouseEvent) => {
-      const a = (e.target as HTMLElement).closest("a");
-      if (a && root.contains(a)) e.preventDefault();
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      // Allow clicks inside the live-edit toolbar / sheets / dialogs
+      if (target.closest("[data-lpe-ui]")) return;
+      if (target.closest("[role=dialog]")) return;
+      const a = target.closest("a");
+      if (a) {
+        e.preventDefault();
+        e.stopPropagation();
+        // If anchor wraps a non-text element (image/icon), open href editor
+        if (selected?.kind !== "text") {
+          const url = window.prompt("الرابط:", (a as HTMLAnchorElement).href);
+          if (url && url !== (a as HTMLAnchorElement).href) {
+            const sel = computeSelector(root!, a);
+            (a as HTMLAnchorElement).href = url;
+            setField(sel, "href", url);
+          }
+        }
+        return;
+      }
+      const btn = target.closest("button");
+      if (btn && btn.getAttribute("type") === "submit") {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     };
-    root.addEventListener("click", blockNav, true);
+    document.addEventListener("click", blockNav, true);
 
     return () => {
       mo.disconnect();
-      root.removeEventListener("click", blockNav, true);
+      document.removeEventListener("click", blockNav, true);
     };
   }, []);
 
