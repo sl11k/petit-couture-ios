@@ -153,9 +153,3 @@ export function LiveEditCanvas({ fallback }: { fallback: React.ReactNode }) {
   );
 }
 
-// Re-export for the home route
-export function HomeWithLiveEdit() {
-  const { enabled } = useLiveEdit();
-  if (!enabled) return null;
-  return <LiveEditCanvas fallback={<HomeScreen />} />;
-}
