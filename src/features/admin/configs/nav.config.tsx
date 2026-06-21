@@ -9,6 +9,7 @@
 // "lookup" field type pointing at the categories / products tables so the
 // admin never has to paste a UUID.
 import type { AdminPageConfig } from "@/features/admin/types";
+import { ProductNameCell } from "@/features/admin/components/ProductNameCell";
 
 const yesNo = [
   { value: "true", label: { ar: "نعم", en: "Yes" } },
@@ -125,12 +126,11 @@ export const shopByCategoryConfig: AdminPageConfig = {
     { key: "title_en", label: { ar: "العنوان بالإنجليزية", en: "Title (EN)" }, type: "text", required: true, maxLength: 80 },
     {
       key: "image_url",
-      label: { ar: "صورة البلاطة (مربعة)", en: "Tile image (square)" },
+      label: { ar: "صورة البلاطة (اختياري)", en: "Tile image (optional)" },
       type: "image",
-      required: true,
       bucket: "category-media",
       folder: "shop-by-category",
-      helpText: { ar: "يفضّل صورة مربعة عالية الجودة", en: "A high-quality square image is preferred" },
+      helpText: { ar: "اتركيها فارغة إذا تريدين زرّاً نصياً فقط", en: "Leave empty for a text-only button" },
     },
     {
       key: "category_id",
@@ -165,7 +165,7 @@ export const seasonPicksConfig: AdminPageConfig = {
   table: "season_picks",
   orderBy: { column: "display_order", ascending: true },
   columns: [
-    { key: "product_id", label: { ar: "المنتج", en: "Product" } },
+    { key: "product_id", label: { ar: "المنتج", en: "Product" }, render: (v) => <ProductNameCell productId={v} /> },
     { key: "title_ar", label: { ar: "العنوان", en: "Heading" }, hideOnMobile: true },
     { key: "badge_ar", label: { ar: "الشارة", en: "Badge" }, type: "badge", hideOnMobile: true },
     { key: "display_order", label: { ar: "#", en: "#" }, type: "number", width: "w-16" },
