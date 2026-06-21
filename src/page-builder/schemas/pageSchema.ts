@@ -208,6 +208,83 @@ export type ReviewsSection = {
   settings?: CommonSectionSettings;
 };
 
+// --- New universal blocks ---
+
+export type ButtonSection = {
+  id: string;
+  type: "button";
+  content: {
+    button: ButtonContent;
+    alignment?: "left" | "center" | "right";
+    size?: "sm" | "md" | "lg" | "xl";
+    shape?: "square" | "rounded" | "pill";
+    fullWidth?: boolean;
+  };
+  settings?: CommonSectionSettings;
+};
+
+export type BannerSection = {
+  id: string;
+  type: "banner";
+  content: {
+    image?: ImageContent;
+    title_ar?: string;
+    title_en?: string;
+    subtitle_ar?: string;
+    subtitle_en?: string;
+    button?: ButtonContent;
+    height?: "sm" | "md" | "lg" | "xl";
+    overlay?: number;
+    alignment?: "left" | "center" | "right";
+    shape?: "square" | "rounded" | "pill";
+    textColor?: string;
+  };
+  settings?: CommonSectionSettings;
+};
+
+export type ProductGridSection = {
+  id: string;
+  type: "product_grid";
+  content: {
+    title_ar?: string;
+    title_en?: string;
+    source?: "category" | "manual" | "newest";
+    categorySlug?: string;
+    productSlugs?: string[];
+    limit?: number;
+    columns?: 2 | 3 | 4 | 5;
+    cardShape?: "square" | "rounded";
+    showPrice?: boolean;
+  };
+  settings?: CommonSectionSettings;
+};
+
+export type DividerSection = {
+  id: string;
+  type: "divider";
+  content: {
+    style?: "solid" | "dashed" | "dotted";
+    color?: string;
+    thickness?: number;
+    width?: number;
+  };
+  settings?: CommonSectionSettings;
+};
+
+export type SpacerSection = {
+  id: string;
+  type: "spacer";
+  content: { height?: number };
+  settings?: CommonSectionSettings;
+};
+
+export type HtmlSection = {
+  id: string;
+  type: "html";
+  content: { html?: string };
+  settings?: CommonSectionSettings;
+};
+
 export type Section =
   | LegacyHomeSection
   | HeroSection
@@ -219,7 +296,13 @@ export type Section =
   | CtaSection
   | GallerySection
   | StatsSection
-  | ReviewsSection;
+  | ReviewsSection
+  | ButtonSection
+  | BannerSection
+  | ProductGridSection
+  | DividerSection
+  | SpacerSection
+  | HtmlSection;
 
 export type SectionType = Section["type"];
 
