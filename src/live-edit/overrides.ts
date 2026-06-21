@@ -21,10 +21,11 @@ export function computeSelector(root: Element, el: Element): string {
   const parts: string[] = [];
   let cur: Element | null = el;
   while (cur && cur !== root) {
-    const parent = cur.parentElement;
+    const parent: Element | null = cur.parentElement;
     if (!parent) break;
     const tag = cur.tagName.toLowerCase();
-    const sibs = Array.from(parent.children).filter((c) => c.tagName === cur!.tagName);
+    const tagName = cur.tagName;
+    const sibs = Array.from(parent.children).filter((c: Element) => c.tagName === tagName);
     const idx = sibs.indexOf(cur) + 1;
     parts.unshift(`${tag}:nth-of-type(${idx})`);
     cur = parent;
