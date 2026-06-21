@@ -546,6 +546,8 @@ export function FormDialog({
                     <WarehouseStockPicker value={Array.isArray(values[f.key]) ? values[f.key] : []} onChange={(v) => setVal(f.key, v)} existing={existingInventory} />
                   ) : f.type === "json" ? (
                     <FriendlyDataEditor value={values[f.key]} onChange={(v) => setVal(f.key, v)} />
+                  ) : f.type === "link" ? (
+                    <LinkPicker value={values[f.key] ?? ""} onChange={(url) => setVal(f.key, url)} placeholder={ph} />
                   ) : f.type === "textarea" ? (
                     <Textarea id={f.key} rows={f.rows ?? 4} value={values[f.key] ?? ""} onChange={(e) => setVal(f.key, e.target.value)} placeholder={ph} className="text-sm" />
                   ) : f.type === "select" ? (
