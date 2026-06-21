@@ -60,10 +60,11 @@ function Index() {
   }, []);
 
   const live = useLiveEdit();
+  useApplyOverrides("/");
   if (live.enabled) {
     return <LiveEditCanvas fallback={content ? <PageRenderer content={content} /> : <HomeScreen />} />;
   }
-  if (!loaded) return (<><HomeScreen /><EditPageButton slug="home" /></>);
-  if (content) return (<><PageRenderer content={content} /><EditPageButton slug="home" /></>);
-  return (<><HomeScreen /><EditPageButton slug="home" /></>);
+  if (!loaded) return (<><div data-live-root><HomeScreen /></div><EditPageButton slug="home" /></>);
+  if (content) return (<><div data-live-root><PageRenderer content={content} /></div><EditPageButton slug="home" /></>);
+  return (<><div data-live-root><HomeScreen /></div><EditPageButton slug="home" /></>);
 }
