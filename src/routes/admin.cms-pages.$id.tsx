@@ -416,7 +416,7 @@ function PaletteItem({ type, icon, label, onClick }: { type: string; icon: strin
   );
 }
 
-function CanvasDropZone({ id, children }: { id: string; children: React.ReactNode | React.ReactNode[] }) {
+function CanvasDropZone({ id, children }: { id: string; children: ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id });
   return (
     <div ref={setNodeRef} className={cn(isOver && "bg-primary/5 outline outline-2 outline-primary/40")}>
