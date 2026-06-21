@@ -208,13 +208,13 @@ export const seasonPicksConfig: AdminPageConfig = {
     },
     {
       key: "link_url",
-      label: { ar: "رابط البطاقة عند الضغط (اختياري)", en: "Card link URL (optional)" },
-      type: "text",
+      label: { ar: "الرابط عند الضغط (اختياري)", en: "Card link (optional)" },
+      type: "link",
       required: false,
-      placeholder: { ar: "/category/dresses أو /landing/sale", en: "/category/dresses or /landing/sale" },
+      placeholder: { ar: "اختر صفحة أو تصنيف أو منتج…", en: "Pick a page, category, product…" },
       helpText: {
-        ar: "أي رابط داخلي مثل /category/xxx أو /landing/xxx. مطلوب عندما لا تختار منتجاً.",
-        en: "Any internal link, e.g. /category/xxx or /landing/xxx. Required when no product is selected.",
+        ar: "اختر تصنيفاً أو صفحة جاهزة أو الصق رابطاً. مطلوب عندما لا تختار منتجاً.",
+        en: "Pick a category/page or paste a URL. Required when no product is selected.",
       },
     },
     {
