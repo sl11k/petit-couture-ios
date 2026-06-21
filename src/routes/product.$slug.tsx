@@ -464,6 +464,41 @@ function ProductDetails() {
     return <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700"><Check className="h-3 w-3" />{t.inStock}</span>;
   };
 
+  // Avoid the "old design flash": render a skeleton while the DB row loads.
+  if (productLoading) {
+    return (
+      <div className="min-h-screen w-full bg-cream flex justify-center" dir={ar ? "rtl" : "ltr"}>
+        <div className="relative w-full max-w-[440px] bg-background min-h-screen shadow-soft animate-pulse">
+          <div className="px-5 pt-4 pb-3 flex items-center justify-between">
+            <div className="h-10 w-10 rounded-xl bg-muted" />
+            <div className="h-3 w-20 rounded bg-muted" />
+            <div className="h-10 w-10 rounded-xl bg-muted" />
+          </div>
+          <div className="px-5">
+            <div className="rounded-[28px] bg-muted aspect-[4/5]" />
+            <div className="mt-4 flex gap-3">
+              {[0,1,2,3].map((i) => <div key={i} className="h-[68px] w-[56px] rounded-[14px] bg-muted" />)}
+            </div>
+          </div>
+          <div className="px-5 mt-7 space-y-3">
+            <div className="h-3 w-24 rounded bg-muted" />
+            <div className="h-7 w-3/4 rounded bg-muted" />
+            <div className="h-4 w-32 rounded bg-muted" />
+            <div className="h-6 w-28 rounded bg-muted mt-3" />
+          </div>
+          <div className="px-5 mt-7 space-y-3">
+            <div className="h-3 w-16 rounded bg-muted" />
+            <div className="flex gap-3">{[0,1,2].map((i) => <div key={i} className="h-11 w-11 rounded-xl bg-muted" />)}</div>
+          </div>
+          <div className="px-5 mt-7 space-y-3">
+            <div className="h-3 w-16 rounded bg-muted" />
+            <div className="grid grid-cols-6 gap-2">{[0,1,2,3,4,5].map((i) => <div key={i} className="h-12 rounded-xl bg-muted" />)}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen w-full bg-cream flex justify-center" dir={ar ? "rtl" : "ltr"}>
       <div className="relative w-full max-w-[440px] bg-background min-h-screen overflow-hidden shadow-soft">
