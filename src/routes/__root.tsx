@@ -22,6 +22,8 @@ import { flushErrorBuffer } from "@/lib/errors";
 import { checkAdminOutlets } from "@/dev/checkAdminOutlets";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LiveEditProvider } from "@/live-edit/LiveEditContext";
+import { InlineQuickEditProvider } from "@/live-edit/InlineQuickEdit";
+import { useCustomCss } from "@/hooks/useCustomCss";
 
 import appCss from "../styles.css?url";
 
@@ -150,11 +152,13 @@ function RootComponent() {
                 <BagProvider>
                   <AddressProvider>
                     <LiveEditProvider>
-                      <StorefrontShell
-                        showStoreChrome={showStoreChrome}
-                        hideFooter={hideFooter}
-                        isAdmin={isAdmin}
-                      />
+                      <InlineQuickEditProvider>
+                        <StorefrontShell
+                          showStoreChrome={showStoreChrome}
+                          hideFooter={hideFooter}
+                          isAdmin={isAdmin}
+                        />
+                      </InlineQuickEditProvider>
                     </LiveEditProvider>
                   </AddressProvider>
                 </BagProvider>
@@ -177,6 +181,7 @@ function StorefrontShell({
   isAdmin: boolean;
 }) {
   const { lang } = useLanguage();
+  useCustomCss();
   // Admin pages have their own AdminTranslateScope inside AdminShell.
   // Wrap storefront only — translates Arabic → English (or vice versa) at runtime
   // using the bulk dictionary in src/i18n/adminDict.ts.
