@@ -21,6 +21,7 @@ import { GlobalErrorBoundary, OfflineBanner } from "@/components/ErrorDisplay";
 import { flushErrorBuffer } from "@/lib/errors";
 import { checkAdminOutlets } from "@/dev/checkAdminOutlets";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { LiveEditProvider } from "@/live-edit/LiveEditContext";
 
 import appCss from "../styles.css?url";
 
