@@ -353,7 +353,7 @@ function SortableSection({
   onSectionUpdate: (id: string, updater: (s: Section) => Section, opts?: { label?: string; key?: string }) => void;
 }) {
 
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id, data: { type: "section" } });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
