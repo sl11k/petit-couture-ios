@@ -211,6 +211,27 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
     }
   };
 
+  const [styleOpen, setStyleOpen] = useState(false);
+  const openStyleEditor = () => {
+    if (!selected?.el) {
+      toast.message("اختر عنصراً أولاً");
+      return;
+    }
+    setStyleOpen(true);
+  };
+  const selectedStyleInitial: StyleValue = (() => {
+    if (!selected?.el) return {};
+    const sel = computeSelector(rootRef.current!, selected.el);
+    const key = keyOf(sel, "style", lang);
+    const saved = draft[key]?.value;
+    return (saved && typeof saved === "object" ? saved : {}) as StyleValue;
+  })();
+  const onStyleChange = (next: StyleValue) => {
+    if (!selected?.el) return;
+    const sel = computeSelector(rootRef.current!, selected.el);
+    setField(sel, "style", next);
+  };
+
   const dirtyCount = Object.keys(draft).length;
 
   return (
