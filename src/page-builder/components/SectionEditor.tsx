@@ -420,6 +420,178 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
         </>
       )}
 
+      {s.type === "button" && (
+        <>
+          <Input placeholder="نص (ع)" value={s.content.button?.label_ar ?? ""} onChange={(e) => updateContent((c: any) => ({ button: { ...(c.button ?? {}), label_ar: e.target.value } }))} />
+          <Input placeholder="Label (EN)" value={s.content.button?.label_en ?? ""} onChange={(e) => updateContent((c: any) => ({ button: { ...(c.button ?? {}), label_en: e.target.value } }))} />
+          <LinkPicker value={s.content.button?.url} onChange={(url) => updateContent((c: any) => ({ button: { ...(c.button ?? {}), url } }))} placeholder="رابط الزر" />
+          <div>
+            <Label className="text-xs">نمط</Label>
+            <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.button?.variant ?? "primary"}
+              onChange={(e) => updateContent((c: any) => ({ button: { ...(c.button ?? {}), variant: e.target.value } }))}>
+              <option value="primary">أساسي</option><option value="secondary">ثانوي</option><option value="ghost">شفاف</option>
+            </select>
+          </div>
+          <div>
+            <Label className="text-xs">الحجم</Label>
+            <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.size ?? "md"}
+              onChange={(e) => updateContent({ size: e.target.value })}>
+              <option value="sm">صغير</option><option value="md">متوسط</option><option value="lg">كبير</option><option value="xl">ضخم</option>
+            </select>
+          </div>
+          <div>
+            <Label className="text-xs">الشكل</Label>
+            <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.shape ?? "rounded"}
+              onChange={(e) => updateContent({ shape: e.target.value })}>
+              <option value="square">مربع</option><option value="rounded">دائري الزوايا</option><option value="pill">بيضاوي</option>
+            </select>
+          </div>
+          <div>
+            <Label className="text-xs">المحاذاة</Label>
+            <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.alignment ?? "center"}
+              onChange={(e) => updateContent({ alignment: e.target.value })}>
+              <option value="left">يسار</option><option value="center">وسط</option><option value="right">يمين</option>
+            </select>
+          </div>
+          <label className="flex items-center gap-2 text-xs">
+            <Switch checked={s.content.fullWidth ?? false} onCheckedChange={(v) => updateContent({ fullWidth: v })} />
+            عرض كامل
+          </label>
+        </>
+      )}
+
+      {s.type === "banner" && (
+        <>
+          <ImageField label="صورة الخلفية" value={s.content.image} onChange={(v) => updateContent({ image: v })} />
+          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
+          <TextField label="الفرعي (ع)" multiline value={s.content.subtitle_ar} onChange={(v, opts) => updateContent({ subtitle_ar: v }, opts)} />
+          <TextField label="Subtitle (EN)" multiline value={s.content.subtitle_en} onChange={(v, opts) => updateContent({ subtitle_en: v }, opts)} />
+          <div className="rounded-md border border-border p-2 space-y-2">
+            <Label className="text-xs">زر CTA</Label>
+            <Input placeholder="نص (ع)" value={s.content.button?.label_ar ?? ""} onChange={(e) => updateContent((c: any) => ({ button: { ...(c.button ?? {}), label_ar: e.target.value } }))} />
+            <Input placeholder="Label (EN)" value={s.content.button?.label_en ?? ""} onChange={(e) => updateContent((c: any) => ({ button: { ...(c.button ?? {}), label_en: e.target.value } }))} />
+            <LinkPicker value={s.content.button?.url} onChange={(url) => updateContent((c: any) => ({ button: { ...(c.button ?? {}), url } }))} placeholder="الرابط" />
+          </div>
+          <div>
+            <Label className="text-xs">الارتفاع</Label>
+            <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.height ?? "md"}
+              onChange={(e) => updateContent({ height: e.target.value })}>
+              <option value="sm">قصير</option><option value="md">متوسط</option><option value="lg">طويل</option><option value="xl">ضخم</option>
+            </select>
+          </div>
+          <div>
+            <Label className="text-xs">الشكل</Label>
+            <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.shape ?? "rounded"}
+              onChange={(e) => updateContent({ shape: e.target.value })}>
+              <option value="square">حواف حادة</option><option value="rounded">حواف ناعمة</option><option value="pill">بيضاوي</option>
+            </select>
+          </div>
+          <div>
+            <div className="flex items-center justify-between"><Label className="text-xs">شفافية التغطية</Label><span className="text-xs text-muted-foreground">{Math.round((s.content.overlay ?? 0.35) * 100)}%</span></div>
+            <input type="range" min={0} max={1} step={0.05} value={s.content.overlay ?? 0.35}
+              onChange={(e) => updateContent({ overlay: Number(e.target.value) })} className="w-full accent-primary" />
+          </div>
+          <div>
+            <Label className="text-xs">لون النص</Label>
+            <input type="color" value={/^#[0-9a-fA-F]{6}$/.test(s.content.textColor ?? "") ? s.content.textColor : "#ffffff"}
+              onChange={(e) => updateContent({ textColor: e.target.value })} className="h-9 w-full rounded border border-border" />
+          </div>
+        </>
+      )}
+
+      {s.type === "product_grid" && (
+        <>
+          <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
+          <div>
+            <Label className="text-xs">المصدر</Label>
+            <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.source ?? "newest"}
+              onChange={(e) => updateContent({ source: e.target.value })}>
+              <option value="newest">أحدث المنتجات</option>
+              <option value="category">من تصنيف</option>
+              <option value="manual">منتجات مختارة</option>
+            </select>
+          </div>
+          {s.content.source === "category" && (
+            <TextField label="معرّف التصنيف (slug)" value={s.content.categorySlug} onChange={(v, opts) => updateContent({ categorySlug: v }, opts)} />
+          )}
+          {s.content.source === "manual" && (
+            <TextField label="معرفات المنتجات (slug مفصولة بفواصل)" multiline
+              value={(s.content.productSlugs ?? []).join(", ")}
+              onChange={(v) => updateContent({ productSlugs: v.split(",").map((x) => x.trim()).filter(Boolean) })} />
+          )}
+          <div>
+            <Label className="text-xs">العدد الأقصى</Label>
+            <Input type="number" min={1} max={48} value={s.content.limit ?? 8}
+              onChange={(e) => updateContent({ limit: Math.max(1, Math.min(48, Number(e.target.value) || 8)) })} />
+          </div>
+          <div>
+            <Label className="text-xs">عدد الأعمدة</Label>
+            <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.columns ?? 4}
+              onChange={(e) => updateContent({ columns: Number(e.target.value) })}>
+              <option value={2}>2</option><option value={3}>3</option><option value={4}>4</option><option value={5}>5</option>
+            </select>
+          </div>
+          <div>
+            <Label className="text-xs">شكل البطاقة</Label>
+            <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.cardShape ?? "rounded"}
+              onChange={(e) => updateContent({ cardShape: e.target.value })}>
+              <option value="square">حواف حادة</option><option value="rounded">حواف ناعمة</option>
+            </select>
+          </div>
+          <label className="flex items-center gap-2 text-xs">
+            <Switch checked={s.content.showPrice !== false} onCheckedChange={(v) => updateContent({ showPrice: v })} />
+            إظهار السعر
+          </label>
+        </>
+      )}
+
+      {s.type === "divider" && (
+        <>
+          <div>
+            <Label className="text-xs">النمط</Label>
+            <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.style ?? "solid"}
+              onChange={(e) => updateContent({ style: e.target.value })}>
+              <option value="solid">صلب</option><option value="dashed">متقطع</option><option value="dotted">منقّط</option>
+            </select>
+          </div>
+          <div>
+            <Label className="text-xs">السماكة (px)</Label>
+            <Input type="number" min={1} max={20} value={s.content.thickness ?? 1}
+              onChange={(e) => updateContent({ thickness: Number(e.target.value) || 1 })} />
+          </div>
+          <div>
+            <Label className="text-xs">العرض %</Label>
+            <input type="range" min={10} max={100} value={s.content.width ?? 100}
+              onChange={(e) => updateContent({ width: Number(e.target.value) })} className="w-full accent-primary" />
+            <span className="text-xs text-muted-foreground">{s.content.width ?? 100}%</span>
+          </div>
+          <div>
+            <Label className="text-xs">اللون</Label>
+            <input type="color" value={/^#[0-9a-fA-F]{6}$/.test(s.content.color ?? "") ? s.content.color : "#e5e7eb"}
+              onChange={(e) => updateContent({ color: e.target.value })} className="h-9 w-full rounded border border-border" />
+          </div>
+        </>
+      )}
+
+      {s.type === "spacer" && (
+        <div>
+          <div className="flex items-center justify-between"><Label className="text-xs">الارتفاع</Label><span className="text-xs text-muted-foreground">{s.content.height ?? 40}px</span></div>
+          <input type="range" min={4} max={300} step={4} value={s.content.height ?? 40}
+            onChange={(e) => updateContent({ height: Number(e.target.value) })} className="w-full accent-primary" />
+        </div>
+      )}
+
+      {s.type === "html" && (
+        <>
+          <Label className="text-xs">HTML</Label>
+          <Textarea rows={12} className="font-mono text-xs" value={s.content.html ?? ""}
+            onChange={(e) => updateContent({ html: e.target.value })} />
+          <p className="text-[11px] text-muted-foreground">⚠️ HTML يُحقن مباشرة في الصفحة — استخدم بحذر.</p>
+        </>
+      )}
+
       {s.type === "legacy_home" && (
         <div className="space-y-3">
           <div className="rounded-md border border-amber-300/40 bg-amber-50/50 dark:bg-amber-950/20 p-3 text-xs space-y-2">
