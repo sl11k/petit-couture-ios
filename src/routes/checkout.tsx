@@ -47,7 +47,7 @@ export const Route = createFileRoute("/checkout")({
       path: "/checkout",
       noindex: true,
     }),
-  component: CheckoutPage,
+  component: () => (<><CheckoutPage /><EditPageButton slug="checkout" /></>),
 });
 
 const phoneRegex = /^(?:\+9665\d{8}|009665\d{8}|05\d{8})$/;
