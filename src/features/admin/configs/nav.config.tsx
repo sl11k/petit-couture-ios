@@ -2,6 +2,7 @@
 //
 // Admin pages for the three storefront navigation surfaces:
 //   1. headerNavConfig          → top header links (البوتيك / فساتين / ...)
+import { Link } from "@tanstack/react-router";
 //   2. shopByCategoryConfig     → homepage tile grid "تسوقي حسب الفئة"
 //   3. seasonPicksConfig        → curated row "الأكثر شهرة - مختارات الموسم"
 //
