@@ -5,6 +5,8 @@ import { PageRenderer } from "@/page-builder/components/PageRenderer";
 import { isPageContent, type PageContent } from "@/page-builder/schemas/pageSchema";
 import { supabase } from "@/integrations/supabase/client";
 import { EditPageButton } from "@/components/EditPageButton";
+import { useLiveEdit } from "@/live-edit/LiveEditContext";
+import { LiveEditCanvas } from "@/live-edit/LiveEditHome";
 import {
   buildMeta,
   organizationJsonLd,
@@ -54,6 +56,10 @@ function Index() {
     return () => { cancelled = true; };
   }, []);
 
+  const live = useLiveEdit();
+  if (live.enabled) {
+    return <LiveEditCanvas fallback={content ? <PageRenderer content={content} /> : <HomeScreen />} />;
+  }
   if (!loaded) return (<><HomeScreen /><EditPageButton slug="home" /></>);
   if (content) return (<><PageRenderer content={content} /><EditPageButton slug="home" /></>);
   return (<><HomeScreen /><EditPageButton slug="home" /></>);
