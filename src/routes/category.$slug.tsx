@@ -505,51 +505,13 @@ function FilterSortBar({
   );
 }
 
-function EmptyState({
-  ar,
-  slug,
-  showFallback,
-}: {
-  ar: boolean;
-  slug: string;
-  showFallback: boolean;
-}) {
-  const fmt = usePriceFormatter();
-  if (!showFallback) {
-    return (
-      <div className="text-center py-16">
-        <p className="text-muted-foreground">
-          {ar ? "لا توجد منتجات في هذا التصنيف بعد." : "No products in this category yet."}
-        </p>
-      </div>
-    );
-  }
-  // Seed preview card (so the page is never empty before admin adds products)
-  const seedProduct = productsByCategory["best-sellers"];
+function EmptyState({ ar }: { ar: boolean; slug: string; showFallback: boolean }) {
   return (
-    <>
-      <p className="text-sm text-muted-foreground mb-4">
-        {ar ? "عيّنة معروضة. يضيف المسؤول منتجات حقيقية من لوحة الإدارة." : "Preview shown. Admin adds real products from the dashboard."}
+    <div className="text-center py-16">
+      <p className="text-muted-foreground">
+        {ar ? "لا توجد منتجات في هذا التصنيف بعد." : "No products in this category yet."}
       </p>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-        <Link to="/product/$slug" params={{ slug }} className="group block">
-          <LazyImage
-            src={seedProduct.images[0]}
-            alt={seedProduct.name}
-            width={500}
-            height={625}
-            aspect="4/5"
-            className="w-full aspect-[4/5] object-cover rounded-md group-hover:opacity-90 transition"
-          />
-          <div className="mt-2.5">
-            <p className="text-sm text-foreground line-clamp-1">{seedProduct.name}</p>
-            <p className="text-[13px] text-gold-deep mt-0.5">
-              {fmt(seedProduct.price)}
-            </p>
-          </div>
-        </Link>
-      </div>
-    </>
+    </div>
   );
 }
 
