@@ -15,8 +15,14 @@ import type {
   StatsSection,
   ReviewsSection,
   ButtonContent,
+  ButtonSection,
+  BannerSection,
+  ProductGridSection,
+  DividerSection,
+  SpacerSection,
+  HtmlSection,
 } from "../schemas/pageSchema";
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
