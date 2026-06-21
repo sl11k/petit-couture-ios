@@ -170,17 +170,42 @@ export function DesktopHeader() {
               label: isRTL ? g.ar : g.en,
             }))}
           />
-          {/* Categories — hover dropdown of all DB categories */}
-          <HoverDropdown
-            label={isRTL ? "الفئات" : "CATEGORIES"}
-            items={dbCats.map((c) => ({
-              slug: c.slug,
-              label: isRTL ? c.name_ar : c.name_en,
-            }))}
-            columns={dbCats.length > 8 ? 2 : 1}
-          />
 
-          {dynamicFeatured.slice(0, 6).map((c) => {
+          {/* Custom header_nav_items override, if any */}
+          {navItems.map((c) => {
+            const active = location.pathname === c.href;
+            return (
+              <Link
+                key={c.href}
+                to={c.href as any}
+                className={[
+                  "px-4 h-9 inline-flex items-center rounded-xl text-[11.5px] tracking-luxury transition",
+                  active ? "bg-foreground text-background" : "text-foreground/70 hover:text-foreground hover:bg-cream-warm",
+                ].join(" ")}
+              >
+                {lang === "en" ? c.name_en.toUpperCase() : c.name_ar}
+              </Link>
+            );
+          })}
+
+          {/* Top-level DB categories. If a category has children, render as dropdown. */}
+          {navItems.length === 0 && tree.slice(0, 8).map((c) => {
+            const label = lang === "en"
+              ? (t.categories[c.slug] ?? c.name_en).toUpperCase()
+              : (t.categories[c.slug] ?? c.name_ar);
+            if (c.children.length > 0) {
+              return (
+                <HoverDropdown
+                  key={c.slug}
+                  label={label}
+                  parentHref={`/category/${c.slug}`}
+                  items={c.children.map((ch) => ({
+                    slug: ch.slug,
+                    label: isRTL ? ch.name_ar : ch.name_en,
+                  }))}
+                />
+              );
+            }
             const active = location.pathname === `/category/${c.slug}`;
             return (
               <Link
@@ -189,14 +214,10 @@ export function DesktopHeader() {
                 params={{ slug: c.slug }}
                 className={[
                   "px-4 h-9 inline-flex items-center rounded-xl text-[11.5px] tracking-luxury transition",
-                  active
-                    ? "bg-foreground text-background"
-                    : "text-foreground/70 hover:text-foreground hover:bg-cream-warm",
+                  active ? "bg-foreground text-background" : "text-foreground/70 hover:text-foreground hover:bg-cream-warm",
                 ].join(" ")}
               >
-                {lang === "en"
-                  ? (t.categories[c.slug] ?? c.name_en).toUpperCase()
-                  : (t.categories[c.slug] ?? c.name_ar)}
+                {label}
               </Link>
             );
           })}
