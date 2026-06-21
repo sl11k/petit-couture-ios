@@ -113,7 +113,7 @@ export async function fetchPopularPicks(activeOnly = true): Promise<PopularPick[
       if (productIds.length) {
         const { data: prods } = await (supabase as any)
           .from("products")
-          .select("id, slug, name_ar, name_en, image_url, main_image_url")
+          .select("id, slug, name_ar, name_en, image_url, images")
           .in("id", productIds);
         (prods ?? []).forEach((p: any) => productMap.set(p.id, p));
       }
