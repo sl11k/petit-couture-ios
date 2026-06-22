@@ -179,6 +179,24 @@ export type GallerySection = {
   settings?: CommonSectionSettings;
 };
 
+export type BeforeAfterSection = {
+  id: string;
+  type: "before_after";
+  content: {
+    title_ar?: string;
+    title_en?: string;
+    beforeImage?: ImageContent;
+    afterImage?: ImageContent;
+    beforeLabel_ar?: string;
+    beforeLabel_en?: string;
+    afterLabel_ar?: string;
+    afterLabel_en?: string;
+    layout?: "slider" | "side_by_side";
+    imageHeight?: number;
+  };
+  settings?: CommonSectionSettings;
+};
+
 export type StatItem = {
   id: string;
   value?: string;
@@ -295,6 +313,7 @@ export type Section =
   | TestimonialsSection
   | CtaSection
   | GallerySection
+  | BeforeAfterSection
   | StatsSection
   | ReviewsSection
   | ButtonSection

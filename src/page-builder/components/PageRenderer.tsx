@@ -12,6 +12,7 @@ import type {
   TestimonialsSection,
   CtaSection,
   GallerySection,
+  BeforeAfterSection,
   StatsSection,
   ReviewsSection,
   ButtonContent,
@@ -21,6 +22,7 @@ import type {
   DividerSection,
   SpacerSection,
   HtmlSection,
+  ImageContent,
 } from "../schemas/pageSchema";
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, Star } from "lucide-react";
@@ -507,6 +509,41 @@ function RenderGallery({ s }: { s: GallerySection }) {
   );
 }
 
+function RenderBeforeAfter({ s }: { s: BeforeAfterSection }) {
+  const { lang } = useLanguage();
+  const [split, setSplit] = useState(50);
+  const ar = lang === "ar";
+  const c = s.content;
+  const title = pick(ar, c.title_ar, c.title_en);
+  const beforeLabel = pick(ar, c.beforeLabel_ar, c.beforeLabel_en) || (ar ? "قبل" : "Before");
+  const afterLabel = pick(ar, c.afterLabel_ar, c.afterLabel_en) || (ar ? "بعد" : "After");
+  const imageStyle = { height: c.imageHeight ?? 520 };
+  const image = (value: ImageContent | undefined, label: string) => value?.url ? (
+    <img src={value.url} alt={value.alt || label} className="h-full w-full object-cover" />
+  ) : <div className="h-full w-full grid place-items-center bg-muted text-muted-foreground text-sm">{label}</div>;
+  return (
+    <section style={sectionStyle(s)} className="px-4 py-12">
+      <div className="mx-auto max-w-6xl">
+        {title && <h2 className="mb-7 text-center text-3xl font-semibold">{title}</h2>}
+        {c.layout === "side_by_side" ? (
+          <div className="grid gap-4 md:grid-cols-2">
+            <figure className="relative overflow-hidden rounded-2xl" style={imageStyle}>{image(c.beforeImage, beforeLabel)}<figcaption className="absolute bottom-3 start-3 rounded-full bg-black/70 px-3 py-1 text-xs text-white">{beforeLabel}</figcaption></figure>
+            <figure className="relative overflow-hidden rounded-2xl" style={imageStyle}>{image(c.afterImage, afterLabel)}<figcaption className="absolute bottom-3 start-3 rounded-full bg-black/70 px-3 py-1 text-xs text-white">{afterLabel}</figcaption></figure>
+          </div>
+        ) : (
+          <div className="relative overflow-hidden rounded-2xl bg-muted" style={imageStyle}>
+            <div className="absolute inset-0">{image(c.afterImage, afterLabel)}</div>
+            <div className="absolute inset-y-0 start-0 overflow-hidden" style={{ width: `${split}%` }}><div className="h-full" style={{ width: `${10000 / Math.max(split, 1)}%` }}>{image(c.beforeImage, beforeLabel)}</div></div>
+            <div className="pointer-events-none absolute inset-y-0 w-0.5 bg-white shadow" style={{ insetInlineStart: `${split}%` }} />
+            <input aria-label="Before and after comparison" type="range" min="0" max="100" value={split} onChange={(event) => setSplit(Number(event.target.value))} className="absolute inset-0 h-full w-full cursor-ew-resize opacity-0" />
+            <span className="absolute bottom-3 start-3 rounded-full bg-black/70 px-3 py-1 text-xs text-white">{beforeLabel}</span><span className="absolute bottom-3 end-3 rounded-full bg-black/70 px-3 py-1 text-xs text-white">{afterLabel}</span>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function RenderStats({ s }: { s: StatsSection }) {
   const ctx = useContext(EditContext);
   const ar = ctx?.ar ?? false;
@@ -773,6 +810,7 @@ function RenderSection({ s }: { s: Section }) {
     case "testimonials":  return <RenderTestimonials s={s} />;
     case "cta":           return <RenderCta s={s} />;
     case "gallery":       return <RenderGallery s={s} />;
+    case "before_after":  return <RenderBeforeAfter s={s} />;
     case "stats":         return <RenderStats s={s} />;
     case "reviews":       return <RenderReviews s={s} />;
     case "button":        return <RenderButton s={s} />;

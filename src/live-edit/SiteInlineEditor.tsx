@@ -93,7 +93,7 @@ const BLOCK_TEMPLATES: StudioBlock[] = [
   ["image_text", "تحرير المجلة", "Editorial feature", "content"],
   ["image_text", "خلف الكواليس", "Behind the scenes", "content"],
   ["gallery", "شبكة إنستغرام", "Instagram grid", "media"],
-  ["gallery", "صور قبل وبعد", "Before & after", "media"],
+  ["before_after", "صور قبل وبعد", "Before & after", "media"],
   ["testimonials", "اقتباس مميز", "Featured quote", "social"],
   ["stats", "عداد الثقة", "Trust counter", "social"],
   ["faq", "الشحن والاسترجاع", "Shipping & returns", "engagement"],
@@ -469,6 +469,10 @@ export function SiteInlineEditor({
   };
 
   const addBlock = (block: StudioBlock) => {
+    // Always reveal the real section inspector after inserting a block.
+    // Previously the element-style popover could remain active and hide it.
+    setStyleOpen(false);
+    setSelected(null);
     const section = createDefaultSection(block.type);
     const content = section.content as Record<string, unknown>;
     if ("title_ar" in content) content.title_ar = block.ar;

@@ -19,6 +19,7 @@ export const SECTION_TYPES: { type: SectionType; label_ar: string; label_en: str
   { type: "reviews",       label_ar: "تقييمات حقيقية",          label_en: "Live reviews",  icon: "⭐" },
   { type: "faq",           label_ar: "أسئلة شائعة",             label_en: "FAQ",           icon: "❓" },
   { type: "gallery",       label_ar: "معرض صور",                label_en: "Gallery",       icon: "🎞️" },
+  { type: "before_after",  label_ar: "قبل وبعد",                label_en: "Before & after", icon: "◫" },
   { type: "cta",           label_ar: "دعوة للإجراء",            label_en: "CTA",           icon: "🎯" },
   { type: "divider",       label_ar: "فاصل",                    label_en: "Divider",       icon: "➖" },
   { type: "spacer",        label_ar: "مسافة",                   label_en: "Spacer",        icon: "↕️" },
@@ -69,6 +70,14 @@ export function createDefaultSection(type: SectionType): Section {
       ] } };
     case "gallery":
       return { id, type: "gallery", content: { columns: 3, images: [] } };
+    case "before_after":
+      return { id, type: "before_after", content: {
+        title_ar: "قبل وبعد", title_en: "Before & after",
+        beforeImage: { url: "", alt: "Before" }, afterImage: { url: "", alt: "After" },
+        beforeLabel_ar: "قبل", beforeLabel_en: "Before",
+        afterLabel_ar: "بعد", afterLabel_en: "After",
+        layout: "slider", imageHeight: 520,
+      } };
     case "cta":
       return { id, type: "cta", content: {
         title_ar: "جاهز للبدء؟", title_en: "Ready to start?",

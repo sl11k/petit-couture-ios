@@ -239,6 +239,10 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
           <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
           <TextField label="النص (ع)" multiline value={s.content.body_ar} onChange={(v, opts) => updateContent({ body_ar: v }, opts)} />
           <TextField label="Body (EN)" multiline value={s.content.body_en} onChange={(v, opts) => updateContent({ body_en: v }, opts)} />
+          <ButtonsEditor
+            buttons={s.content.button ? [s.content.button] : []}
+            onChange={(buttons) => updateContent({ button: buttons[0] })}
+          />
         </>
       )}
 
@@ -406,6 +410,43 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
               </div>
             ))}
             <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent((c: any) => ({ images: [...c.images, {}] }))}><Plus className="h-3 w-3 me-1" /> إضافة صورة</Button>
+          </div>
+        </>
+      )}
+
+      {s.type === "before_after" && (
+        <>
+          <TextField label="العنوان (عربي)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (English)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
+          <div className="rounded-lg border border-border p-3 space-y-3">
+            <div className="font-medium text-xs">صورة قبل</div>
+            <ImageField label="ارفع صورة قبل" value={s.content.beforeImage} onChange={(v) => updateContent({ beforeImage: v })} />
+            <TextField label="تسمية قبل (عربي)" value={s.content.beforeLabel_ar} onChange={(v, opts) => updateContent({ beforeLabel_ar: v }, opts)} />
+            <TextField label="Before label (English)" value={s.content.beforeLabel_en} onChange={(v, opts) => updateContent({ beforeLabel_en: v }, opts)} />
+          </div>
+          <div className="rounded-lg border border-border p-3 space-y-3">
+            <div className="font-medium text-xs">صورة بعد</div>
+            <ImageField label="ارفع صورة بعد" value={s.content.afterImage} onChange={(v) => updateContent({ afterImage: v })} />
+            <TextField label="تسمية بعد (عربي)" value={s.content.afterLabel_ar} onChange={(v, opts) => updateContent({ afterLabel_ar: v }, opts)} />
+            <TextField label="After label (English)" value={s.content.afterLabel_en} onChange={(v, opts) => updateContent({ afterLabel_en: v }, opts)} />
+          </div>
+          <div>
+            <Label className="text-xs">طريقة العرض</Label>
+            <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+              value={s.content.layout ?? "slider"}
+              onChange={(e) => updateContent({ layout: e.target.value })}>
+              <option value="slider">سحب للمقارنة</option>
+              <option value="side_by_side">صورتان جنباً إلى جنب</option>
+            </select>
+          </div>
+          <div>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">ارتفاع الصور</Label>
+              <span className="text-xs text-muted-foreground">{s.content.imageHeight ?? 520}px</span>
+            </div>
+            <input type="range" min={240} max={800} step={20} value={s.content.imageHeight ?? 520}
+              onChange={(e) => updateContent({ imageHeight: Number(e.target.value) })}
+              className="w-full accent-primary" />
           </div>
         </>
       )}
