@@ -22,36 +22,363 @@ import { createSection, defaultThemeConfig } from "./defaults";
 import { ThemeRenderer } from "./ThemeRenderer";
 import { useThemeCustomizer } from "./ThemeProvider";
 import type { GlobalThemeSettings, SectionType, ThemeConfig, ThemeSection } from "./types";
+import "./theme-editor.css";
 
-const catalog: { type: SectionType; label: string }[] = [
-  { type: "announcement", label: "Announcement bar" },
-  { type: "marquee", label: "Moving marquee" },
-  { type: "hero", label: "Hero" },
-  { type: "slideshow", label: "Slideshow" },
-  { type: "product_grid", label: "Product grid" },
-  { type: "featured_products", label: "Featured products" },
-  { type: "categories", label: "Categories" },
-  { type: "banner", label: "Banner" },
-  { type: "collection", label: "Collection" },
-  { type: "text", label: "Text" },
-  { type: "image", label: "Image" },
-  { type: "image_text", label: "Image + text" },
-  { type: "video", label: "Video" },
-  { type: "gallery", label: "Gallery" },
-  { type: "features", label: "Feature cards" },
-  { type: "stats", label: "Stats" },
-  { type: "testimonials", label: "Testimonials" },
-  { type: "reviews", label: "Reviews" },
-  { type: "logo_cloud", label: "Brand logos" },
-  { type: "instagram", label: "Social gallery" },
-  { type: "newsletter", label: "Newsletter" },
-  { type: "countdown", label: "Countdown" },
-  { type: "faq", label: "FAQ" },
-  { type: "divider", label: "Divider" },
-  { type: "spacer", label: "Spacer" },
-  { type: "cta", label: "Call to action" },
-  { type: "footer", label: "Footer" },
+type BlockCategory =
+  | "Campaigns"
+  | "Commerce"
+  | "Content"
+  | "Social proof"
+  | "Engagement"
+  | "Layout";
+type CatalogItem = {
+  id: string;
+  type: SectionType;
+  label: string;
+  category: BlockCategory;
+  description: string;
+  preset?: Partial<ThemeSection["settings"]>;
+};
+const baseCatalog: Omit<CatalogItem, "id">[] = [
+  {
+    type: "announcement",
+    label: "Announcement bar",
+    category: "Campaigns",
+    description: "Shipping, offers and important news",
+  },
+  {
+    type: "marquee",
+    label: "Moving marquee",
+    category: "Campaigns",
+    description: "Animated campaign message",
+  },
+  {
+    type: "hero",
+    label: "Editorial hero",
+    category: "Campaigns",
+    description: "Large cinematic introduction",
+  },
+  {
+    type: "slideshow",
+    label: "Campaign slideshow",
+    category: "Campaigns",
+    description: "Rotating seasonal stories",
+  },
+  {
+    type: "banner",
+    label: "Image banner",
+    category: "Campaigns",
+    description: "Full-width promotional banner",
+  },
+  {
+    type: "collection",
+    label: "Collection spotlight",
+    category: "Campaigns",
+    description: "Feature one curated collection",
+  },
+  {
+    type: "countdown",
+    label: "Launch countdown",
+    category: "Campaigns",
+    description: "Create urgency for a launch",
+  },
+  {
+    type: "hero",
+    label: "Split hero",
+    category: "Campaigns",
+    description: "Image and copy side-by-side",
+    preset: { layout: "split", imagePosition: "right", minHeight: 480 },
+  },
+  {
+    type: "banner",
+    label: "Sale banner",
+    category: "Campaigns",
+    description: "High-impact sale promotion",
+    preset: { title: "The private sale", subtitle: "Limited time", accentColor: "#b42318" },
+  },
+  {
+    type: "cta",
+    label: "Floating promotion",
+    category: "Campaigns",
+    description: "Compact conversion panel",
+    preset: { layout: "boxed", title: "A little something special" },
+  },
+  {
+    type: "product_grid",
+    label: "Product grid",
+    category: "Commerce",
+    description: "Flexible live product catalogue",
+  },
+  {
+    type: "featured_products",
+    label: "Featured products",
+    category: "Commerce",
+    description: "Hand-picked best products",
+  },
+  {
+    type: "product_grid",
+    label: "New arrivals",
+    category: "Commerce",
+    description: "Show the newest pieces",
+    preset: { title: "Just arrived", subtitle: "New this week", itemCount: 8 },
+  },
+  {
+    type: "featured_products",
+    label: "Best sellers",
+    category: "Commerce",
+    description: "Your most-loved products",
+    preset: { title: "Most loved", subtitle: "Customer favourites" },
+  },
+  {
+    type: "product_grid",
+    label: "Sale products",
+    category: "Commerce",
+    description: "A dedicated offer grid",
+    preset: { title: "The sale edit", accentColor: "#b42318" },
+  },
+  {
+    type: "categories",
+    label: "Category cards",
+    category: "Commerce",
+    description: "Visual shopping shortcuts",
+  },
+  {
+    type: "categories",
+    label: "Shop by age",
+    category: "Commerce",
+    description: "Age-based navigation",
+    preset: {
+      title: "Shop by age",
+      itemsText: "Newborn\n0–2 years\n3–5 years\n6–8 years\n9–12 years",
+    },
+  },
+  {
+    type: "categories",
+    label: "Shop the occasion",
+    category: "Commerce",
+    description: "Occasion-based collections",
+    preset: {
+      title: "Made for every moment",
+      itemsText: "Everyday\nBirthday\nEid\nWedding\nGifting\nHoliday",
+    },
+  },
+  {
+    type: "collection",
+    label: "Gift guide",
+    category: "Commerce",
+    description: "Curated gifting destination",
+    preset: { title: "The gift guide", subtitle: "Beautifully chosen" },
+  },
+  {
+    type: "features",
+    label: "Shopping benefits",
+    category: "Commerce",
+    description: "Delivery, returns and service",
+    preset: { title: "Shop with confidence" },
+  },
+  {
+    type: "text",
+    label: "Rich text",
+    category: "Content",
+    description: "Story, heading and body copy",
+  },
+  {
+    type: "image",
+    label: "Full image",
+    category: "Content",
+    description: "Editorial photography block",
+  },
+  {
+    type: "image_text",
+    label: "Image with text",
+    category: "Content",
+    description: "Classic editorial composition",
+  },
+  {
+    type: "image_text",
+    label: "Brand story",
+    category: "Content",
+    description: "Tell the story behind the shop",
+    preset: { title: "Our story", subtitle: "Made with care", layout: "split" },
+  },
+  {
+    type: "image_text",
+    label: "Founder note",
+    category: "Content",
+    description: "A personal message",
+    preset: { title: "A note from our founder", subtitle: "Welcome to our world" },
+  },
+  {
+    type: "video",
+    label: "Campaign video",
+    category: "Content",
+    description: "Immersive motion content",
+  },
+  {
+    type: "gallery",
+    label: "Lookbook gallery",
+    category: "Content",
+    description: "Flexible visual grid",
+  },
+  {
+    type: "gallery",
+    label: "Editorial mosaic",
+    category: "Content",
+    description: "Dense magazine-style gallery",
+    preset: { columns: 3, gap: 8, borderRadius: 2 },
+  },
+  {
+    type: "gallery",
+    label: "Before & after",
+    category: "Content",
+    description: "Two-image comparison",
+    preset: { columns: 2, itemCount: 2, title: "See the difference" },
+  },
+  {
+    type: "features",
+    label: "Icon features",
+    category: "Content",
+    description: "Explain services and values",
+  },
+  {
+    type: "stats",
+    label: "Impact numbers",
+    category: "Content",
+    description: "Animated-looking key metrics",
+  },
+  {
+    type: "faq",
+    label: "Accordion / FAQ",
+    category: "Content",
+    description: "Expandable questions and answers",
+  },
+  {
+    type: "testimonials",
+    label: "Testimonials",
+    category: "Social proof",
+    description: "Customer stories and quotes",
+  },
+  {
+    type: "reviews",
+    label: "Review cards",
+    category: "Social proof",
+    description: "Ratings and recent feedback",
+  },
+  {
+    type: "logo_cloud",
+    label: "Brand logo cloud",
+    category: "Social proof",
+    description: "Partners, press and stockists",
+  },
+  {
+    type: "logo_cloud",
+    label: "As seen in",
+    category: "Social proof",
+    description: "Press recognition strip",
+    preset: { title: "As seen in", subtitle: "Press & media" },
+  },
+  {
+    type: "stats",
+    label: "Trust counter",
+    category: "Social proof",
+    description: "Orders, ratings and customers",
+    preset: { title: "Trusted by families" },
+  },
+  {
+    type: "instagram",
+    label: "Instagram feed",
+    category: "Social proof",
+    description: "Social content gallery",
+  },
+  {
+    type: "gallery",
+    label: "Customer photos",
+    category: "Social proof",
+    description: "User-generated content wall",
+    preset: { title: "Styled by you", subtitle: "Our community" },
+  },
+  {
+    type: "newsletter",
+    label: "Newsletter signup",
+    category: "Engagement",
+    description: "Grow your subscriber list",
+  },
+  {
+    type: "cta",
+    label: "Call to action",
+    category: "Engagement",
+    description: "Focused conversion section",
+  },
+  {
+    type: "cta",
+    label: "WhatsApp concierge",
+    category: "Engagement",
+    description: "Personal shopping contact",
+    preset: {
+      title: "Need a little help?",
+      subtitle: "Personal shopping",
+      description: "Our team is ready to help you choose.",
+      accentColor: "#128c7e",
+    },
+  },
+  {
+    type: "cta",
+    label: "Book an appointment",
+    category: "Engagement",
+    description: "Private consultation prompt",
+    preset: { title: "Book a private appointment", subtitle: "One-to-one styling" },
+  },
+  {
+    type: "faq",
+    label: "Size guide",
+    category: "Engagement",
+    description: "Helpful sizing accordion",
+    preset: { title: "Find the perfect fit", subtitle: "Size guide" },
+  },
+  {
+    type: "text",
+    label: "Store locations",
+    category: "Engagement",
+    description: "Addresses and opening hours",
+    preset: { title: "Visit us", subtitle: "Our boutiques" },
+  },
+  {
+    type: "divider",
+    label: "Divider",
+    category: "Layout",
+    description: "A refined visual separator",
+  },
+  {
+    type: "spacer",
+    label: "Spacer",
+    category: "Layout",
+    description: "Precise vertical breathing room",
+  },
+  {
+    type: "text",
+    label: "Section heading",
+    category: "Layout",
+    description: "Standalone title and introduction",
+    preset: { paddingY: 36 },
+  },
+  {
+    type: "announcement",
+    label: "Trust bar",
+    category: "Layout",
+    description: "Compact benefits strip",
+    preset: { title: "Secure payment  ·  Fast delivery  ·  Easy returns" },
+  },
+  {
+    type: "footer",
+    label: "Store footer",
+    category: "Layout",
+    description: "Brand, navigation and contact",
+  },
 ];
+const catalog: CatalogItem[] = baseCatalog.map((item, index) => ({
+  ...item,
+  id: `${item.type}-${index}`,
+}));
 const title = (type: string) => catalog.find((x) => x.type === type)?.label ?? type;
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -483,10 +810,16 @@ export function ThemeEditor({ onClose }: { onClose?: () => void } = {}) {
   const [adding, setAdding] = useState(false);
   const [dragging, setDragging] = useState<number | null>(null);
   const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<BlockCategory | "All">("All");
   const [device, setDevice] = useState<"desktop" | "tablet" | "mobile">("desktop");
   const visibleCatalog = useMemo(
-    () => catalog.filter((x) => x.label.toLowerCase().includes(query.toLowerCase())),
-    [query],
+    () =>
+      catalog.filter(
+        (x) =>
+          (category === "All" || x.category === category) &&
+          `${x.label} ${x.description}`.toLowerCase().includes(query.toLowerCase()),
+      ),
+    [query, category],
   );
   useEffect(() => {
     if (!onClose) return;
@@ -580,7 +913,7 @@ export function ThemeEditor({ onClose }: { onClose?: () => void } = {}) {
               />
               {visibleCatalog.map((x) => (
                 <button
-                  key={x.type}
+                  key={x.id}
                   onClick={() => {
                     const s = createSection(x.type);
                     setDraft({ ...draft, sections: [...draft.sections, s] });
@@ -655,7 +988,11 @@ export function ThemeEditor({ onClose }: { onClose?: () => void } = {}) {
           {draft.sections.length === 0 && (
             <div className="theme-list-empty">Your page is empty. Add a section to begin.</div>
           )}
-          <button className="theme-add-button" onClick={() => setAdding(!adding)}>
+          <button
+            className="theme-add-button"
+            data-testid="block-library-button"
+            onClick={() => setAdding(true)}
+          >
             <Layers3 size={16} /> Add from block library
           </button>
         </aside>
@@ -710,6 +1047,87 @@ export function ThemeEditor({ onClose }: { onClose?: () => void } = {}) {
           )}
         </aside>
       </div>
+      {adding && (
+        <div
+          className="theme-library-backdrop"
+          data-testid="block-library"
+          onMouseDown={() => setAdding(false)}
+        >
+          <section className="theme-library" onMouseDown={(event) => event.stopPropagation()}>
+            <header className="theme-library-head">
+              <div>
+                <small>SECTION LIBRARY</small>
+                <h2>Build something beautiful</h2>
+                <p>{catalog.length} ready-made blocks, all fully customizable.</p>
+              </div>
+              <button
+                className="theme-icon-button"
+                onClick={() => setAdding(false)}
+                aria-label="Close library"
+              >
+                <X size={19} />
+              </button>
+            </header>
+            <div className="theme-library-tools">
+              <input
+                className="theme-block-search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search blocks, layouts and ideas…"
+                autoFocus
+              />
+              <nav>
+                {(
+                  [
+                    "All",
+                    "Campaigns",
+                    "Commerce",
+                    "Content",
+                    "Social proof",
+                    "Engagement",
+                    "Layout",
+                  ] as const
+                ).map((item) => (
+                  <button
+                    key={item}
+                    className={category === item ? "active" : ""}
+                    onClick={() => setCategory(item)}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </nav>
+            </div>
+            <div className="theme-library-grid">
+              {visibleCatalog.map((x) => (
+                <button
+                  key={x.id}
+                  className="theme-block-card"
+                  onClick={() => {
+                    const base = createSection(x.type);
+                    const s = { ...base, settings: { ...base.settings, ...x.preset } };
+                    setDraft({ ...draft, sections: [...draft.sections, s] });
+                    setSelected(s.id);
+                    setAdding(false);
+                  }}
+                >
+                  <span className={`theme-block-art art-${x.type}`}>
+                    <Layers3 size={22} />
+                  </span>
+                  <span>
+                    <b>{x.label}</b>
+                    <small>{x.description}</small>
+                  </span>
+                  <Plus size={17} />
+                </button>
+              ))}
+              {!visibleCatalog.length && (
+                <div className="theme-library-empty">No blocks match your search.</div>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
