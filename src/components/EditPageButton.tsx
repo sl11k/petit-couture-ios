@@ -9,7 +9,17 @@ import { useLiveEdit } from "@/live-edit/LiveEditContext";
  * Floating "Edit this page" button for admins.
  * Toggles the in-page Live Edit mode for the given slug.
  */
-export function EditPageButton({ slug = "home" }: { slug?: string }) {
+export function EditPageButton({
+  slug = "home",
+  pageType = "custom",
+  titleAr,
+  titleEn,
+}: {
+  slug?: string;
+  pageType?: string;
+  titleAr?: string;
+  titleEn?: string;
+}) {
   const { roles, loading } = useUserRole();
   const { isRTL } = useLanguage();
   const live = useLiveEdit();
@@ -22,6 +32,7 @@ export function EditPageButton({ slug = "home" }: { slug?: string }) {
   useEffect(() => {
     if (!isAdmin) return;
     let cancelled = false;
+    setPageId(null);
     (async () => {
       const { data } = await supabase.from("cms_pages").select("id").eq("slug", slug).maybeSingle();
       if (!cancelled) setPageId(data?.id ?? null);
@@ -41,7 +52,11 @@ export function EditPageButton({ slug = "home" }: { slug?: string }) {
         checkout: { ar: "صفحة الدفع", en: "Checkout", type: "checkout" },
         category: { ar: "صفحة الفئة", en: "Category page", type: "category" },
       };
-      const meta = titleMap[slug] ?? { ar: slug, en: slug, type: "custom" };
+      const meta = titleMap[slug] ?? {
+        ar: titleAr || slug,
+        en: titleEn || slug,
+        type: pageType,
+      };
       const { data, error } = await supabase
         .from("cms_pages")
         .insert({
@@ -51,7 +66,7 @@ export function EditPageButton({ slug = "home" }: { slug?: string }) {
           type: meta.type,
           status: "draft",
           draft_content: { sections: [] } as never,
-          is_system: ["home", "product", "product_card", "checkout", "category"].includes(slug),
+          is_system: slug === "home",
         })
         .select("id")
         .maybeSingle();

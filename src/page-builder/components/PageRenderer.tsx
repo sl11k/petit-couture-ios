@@ -1,5 +1,4 @@
 import { useLanguage } from "@/i18n/LanguageContext";
-import { HomeScreen } from "@/components/HomeScreen";
 import { supabase } from "@/integrations/supabase/client";
 import type {
   Section,
@@ -902,7 +901,7 @@ function sectionStyle(s: Section): React.CSSProperties {
 
 function RenderSection({ s }: { s: Section }) {
   switch (s.type) {
-    case "legacy_home":   return <HomeScreen />;
+    case "legacy_home":   return null;
     case "hero":          return <RenderHero s={s} />;
     case "text_block":    return <RenderTextBlock s={s} />;
     case "image_text":    return <RenderImageText s={s} />;

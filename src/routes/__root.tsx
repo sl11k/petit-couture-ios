@@ -33,6 +33,10 @@ import { InlineQuickEditProvider } from "@/live-edit/InlineQuickEdit";
 import { SiteInlineEditor } from "@/live-edit/SiteInlineEditor";
 import { useCustomCss } from "@/hooks/useCustomCss";
 import { ThemeCustomizerProvider } from "@/theme-customizer/ThemeProvider";
+import { EditPageButton } from "@/components/EditPageButton";
+import { PublishedPageSections } from "@/live-edit/PublishedPageSections";
+import { getEditablePageIdentity } from "@/live-edit/pageIdentity";
+import { useApplyOverrides } from "@/live-edit/useApplyOverrides";
 
 import appCss from "../styles.css?url";
 
@@ -219,7 +223,10 @@ function StorefrontShell({
   const { lang } = useLanguage();
   const live = useLiveEdit();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const pageIdentity = getEditablePageIdentity(pathname);
+  const allowPageEditing = !isAdmin && !pathname.startsWith("/login") && !pathname.startsWith("/sitemap") && !pathname.startsWith("/robots") && !pathname.startsWith("/debug");
   useCustomCss();
+  useApplyOverrides(pathname);
   // Admin pages have their own AdminTranslateScope inside AdminShell.
   // Wrap storefront only — translates Arabic → English (or vice versa) at runtime
   // using the bulk dictionary in src/i18n/adminDict.ts.
@@ -230,7 +237,19 @@ function StorefrontShell({
       <AnalyticsTracker />
       <div id="main-content" tabIndex={-1}>
         <Outlet />
+        {pathname !== "/" && allowPageEditing && (
+          <PublishedPageSections key={pageIdentity.slug} slug={pageIdentity.slug} />
+        )}
       </div>
+      {allowPageEditing && (
+        <EditPageButton
+          key={pageIdentity.slug}
+          slug={pageIdentity.slug}
+          pageType={pageIdentity.type}
+          titleAr={pageIdentity.titleAr}
+          titleEn={pageIdentity.titleEn}
+        />
+      )}
       {!hideFooter && <Footer />}
       {showStoreChrome && (
         <>
@@ -263,5 +282,5 @@ function StorefrontShell({
       </SiteInlineEditor>
     );
   }
-  return localized;
+  return <div data-live-root>{localized}</div>;
 }

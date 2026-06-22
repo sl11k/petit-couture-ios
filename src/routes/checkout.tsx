@@ -1,5 +1,4 @@
 import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
-import { EditPageButton } from "@/components/EditPageButton";
 import { buildMeta } from "@/lib/seo";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -47,7 +46,7 @@ export const Route = createFileRoute("/checkout")({
       path: "/checkout",
       noindex: true,
     }),
-  component: () => (<><CheckoutPage /><EditPageButton slug="checkout" /></>),
+  component: CheckoutPage,
 });
 
 const phoneRegex = /^(?:\+9665\d{8}|009665\d{8}|05\d{8})$/;
