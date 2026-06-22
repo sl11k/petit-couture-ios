@@ -25,6 +25,7 @@ import { LiveEditProvider, useLiveEdit } from "@/live-edit/LiveEditContext";
 import { InlineQuickEditProvider } from "@/live-edit/InlineQuickEdit";
 import { SiteInlineEditor } from "@/live-edit/SiteInlineEditor";
 import { useCustomCss } from "@/hooks/useCustomCss";
+import { ThemeCustomizerProvider } from "@/theme-customizer/ThemeProvider";
 
 import appCss from "../styles.css?url";
 
@@ -152,15 +153,17 @@ function RootComponent() {
               <WishlistProvider>
                 <BagProvider>
                   <AddressProvider>
-                    <LiveEditProvider>
-                      <InlineQuickEditProvider>
-                        <StorefrontShell
-                          showStoreChrome={showStoreChrome}
-                          hideFooter={hideFooter}
-                          isAdmin={isAdmin}
-                        />
-                      </InlineQuickEditProvider>
-                    </LiveEditProvider>
+                    <ThemeCustomizerProvider>
+                      <LiveEditProvider>
+                        <InlineQuickEditProvider>
+                          <StorefrontShell
+                            showStoreChrome={showStoreChrome}
+                            hideFooter={hideFooter}
+                            isAdmin={isAdmin}
+                          />
+                        </InlineQuickEditProvider>
+                      </LiveEditProvider>
+                    </ThemeCustomizerProvider>
                   </AddressProvider>
                 </BagProvider>
               </WishlistProvider>
