@@ -23,7 +23,7 @@ RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $$
+AS $complete_payment$
 DECLARE
   o public.orders%ROWTYPE;
   newly_finalized boolean := false;
@@ -63,7 +63,7 @@ BEGIN
 
   RETURN newly_finalized;
 END;
-$$;
+$complete_payment$;
 
 -- Release a reservation once when a gateway definitively rejects or expires a
 -- payment. A paid order can never be moved backwards by a late failure event.
@@ -77,7 +77,7 @@ RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $$
+AS $fail_payment$
 DECLARE
   o public.orders%ROWTYPE;
   newly_released boolean := false;
@@ -102,7 +102,7 @@ BEGIN
    WHERE id = _order_id;
   RETURN newly_released;
 END;
-$$;
+$fail_payment$;
 
 -- Record a provider-confirmed full refund without changing inventory. Physical
 -- stock is returned only through the separate returns workflow.
@@ -117,7 +117,7 @@ RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $$
+AS $refund_payment$
 DECLARE o public.orders%ROWTYPE;
 BEGIN
   SELECT * INTO o FROM public.orders WHERE id = _order_id FOR UPDATE;
@@ -137,7 +137,7 @@ BEGIN
    WHERE id = _order_id;
   RETURN true;
 END;
-$$;
+$refund_payment$;
 
 -- Claim OTO creation before the external API call. Only one concurrent webhook
 -- or manual retry can own the claim, preventing duplicate carrier orders.
@@ -146,7 +146,7 @@ RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $$
+AS $claim_oto$
 DECLARE o public.orders%ROWTYPE;
 BEGIN
   SELECT * INTO o FROM public.orders WHERE id = _order_id FOR UPDATE;
@@ -163,7 +163,7 @@ BEGIN
    WHERE id = _order_id;
   RETURN true;
 END;
-$$;
+$claim_oto$;
 
 REVOKE ALL ON FUNCTION public.complete_async_payment(uuid,text,text,uuid,numeric,text) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.fail_async_payment(uuid,text,uuid,text) FROM PUBLIC, anon, authenticated;
