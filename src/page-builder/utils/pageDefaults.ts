@@ -127,7 +127,7 @@ export function createDefaultSection(type: SectionType): Section {
     case "product_grid":
       return { id, type: "product_grid", content: {
         title_ar: "منتجاتنا", title_en: "Our products",
-        source: "newest", limit: 8, columns: 4, cardShape: "rounded", showPrice: true,
+        source: "newest", limit: 8, columns: 4, layout: "grid", carouselCardSize: "medium", showNavigation: true, cardShape: "rounded", showPrice: true,
       } };
     case "divider":
       return { id, type: "divider", content: { style: "solid", color: "#e5e7eb", thickness: 1, width: 100 } };

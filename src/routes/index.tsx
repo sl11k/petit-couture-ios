@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { isPageContent } from "@/page-builder/schemas/pageSchema";
 import { PageRenderer } from "@/page-builder/components/PageRenderer";
 import { useLiveEdit } from "@/live-edit/LiveEditContext";
+import { HomeScreen } from "@/components/HomeScreen";
 import { buildMeta, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
@@ -37,6 +38,10 @@ export const Route = createFileRoute("/")({
 function Index() {
   const live = useLiveEdit();
   const content = Route.useLoaderData();
-  if (live.enabled) return null;
-  return <PageRenderer content={content} />;
+  return (
+    <>
+      <HomeScreen />
+      {!live.enabled && content.sections.length > 0 && <PageRenderer content={content} />}
+    </>
+  );
 }

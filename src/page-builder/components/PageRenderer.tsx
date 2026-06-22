@@ -27,7 +27,7 @@ import type {
   ImageContent,
 } from "../schemas/pageSchema";
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { ChevronDown, Star } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function pick(ar: boolean, valAr?: string, valEn?: string) {
@@ -793,6 +793,8 @@ function RenderProductGrid({ s }: { s: ProductGridSection }) {
   const c = s.content;
   const [items, setItems] = useState<Array<{ id: string; slug: string; name: string; image: string | null; price: number | null; currency: string | null }>>([]);
   const [loading, setLoading] = useState(true);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef({ active: false, x: 0, scroll: 0, moved: false });
 
   const keyDeps = useMemo(() => JSON.stringify({ src: c.source, cat: c.categorySlug, slugs: c.productSlugs, lim: c.limit }), [c.source, c.categorySlug, c.productSlugs, c.limit]);
 
@@ -839,6 +841,14 @@ function RenderProductGrid({ s }: { s: ProductGridSection }) {
   const colCls = cols === 2 ? "grid-cols-2" : cols === 3 ? "grid-cols-2 md:grid-cols-3" : cols === 5 ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-5" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4";
   const cardRound = c.cardShape === "square" ? "rounded-none" : "rounded-xl";
   const title = pick(ar, c.title_ar, c.title_en);
+  const carouselWidth = c.carouselCardSize === "compact" ? "w-[155px] sm:w-[185px]" : c.carouselCardSize === "large" ? "w-[260px] sm:w-[310px]" : "w-[205px] sm:w-[235px]";
+  const renderCard = (p: (typeof items)[number], carousel = false) => (
+    <a key={p.id} href={`/product/${p.slug}`} draggable={false} onClick={(event) => { if (dragRef.current.moved) { event.preventDefault(); dragRef.current.moved = false; } }} className={cn("block overflow-hidden border border-border bg-card hover:shadow-md transition", cardRound, carousel && `shrink-0 snap-start select-none ${carouselWidth}`)}>
+      {p.image ? <img src={p.image} alt={p.name} draggable={false} loading="lazy" className="w-full aspect-square object-cover" /> : <div className="aspect-square bg-muted" />}
+      <div className="p-2.5"><div className="text-sm font-medium line-clamp-2">{p.name}</div>{c.showPrice !== false && p.price != null && <div className="text-sm text-primary font-semibold mt-1">{p.price} {p.currency || "SAR"}</div>}</div>
+    </a>
+  );
+  const scrollCarousel = (direction: -1 | 1) => trackRef.current?.scrollBy({ left: direction * (ar ? -1 : 1) * trackRef.current.clientWidth * 0.82, behavior: "smooth" });
   return (
     <section style={sectionStyle(s)} className="px-4 py-6">
       <div className="max-w-6xl mx-auto">
@@ -847,21 +857,20 @@ function RenderProductGrid({ s }: { s: ProductGridSection }) {
           <div className={cn("grid gap-3", colCls)}>{Array.from({ length: cols }).map((_, i) => (<div key={i} className={cn("aspect-square bg-muted animate-pulse", cardRound)} />))}</div>
         ) : items.length === 0 ? (
           <p className="text-center text-muted-foreground text-sm py-8">{ar ? "لا توجد منتجات" : "No products"}</p>
+        ) : c.layout === "carousel" ? (
+          <div className="relative">
+            <div ref={trackRef} dir={ar ? "rtl" : "ltr"} className="flex touch-pan-y cursor-grab snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-3 active:cursor-grabbing [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              onPointerDown={(event) => { const el = event.currentTarget; el.setPointerCapture(event.pointerId); dragRef.current = { active: true, x: event.clientX, scroll: el.scrollLeft, moved: false }; }}
+              onPointerMove={(event) => { const drag = dragRef.current; if (!drag.active) return; const delta = event.clientX - drag.x; if (Math.abs(delta) > 5) drag.moved = true; event.currentTarget.scrollLeft = drag.scroll - delta; }}
+              onPointerUp={(event) => { dragRef.current.active = false; event.currentTarget.releasePointerCapture(event.pointerId); }}
+              onPointerCancel={() => { dragRef.current.active = false; }}>
+              {items.map((product) => renderCard(product, true))}
+            </div>
+            {c.showNavigation !== false && items.length > 1 && <><button type="button" onClick={() => scrollCarousel(-1)} aria-label={ar ? "السابق" : "Previous"} className="absolute start-2 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/95 shadow-lg backdrop-blur">{ar ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}</button><button type="button" onClick={() => scrollCarousel(1)} aria-label={ar ? "التالي" : "Next"} className="absolute end-2 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/95 shadow-lg backdrop-blur">{ar ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}</button></>}
+          </div>
         ) : (
           <div className={cn("grid gap-3", colCls)}>
-            {items.map((p) => (
-              <a key={p.id} href={`/product/${p.slug}`} className={cn("block overflow-hidden border border-border bg-card hover:shadow-md transition", cardRound)}>
-                {p.image ? (
-                  <img src={p.image} alt={p.name} loading="lazy" className="w-full aspect-square object-cover" />
-                ) : (<div className="aspect-square bg-muted" />)}
-                <div className="p-2.5">
-                  <div className="text-sm font-medium line-clamp-2">{p.name}</div>
-                  {c.showPrice !== false && p.price != null && (
-                    <div className="text-sm text-primary font-semibold mt-1">{p.price} {p.currency || "SAR"}</div>
-                  )}
-                </div>
-              </a>
-            ))}
+            {items.map((product) => renderCard(product))}
           </div>
         )}
       </div>

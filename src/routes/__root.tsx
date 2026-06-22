@@ -32,7 +32,7 @@ import { LiveEditProvider, useLiveEdit } from "@/live-edit/LiveEditContext";
 import { InlineQuickEditProvider } from "@/live-edit/InlineQuickEdit";
 import { SiteInlineEditor } from "@/live-edit/SiteInlineEditor";
 import { useCustomCss } from "@/hooks/useCustomCss";
-import { ThemeCustomizerProvider } from "@/theme-customizer/ThemeProvider";
+import { ThemeCustomizerProvider, useThemeCustomizer } from "@/theme-customizer/ThemeProvider";
 import { EditPageButton } from "@/components/EditPageButton";
 import { PublishedPageSections } from "@/live-edit/PublishedPageSections";
 import { getEditablePageIdentity } from "@/live-edit/pageIdentity";
@@ -221,12 +221,16 @@ function StorefrontShell({
   isAdmin: boolean;
 }) {
   const { lang } = useLanguage();
+  const { ready: themeReady } = useThemeCustomizer();
   const live = useLiveEdit();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const pageIdentity = getEditablePageIdentity(pathname);
   const allowPageEditing = !isAdmin && !pathname.startsWith("/login") && !pathname.startsWith("/sitemap") && !pathname.startsWith("/robots") && !pathname.startsWith("/debug");
   useCustomCss();
   useApplyOverrides(pathname);
+  if (!themeReady && !isAdmin) {
+    return <div className="min-h-screen bg-background" aria-label="Loading storefront" />;
+  }
   // Admin pages have their own AdminTranslateScope inside AdminShell.
   // Wrap storefront only — translates Arabic → English (or vice versa) at runtime
   // using the bulk dictionary in src/i18n/adminDict.ts.

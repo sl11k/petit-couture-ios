@@ -718,12 +718,28 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
               onChange={(e) => updateContent({ limit: Math.max(1, Math.min(48, Number(e.target.value) || 8)) })} />
           </div>
           <div>
+            <Label className="text-xs">طريقة عرض المنتجات</Label>
+            <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.layout ?? "grid"} onChange={(e) => updateContent({ layout: e.target.value })}>
+              <option value="carousel">صف واحد قابل للسحب يميناً ويساراً</option>
+              <option value="grid">شبكة متعددة الصفوف تحت بعضها</option>
+            </select>
+          </div>
+          {(s.content.layout ?? "grid") === "grid" && <div>
             <Label className="text-xs">عدد الأعمدة</Label>
             <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.columns ?? 4}
               onChange={(e) => updateContent({ columns: Number(e.target.value) })}>
               <option value={2}>2</option><option value={3}>3</option><option value={4}>4</option><option value={5}>5</option>
             </select>
-          </div>
+          </div>}
+          {s.content.layout === "carousel" && <>
+            <div>
+              <Label className="text-xs">حجم بطاقة المنتج</Label>
+              <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.carouselCardSize ?? "medium"} onChange={(e) => updateContent({ carouselCardSize: e.target.value })}>
+                <option value="compact">صغير — منتجات أكثر ظاهرة</option><option value="medium">متوسط</option><option value="large">كبير</option>
+              </select>
+            </div>
+            <label className="flex items-center gap-2 text-xs"><Switch checked={s.content.showNavigation !== false} onCheckedChange={(showNavigation) => updateContent({ showNavigation })} />إظهار أسهم التنقل</label>
+          </>}
           <div>
             <Label className="text-xs">شكل البطاقة</Label>
             <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.cardShape ?? "rounded"}

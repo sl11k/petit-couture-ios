@@ -339,6 +339,9 @@ export type ProductGridSection = {
     productSlugs?: string[];
     limit?: number;
     columns?: 2 | 3 | 4 | 5;
+    layout?: "grid" | "carousel";
+    carouselCardSize?: "compact" | "medium" | "large";
+    showNavigation?: boolean;
     cardShape?: "square" | "rounded";
     showPrice?: boolean;
   };
