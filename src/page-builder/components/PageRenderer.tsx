@@ -192,7 +192,8 @@ function EditT({
   placeholder?: string;
 }) {
   const ctx = useContext(EditContext);
-  const ar = ctx?.ar ?? false;
+  const { lang } = useLanguage();
+  const ar = ctx?.ar ?? lang === "ar";
   const full = `${field}_${ar ? "ar" : "en"}`;
   const value = ((s as any).content?.[full] ?? "") as string;
   const Tag = as ?? "span";
@@ -296,7 +297,8 @@ function RenderHero({ s }: { s: HeroSection }) {
   const overlay = s.settings?.overlay ?? 0;
   const align = s.content.alignment ?? "center";
   const ctx = useContext(EditContext);
-  const ar = ctx?.ar ?? false;
+  const { lang } = useLanguage();
+  const ar = ctx?.ar ?? lang === "ar";
   return (
     <section className="relative overflow-hidden" style={sectionWrapStyle(s)}>
       {bgImage && (
@@ -320,7 +322,8 @@ function RenderHero({ s }: { s: HeroSection }) {
 function RenderTextBlock({ s }: { s: TextBlockSection }) {
   const align = (s.content as any).alignment ?? "left";
   const ctx = useContext(EditContext);
-  const ar = ctx?.ar ?? false;
+  const { lang } = useLanguage();
+  const ar = ctx?.ar ?? lang === "ar";
   if (s.content.layout === "split") return (
     <section style={sectionWrapStyle(s)}>
       <div className="mx-auto grid min-h-[560px] max-w-7xl items-stretch md:grid-cols-2">
@@ -348,7 +351,8 @@ function RenderTextBlock({ s }: { s: TextBlockSection }) {
 function RenderImageText({ s }: { s: ImageTextSection }) {
   const side = s.content.imageSide ?? "left";
   const ctx = useContext(EditContext);
-  const ar = ctx?.ar ?? false;
+  const { lang } = useLanguage();
+  const ar = ctx?.ar ?? lang === "ar";
   return (
     <section style={sectionWrapStyle(s)}>
       <div className={cn("mx-auto max-w-6xl px-4 py-12 grid md:grid-cols-2 gap-8 items-center", side === "right" && "md:[&>div:first-child]:order-2")}>
@@ -370,7 +374,8 @@ function RenderFeatureGrid({ s }: { s: FeatureGridSection }) {
   const cols = s.content.columns ?? 3;
   const colsCls = cols === 2 ? "md:grid-cols-2" : cols === 4 ? "md:grid-cols-2 lg:grid-cols-4" : "md:grid-cols-3";
   const ctx = useContext(EditContext);
-  const ar = ctx?.ar ?? false;
+  const { lang } = useLanguage();
+  const ar = ctx?.ar ?? lang === "ar";
   return (
     <section style={sectionWrapStyle(s)}>
       <div className="mx-auto max-w-6xl px-4 py-12">
@@ -410,7 +415,8 @@ function RenderFeatureGrid({ s }: { s: FeatureGridSection }) {
 function RenderFaq({ s }: { s: FaqSection }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const ctx = useContext(EditContext);
-  const ar = ctx?.ar ?? false;
+  const { lang } = useLanguage();
+  const ar = ctx?.ar ?? lang === "ar";
   return (
     <section style={sectionWrapStyle(s)}>
       <div className="mx-auto max-w-3xl px-4 py-12">
@@ -455,7 +461,8 @@ function RenderFaq({ s }: { s: FaqSection }) {
 
 function RenderTestimonials({ s }: { s: TestimonialsSection }) {
   const ctx = useContext(EditContext);
-  const ar = ctx?.ar ?? false;
+  const { lang } = useLanguage();
+  const ar = ctx?.ar ?? lang === "ar";
   return (
     <section style={sectionWrapStyle(s)}>
       <div className="mx-auto max-w-6xl px-4 py-12">
@@ -502,7 +509,8 @@ function RenderTestimonials({ s }: { s: TestimonialsSection }) {
 function RenderCta({ s }: { s: CtaSection }) {
   const align = s.content.alignment ?? "center";
   const ctx = useContext(EditContext);
-  const ar = ctx?.ar ?? false;
+  const { lang } = useLanguage();
+  const ar = ctx?.ar ?? lang === "ar";
   return (
     <section style={sectionWrapStyle(s)}>
       <div className={cn("mx-auto max-w-4xl px-4 py-16", `text-${align}`)}>
@@ -641,7 +649,8 @@ function RenderNewsletter({ s }: { s: NewsletterSection }) {
 
 function RenderStats({ s }: { s: StatsSection }) {
   const ctx = useContext(EditContext);
-  const ar = ctx?.ar ?? false;
+  const { lang } = useLanguage();
+  const ar = ctx?.ar ?? lang === "ar";
   return (
     <section style={sectionWrapStyle(s)}>
       <div className="mx-auto max-w-5xl px-4 py-12 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">

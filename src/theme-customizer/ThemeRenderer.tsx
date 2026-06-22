@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/i18n/LanguageContext";
 import type { ButtonConfig, ThemeConfig, ThemeSection } from "./types";
 
 type Product = {
@@ -63,7 +64,7 @@ function SectionHeader({
   );
 }
 
-function ProductCards({ section, products }: { section: ThemeSection; products: Product[] }) {
+function ProductCards({ section, products, ar }: { section: ThemeSection; products: Product[]; ar: boolean }) {
   const s = section.settings;
   const visible = products.slice(0, s.itemCount);
   return (
@@ -80,12 +81,12 @@ function ProductCards({ section, products }: { section: ThemeSection; products: 
         >
           <div className="theme-product-image">
             {p.image_url ? (
-              <img src={p.image_url} alt={p.name_en || p.name_ar || "Product"} />
+              <img src={p.image_url} alt={(ar ? p.name_ar : p.name_en) || p.name_en || p.name_ar || "Product"} />
             ) : (
               <span>✦</span>
             )}
           </div>
-          <h3>{p.name_ar || p.name_en || p.slug}</h3>
+          <h3>{(ar ? p.name_ar : p.name_en) || p.name_en || p.name_ar || p.slug}</h3>
           {s.showPrice && (
             <p>
               {p.price} {p.currency || "SAR"}
@@ -109,10 +110,12 @@ function RenderSection({
   section,
   config,
   products,
+  ar,
 }: {
   section: ThemeSection;
   config: ThemeConfig;
   products: Product[];
+  ar: boolean;
 }) {
   const s = section.settings;
   const common: CSSProperties = {
@@ -170,7 +173,7 @@ function RenderSection({
     return (
       <section className="theme-section" style={common}>
         <SectionHeader section={section} />
-        <ProductCards section={section} products={products} />
+        <ProductCards section={section} products={products} ar={ar} />
       </section>
     );
   if (section.type === "categories") {
@@ -343,6 +346,8 @@ export function ThemeRenderer({
   selectedSectionId?: string | null;
   onSelectSection?: (id: string) => void;
 }) {
+  const { lang } = useLanguage();
+  const ar = lang === "ar";
   const [products, setProducts] = useState<Product[]>([]);
   useEffect(() => {
     let active = true;
@@ -376,10 +381,10 @@ export function ThemeRenderer({
                 onSelectSection(s.id);
               }}
             >
-              <RenderSection section={s} config={config} products={products} />
+              <RenderSection section={s} config={config} products={products} ar={ar} />
             </div>
           ) : (
-            <RenderSection key={s.id} section={s} config={config} products={products} />
+            <RenderSection key={s.id} section={s} config={config} products={products} ar={ar} />
           ),
         )}
       {config.sections.every((s) => !s.enabled) && (
