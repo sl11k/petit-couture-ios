@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AdminPage } from "@/features/admin/components/AdminPage";
-import { siteThemesConfig } from "@/features/admin/configs/phase5.config";
+import { ThemeEditor } from "@/theme-customizer/ThemeEditor";
 
 export const Route = createFileRoute("/admin/themes")({
-  component: () => <AdminPage config={siteThemesConfig} />,
+  component: ThemeEditor,
 });

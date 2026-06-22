@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { EditPageButton } from "@/components/EditPageButton";
 import { pickAbVariant } from "@/live-edit/AbVariantManager";
 import { useApplyOverrides } from "@/live-edit/useApplyOverrides";
+import { useThemeCustomizer } from "@/theme-customizer/ThemeProvider";
+import { ThemeRenderer } from "@/theme-customizer/ThemeRenderer";
 import {
   buildMeta,
   organizationJsonLd,
@@ -32,6 +34,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const theme = useThemeCustomizer();
   const [content, setContent] = useState<PageContent | null>(null);
   const [loaded, setLoaded] = useState(false);
 
@@ -58,8 +61,7 @@ function Index() {
   }, []);
 
   useApplyOverrides("/");
-  // Always render the ORIGINAL HomeScreen design. When live-edit is on,
-  // the root shell wraps everything (header + content + footer) with the
-  // inline editor — so this page just renders normally.
-  return (<><HomeScreen /><EditPageButton slug="home" /></>);
+  // Preserve the original data-backed homepage until an admin explicitly saves
+  // a visual theme. Saved themes use the same global storefront shell/chrome.
+  return (<>{theme.hasSavedTheme ? <ThemeRenderer config={theme.config} /> : <HomeScreen />}<EditPageButton slug="home" /></>);
 }
