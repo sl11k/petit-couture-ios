@@ -1,34 +1,57 @@
-// Tamara webhook handler — receives order.* events from Tamara and updates orders.
-// Docs: https://docs.tamara.co/reference/webhooks
-//
-// Tamara signs each notification with header `tamara-token` containing a JWT
-// signed with HS256 using the merchant's notification token as the shared secret.
-// (Some merchants are issued a Public Key for RS256 — supported as a fallback.)
 import { createFileRoute } from "@tanstack/react-router";
-import { createHmac, timingSafeEqual } from "crypto";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { createHmac, timingSafeEqual } from "node:crypto";
+import {
+  amountsMatch,
+  completeGatewayPayment,
+  failGatewayPayment,
+  loadGatewayOrder,
+  logPaymentWebhook,
+  refundGatewayPayment,
+  updatePaymentWebhookLog,
+} from "@/lib/payment-gateway.server";
 
 const TAMARA_API = process.env.TAMARA_API_URL || "https://api.tamara.co";
 
-function b64urlDecode(str: string): Buffer {
-  str = str.replace(/-/g, "+").replace(/_/g, "/");
-  while (str.length % 4) str += "=";
-  return Buffer.from(str, "base64");
+function decodeBase64Url(value: string) {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  return Buffer.from(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "="), "base64");
 }
 
-function verifyHs256(jwt: string, secret: string): boolean {
+function verifyNotificationToken(jwt: string, secret: string) {
   try {
-    const parts = jwt.split(".");
-    if (parts.length !== 3) return false;
-    const [h, p, s] = parts;
-    const data = `${h}.${p}`;
-    const expected = createHmac("sha256", secret).update(data).digest();
-    const got = b64urlDecode(s);
-    if (got.length !== expected.length) return false;
-    return timingSafeEqual(got, expected);
+    const [headerPart, payloadPart, signaturePart, extra] = jwt.split(".");
+    if (!headerPart || !payloadPart || !signaturePart || extra) return null;
+    const header = JSON.parse(decodeBase64Url(headerPart).toString("utf8")) as {
+      alg?: string;
+    };
+    if (header.alg !== "HS256") return null;
+    const expected = createHmac("sha256", secret).update(`${headerPart}.${payloadPart}`).digest();
+    const received = decodeBase64Url(signaturePart);
+    if (received.length !== expected.length || !timingSafeEqual(received, expected)) return null;
+
+    const claims = JSON.parse(decodeBase64Url(payloadPart).toString("utf8")) as {
+      exp?: number;
+      nbf?: number;
+      order_id?: string;
+    };
+    const now = Math.floor(Date.now() / 1000);
+    if (claims.exp !== undefined && claims.exp < now - 30) return null;
+    if (claims.nbf !== undefined && claims.nbf > now + 30) return null;
+    return claims;
   } catch {
-    return false;
+    return null;
   }
+}
+
+async function fetchTamaraOrder(orderId: string, token: string) {
+  const response = await fetch(`${TAMARA_API}/orders/${encodeURIComponent(orderId)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(`Tamara order lookup failed (${response.status})`);
+  }
+  return result as Record<string, unknown>;
 }
 
 export const Route = createFileRoute("/api/public/tamara-webhook")({
@@ -36,182 +59,209 @@ export const Route = createFileRoute("/api/public/tamara-webhook")({
     handlers: {
       POST: async ({ request }) => {
         const body = await request.text();
-        const token =
+        const jwt =
           request.headers.get("tamara-token") ||
           request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
           "";
+        const ip =
+          request.headers.get("cf-connecting-ip") ||
+          request.headers.get("x-real-ip") ||
+          request.headers.get("x-forwarded-for") ||
+          "";
         const notificationSecret = process.env.TAMARA_NOTIFICATION_TOKEN;
-
-        // Optional extra header check
-        const headerSecret = process.env.TAMARA_WEBHOOK_HEADER_SECRET;
-        const incomingHeaderSecret = request.headers.get("x-webhook-secret") || "";
-        const headerCheckValid = headerSecret
-          ? incomingHeaderSecret === headerSecret
-          : true;
-
-        let signatureValid = false;
-        if (notificationSecret && token) {
-          signatureValid = verifyHs256(token, notificationSecret);
+        if (!notificationSecret) {
+          console.error("[tamara-webhook] TAMARA_NOTIFICATION_TOKEN is not configured");
+          return new Response("Webhook is not configured", { status: 503 });
         }
 
-        let payload: any;
+        let payload: Record<string, unknown>;
         try {
-          payload = JSON.parse(body);
+          payload = JSON.parse(body) as Record<string, unknown>;
         } catch {
+          await logPaymentWebhook({
+            gateway: "tamara",
+            eventType: "invalid_json",
+            signature: jwt,
+            signatureValid: false,
+            ip,
+            payload: { raw: body.slice(0, 1000) },
+            processingError: "Invalid JSON",
+          });
           return new Response("Bad JSON", { status: 400 });
         }
 
-        const orderNumber =
-          payload?.order_reference_id || payload?.order_number || null;
-        const tamaraOrderId = payload?.order_id || null;
-        const eventType = String(
-          payload?.event_type || payload?.order_status || "unknown",
-        ).toLowerCase();
-
-        // Audit log
-        await (supabaseAdmin.from("payment_webhooks_log") as any)
-          .insert({
-            gateway: "tamara",
-            event_type: eventType,
-            order_number: orderNumber,
-            transaction_id: tamaraOrderId,
-            signature_valid: signatureValid,
-            payload,
-          })
-          .then(
-            () => {},
-            () => {},
-          );
-
-        if (!headerCheckValid) {
-          return new Response("Invalid header secret", { status: 401 });
+        const claims = verifyNotificationToken(jwt, notificationSecret);
+        const eventType = String(payload.event_type || payload.order_status || "").toLowerCase();
+        const logId = await logPaymentWebhook({
+          gateway: "tamara",
+          eventType: eventType || "unknown",
+          signature: jwt,
+          signatureValid: Boolean(claims),
+          ip,
+          payload,
+        });
+        if (!claims) {
+          await updatePaymentWebhookLog(logId, { processing_error: "Invalid notification token" });
+          return new Response("Invalid notification token", { status: 401 });
         }
 
-        if (!signatureValid && notificationSecret) {
-          return new Response("Invalid signature", { status: 401 });
+        const orderNumber = String(payload.order_reference_id || payload.order_number || "");
+        const tamaraOrderId = String(payload.order_id || "");
+        if (!orderNumber || !tamaraOrderId) {
+          await updatePaymentWebhookLog(logId, { processing_error: "Missing payment identity" });
+          return new Response("Missing payment identity", { status: 400 });
+        }
+        if (claims.order_id && claims.order_id !== tamaraOrderId) {
+          await updatePaymentWebhookLog(logId, { processing_error: "Token order mismatch" });
+          return new Response("Token order mismatch", { status: 401 });
         }
 
-        if (!orderNumber) {
-          return Response.json({ received: true, ignored: "no reference" });
-        }
+        try {
+          const apiToken = process.env.TAMARA_API_TOKEN;
+          if (!apiToken) throw new Error("TAMARA_API_TOKEN is not configured");
+          const order = await loadGatewayOrder({ orderNumber, gateway: "tamara" });
+          let transactionId: string | null = null;
 
-        // Map Tamara status → our payment_status
-        let newPaymentStatus: string | null = null;
-        let newOrderStatus: string | null = null;
-
-        if (eventType === "order_approved" || eventType === "approved") {
-          // Auto authorise + capture
-          if (tamaraOrderId && process.env.TAMARA_API_TOKEN) {
-            try {
-              await fetch(`${TAMARA_API}/orders/${tamaraOrderId}/authorise`, {
-                method: "POST",
-                headers: {
-                  Authorization: `Bearer ${process.env.TAMARA_API_TOKEN}`,
-                },
-              });
-              newPaymentStatus = "pending_review";
-            } catch (e) {
-              console.error("Tamara authorise error", e);
-            }
-          }
-        } else if (
-          eventType === "order_authorised" ||
-          eventType === "authorised" ||
-          eventType === "order_authorized"
-        ) {
-          // Capture full amount
-          if (tamaraOrderId && process.env.TAMARA_API_TOKEN) {
-            try {
-              const ordRes = await fetch(
-                `${TAMARA_API}/orders/${tamaraOrderId}`,
-                {
-                  headers: {
-                    Authorization: `Bearer ${process.env.TAMARA_API_TOKEN}`,
-                  },
-                },
+          if (["order_approved", "approved"].includes(eventType)) {
+            const response = await fetch(
+              `${TAMARA_API}/orders/${encodeURIComponent(tamaraOrderId)}/authorise`,
+              { method: "POST", headers: { Authorization: `Bearer ${apiToken}` } },
+            );
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(
+                `Tamara authorise failed (${response.status}): ${JSON.stringify(result).slice(0, 300)}`,
               );
-              const ord = await ordRes.json();
-              const capRes = await fetch(`${TAMARA_API}/payments/capture`, {
+            }
+          } else if (
+            ["order_authorised", "authorised", "order_authorized", "authorized"].includes(eventType)
+          ) {
+            let capture: unknown = { skipped: "order_already_paid" };
+            if (order.payment_status !== "paid") {
+              const remote = await fetchTamaraOrder(tamaraOrderId, apiToken);
+              const remoteTotal = remote.total_amount as { amount?: unknown; currency?: unknown };
+              if (
+                !amountsMatch(order.total, remoteTotal?.amount) ||
+                String(order.currency).toUpperCase() !== String(remoteTotal?.currency).toUpperCase()
+              ) {
+                throw new Error("Tamara order amount or currency mismatch");
+              }
+              const captureResponse = await fetch(`${TAMARA_API}/payments/capture`, {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  Authorization: `Bearer ${process.env.TAMARA_API_TOKEN}`,
+                  Authorization: `Bearer ${apiToken}`,
                 },
                 body: JSON.stringify({
                   order_id: tamaraOrderId,
-                  total_amount: ord.total_amount,
-                  tax_amount: ord.tax_amount,
-                  shipping_amount: ord.shipping_amount,
-                  discount_amount: ord.discount_amount,
-                  items: ord.items,
+                  total_amount: remote.total_amount,
+                  tax_amount: remote.tax_amount,
+                  shipping_amount: remote.shipping_amount,
+                  discount_amount: remote.discount_amount,
+                  items: remote.items,
                   shipping_info: {
                     shipped_at: new Date().toISOString(),
-                    shipping_company: "—",
-                    tracking_number: "—",
+                    shipping_company: "OTO",
+                    tracking_number: "pending",
                     tracking_url: "",
                   },
                 }),
               });
-              if (capRes.ok) {
-                newPaymentStatus = "paid";
-                newOrderStatus = "processing";
-              } else {
-                newPaymentStatus = "pending_review";
+              capture = await captureResponse.json().catch(() => ({}));
+              if (!captureResponse.ok) {
+                throw new Error(
+                  `Tamara capture failed (${captureResponse.status}): ${JSON.stringify(capture).slice(0, 300)}`,
+                );
               }
-            } catch (e) {
-              console.error("Tamara capture error", e);
-              newPaymentStatus = "pending_review";
             }
-          }
-        } else if (
-          eventType === "order_captured" ||
-          eventType === "fully_captured" ||
-          eventType === "captured"
-        ) {
-          newPaymentStatus = "paid";
-          newOrderStatus = "processing";
-        } else if (
-          eventType === "order_declined" ||
-          eventType === "declined" ||
-          eventType === "order_canceled" ||
-          eventType === "order_cancelled" ||
-          eventType === "canceled" ||
-          eventType === "cancelled" ||
-          eventType === "order_expired" ||
-          eventType === "expired"
-        ) {
-          newPaymentStatus = "failed";
-        } else if (
-          eventType === "order_refunded" ||
-          eventType === "refunded"
-        ) {
-          newPaymentStatus = "refunded";
-        }
-
-        if (newPaymentStatus) {
-          const update: Record<string, unknown> = {
-            payment_status: newPaymentStatus,
-            updated_at: new Date().toISOString(),
-          };
-          if (newOrderStatus) update.status = newOrderStatus;
-          const { data: updated } = await (supabaseAdmin.from("orders") as any)
-            .update(update)
-            .eq("order_number", orderNumber)
-            .select("id, user_id")
-            .maybeSingle();
-
-          if (newPaymentStatus === "paid" && updated?.id) {
-            try {
-              const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
-              const res = await createOtoShipmentForOrder(updated.id, updated.user_id ?? null);
-              if (!res.ok) console.error("[tamara-webhook] OTO auto-create failed:", res.error);
-            } catch (e: any) {
-              console.error("[tamara-webhook] OTO auto-create threw:", e?.message || e);
+            const completed = await completeGatewayPayment({
+              order,
+              gateway: "tamara",
+              gatewayTransactionId: tamaraOrderId,
+              rawResponse: { webhook: payload, capture },
+            });
+            transactionId = completed.transactionId;
+          } else if (["order_captured", "fully_captured", "captured"].includes(eventType)) {
+            const remote = await fetchTamaraOrder(tamaraOrderId, apiToken);
+            const remoteTotal = remote.total_amount as { amount?: unknown; currency?: unknown };
+            if (
+              !amountsMatch(order.total, remoteTotal?.amount) ||
+              String(order.currency).toUpperCase() !== String(remoteTotal?.currency).toUpperCase()
+            ) {
+              throw new Error("Tamara order amount or currency mismatch");
             }
+            const completed = await completeGatewayPayment({
+              order,
+              gateway: "tamara",
+              gatewayTransactionId: tamaraOrderId,
+              rawResponse: { webhook: payload, order: remote },
+            });
+            transactionId = completed.transactionId;
+          } else if (
+            [
+              "order_declined",
+              "declined",
+              "order_canceled",
+              "order_cancelled",
+              "canceled",
+              "cancelled",
+              "order_expired",
+              "expired",
+            ].includes(eventType)
+          ) {
+            transactionId = await failGatewayPayment({
+              order,
+              gateway: "tamara",
+              gatewayTransactionId: tamaraOrderId,
+              reason: `tamara_${eventType}`,
+              rawResponse: payload,
+            });
+          } else if (["order_refunded", "refunded"].includes(eventType)) {
+            const remote = await fetchTamaraOrder(tamaraOrderId, apiToken);
+            const remoteTotal = remote.total_amount as { amount?: unknown; currency?: unknown };
+            if (
+              !amountsMatch(order.total, remoteTotal?.amount) ||
+              String(order.currency).toUpperCase() !== String(remoteTotal?.currency).toUpperCase()
+            ) {
+              throw new Error("Tamara refund amount or currency mismatch");
+            }
+            transactionId = await refundGatewayPayment({
+              order,
+              gateway: "tamara",
+              gatewayTransactionId: tamaraOrderId,
+              rawResponse: { webhook: payload, order: remote },
+            });
+          } else {
+            throw new Error(`Unsupported Tamara event: ${eventType || "empty"}`);
           }
-        }
 
-        return Response.json({ received: true, status: newPaymentStatus });
+          if (
+            [
+              "order_authorised",
+              "authorised",
+              "order_authorized",
+              "authorized",
+              "order_captured",
+              "fully_captured",
+              "captured",
+            ].includes(eventType)
+          ) {
+            const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
+            const shipment = await createOtoShipmentForOrder(order.id, null);
+            if (!shipment.ok) throw new Error(`OTO creation failed: ${shipment.error}`);
+          }
+
+          await updatePaymentWebhookLog(logId, {
+            processed: true,
+            related_transaction_id: transactionId,
+          });
+          return Response.json({ received: true, event: eventType });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Processing failed";
+          await updatePaymentWebhookLog(logId, { processing_error: message });
+          console.error("[tamara-webhook]", message);
+          return new Response("Processing failed", { status: 500 });
+        }
       },
     },
   },

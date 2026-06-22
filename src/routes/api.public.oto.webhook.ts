@@ -9,11 +9,7 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import {
-  normalizeOtoPayload,
-  verifyOtoWebhookSignature,
-  mapOtoStatus,
-} from "@/lib/oto-webhook";
+import { normalizeOtoPayload, verifyOtoWebhookSignature, mapOtoStatus } from "@/lib/oto-webhook";
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -27,9 +23,7 @@ export const Route = createFileRoute("/api/public/oto/webhook")({
     handlers: {
       POST: async ({ request }) => {
         const ip =
-          request.headers.get("x-forwarded-for") ||
-          request.headers.get("cf-connecting-ip") ||
-          "";
+          request.headers.get("x-forwarded-for") || request.headers.get("cf-connecting-ip") || "";
         const rawText = await request.text();
 
         let json: Record<string, unknown>;
@@ -48,19 +42,25 @@ export const Route = createFileRoute("/api/public/oto/webhook")({
 
         const normalized = normalizeOtoPayload(json);
 
-        // Optional authorization header check.
+        // At least one verification mechanism is required in production. The
+        // explicit unsigned escape hatch is intended only for local testing.
         const authKey = process.env.OTO_WEBHOOK_AUTHORIZATION_KEY;
         const authHeader = request.headers.get("authorization") || "";
         const authPresent = authHeader.length > 0;
-        const authValid = authKey ? authHeader === authKey || authHeader === `Bearer ${authKey}` : true;
+        const authValid = authKey
+          ? authHeader === authKey || authHeader === `Bearer ${authKey}`
+          : true;
 
         // Optional in-body signature check.
         const secretKey = process.env.OTO_WEBHOOK_SECRET_KEY;
         const allowUnsigned = process.env.OTO_ALLOW_UNSIGNED === "1";
         const signaturePresent = Boolean((normalized as { signature?: string }).signature);
-        const signatureValid = secretKey
-          ? verifyOtoWebhookSignature(normalized, secretKey)
-          : true;
+        const signatureValid = secretKey ? verifyOtoWebhookSignature(normalized, secretKey) : true;
+
+        if (!authKey && !secretKey && !allowUnsigned) {
+          console.error("[oto-webhook] no webhook verification secret is configured");
+          return jsonResponse({ ok: false, error: "Webhook is not configured" }, 503);
+        }
 
         const baseLog = {
           webhook_type: normalized.kind,
@@ -89,15 +89,10 @@ export const Route = createFileRoute("/api/public/oto/webhook")({
         if (secretKey && !signatureValid && !allowUnsigned) {
           await supabaseAdmin.from("oto_webhook_deliveries").insert({
             ...baseLog,
-            processing_error: signaturePresent
-              ? "Signature mismatch"
-              : "Missing signature",
+            processing_error: signaturePresent ? "Signature mismatch" : "Missing signature",
             http_status: 401,
           });
-          return jsonResponse(
-            { ok: false, error: "Invalid or missing signature" },
-            401,
-          );
+          return jsonResponse({ ok: false, error: "Invalid or missing signature" }, 401);
         }
 
         if (normalized.kind === "unknown") {
@@ -124,11 +119,12 @@ export const Route = createFileRoute("/api/public/oto/webhook")({
           let shipmentId: string | null = null;
           let dbOrderId: string | null = null;
           if (tracking) {
-            const { data } = await supabaseAdmin
+            const { data, error } = await supabaseAdmin
               .from("shipments")
               .select("id, order_id")
               .eq("tracking_number", tracking)
               .maybeSingle();
+            if (error) throw new Error(`Shipment lookup failed: ${error.message}`);
             if (data) {
               shipmentId = data.id;
               dbOrderId = data.order_id;
@@ -136,13 +132,14 @@ export const Route = createFileRoute("/api/public/oto/webhook")({
           }
           if (!shipmentId) {
             // Fallback: shipment.raw_response.orderId == OTO orderId, or order_number match.
-            const { data } = await supabaseAdmin
+            const { data, error } = await supabaseAdmin
               .from("shipments")
               .select("id, order_id")
               .eq("carrier_code", "oto")
-              .or(`order_number.eq.${orderId}`)
+              .eq("order_number", orderId)
               .limit(1)
               .maybeSingle();
+            if (error) throw new Error(`Shipment lookup failed: ${error.message}`);
             if (data) {
               shipmentId = data.id;
               dbOrderId = data.order_id;
@@ -151,9 +148,13 @@ export const Route = createFileRoute("/api/public/oto/webhook")({
 
           if (normalized.kind === "orderStatus") {
             const internal = mapOtoStatus(normalized.status);
+            if (!shipmentId) throw new Error("OTO shipment not found");
+            if (internal === "unknown") {
+              throw new Error(`Unsupported OTO status: ${normalized.status || "empty"}`);
+            }
             if (shipmentId) {
               const update: Record<string, unknown> = {
-                status: internal === "unknown" ? "in_transit" : internal,
+                status: internal,
                 updated_at: new Date().toISOString(),
                 raw_response: normalized.raw,
               };
@@ -162,16 +163,24 @@ export const Route = createFileRoute("/api/public/oto/webhook")({
               if (internal === "returned") update.is_returned = true;
               if (normalized.trackingUrl) update.tracking_url = normalized.trackingUrl;
               if (normalized.printAWBURL) update.awb_url = normalized.printAWBURL;
-              await supabaseAdmin.from("shipments").update(update).eq("id", shipmentId);
+              const { error: shipmentError } = await supabaseAdmin
+                .from("shipments")
+                .update(update)
+                .eq("id", shipmentId);
+              if (shipmentError)
+                throw new Error(`Shipment update failed: ${shipmentError.message}`);
 
-              await supabaseAdmin.from("shipment_tracking_events").insert({
-                shipment_id: shipmentId,
-                status: internal,
-                description: normalized.note ?? normalized.dcStatus ?? null,
-                source: "webhook",
-                occurred_at: normalized.timestamp,
-                raw: normalized.raw,
-              });
+              const { error: eventError } = await supabaseAdmin
+                .from("shipment_tracking_events")
+                .insert({
+                  shipment_id: shipmentId,
+                  status: internal,
+                  description: normalized.note ?? normalized.dcStatus ?? null,
+                  source: "webhook",
+                  occurred_at: normalized.timestamp,
+                  raw: normalized.raw,
+                });
+              if (eventError) throw new Error(`Tracking event failed: ${eventError.message}`);
 
               if (dbOrderId) {
                 const orderMap: Record<string, string> = {
@@ -185,16 +194,19 @@ export const Route = createFileRoute("/api/public/oto/webhook")({
                 };
                 const mapped = orderMap[internal];
                 if (mapped) {
-                  await supabaseAdmin
+                  const { error: orderError } = await supabaseAdmin
                     .from("orders")
                     .update({ shipping_status: mapped })
                     .eq("id", dbOrderId);
+                  if (orderError)
+                    throw new Error(`Order shipping update failed: ${orderError.message}`);
                 }
               }
             }
           } else if (normalized.kind === "shipmentError") {
+            if (!shipmentId) throw new Error("OTO shipment not found");
             if (shipmentId) {
-              await supabaseAdmin
+              const { error: shipmentError } = await supabaseAdmin
                 .from("shipments")
                 .update({
                   status: "failed",
@@ -204,37 +216,47 @@ export const Route = createFileRoute("/api/public/oto/webhook")({
                   updated_at: new Date().toISOString(),
                 })
                 .eq("id", shipmentId);
-              await supabaseAdmin.from("shipment_tracking_events").insert({
-                shipment_id: shipmentId,
-                status: "failed",
-                description:
-                  normalized.errorMessage ||
-                  normalized.deliveryCompanyResponse ||
-                  normalized.errorCode,
-                source: "webhook",
-                occurred_at: normalized.timestamp,
-                raw: normalized.raw,
-              });
+              if (shipmentError)
+                throw new Error(`Shipment update failed: ${shipmentError.message}`);
+              const { error: eventError } = await supabaseAdmin
+                .from("shipment_tracking_events")
+                .insert({
+                  shipment_id: shipmentId,
+                  status: "failed",
+                  description:
+                    normalized.errorMessage ||
+                    normalized.deliveryCompanyResponse ||
+                    normalized.errorCode,
+                  source: "webhook",
+                  occurred_at: normalized.timestamp,
+                  raw: normalized.raw,
+                });
+              if (eventError) throw new Error(`Tracking event failed: ${eventError.message}`);
             }
           }
         } catch (e) {
           processingError = e instanceof Error ? e.message : "Processing failed";
         }
 
+        const responseStatus = processingError ? 500 : 200;
         await supabaseAdmin.from("oto_webhook_deliveries").insert({
           ...baseLog,
           processed: !processingError,
           processing_error: processingError,
-          http_status: 200,
+          http_status: responseStatus,
         });
 
-        return jsonResponse({
-          ok: true,
-          provider: "oto",
-          eventType: normalized.kind,
-          orderId: (normalized as { orderId?: string }).orderId ?? null,
-          trackingNumber: (normalized as { trackingNumber?: string }).trackingNumber ?? null,
-        });
+        return jsonResponse(
+          {
+            ok: !processingError,
+            provider: "oto",
+            eventType: normalized.kind,
+            orderId: (normalized as { orderId?: string }).orderId ?? null,
+            trackingNumber: (normalized as { trackingNumber?: string }).trackingNumber ?? null,
+            error: processingError,
+          },
+          responseStatus,
+        );
       },
     },
   },

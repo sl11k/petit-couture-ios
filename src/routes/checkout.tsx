@@ -315,7 +315,7 @@ function CheckoutPage() {
     }
     setPlacing(true);
     try {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth } = await supabase.auth.getSession();
       const fullAddress: Address = {
         fullName: contact.fullName.trim(),
         email: contact.email.trim(),
@@ -335,7 +335,7 @@ function CheckoutPage() {
       const { order, duplicate } = await placeOrder({
         data: {
           session_id: getCurrentSessionId(),
-          user_id: auth.user?.id ?? null,
+          auth_token: auth.session?.access_token ?? null,
           items: bag.items.map((it) => ({
             slug: it.slug,
             name: it.name,
@@ -346,16 +346,13 @@ function CheckoutPage() {
             size: it.size ?? null,
             color: it.color ?? null,
             sku: it.sku ?? null,
+            variant_id: it.variantId ?? null,
           })),
           address: fullAddress as Record<string, unknown> as never,
           currency: bag.currency,
           payment_method: payment,
           coupon_code: coupon?.code ?? null,
           pricing: {
-            subtotal: pricing.subtotal,
-            shipping_fee: pricing.shipping_fee,
-            tax: pricing.tax,
-            total: pricing.total,
             shipping_method: shipping.id,
           },
         },
@@ -373,23 +370,19 @@ function CheckoutPage() {
         });
       }
 
-      placedRef.current = true;
-
       // Tabby: create session and redirect to hosted checkout
       if (payment === "tabby") {
         try {
           const { createTabbyCheckout } = await import("@/lib/tabby.functions");
-          const origin = window.location.origin;
           const result = await createTabbyCheckout({
             data: {
               order_id: order.id,
-              success_url: `${origin}/order-confirmation/${order.order_number}?tabby=success`,
-              cancel_url: `${origin}/checkout?tabby=cancel`,
-              failure_url: `${origin}/checkout?tabby=failure`,
+              session_id: getCurrentSessionId(),
               lang: isRTL ? "ar" : "en",
             },
           });
           if (result.ok) {
+            placedRef.current = true;
             bag.clear();
             window.location.href = result.web_url;
             return;
@@ -409,18 +402,15 @@ function CheckoutPage() {
       if (payment === "tamara") {
         try {
           const { createTamaraCheckout } = await import("@/lib/tamara.functions");
-          const origin = window.location.origin;
           const result = await createTamaraCheckout({
             data: {
               order_id: order.id,
-              success_url: `${origin}/order-confirmation/${order.order_number}?tamara=success`,
-              cancel_url: `${origin}/checkout?tamara=cancel`,
-              failure_url: `${origin}/checkout?tamara=failure`,
-              notification_url: `${origin}/api/public/tamara-webhook`,
+              session_id: getCurrentSessionId(),
               lang: isRTL ? "ar" : "en",
             },
           });
           if (result.ok) {
+            placedRef.current = true;
             bag.clear();
             window.location.href = result.checkout_url;
             return;
@@ -436,6 +426,7 @@ function CheckoutPage() {
         }
       }
 
+      placedRef.current = true;
       bag.clear();
       navigate({
         to: "/order-confirmation/$orderNumber",

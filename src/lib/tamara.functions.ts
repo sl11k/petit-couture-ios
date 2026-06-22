@@ -1,22 +1,25 @@
-// Tamara BNPL integration — creates a checkout session for an existing order
-// and returns the hosted payment URL.
-// Docs: https://docs.tamara.co/reference/create-checkout-session
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { loadCheckoutOrder, recordPaymentSession } from "@/lib/payment-gateway.server";
+import { assertOrderTotals, money } from "@/lib/payment-validation";
 
-// Production: https://api.tamara.co
-// Sandbox:    https://api-sandbox.tamara.co
 const TAMARA_API = process.env.TAMARA_API_URL || "https://api.tamara.co";
-
 const InputSchema = z.object({
   order_id: z.string().uuid(),
-  success_url: z.string().url(),
-  cancel_url: z.string().url(),
-  failure_url: z.string().url(),
-  notification_url: z.string().url(),
+  session_id: z.string().min(16).max(128),
   lang: z.enum(["ar", "en"]).default("ar"),
 });
+
+function storefrontOrigin() {
+  const configured = process.env.STOREFRONT_URL || process.env.SITE_URL;
+  const origin = configured ? new URL(configured).origin : new URL(getRequest().url).origin;
+  if (process.env.NODE_ENV === "production" && !origin.startsWith("https://")) {
+    throw new Error("STOREFRONT_URL must use HTTPS in production");
+  }
+  return origin;
+}
 
 export const createTamaraCheckout = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => InputSchema.parse(input))
@@ -24,207 +27,158 @@ export const createTamaraCheckout = createServerFn({ method: "POST" })
     const token = process.env.TAMARA_API_TOKEN;
     if (!token) throw new Error("TAMARA_API_TOKEN is not configured");
 
-    const { data: order, error: orderErr } = await supabaseAdmin
-      .from("orders")
-      .select("*")
-      .eq("id", data.order_id)
-      .single();
-    if (orderErr || !order) throw new Error("Order not found");
-
-    const { data: items, error: itemsErr } = await supabaseAdmin
+    const order = await loadCheckoutOrder(data.order_id, data.session_id, "tamara");
+    const { data: items, error: itemsError } = await supabaseAdmin
       .from("order_items")
       .select("*")
-      .eq("order_id", data.order_id);
-    if (itemsErr) throw new Error("Failed to load order items");
+      .eq("order_id", order.id);
+    if (itemsError) throw new Error("Failed to load order items");
+    if (!items?.length) throw new Error("Order has no items");
 
-    const addr = (order.shipping_address as Record<string, unknown>) || {};
-    const phone = String(order.customer_phone || addr.phone || "").replace(/\s/g, "");
-    const currency = (order.currency || "SAR").toUpperCase();
-    // Tamara country code: SAR→SA, AED→AE, KWD→KW, BHD→BH
-    const countryMap: Record<string, string> = {
-      SAR: "SA", AED: "AE", KWD: "KW", BHD: "BH", QAR: "QA", OMR: "OM",
+    assertOrderTotals(items, order);
+
+    const address = (order.shipping_address as Record<string, unknown>) || {};
+    const phone = String(order.customer_phone || address.phone || "").replace(/\s/g, "");
+    const names = String(order.customer_name || "Customer")
+      .trim()
+      .split(/\s+/);
+    const firstName = names[0] || "Customer";
+    const lastName = names.slice(1).join(" ") || "—";
+    const currency = String(order.currency || "SAR").toUpperCase();
+    const countryCodes: Record<string, string> = {
+      SAR: "SA",
+      AED: "AE",
+      KWD: "KW",
+      BHD: "BH",
+      QAR: "QA",
+      OMR: "OM",
     };
-    const country_code = countryMap[currency] || "SA";
-
-    const amount = (n: number) => ({
-      amount: Number(n).toFixed(2),
-      currency,
-    });
+    const countryCode = countryCodes[currency];
+    if (!countryCode) throw new Error(`Tamara does not support currency ${currency}`);
+    const amount = (value: unknown) => ({ amount: money(value).toFixed(2), currency });
+    const origin = storefrontOrigin();
 
     const payload = {
       order_reference_id: order.order_number,
       order_number: order.order_number,
-      total_amount: amount(Number(order.total)),
-      tax_amount: amount(Number(order.tax || 0)),
-      shipping_amount: amount(Number(order.shipping_fee || 0)),
+      total_amount: amount(order.total),
+      tax_amount: amount(order.tax || 0),
+      shipping_amount: amount(order.shipping_fee || 0),
       discount: {
-        name: (order as any).coupon_code || "discount",
-        amount: amount(Number((order as any).discount_amount || 0)),
+        name: String(order.coupon_code || "discount"),
+        amount: amount(order.discount_amount || 0),
       },
       description: `Order ${order.order_number}`,
-      country_code,
+      country_code: countryCode,
       payment_type: "PAY_BY_INSTALMENTS",
       instalments: 4,
       locale: data.lang === "ar" ? "ar_SA" : "en_US",
-      items: (items || []).map((it) => ({
-        reference_id: it.product_slug,
+      items: items.map((item) => ({
+        reference_id: item.product_slug,
         type: "Physical",
-        name: it.product_name,
-        sku: it.product_slug,
-        quantity: it.qty,
-        total_amount: amount(Number(it.unit_price) * it.qty),
-        unit_price: amount(Number(it.unit_price)),
+        name: item.product_name,
+        sku: item.sku || item.product_slug,
+        quantity: item.qty,
+        total_amount: amount(Number(item.unit_price) * Number(item.qty)),
+        unit_price: amount(item.unit_price),
         tax_amount: amount(0),
         discount_amount: amount(0),
-        image_url: it.image_url || undefined,
+        image_url: item.image_url || undefined,
       })),
       consumer: {
-        first_name: String(order.customer_name || "").split(" ")[0] || "Customer",
-        last_name: String(order.customer_name || "").split(" ").slice(1).join(" ") || "—",
+        first_name: firstName,
+        last_name: lastName,
         phone_number: phone,
         email: order.customer_email,
       },
       shipping_address: {
-        first_name: String(order.customer_name || "").split(" ")[0] || "Customer",
-        last_name: String(order.customer_name || "").split(" ").slice(1).join(" ") || "—",
-        line1: String(addr.street || addr.geoAddress || addr.city || "—"),
-        line2: String(addr.district || ""),
-        region: String(addr.city || ""),
-        city: String(addr.city || ""),
-        country_code,
+        first_name: firstName,
+        last_name: lastName,
+        line1: String(address.street || address.geoAddress || address.city || "—"),
+        line2: String(address.district || ""),
+        region: String(address.city || ""),
+        city: String(address.city || ""),
+        country_code: countryCode,
         phone_number: phone,
       },
       billing_address: {
-        first_name: String(order.customer_name || "").split(" ")[0] || "Customer",
-        last_name: String(order.customer_name || "").split(" ").slice(1).join(" ") || "—",
-        line1: String(addr.street || addr.geoAddress || addr.city || "—"),
-        line2: String(addr.district || ""),
-        region: String(addr.city || ""),
-        city: String(addr.city || ""),
-        country_code,
+        first_name: firstName,
+        last_name: lastName,
+        line1: String(address.street || address.geoAddress || address.city || "—"),
+        line2: String(address.district || ""),
+        region: String(address.city || ""),
+        city: String(address.city || ""),
+        country_code: countryCode,
         phone_number: phone,
       },
       merchant_url: {
-        success: data.success_url,
-        failure: data.failure_url,
-        cancel: data.cancel_url,
-        notification: data.notification_url,
+        success: `${origin}/order-confirmation/${encodeURIComponent(order.order_number)}?tamara=success`,
+        failure: `${origin}/checkout?tamara=failure`,
+        cancel: `${origin}/checkout?tamara=cancel`,
+        notification: `${origin}/api/public/tamara-webhook`,
       },
-      platform: "Lovable",
+      platform: "Le Petit Paradis",
       is_mobile: false,
-      additional_data: {
-        order_id: order.id,
-      },
+      additional_data: { order_id: order.id },
     };
 
-    const res = await fetch(`${TAMARA_API}/checkout`, {
+    const response = await fetch(`${TAMARA_API}/checkout`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload),
     });
-
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      console.error("Tamara checkout failed", res.status, json);
-      const message =
-        json?.message ||
-        json?.error_message ||
-        (Array.isArray(json?.errors) && json.errors[0]?.error_code) ||
-        `Tamara error ${res.status}`;
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      console.error("Tamara checkout failed", response.status, result);
+      const detail =
+        result?.message ||
+        result?.error_message ||
+        (Array.isArray(result?.errors) && result.errors[0]?.error_code) ||
+        `Tamara error ${response.status}`;
       return {
         ok: false as const,
         message:
           data.lang === "ar"
-            ? `تمارا غير متاحة لهذا الطلب: ${message}`
-            : `Tamara not available: ${message}`,
+            ? `تمارا غير متاحة لهذا الطلب: ${detail}`
+            : `Tamara is not available: ${detail}`,
       };
     }
 
-    const checkout_url = json?.checkout_url as string | undefined;
-    const checkout_id = json?.checkout_id as string | undefined;
-    const order_id_tamara = json?.order_id as string | undefined;
-
-    if (!checkout_url) {
+    const checkoutUrl = result?.checkout_url as string | undefined;
+    if (!checkoutUrl) {
       return {
         ok: false as const,
         message:
           data.lang === "ar"
             ? "تعذّر إنشاء جلسة الدفع لدى تمارا"
-            : "Could not create Tamara checkout session",
+            : "Could not create a Tamara checkout session",
       };
     }
 
-    await supabaseAdmin
+    const transactionId = await recordPaymentSession({
+      order,
+      gateway: "tamara",
+      gatewayReference: result?.checkout_id || null,
+      gatewayTransactionId: result?.order_id || null,
+      rawResponse: result,
+    });
+    const { error: updateError } = await supabaseAdmin
       .from("orders")
       .update({
-        payment_link: checkout_url,
+        payment_link: checkoutUrl,
         payment_status: "pending_review",
+        payment_gateway: "tamara",
+        last_transaction_id: transactionId,
         last_payment_attempt_at: new Date().toISOString(),
-        payment_attempts: (order.payment_attempts || 0) + 1,
+        payment_attempts: Number(order.payment_attempts || 0) + 1,
       })
       .eq("id", order.id);
+    if (updateError) throw new Error(`Failed to save Tamara session: ${updateError.message}`);
 
     return {
       ok: true as const,
-      checkout_id,
-      tamara_order_id: order_id_tamara,
-      checkout_url,
+      checkout_id: result?.checkout_id as string | undefined,
+      tamara_order_id: result?.order_id as string | undefined,
+      checkout_url: checkoutUrl,
     };
-  });
-
-// Authorize then capture a Tamara order after the customer approves.
-// Tamara flow: status `approved` → call /orders/{id}/authorise → `authorised`
-// → call /payments/capture for the captured amount → `fully_captured` (paid).
-export const captureTamaraPayment = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) =>
-    z.object({ tamara_order_id: z.string().min(1) }).parse(input),
-  )
-  .handler(async ({ data }) => {
-    const token = process.env.TAMARA_API_TOKEN;
-    if (!token) throw new Error("TAMARA_API_TOKEN is not configured");
-
-    // 1) Authorise
-    const authRes = await fetch(
-      `${TAMARA_API}/orders/${data.tamara_order_id}/authorise`,
-      {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      },
-    );
-    const authJson = await authRes.json().catch(() => ({}));
-
-    // 2) Fetch order for amount
-    const ordRes = await fetch(`${TAMARA_API}/orders/${data.tamara_order_id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const ordJson = await ordRes.json();
-    if (!ordRes.ok) throw new Error(ordJson?.message || "Failed to fetch Tamara order");
-
-    // 3) Capture full amount
-    const capRes = await fetch(`${TAMARA_API}/payments/capture`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        order_id: data.tamara_order_id,
-        total_amount: ordJson.total_amount,
-        tax_amount: ordJson.tax_amount,
-        shipping_amount: ordJson.shipping_amount,
-        discount_amount: ordJson.discount_amount,
-        items: ordJson.items,
-        shipping_info: {
-          shipped_at: new Date().toISOString(),
-          shipping_company: "—",
-          tracking_number: "—",
-          tracking_url: "",
-        },
-      }),
-    });
-    const capJson = await capRes.json().catch(() => ({}));
-    return { ok: capRes.ok, authorise: authJson, capture: capJson, order: ordJson };
   });
