@@ -1,20 +1,25 @@
-// Tabby BNPL integration — creates a checkout session for an existing order
-// and returns the hosted payment URL.
-//
-// Docs: https://docs.tabby.ai/reference/createsession
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { loadCheckoutOrder, recordPaymentSession } from "@/lib/payment-gateway.server";
+import { assertOrderTotals, money } from "@/lib/payment-validation";
 
 const TABBY_API = "https://api.tabby.ai/api/v2/checkout";
-
 const InputSchema = z.object({
   order_id: z.string().uuid(),
-  success_url: z.string().url(),
-  cancel_url: z.string().url(),
-  failure_url: z.string().url(),
+  session_id: z.string().min(16).max(128),
   lang: z.enum(["ar", "en"]).default("ar"),
 });
+
+function storefrontOrigin() {
+  const configured = process.env.STOREFRONT_URL || process.env.SITE_URL;
+  const origin = configured ? new URL(configured).origin : new URL(getRequest().url).origin;
+  if (process.env.NODE_ENV === "production" && !origin.startsWith("https://")) {
+    throw new Error("STOREFRONT_URL must use HTTPS in production");
+  }
+  return origin;
+}
 
 export const createTabbyCheckout = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => InputSchema.parse(input))
@@ -22,32 +27,33 @@ export const createTabbyCheckout = createServerFn({ method: "POST" })
     const secret = process.env.TABBY_SECRET_KEY;
     if (!secret) throw new Error("TABBY_SECRET_KEY is not configured");
 
-    // Load order + items
-    const { data: order, error: orderErr } = await supabaseAdmin
-      .from("orders")
-      .select("*")
-      .eq("id", data.order_id)
-      .single();
-    if (orderErr || !order) throw new Error("Order not found");
-
-    const { data: items, error: itemsErr } = await supabaseAdmin
+    const order = await loadCheckoutOrder(data.order_id, data.session_id, "tabby");
+    const { data: items, error: itemsError } = await supabaseAdmin
       .from("order_items")
       .select("*")
-      .eq("order_id", data.order_id);
-    if (itemsErr) throw new Error("Failed to load order items");
+      .eq("order_id", order.id);
+    if (itemsError) throw new Error("Failed to load order items");
+    if (!items?.length) throw new Error("Order has no items");
 
-    const addr = (order.shipping_address as Record<string, unknown>) || {};
-    const phone = String(order.customer_phone || addr.phone || "").replace(/\s/g, "");
-    const currency = (order.currency || "SAR").toUpperCase();
-    // Tabby merchant_code per market: SAR→sa, AED→ae, KWD→kw, BHD→bh, QAR→qa
-    const merchantMap: Record<string, string> = {
-      SAR: "sa", AED: "ae", KWD: "kw", BHD: "bh", QAR: "qa",
+    assertOrderTotals(items, order);
+
+    const address = (order.shipping_address as Record<string, unknown>) || {};
+    const phone = String(order.customer_phone || address.phone || "").replace(/\s/g, "");
+    const currency = String(order.currency || "SAR").toUpperCase();
+    const merchantCodes: Record<string, string> = {
+      SAR: "sa",
+      AED: "ae",
+      KWD: "kw",
+      BHD: "bh",
+      QAR: "qa",
     };
-    const merchantCode = process.env.TABBY_MERCHANT_CODE || merchantMap[currency] || "sa";
+    const merchantCode = process.env.TABBY_MERCHANT_CODE || merchantCodes[currency];
+    if (!merchantCode) throw new Error(`Tabby does not support currency ${currency}`);
+    const origin = storefrontOrigin();
 
     const payload = {
       payment: {
-        amount: Number(order.total).toFixed(2),
+        amount: money(order.total).toFixed(2),
         currency,
         description: `Order ${order.order_number}`,
         buyer: {
@@ -56,26 +62,25 @@ export const createTabbyCheckout = createServerFn({ method: "POST" })
           name: order.customer_name,
         },
         shipping_address: {
-          city: String(addr.city || ""),
-          address: String(addr.street || addr.geoAddress || addr.city || "—"),
-          zip: String(addr.postalCode || ""),
+          city: String(address.city || ""),
+          address: String(address.street || address.geoAddress || address.city || "—"),
+          zip: String(address.postalCode || ""),
         },
         order: {
-          tax_amount: Number(order.tax).toFixed(2),
-          shipping_amount: Number(order.shipping_fee).toFixed(2),
-          discount_amount: Number(order.discount_amount || 0).toFixed(2),
+          tax_amount: money(order.tax || 0).toFixed(2),
+          shipping_amount: money(order.shipping_fee || 0).toFixed(2),
+          discount_amount: money(order.discount_amount || 0).toFixed(2),
           updated_at: new Date().toISOString(),
           reference_id: order.order_number,
-          items: (items || []).map((it) => ({
-            title: it.product_name,
-            description: it.product_name,
-            quantity: it.qty,
-            unit_price: Number(it.unit_price).toFixed(2),
+          items: items.map((item) => ({
+            title: item.product_name,
+            description: item.product_name,
+            quantity: item.qty,
+            unit_price: money(item.unit_price).toFixed(2),
             discount_amount: "0.00",
-            reference_id: it.product_slug,
-            image_url: it.image_url || undefined,
-            product_url: undefined,
-            category: it.brand || "general",
+            reference_id: item.product_slug,
+            image_url: item.image_url || undefined,
+            category: item.brand || "general",
           })),
         },
         buyer_history: {
@@ -83,96 +88,65 @@ export const createTabbyCheckout = createServerFn({ method: "POST" })
           loyalty_level: 0,
         },
         order_history: [],
-        meta: {
-          order_id: order.id,
-          customer: order.user_id || order.customer_email,
-        },
+        meta: { order_id: order.id },
       },
       lang: data.lang,
       merchant_code: merchantCode,
       merchant_urls: {
-        success: data.success_url,
-        cancel: data.cancel_url,
-        failure: data.failure_url,
+        success: `${origin}/order-confirmation/${encodeURIComponent(order.order_number)}?tabby=success`,
+        cancel: `${origin}/checkout?tabby=cancel`,
+        failure: `${origin}/checkout?tabby=failure`,
       },
     };
 
-    const res = await fetch(TABBY_API, {
+    const response = await fetch(TABBY_API, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${secret}`,
-      },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${secret}` },
       body: JSON.stringify(payload),
     });
-
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      console.error("Tabby createSession failed", res.status, json);
-      throw new Error(
-        json?.error || json?.errorType || `Tabby error ${res.status}`,
-      );
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      console.error("Tabby checkout failed", response.status, result);
+      throw new Error(result?.error || result?.errorType || `Tabby error ${response.status}`);
     }
 
-    // Pick the first available installments configuration URL
-    const config =
-      json?.configuration?.available_products?.installments?.[0] ||
-      json?.configuration?.available_products?.pay_later?.[0];
-
-    if (json?.status !== "created" || !config?.web_url) {
-      // Customer rejected by Tabby — fall back
+    const configuration =
+      result?.configuration?.available_products?.installments?.[0] ||
+      result?.configuration?.available_products?.pay_later?.[0];
+    if (result?.status !== "created" || !configuration?.web_url) {
       return {
         ok: false as const,
-        rejection: json?.configuration?.products?.installments?.[0]?.rejection_reason || "not_available",
-        message: "تابي غير متاح لهذا الطلب حالياً. يرجى اختيار طريقة دفع أخرى.",
+        rejection:
+          result?.configuration?.products?.installments?.[0]?.rejection_reason || "not_available",
+        message:
+          data.lang === "ar"
+            ? "تابي غير متاح لهذا الطلب حاليًا. يرجى اختيار طريقة دفع أخرى."
+            : "Tabby is not available for this order. Please choose another payment method.",
       };
     }
 
-    // Save payment link on the order
-    await supabaseAdmin
+    const transactionId = await recordPaymentSession({
+      order,
+      gateway: "tabby",
+      gatewayReference: String(result.id || "") || null,
+      rawResponse: result,
+    });
+    const { error: updateError } = await supabaseAdmin
       .from("orders")
       .update({
-        payment_link: config.web_url,
+        payment_link: configuration.web_url,
         payment_status: "pending_review",
+        payment_gateway: "tabby",
+        last_transaction_id: transactionId,
         last_payment_attempt_at: new Date().toISOString(),
-        payment_attempts: (order.payment_attempts || 0) + 1,
+        payment_attempts: Number(order.payment_attempts || 0) + 1,
       })
       .eq("id", order.id);
+    if (updateError) throw new Error(`Failed to save Tabby session: ${updateError.message}`);
 
     return {
       ok: true as const,
-      session_id: json.id as string,
-      web_url: config.web_url as string,
+      session_id: result.id as string,
+      web_url: configuration.web_url as string,
     };
-  });
-
-// Capture a Tabby payment after success (Tabby requires explicit capture)
-export const captureTabbyPayment = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) =>
-    z.object({ payment_id: z.string().min(1) }).parse(input),
-  )
-  .handler(async ({ data }) => {
-    const secret = process.env.TABBY_SECRET_KEY;
-    if (!secret) throw new Error("TABBY_SECRET_KEY is not configured");
-
-    // Fetch payment to get amount
-    const getRes = await fetch(`https://api.tabby.ai/api/v2/payments/${data.payment_id}`, {
-      headers: { Authorization: `Bearer ${secret}` },
-    });
-    const payment = await getRes.json();
-    if (!getRes.ok) throw new Error(payment?.error || "Failed to fetch payment");
-
-    const capRes = await fetch(
-      `https://api.tabby.ai/api/v1/payments/${data.payment_id}/captures`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${secret}`,
-        },
-        body: JSON.stringify({ amount: payment.amount }),
-      },
-    );
-    const cap = await capRes.json().catch(() => ({}));
-    return { ok: capRes.ok, payment, capture: cap };
   });

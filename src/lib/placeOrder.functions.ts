@@ -19,33 +19,33 @@ const ItemSchema = z.object({
   variant_id: z.string().uuid().nullable().optional(),
 });
 
-const AddressSchema = z.object({
-  fullName: z.string().min(1).max(120),
-  email: z.string().email().max(255),
-  phone: z.string().min(1).max(64),
-  shortCode: z.string().max(32).optional().nullable(),
-  buildingNumber: z.string().max(16).optional().nullable(),
-  street: z.string().max(160).optional().nullable(),
-  district: z.string().max(120).optional().nullable(),
-  city: z.string().max(80).optional().nullable(),
-  postalCode: z.string().max(16).optional().nullable(),
-  additionalNumber: z.string().max(16).optional().nullable(),
-  notes: z.string().max(500).optional().nullable(),
-}).passthrough();
+const AddressSchema = z
+  .object({
+    fullName: z.string().min(1).max(120),
+    email: z.string().email().max(255),
+    phone: z.string().min(1).max(64),
+    shortCode: z.string().max(32).optional().nullable(),
+    buildingNumber: z.string().max(16).optional().nullable(),
+    street: z.string().max(160).optional().nullable(),
+    district: z.string().max(120).optional().nullable(),
+    city: z.string().max(80).optional().nullable(),
+    postalCode: z.string().max(16).optional().nullable(),
+    additionalNumber: z.string().max(16).optional().nullable(),
+    notes: z.string().max(500).optional().nullable(),
+  })
+  .passthrough();
 
 const InputSchema = z.object({
   session_id: z.string().min(1).max(128),
-  user_id: z.string().uuid().nullable().optional(),
+  auth_token: z.string().min(20).max(4096).nullable().optional(),
   items: z.array(ItemSchema).min(1).max(100),
   address: AddressSchema,
   currency: z.string().min(3).max(8),
-  payment_method: z.enum(["cod", "card", "apple_pay", "bank_transfer", "tabby", "tamara"]).default("cod"),
+  payment_method: z
+    .enum(["cod", "card", "apple_pay", "bank_transfer", "tabby", "tamara"])
+    .default("cod"),
   coupon_code: z.string().min(1).max(64).nullable().optional(),
   pricing: z.object({
-    subtotal: z.number().min(0),
-    shipping_fee: z.number().min(0),
-    tax: z.number().min(0),
-    total: z.number().min(0),
     shipping_method: z.string().min(1).max(64),
   }),
 });
@@ -53,24 +53,36 @@ const InputSchema = z.object({
 export type PlaceOrderInput = z.infer<typeof InputSchema>;
 
 // Stable hash of the cart contents — order-independent for items, includes pricing.
-async function hashCart(input: PlaceOrderInput): Promise<string> {
+async function hashCart(input: PlaceOrderInput, verifiedUserId: string | null): Promise<string> {
   const normalized = {
     items: [...input.items]
       .map((it) => ({
         slug: it.slug,
         qty: it.qty,
-        price: it.price,
         size: it.size ?? null,
         color: it.color ?? null,
+        sku: it.sku ?? null,
+        variant_id: it.variant_id ?? null,
       }))
       .sort((a, b) =>
-        `${a.slug}|${a.size}|${a.color}`.localeCompare(
-          `${b.slug}|${b.size}|${b.color}`,
-        ),
+        `${a.slug}|${a.size}|${a.color}`.localeCompare(`${b.slug}|${b.size}|${b.color}`),
       ),
-    pricing: input.pricing,
+    shipping_method: input.pricing.shipping_method,
+    coupon_code: input.coupon_code ?? null,
     payment_method: input.payment_method,
     currency: input.currency,
+    user_id: verifiedUserId,
+    address: {
+      fullName: input.address.fullName.trim(),
+      email: input.address.email.trim().toLowerCase(),
+      phone: input.address.phone.trim(),
+      shortCode: input.address.shortCode ?? null,
+      buildingNumber: input.address.buildingNumber ?? null,
+      street: input.address.street ?? null,
+      district: input.address.district ?? null,
+      city: input.address.city ?? null,
+      postalCode: input.address.postalCode ?? null,
+    },
   };
   const data = new TextEncoder().encode(JSON.stringify(normalized));
   const buf = await crypto.subtle.digest("SHA-256", data);
@@ -82,7 +94,80 @@ async function hashCart(input: PlaceOrderInput): Promise<string> {
 export const placeOrder = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }) => {
-    const cartHash = await hashCart(data);
+    let verifiedUserId: string | null = null;
+    if (data.auth_token) {
+      const { data: auth, error: authError } = await supabaseAdmin.auth.getUser(data.auth_token);
+      if (authError || !auth.user) throw new Error("Invalid checkout authentication");
+      verifiedUserId = auth.user.id;
+    }
+
+    // Rebuild every line price from active catalog records. Browser prices are
+    // display hints only and never become chargeable amounts.
+    const slugs = [...new Set(data.items.map((item) => item.slug))];
+    const { data: products, error: productsError } = await supabaseAdmin
+      .from("products")
+      .select("id, slug, name_ar, name_en, brand, image_url, price, currency, is_active")
+      .in("slug", slugs)
+      .eq("is_active", true);
+    if (productsError) throw new Error(`Catalog validation failed: ${productsError.message}`);
+    if (!products || products.length !== slugs.length) {
+      throw new Error("One or more products are unavailable");
+    }
+
+    const productBySlug = new Map(products.map((product) => [product.slug, product]));
+    const { data: variants, error: variantsError } = await supabaseAdmin
+      .from("product_variants")
+      .select("id, product_id, sku, price, price_override, is_active")
+      .in(
+        "product_id",
+        products.map((product) => product.id),
+      )
+      .eq("is_active", true);
+    if (variantsError) throw new Error(`Variant validation failed: ${variantsError.message}`);
+
+    const pricedItems = data.items.map((item) => {
+      const product = productBySlug.get(item.slug);
+      if (!product) throw new Error(`Product unavailable: ${item.slug}`);
+      if (String(product.currency).toUpperCase() !== data.currency.toUpperCase()) {
+        throw new Error(`Currency mismatch for product ${item.slug}`);
+      }
+      const productVariants = (variants || []).filter(
+        (candidate) => candidate.product_id === product.id,
+      );
+      const variant = productVariants.find(
+        (candidate) =>
+          (item.variant_id && candidate.id === item.variant_id) ||
+          (!item.variant_id && item.sku && candidate.sku === item.sku),
+      );
+      if (productVariants.length > 0 && !variant) {
+        throw new Error(`Variant unavailable for ${item.slug}`);
+      }
+      const unitPrice = Number(variant?.price_override ?? variant?.price ?? product.price);
+      if (!Number.isFinite(unitPrice) || unitPrice < 0) throw new Error("Invalid catalog price");
+      return {
+        ...item,
+        product_id: product.id,
+        variant_id: variant?.id ?? item.variant_id ?? null,
+        name: item.name || product.name_en || product.name_ar,
+        brand: product.brand ?? item.brand ?? null,
+        image: product.image_url ?? item.image ?? null,
+        price: Math.round(unitPrice * 100) / 100,
+      };
+    });
+
+    const subtotal =
+      Math.round(pricedItems.reduce((sum, item) => sum + item.price * item.qty, 0) * 100) / 100;
+    const shippingFees: Record<string, number> = {
+      standard: subtotal >= 500 ? 0 : 25,
+      express: 45,
+      international: 120,
+      pickup: 0,
+    };
+    const shipping_fee = shippingFees[data.pricing.shipping_method];
+    if (shipping_fee === undefined) throw new Error("Invalid shipping method");
+    const tax = Math.round(subtotal * 0.15 * 100) / 100;
+
+    const cartHash = await hashCart(data, verifiedUserId);
     const idempotencyKey = `${data.session_id}:${cartHash}`;
 
     // ── Re-validate coupon server-side and recompute total. Never trust client.
@@ -92,8 +177,8 @@ export const placeOrder = createServerFn({ method: "POST" })
     if (data.coupon_code) {
       const { data: rows, error: cErr } = await (supabaseAdmin as any).rpc("validate_coupon", {
         _code: data.coupon_code,
-        _subtotal: data.pricing.subtotal,
-        _user_id: data.user_id ?? null,
+        _subtotal: subtotal,
+        _user_id: verifiedUserId,
         _customer_email: data.address.email,
       });
       if (cErr) throw new Error(`Coupon validation failed: ${cErr.message}`);
@@ -101,13 +186,13 @@ export const placeOrder = createServerFn({ method: "POST" })
       if (!row || !row.valid) {
         throw new Error(`Coupon invalid: ${row?.reason ?? "unknown"}`);
       }
-      discount_amount = Math.min(Number(row.discount_amount) || 0, data.pricing.subtotal);
+      discount_amount = Math.min(Number(row.discount_amount) || 0, subtotal);
       coupon_id = row.coupon_id;
       coupon_code = row.code;
     }
     const finalTotal = Math.max(
       0,
-      Number((data.pricing.subtotal + data.pricing.shipping_fee + data.pricing.tax - discount_amount).toFixed(2)),
+      Number((subtotal + shipping_fee + tax - discount_amount).toFixed(2)),
     );
 
     // 1. If an order with this key already exists, return it (idempotent replay).
@@ -123,19 +208,18 @@ export const placeOrder = createServerFn({ method: "POST" })
 
     // 2. Insert the order. Unique index on idempotency_key guarantees that
     //    even concurrent requests can't both succeed.
-    const { data: order, error: orderErr } = await (supabaseAdmin
-      .from("orders") as any)
+    const { data: order, error: orderErr } = await (supabaseAdmin.from("orders") as any)
       .insert({
         idempotency_key: idempotencyKey,
-        user_id: data.user_id ?? null,
+        user_id: verifiedUserId,
         customer_name: data.address.fullName,
         customer_email: data.address.email,
         customer_phone: data.address.phone,
         status: "pending",
         payment_method: data.payment_method,
-        subtotal: data.pricing.subtotal,
-        shipping_fee: data.pricing.shipping_fee,
-        tax: data.pricing.tax,
+        subtotal,
+        shipping_fee,
+        tax,
         discount_amount,
         coupon_id,
         coupon_code,
@@ -169,8 +253,9 @@ export const placeOrder = createServerFn({ method: "POST" })
     // 3. Insert items. If this fails, the order row remains but no items —
     //    a follow-up replay with the same key will return the existing order
     //    and we re-insert items only if missing.
-    const items = data.items.map((it) => ({
+    const items = pricedItems.map((it) => ({
       order_id: order.id,
+      product_id: it.product_id,
       product_slug: it.slug,
       product_name: it.name,
       brand: it.brand ?? null,
@@ -183,16 +268,17 @@ export const placeOrder = createServerFn({ method: "POST" })
       variant_id: it.variant_id ?? null,
       line_total: it.price * it.qty,
     }));
-    let { error: itemsErr } = await supabaseAdmin
-      .from("order_items")
-      .insert(items as any);
+    let { error: itemsErr } = await supabaseAdmin.from("order_items").insert(items as any);
     // Defensive: if the per-size SKU column hasn't been migrated yet on this
     // environment, retry without it so checkout never breaks on a timing gap.
     if (itemsErr && /sku/i.test(itemsErr.message)) {
       const itemsNoSku = items.map(({ sku: _sku, ...rest }) => rest);
       ({ error: itemsErr } = await supabaseAdmin.from("order_items").insert(itemsNoSku));
     }
-    if (itemsErr) throw new Error(itemsErr.message);
+    if (itemsErr) {
+      await supabaseAdmin.from("orders").delete().eq("id", order.id);
+      throw new Error(itemsErr.message);
+    }
 
     // 3b. Stock handling:
     //  - For payments that confirm immediately (cod, card, apple_pay): finalize now.
@@ -202,12 +288,14 @@ export const placeOrder = createServerFn({ method: "POST" })
     const asyncPayment = ["bank_transfer", "tabby", "tamara"].includes(data.payment_method);
     const rpcName = asyncPayment ? "reserve_order_inventory" : "finalize_order_stock";
     try {
-      const { error: stockErr } = await (supabaseAdmin as any).rpc(
-        rpcName, { _order_id: order.id },
-      );
-      if (stockErr) console.error(`[placeOrder] ${rpcName}:`, stockErr.message);
-    } catch (e: any) {
-      console.error(`[placeOrder] ${rpcName} threw:`, e?.message || e);
+      const { error: stockErr } = await (supabaseAdmin as any).rpc(rpcName, {
+        _order_id: order.id,
+      });
+      if (stockErr) throw stockErr;
+    } catch (error) {
+      await supabaseAdmin.from("orders").delete().eq("id", order.id);
+      const message = error instanceof Error ? error.message : "Inventory allocation failed";
+      throw new Error(`Could not allocate inventory: ${message}`);
     }
 
     // 3c. Record coupon redemption + bump used_count (best-effort).
@@ -216,7 +304,7 @@ export const placeOrder = createServerFn({ method: "POST" })
         await supabaseAdmin.from("coupon_redemptions").insert({
           coupon_id,
           order_id: order.id,
-          user_id: data.user_id ?? null,
+          user_id: verifiedUserId,
           customer_email: data.address.email,
           customer_phone: data.address.phone,
           discount_amount,
@@ -254,7 +342,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     if (data.payment_method === "cod") {
       try {
         const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
-        const res = await createOtoShipmentForOrder(order.id, data.user_id ?? null);
+        const res = await createOtoShipmentForOrder(order.id, verifiedUserId);
         if (!res.ok) console.error("[placeOrder] OTO auto-create failed:", res.error);
       } catch (e: any) {
         console.error("[placeOrder] OTO auto-create threw:", e?.message || e);

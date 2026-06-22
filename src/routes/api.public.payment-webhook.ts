@@ -1,15 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "crypto";
+import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 /**
  * Public payment webhook endpoint.
- * 
+ *
  * Security:
  * - HMAC-SHA256 signature verification using PAYMENT_WEBHOOK_SECRET
  * - All requests logged (verified or not) for audit
  * - Idempotency: Transaction updates are based on gateway_transaction_id
- * 
+ *
  * Expected payload (gateway-agnostic):
  * {
  *   gateway: "stripe" | "tap" | "moyasar" | "tabby" | "tamara",
@@ -26,7 +27,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
  *   card_brand?: string,
  *   raw?: object
  * }
- * 
+ *
  * Header: X-Webhook-Signature = HMAC-SHA256(body, PAYMENT_WEBHOOK_SECRET) hex
  */
 export const Route = createFileRoute("/api/public/payment-webhook")({
@@ -38,18 +39,20 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
         const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "";
 
         const secret = process.env.PAYMENT_WEBHOOK_SECRET;
+        if (!secret) {
+          console.error("[payment-webhook] PAYMENT_WEBHOOK_SECRET is not configured");
+          return new Response("Webhook is not configured", { status: 503 });
+        }
         let signatureValid = false;
-        if (secret) {
-          try {
-            const expected = createHmac("sha256", secret).update(body).digest("hex");
-            const sigBuf = Buffer.from(signature);
-            const expBuf = Buffer.from(expected);
-            if (sigBuf.length === expBuf.length) {
-              signatureValid = timingSafeEqual(sigBuf, expBuf);
-            }
-          } catch {
-            signatureValid = false;
+        try {
+          const expected = createHmac("sha256", secret).update(body).digest("hex");
+          const sigBuf = Buffer.from(signature);
+          const expBuf = Buffer.from(expected);
+          if (sigBuf.length === expBuf.length) {
+            signatureValid = timingSafeEqual(sigBuf, expBuf);
           }
+        } catch {
+          signatureValid = false;
         }
 
         let payload: any;
@@ -65,6 +68,29 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
             processing_error: "Invalid JSON",
           });
           return new Response("Invalid JSON", { status: 400 });
+        }
+
+        const parsed = z
+          .object({
+            gateway: z.string().min(1).max(50),
+            event_type: z.string().min(1).max(100),
+            transaction_id: z.string().min(1).max(255),
+            order_number: z.string().min(1).max(100),
+            amount: z.coerce.number().nonnegative().finite(),
+            currency: z
+              .string()
+              .length(3)
+              .transform((value) => value.toUpperCase()),
+            status: z.string().min(1).max(50),
+          })
+          .passthrough()
+          .safeParse(payload);
+        if (!parsed.success) return new Response("Invalid webhook payload", { status: 400 });
+        payload = parsed.data;
+        // Tabby and Tamara must use their provider-specific signed endpoints;
+        // accepting them here would create a second, weaker confirmation path.
+        if (payload.gateway === "tabby" || payload.gateway === "tamara") {
+          return new Response("Use the provider-specific webhook endpoint", { status: 400 });
         }
 
         // Always log the attempt (even invalid signatures - for security audit)
@@ -99,10 +125,13 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
           if (payload.transaction_id) {
             const { data: existing } = await supabaseAdmin
               .from("payment_transactions")
-              .select("id, order_id")
+              .select("id, order_id, gateway, amount, currency")
               .eq("gateway_transaction_id", payload.transaction_id)
               .maybeSingle();
             if (existing) {
+              if (existing.gateway !== payload.gateway) {
+                return new Response("Gateway mismatch", { status: 400 });
+              }
               txnId = existing.id;
               orderId = existing.order_id;
             }
@@ -147,10 +176,14 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
           if (payload.amount && orderId) {
             const { data: order } = await supabaseAdmin
               .from("orders")
-              .select("total")
+              .select("total, currency")
               .eq("id", orderId)
               .single();
-            if (order && Math.abs(Number(order.total) - Number(payload.amount)) > 0.01) {
+            if (
+              order &&
+              (Math.abs(Number(order.total) - Number(payload.amount)) > 0.01 ||
+                String(order.currency).toUpperCase() !== String(payload.currency).toUpperCase())
+            ) {
               await supabaseAdmin
                 .from("payment_webhooks_log")
                 .update({ processing_error: "Amount mismatch" })
@@ -175,7 +208,8 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
           }
           if (payload.card_last4) update.card_last4 = payload.card_last4;
           if (payload.card_brand) update.card_brand = payload.card_brand;
-          if (status === "captured" || status === "paid") update.captured_at = new Date().toISOString();
+          if (status === "captured" || status === "paid")
+            update.captured_at = new Date().toISOString();
           if (status === "failed") update.failed_at = new Date().toISOString();
           if (status === "authorized") update.authorized_at = new Date().toISOString();
 
@@ -241,7 +275,8 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
 function mapStatus(status?: string, eventType?: string): string {
   const s = (status || "").toLowerCase();
   const e = (eventType || "").toLowerCase();
-  if (s === "captured" || s === "paid" || s === "succeeded" || e.includes("succeeded")) return "captured";
+  if (s === "captured" || s === "paid" || s === "succeeded" || e.includes("succeeded"))
+    return "captured";
   if (s === "authorized" || s === "approved") return "authorized";
   if (s === "failed" || s === "declined" || e.includes("failed")) return "failed";
   if (s === "refunded" || e.includes("refund")) return "refunded";
