@@ -637,7 +637,7 @@ export function SiteInlineEditor({
         </Button>
         <Button
           size="sm"
-          className="h-8 bg-white text-[#211b1d] hover:bg-white/90"
+          className="lpe-publish-button h-9 px-4 font-bold"
           onClick={onPublish}
           disabled={publishing}
         >

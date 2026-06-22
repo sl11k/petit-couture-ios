@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { MediaUploader } from "@/features/admin/components/MediaUploader";
 import { Plus, Trash2, Sparkles } from "lucide-react";
+import { Search, Check } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { LinkPicker } from "./LinkPicker";
 import type {
   Section, ButtonContent, FeatureCard, FaqItem, TestimonialItem, StatItem, ImageContent,
@@ -82,6 +85,74 @@ function ImageField({ label, value, onChange, allowLink = true }: { label: strin
         <Switch checked={value?.newTab ?? false} onCheckedChange={(newTab) => onChange({ ...(value ?? {}), newTab })} />
         فتح رابط الصورة في تبويب جديد
       </label>}
+    </div>
+  );
+}
+
+type CategoryChoice = { id: string; slug: string; name_ar: string; name_en: string; image_url: string | null };
+type ProductChoice = { id: string; slug: string; name_ar: string | null; name_en: string | null; sku: string | null; image_url: string | null };
+
+function CategoryPicker({ value, onChange }: { value?: string; onChange: (slug: string) => void }) {
+  const [items, setItems] = useState<CategoryChoice[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let active = true;
+    supabase.from("categories").select("id,slug,name_ar,name_en,image_url").eq("is_active", true).order("display_order").then(({ data }) => {
+      if (active) { setItems((data ?? []) as CategoryChoice[]); setLoading(false); }
+    });
+    return () => { active = false; };
+  }, []);
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs">اختر التصنيف</Label>
+      <select value={value ?? ""} onChange={(e) => onChange(e.target.value)} disabled={loading} className="w-full rounded-md border border-border bg-background px-2 py-2 text-sm">
+        <option value="">{loading ? "جاري تحميل التصنيفات…" : "اختر تصنيفاً"}</option>
+        {items.map((item) => <option key={item.id} value={item.slug}>{item.name_ar} · {item.name_en}</option>)}
+      </select>
+      {!loading && items.length === 0 && <p className="text-[11px] text-destructive">لا توجد تصنيفات مفعلة.</p>}
+    </div>
+  );
+}
+
+function ManualProductPicker({ value, onChange }: { value: string[]; onChange: (slugs: string[]) => void }) {
+  const [items, setItems] = useState<ProductChoice[]>([]);
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const all: ProductChoice[] = [];
+      const pageSize = 1000;
+      for (let from = 0; active; from += pageSize) {
+        const { data } = await supabase.from("products").select("id,slug,name_ar,name_en,sku,image_url").eq("status", "active").eq("is_active", true).order("created_at", { ascending: false }).range(from, from + pageSize - 1);
+        const page = (data ?? []) as ProductChoice[];
+        all.push(...page);
+        if (page.length < pageSize) break;
+      }
+      if (active) { setItems(all); setLoading(false); }
+    })();
+    return () => { active = false; };
+  }, []);
+  const filtered = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    const matches = needle ? items.filter((item) => `${item.name_ar ?? ""} ${item.name_en ?? ""} ${item.sku ?? ""} ${item.slug}`.toLowerCase().includes(needle)) : items;
+    return [...matches].sort((a, b) => Number(value.includes(b.slug)) - Number(value.includes(a.slug)));
+  }, [items, query, value]);
+  const toggle = (slug: string) => onChange(value.includes(slug) ? value.filter((item) => item !== slug) : [...value, slug]);
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between"><Label className="text-xs">المنتجات المختارة</Label><span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] text-primary">{value.length} مختار</span></div>
+      <div className="relative"><Search className="absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" /><Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="ابحث بالاسم أو SKU…" className="ps-8" /></div>
+      <div className="max-h-72 overflow-y-auto rounded-md border border-border bg-background">
+        {loading ? <p className="p-5 text-center text-xs text-muted-foreground">جاري تحميل المنتجات…</p> : filtered.length === 0 ? <p className="p-5 text-center text-xs text-muted-foreground">لا توجد نتائج</p> : filtered.map((item) => {
+          const selected = value.includes(item.slug);
+          return <button type="button" key={item.id} onClick={() => toggle(item.slug)} className={`flex w-full items-center gap-2 border-b border-border p-2 text-start last:border-0 ${selected ? "bg-primary/5" : "hover:bg-muted/50"}`}>
+            {item.image_url ? <img src={item.image_url} alt="" className="h-10 w-10 rounded object-cover" /> : <div className="h-10 w-10 rounded bg-muted" />}
+            <span className="min-w-0 flex-1"><b className="block truncate text-xs font-medium">{item.name_ar || item.name_en}</b><small className="block truncate text-[10px] text-muted-foreground">{item.name_en} · {item.sku || item.slug}</small></span>
+            <span className={`grid h-5 w-5 place-items-center rounded border ${selected ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>{selected && <Check className="h-3 w-3" />}</span>
+          </button>;
+        })}
+      </div>
     </div>
   );
 }
@@ -636,12 +707,10 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
             </select>
           </div>
           {s.content.source === "category" && (
-            <TextField label="معرّف التصنيف (slug)" value={s.content.categorySlug} onChange={(v, opts) => updateContent({ categorySlug: v }, opts)} />
+            <CategoryPicker value={s.content.categorySlug} onChange={(categorySlug) => updateContent({ categorySlug })} />
           )}
           {s.content.source === "manual" && (
-            <TextField label="معرفات المنتجات (slug مفصولة بفواصل)" multiline
-              value={(s.content.productSlugs ?? []).join(", ")}
-              onChange={(v) => updateContent({ productSlugs: v.split(",").map((x) => x.trim()).filter(Boolean) })} />
+            <ManualProductPicker value={s.content.productSlugs ?? []} onChange={(productSlugs) => updateContent({ productSlugs })} />
           )}
           <div>
             <Label className="text-xs">العدد الأقصى</Label>

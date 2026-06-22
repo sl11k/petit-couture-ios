@@ -60,6 +60,21 @@
 .lpe-topbar button {
   color: #fff;
 }
+.lpe-topbar .lpe-publish-button {
+  color: #24181c !important;
+  background: linear-gradient(135deg, #f6d37a, #dca947) !important;
+  border: 1px solid rgba(255, 239, 192, 0.9) !important;
+  box-shadow: 0 5px 18px rgba(220, 169, 71, 0.38);
+}
+.lpe-topbar .lpe-publish-button:hover {
+  color: #160e11 !important;
+  background: linear-gradient(135deg, #ffe39b, #e8b858) !important;
+  transform: translateY(-1px);
+}
+.lpe-topbar .lpe-publish-button:disabled {
+  opacity: 0.65;
+  transform: none;
+}
 
 .lpe-sections-panel {
   position: fixed;
