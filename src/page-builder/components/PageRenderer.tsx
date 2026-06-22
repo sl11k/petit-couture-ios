@@ -13,6 +13,9 @@ import type {
   CtaSection,
   GallerySection,
   BeforeAfterSection,
+  VideoSection,
+  CountdownSection,
+  NewsletterSection,
   StatsSection,
   ReviewsSection,
   ButtonContent,
@@ -24,7 +27,7 @@ import type {
   HtmlSection,
   ImageContent,
 } from "../schemas/pageSchema";
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { ChevronDown, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -317,11 +320,27 @@ function RenderHero({ s }: { s: HeroSection }) {
 
 function RenderTextBlock({ s }: { s: TextBlockSection }) {
   const align = (s.content as any).alignment ?? "left";
+  const ctx = useContext(EditContext);
+  const ar = ctx?.ar ?? false;
+  if (s.content.layout === "split") return (
+    <section style={sectionWrapStyle(s)}>
+      <div className="mx-auto grid min-h-[560px] max-w-7xl items-stretch md:grid-cols-2">
+        <div className={cn("flex flex-col justify-center px-6 py-16 md:px-12", `text-${align}`)}>
+          <EditT s={s} field="eyebrow" as="p" className="mb-3 text-xs uppercase tracking-widest opacity-70" placeholder="Eyebrow" />
+          <EditT s={s} field="title" as="h1" className="text-4xl font-semibold tracking-tight md:text-6xl" placeholder="العنوان" />
+          <EditT s={s} field="subtitle" as="p" multiline className="mt-4 text-lg opacity-80" placeholder="العنوان الفرعي" />
+          <div className={cn("mt-6 flex flex-wrap gap-3", align === "center" && "justify-center", align === "right" && "justify-end")}><ButtonsRow buttons={s.content.buttons} ar={ar} /></div>
+        </div>
+        <div className="min-h-[360px] bg-muted">{bgImage ? <img src={bgImage} alt={s.content.image?.alt || ""} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-muted-foreground">{ar ? "أضف صورة" : "Add image"}</div>}</div>
+      </div>
+    </section>
+  );
   return (
     <section style={sectionWrapStyle(s)}>
       <div className={cn("mx-auto max-w-3xl px-4 py-12", `text-${align}`)}>
         <EditT s={s} field="title" as="h2" className="text-2xl md:text-3xl font-semibold mb-4" placeholder="العنوان" />
         <EditT s={s} field="body" as="div" multiline className="whitespace-pre-wrap text-foreground/90 leading-relaxed" placeholder="اكتب النص هنا…" />
+        <ButtonsRow buttons={s.content.buttons} ar={ar} />
       </div>
     </section>
   );
@@ -335,7 +354,8 @@ function RenderImageText({ s }: { s: ImageTextSection }) {
     <section style={sectionWrapStyle(s)}>
       <div className={cn("mx-auto max-w-6xl px-4 py-12 grid md:grid-cols-2 gap-8 items-center", side === "right" && "md:[&>div:first-child]:order-2")}>
         <div>
-          {s.content.image?.url && <img src={s.content.image.url} alt={s.content.image.alt || ""} className="w-full rounded-2xl object-cover" />}
+          {s.content.image?.url && (s.content.image.link ? <a href={s.content.image.link} target={s.content.image.newTab ? "_blank" : undefined} rel={s.content.image.newTab ? "noreferrer" : undefined}><img src={s.content.image.url} alt={s.content.image.alt || ""} className="w-full rounded-2xl object-cover" /></a> : <img src={s.content.image.url} alt={s.content.image.alt || ""} className="w-full rounded-2xl object-cover" />)}
+          {pick(ar, s.content.image?.caption_ar, s.content.image?.caption_en) && <p className="mt-2 text-xs opacity-60">{pick(ar, s.content.image?.caption_ar, s.content.image?.caption_en)}</p>}
         </div>
         <div>
           <EditT s={s} field="title" as="h2" className="text-2xl md:text-3xl font-semibold mb-3" placeholder="العنوان" />
@@ -363,6 +383,9 @@ function RenderFeatureGrid({ s }: { s: FeatureGridSection }) {
             const descField = ar ? "description_ar" : "description_en";
             return (
               <div key={c.id} className="rounded-2xl border border-border p-6 bg-card">
+                {c.icon && <div className="mb-3 text-3xl">{c.icon}</div>}
+                {c.image?.url && (c.image.link ? <a href={c.image.link} target={c.image.newTab ? "_blank" : undefined} rel={c.image.newTab ? "noreferrer" : undefined}><img src={c.image.url} alt={c.image.alt || ""} className="mb-4 aspect-[4/3] w-full rounded-xl object-cover" /></a> : <img src={c.image.url} alt={c.image.alt || ""} className="mb-4 aspect-[4/3] w-full rounded-xl object-cover" />)}
+                {pick(ar, c.image?.caption_ar, c.image?.caption_en) && <p className="mb-3 text-xs opacity-60">{pick(ar, c.image?.caption_ar, c.image?.caption_en)}</p>}
                 <EditCustom
                   s={s} as="h3" className="text-lg font-semibold mb-2" placeholder="عنوان البطاقة"
                   value={(c as any)[titleField] ?? ""}
@@ -419,6 +442,7 @@ function RenderFaq({ s }: { s: FaqSection }) {
                       ckey={`faq:${s.id}:${it.id}:${af}`}
                       commit={(next, cur: any) => ({ ...cur, content: { ...cur.content, items: cur.content.items.map((x: any) => x.id === it.id ? { ...x, [af]: next } as any : x) } })}
                     />
+                    {it.link && <a href={it.link} className="mt-3 inline-block underline">{ar ? "اعرف أكثر" : "Learn more"}</a>}
                   </div>
                 )}
               </div>
@@ -466,6 +490,7 @@ function RenderTestimonials({ s }: { s: TestimonialsSection }) {
                     />
                   </div>
                 </figcaption>
+                {it.link && <a href={it.link} className="mt-4 inline-block text-sm underline">{ar ? "عرض القصة" : "View story"}</a>}
               </figure>
             );
           })}
@@ -494,15 +519,18 @@ function RenderCta({ s }: { s: CtaSection }) {
 
 function RenderGallery({ s }: { s: GallerySection }) {
   const cols = s.content.columns ?? 3;
+  const { lang } = useLanguage();
+  const ar = lang === "ar";
   const colsCls = cols === 2 ? "md:grid-cols-2" : cols === 4 ? "md:grid-cols-2 lg:grid-cols-4" : "md:grid-cols-3";
   return (
     <section style={sectionWrapStyle(s)}>
       <div className="mx-auto max-w-6xl px-4 py-12">
         <EditT s={s} field="title" as="h2" className="text-2xl md:text-3xl font-semibold mb-6 text-center" placeholder="معرض الصور" />
         <div className={cn("grid gap-3", colsCls)}>
-          {s.content.images.map((im, i) => (
-            <img key={i} src={im.url} alt={im.alt || ""} className="w-full aspect-square object-cover rounded-xl" />
-          ))}
+          {s.content.images.map((im, i) => {
+            const media = <figure><img src={im.url} alt={im.alt || ""} className="w-full aspect-square object-cover rounded-xl" />{pick(ar, im.caption_ar, im.caption_en) && <figcaption className="mt-2 text-xs opacity-60">{pick(ar, im.caption_ar, im.caption_en)}</figcaption>}</figure>;
+            return im.link ? <a key={i} href={im.link} target={im.newTab ? "_blank" : undefined} rel={im.newTab ? "noreferrer" : undefined}>{media}</a> : <div key={i}>{media}</div>;
+          })}
         </div>
       </div>
     </section>
@@ -544,6 +572,74 @@ function RenderBeforeAfter({ s }: { s: BeforeAfterSection }) {
   );
 }
 
+function RenderVideo({ s }: { s: VideoSection }) {
+  const { lang } = useLanguage();
+  const ar = lang === "ar";
+  const c = s.content;
+  return (
+    <section style={sectionWrapStyle(s)} className="px-4 py-12">
+      <div className="mx-auto max-w-6xl text-center">
+        {pick(ar, c.title_ar, c.title_en) && <h2 className="mb-6 text-3xl font-semibold">{pick(ar, c.title_ar, c.title_en)}</h2>}
+        {c.videoUrl ? <video src={c.videoUrl} poster={c.poster?.url} autoPlay={c.autoplay} muted={c.muted} loop={c.loop} controls={c.controls !== false} playsInline className="mx-auto w-full rounded-2xl bg-black object-cover" style={{ aspectRatio: c.aspectRatio ?? "16/9" }} /> : <div className="grid w-full place-items-center rounded-2xl bg-muted text-muted-foreground" style={{ aspectRatio: c.aspectRatio ?? "16/9" }}>{ar ? "أضف ملف الفيديو من الإعدادات" : "Add a video in settings"}</div>}
+        {pick(ar, c.caption_ar, c.caption_en) && <p className="mt-3 text-sm opacity-70">{pick(ar, c.caption_ar, c.caption_en)}</p>}
+        {c.link && <a href={c.link} className="mt-4 inline-block underline">{ar ? "فتح الرابط" : "Open link"}</a>}
+      </div>
+    </section>
+  );
+}
+
+function RenderCountdown({ s }: { s: CountdownSection }) {
+  const { lang } = useLanguage();
+  const ar = lang === "ar";
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => { const timer = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(timer); }, []);
+  const target = s.content.targetDate ? new Date(s.content.targetDate).getTime() : now;
+  const remaining = Math.max(0, target - now);
+  const days = Math.floor(remaining / 86400000);
+  const hours = Math.floor((remaining / 3600000) % 24);
+  const minutes = Math.floor((remaining / 60000) % 60);
+  const seconds = Math.floor((remaining / 1000) % 60);
+  const units = [[days, ar ? "يوم" : "Days"], [hours, ar ? "ساعة" : "Hours"], [minutes, ar ? "دقيقة" : "Minutes"], [seconds, ar ? "ثانية" : "Seconds"]];
+  const bg = s.content.backgroundImage?.url;
+  return (
+    <section style={{ ...sectionWrapStyle(s), backgroundImage: bg ? `linear-gradient(#0008,#0008),url(${bg})` : undefined, backgroundSize: "cover", backgroundPosition: "center" }} className={cn("px-4 py-16 text-center", bg && "text-white")}>
+      <div className="mx-auto max-w-5xl">
+        <h2 className="text-3xl font-semibold">{pick(ar, s.content.title_ar, s.content.title_en)}</h2>
+        <p className="mt-2 opacity-75">{pick(ar, s.content.subtitle_ar, s.content.subtitle_en)}</p>
+        {remaining > 0 ? <div className="mx-auto my-8 grid max-w-2xl grid-cols-4 gap-3">{units.map(([value, label]) => <div key={String(label)} className="rounded-xl border border-current/20 bg-background/10 p-4 backdrop-blur"><strong className="block text-3xl md:text-5xl">{String(value).padStart(2, "0")}</strong><span className="text-xs opacity-70">{label}</span></div>)}</div> : <p className="my-8 text-2xl font-semibold">{pick(ar, s.content.expiredText_ar, s.content.expiredText_en)}</p>}
+        <ButtonsRow buttons={s.content.button ? [s.content.button] : []} ar={ar} />
+      </div>
+    </section>
+  );
+}
+
+function RenderNewsletter({ s }: { s: NewsletterSection }) {
+  const { lang } = useLanguage();
+  const ar = lang === "ar";
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState("");
+  const submit = async (event: FormEvent) => {
+    event.preventDefault(); setError(""); setBusy(true);
+    const normalized = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) { setError(ar ? "أدخل بريداً إلكترونياً صحيحاً" : "Enter a valid email"); setBusy(false); return; }
+    const { error: dbError } = await supabase.from("contact_submissions").insert({ name: "Newsletter subscriber", email: normalized, subject: "Newsletter subscription", message: `Newsletter subscription from section ${s.id}` });
+    if (!dbError && s.content.actionUrl) { try { await fetch(s.content.actionUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: normalized, source: "storefront-newsletter" }) }); } catch { /* The database copy remains saved. */ } }
+    setBusy(false);
+    if (dbError) setError(ar ? "تعذر الاشتراك، حاول مرة أخرى" : "Could not subscribe. Try again."); else { setDone(true); setEmail(""); }
+  };
+  const bg = s.content.backgroundImage?.url;
+  return (
+    <section style={{ ...sectionWrapStyle(s), backgroundImage: bg ? `linear-gradient(#0007,#0007),url(${bg})` : undefined, backgroundSize: "cover", backgroundPosition: "center" }} className={cn("px-4 py-16 text-center", bg && "text-white")}>
+      <div className="mx-auto max-w-3xl"><h2 className="text-3xl font-semibold">{pick(ar, s.content.title_ar, s.content.title_en)}</h2><p className="mt-3 opacity-75">{pick(ar, s.content.subtitle_ar, s.content.subtitle_en)}</p>
+        {done ? <p className="mt-6 font-medium">{pick(ar, s.content.successText_ar, s.content.successText_en)}</p> : <form onSubmit={submit} className="mx-auto mt-6 flex max-w-xl gap-2"><input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder={pick(ar, s.content.placeholder_ar, s.content.placeholder_en)} className="min-w-0 flex-1 rounded-xl border bg-background px-4 py-3 text-foreground" /><button disabled={busy} className="rounded-xl bg-primary px-5 py-3 text-primary-foreground disabled:opacity-50">{busy ? "…" : pick(ar, s.content.buttonLabel_ar, s.content.buttonLabel_en)}</button></form>}
+        {error && <p className="mt-2 text-sm text-destructive">{error}</p>}{s.content.privacyUrl && <a href={s.content.privacyUrl} className="mt-3 inline-block text-xs underline opacity-70">{ar ? "سياسة الخصوصية" : "Privacy policy"}</a>}
+      </div>
+    </section>
+  );
+}
+
 function RenderStats({ s }: { s: StatsSection }) {
   const ctx = useContext(EditContext);
   const ar = ctx?.ar ?? false;
@@ -553,13 +649,14 @@ function RenderStats({ s }: { s: StatsSection }) {
         {s.content.items.map((it) => {
           const lf = ar ? "label_ar" : "label_en";
           return (
-            <div key={it.id}>
+            <div key={it.id} className="relative">
               <EditCustom
                 s={s} as="div" className="text-3xl md:text-4xl font-semibold" placeholder="0"
                 value={it.value ?? ""}
                 ckey={`stat:${s.id}:${it.id}:value`}
                 commit={(next, cur: any) => ({ ...cur, content: { ...cur.content, items: cur.content.items.map((x: any) => x.id === it.id ? { ...x, value: next } as any : x) } })}
               />
+              {it.link && <a href={it.link} aria-label={String((it as any)[lf] ?? it.value ?? "")} className="absolute inset-0" />}
               <EditCustom
                 s={s} as="div" className="text-sm opacity-70 mt-1" placeholder="التسمية"
                 value={(it as any)[lf] ?? ""}
@@ -720,6 +817,10 @@ function RenderProductGrid({ s }: { s: ProductGridSection }) {
             .select("id, slug, name_ar, name_en, image_url, price, currency, status, is_active")
             .eq("status", "active").eq("is_active", true).in("id", ids).limit(lim);
         }
+      } else if (c.source === "best_sellers") {
+        q = q.order("sales_count", { ascending: false });
+      } else if (c.source === "sale") {
+        q = q.not("compare_at_price", "is", null).order("created_at", { ascending: false });
       } else {
         q = q.order("created_at", { ascending: false });
       }
@@ -811,6 +912,9 @@ function RenderSection({ s }: { s: Section }) {
     case "cta":           return <RenderCta s={s} />;
     case "gallery":       return <RenderGallery s={s} />;
     case "before_after":  return <RenderBeforeAfter s={s} />;
+    case "video":         return <RenderVideo s={s} />;
+    case "countdown":     return <RenderCountdown s={s} />;
+    case "newsletter":    return <RenderNewsletter s={s} />;
     case "stats":         return <RenderStats s={s} />;
     case "reviews":       return <RenderReviews s={s} />;
     case "button":        return <RenderButton s={s} />;

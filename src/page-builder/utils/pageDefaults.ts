@@ -20,6 +20,9 @@ export const SECTION_TYPES: { type: SectionType; label_ar: string; label_en: str
   { type: "faq",           label_ar: "أسئلة شائعة",             label_en: "FAQ",           icon: "❓" },
   { type: "gallery",       label_ar: "معرض صور",                label_en: "Gallery",       icon: "🎞️" },
   { type: "before_after",  label_ar: "قبل وبعد",                label_en: "Before & after", icon: "◫" },
+  { type: "video",         label_ar: "فيديو",                   label_en: "Video",          icon: "▶" },
+  { type: "countdown",     label_ar: "عد تنازلي",               label_en: "Countdown",      icon: "⏳" },
+  { type: "newsletter",    label_ar: "نشرة بريدية",             label_en: "Newsletter",     icon: "✉" },
   { type: "cta",           label_ar: "دعوة للإجراء",            label_en: "CTA",           icon: "🎯" },
   { type: "divider",       label_ar: "فاصل",                    label_en: "Divider",       icon: "➖" },
   { type: "spacer",        label_ar: "مسافة",                   label_en: "Spacer",        icon: "↕️" },
@@ -77,6 +80,29 @@ export function createDefaultSection(type: SectionType): Section {
         beforeLabel_ar: "قبل", beforeLabel_en: "Before",
         afterLabel_ar: "بعد", afterLabel_en: "After",
         layout: "slider", imageHeight: 520,
+      } };
+    case "video":
+      return { id, type: "video", content: {
+        title_ar: "شاهد قصتنا", title_en: "Watch our story", videoUrl: "",
+        poster: { url: "", alt: "Video cover" }, caption_ar: "", caption_en: "",
+        autoplay: false, muted: true, loop: false, controls: true, aspectRatio: "16/9",
+      } };
+    case "countdown": {
+      const target = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      return { id, type: "countdown", content: {
+        title_ar: "الإطلاق قريباً", title_en: "Launching soon",
+        subtitle_ar: "كونوا على الموعد", subtitle_en: "Save the date", targetDate: target,
+        expiredText_ar: "انطلقنا!", expiredText_en: "We are live!",
+        button: { label_ar: "تسوق الآن", label_en: "Shop now", url: "/", variant: "primary" },
+      } };
+    }
+    case "newsletter":
+      return { id, type: "newsletter", content: {
+        title_ar: "انضمي إلى قائمتنا", title_en: "Join our list",
+        subtitle_ar: "استلمي الأخبار والعروض الحصرية", subtitle_en: "Get news and exclusive offers",
+        placeholder_ar: "بريدك الإلكتروني", placeholder_en: "Your email",
+        buttonLabel_ar: "اشتركي", buttonLabel_en: "Subscribe",
+        successText_ar: "تم اشتراكك بنجاح", successText_en: "You are subscribed",
       } };
     case "cta":
       return { id, type: "cta", content: {

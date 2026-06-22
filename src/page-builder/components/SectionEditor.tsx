@@ -69,12 +69,19 @@ function ButtonsEditor({ buttons, onChange }: { buttons?: ButtonContent[]; onCha
   );
 }
 
-function ImageField({ label, value, onChange }: { label: string; value?: ImageContent; onChange: (v: ImageContent) => void }) {
+function ImageField({ label, value, onChange, allowLink = true }: { label: string; value?: ImageContent; onChange: (v: ImageContent) => void; allowLink?: boolean }) {
   return (
     <div className="space-y-1">
       <Label className="text-xs">{label}</Label>
       <MediaUploader value={value?.url ?? null} onChange={(url) => onChange({ ...(value ?? {}), url: url ?? undefined })} bucket="content-media" kind="image" folder="cms" />
       <Input placeholder="Alt text" value={value?.alt ?? ""} onChange={(e) => onChange({ ...(value ?? {}), alt: e.target.value })} />
+      <Input placeholder="التعليق (عربي)" value={value?.caption_ar ?? ""} onChange={(e) => onChange({ ...(value ?? {}), caption_ar: e.target.value })} />
+      <Input placeholder="Caption (English)" value={value?.caption_en ?? ""} onChange={(e) => onChange({ ...(value ?? {}), caption_en: e.target.value })} />
+      {allowLink && <LinkPicker value={value?.link} onChange={(link) => onChange({ ...(value ?? {}), link })} placeholder="رابط الصورة (اختياري)" />}
+      {allowLink && <label className="flex items-center gap-2 text-xs">
+        <Switch checked={value?.newTab ?? false} onCheckedChange={(newTab) => onChange({ ...(value ?? {}), newTab })} />
+        فتح رابط الصورة في تبويب جديد
+      </label>}
     </div>
   );
 }
@@ -211,7 +218,13 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
               <option value="left">يسار</option><option value="center">وسط</option><option value="right">يمين</option>
             </select>
           </div>
-          <ImageField label="صورة الخلفية" value={s.content.image} onChange={(v) => updateContent({ image: v })} />
+          <div>
+            <Label className="text-xs">تخطيط الواجهة</Label>
+            <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.layout ?? "overlay"} onChange={(e) => updateContent({ layout: e.target.value })}>
+              <option value="overlay">النص فوق الصورة</option><option value="split">صورة ونص منقسمان</option>
+            </select>
+          </div>
+          <ImageField label="صورة الخلفية" value={s.content.image} onChange={(v) => updateContent({ image: v })} allowLink={false} />
           <ButtonsEditor buttons={s.content.buttons} onChange={(b) => updateContent({ buttons: b })} />
         </>
       )}
@@ -222,6 +235,8 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
           <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
           <TextField label="النص (ع)" multiline value={s.content.body_ar} onChange={(v, opts) => updateContent({ body_ar: v }, opts)} />
           <TextField label="Body (EN)" multiline value={s.content.body_en} onChange={(v, opts) => updateContent({ body_en: v }, opts)} />
+          <div><Label className="text-xs">المحاذاة</Label><select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.alignment ?? "left"} onChange={(e) => updateContent({ alignment: e.target.value })}><option value="left">يسار</option><option value="center">وسط</option><option value="right">يمين</option></select></div>
+          <ButtonsEditor buttons={s.content.buttons} onChange={(buttons) => updateContent({ buttons })} />
         </>
       )}
 
@@ -250,6 +265,8 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
         <>
           <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
           <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
+          <TextField label="الوصف الفرعي (عربي)" value={s.content.subtitle_ar} onChange={(v, opts) => updateContent({ subtitle_ar: v }, opts)} />
+          <TextField label="Subtitle (English)" value={s.content.subtitle_en} onChange={(v, opts) => updateContent({ subtitle_en: v }, opts)} />
           <div>
             <Label className="text-xs">عدد الأعمدة</Label>
             <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.columns ?? 3}
@@ -270,6 +287,8 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
                 <Input placeholder="Title (EN)" value={c.title_en ?? ""} onChange={(e) => updateContent((ct: any) => ({ cards: ct.cards.map((x: any) => x.id === c.id ? { ...x, title_en: e.target.value } : x) }))} />
                 <Textarea rows={2} placeholder="وصف (ع)" value={c.description_ar ?? ""} onChange={(e) => updateContent((ct: any) => ({ cards: ct.cards.map((x: any) => x.id === c.id ? { ...x, description_ar: e.target.value } : x) }))} />
                 <Textarea rows={2} placeholder="Description (EN)" value={c.description_en ?? ""} onChange={(e) => updateContent((ct: any) => ({ cards: ct.cards.map((x: any) => x.id === c.id ? { ...x, description_en: e.target.value } : x) }))} />
+                <Input placeholder="أيقونة أو رمز مثل ✦" value={c.icon ?? ""} onChange={(e) => updateContent((ct: any) => ({ cards: ct.cards.map((x: any) => x.id === c.id ? { ...x, icon: e.target.value } : x) }))} />
+                <ImageField label="صورة البطاقة" value={c.image} onChange={(image) => updateContent((ct: any) => ({ cards: ct.cards.map((x: any) => x.id === c.id ? { ...x, image } : x) }))} />
                 <LinkPicker value={c.link} onChange={(url) => updateContent((ct: any) => ({ cards: ct.cards.map((x: any) => x.id === c.id ? { ...x, link: url } : x) }))} placeholder="رابط البطاقة" />
               </div>
             ))}
@@ -297,6 +316,7 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
                 <Input placeholder="Question (EN)" value={it.question_en ?? ""} onChange={(e) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, question_en: e.target.value } : x) }))} />
                 <Textarea rows={2} placeholder="إجابة (ع)" value={it.answer_ar ?? ""} onChange={(e) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, answer_ar: e.target.value } : x) }))} />
                 <Textarea rows={2} placeholder="Answer (EN)" value={it.answer_en ?? ""} onChange={(e) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, answer_en: e.target.value } : x) }))} />
+                <LinkPicker value={it.link} onChange={(link) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, link } : x) }))} placeholder="رابط إضافي للإجابة" />
               </div>
             ))}
             <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent((ct: any) => ({ items: [...ct.items, { id: nid("q"), question_ar: "سؤال؟", question_en: "Question?", answer_ar: "", answer_en: "" } as FaqItem] }))}>
@@ -325,6 +345,7 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
                 <Textarea rows={2} placeholder="الاقتباس (ع)" value={it.quote_ar ?? ""} onChange={(e) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, quote_ar: e.target.value } : x) }))} />
                 <Textarea rows={2} placeholder="Quote (EN)" value={it.quote_en ?? ""} onChange={(e) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, quote_en: e.target.value } : x) }))} />
                 <MediaUploader value={it.avatar ?? null} onChange={(url) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, avatar: url ?? undefined } : x) }))} bucket="content-media" kind="image" folder="cms/avatars" />
+                <LinkPicker value={it.link} onChange={(link) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, link } : x) }))} placeholder="رابط العميل أو القصة" />
               </div>
             ))}
             <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent((ct: any) => ({ items: [...ct.items, { id: nid("t"), name: "", quote_ar: "", quote_en: "" } as TestimonialItem] }))}>
@@ -378,6 +399,7 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
               <Input placeholder="القيمة (مثل 100+)" value={it.value ?? ""} onChange={(e) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, value: e.target.value } : x) }))} />
               <Input placeholder="التسمية (ع)" value={it.label_ar ?? ""} onChange={(e) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, label_ar: e.target.value } : x) }))} />
               <Input placeholder="Label (EN)" value={it.label_en ?? ""} onChange={(e) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, label_en: e.target.value } : x) }))} />
+              <LinkPicker value={it.link} onChange={(link) => updateContent((ct: any) => ({ items: ct.items.map((x: any) => x.id === it.id ? { ...x, link } : x) }))} placeholder="رابط العنصر" />
             </div>
           ))}
           <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent((ct: any) => ({ items: [...ct.items, { id: nid("st"), value: "0", label_ar: "", label_en: "" } as StatItem] }))}>
@@ -405,8 +427,7 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
                   <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive"
                     onClick={() => updateContent((c: any) => ({ images: c.images.filter((_: any, j: any) => j !== i) }))}><Trash2 className="h-3 w-3" /></Button>
                 </div>
-                <MediaUploader value={im.url ?? null} onChange={(url) => updateContent((c: any) => ({ images: c.images.map((x: any, j: any) => j === i ? { ...x, url: url ?? undefined } : x) }))} bucket="content-media" kind="image" folder="cms/gallery" />
-                <Input placeholder="Alt" value={im.alt ?? ""} onChange={(e) => updateContent((c: any) => ({ images: c.images.map((x: any, j: any) => j === i ? { ...x, alt: e.target.value } : x) }))} />
+                <ImageField label="الصورة" value={im} onChange={(image) => updateContent((c: any) => ({ images: c.images.map((x: any, j: any) => j === i ? image : x) }))} />
               </div>
             ))}
             <Button size="sm" variant="outline" className="w-full" onClick={() => updateContent((c: any) => ({ images: [...c.images, {}] }))}><Plus className="h-3 w-3 me-1" /> إضافة صورة</Button>
@@ -420,13 +441,13 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
           <TextField label="Title (English)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
           <div className="rounded-lg border border-border p-3 space-y-3">
             <div className="font-medium text-xs">صورة قبل</div>
-            <ImageField label="ارفع صورة قبل" value={s.content.beforeImage} onChange={(v) => updateContent({ beforeImage: v })} />
+            <ImageField label="ارفع صورة قبل" value={s.content.beforeImage} onChange={(v) => updateContent({ beforeImage: v })} allowLink={false} />
             <TextField label="تسمية قبل (عربي)" value={s.content.beforeLabel_ar} onChange={(v, opts) => updateContent({ beforeLabel_ar: v }, opts)} />
             <TextField label="Before label (English)" value={s.content.beforeLabel_en} onChange={(v, opts) => updateContent({ beforeLabel_en: v }, opts)} />
           </div>
           <div className="rounded-lg border border-border p-3 space-y-3">
             <div className="font-medium text-xs">صورة بعد</div>
-            <ImageField label="ارفع صورة بعد" value={s.content.afterImage} onChange={(v) => updateContent({ afterImage: v })} />
+            <ImageField label="ارفع صورة بعد" value={s.content.afterImage} onChange={(v) => updateContent({ afterImage: v })} allowLink={false} />
             <TextField label="تسمية بعد (عربي)" value={s.content.afterLabel_ar} onChange={(v, opts) => updateContent({ afterLabel_ar: v }, opts)} />
             <TextField label="After label (English)" value={s.content.afterLabel_en} onChange={(v, opts) => updateContent({ afterLabel_en: v }, opts)} />
           </div>
@@ -451,12 +472,70 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
         </>
       )}
 
+      {s.type === "video" && (
+        <>
+          <TextField label="العنوان (عربي)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (English)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
+          <div className="space-y-1">
+            <Label className="text-xs">ملف الفيديو</Label>
+            <MediaUploader value={s.content.videoUrl ?? null} onChange={(url) => updateContent({ videoUrl: url ?? "" })} bucket="content-media" kind="video" folder="cms/video" />
+            <Input placeholder="أو رابط MP4 / WebM مباشر" value={s.content.videoUrl ?? ""} onChange={(e) => updateContent({ videoUrl: e.target.value })} />
+          </div>
+          <ImageField label="صورة الغلاف" value={s.content.poster} onChange={(poster) => updateContent({ poster })} allowLink={false} />
+          <TextField label="وصف الفيديو (عربي)" value={s.content.caption_ar} onChange={(v, opts) => updateContent({ caption_ar: v }, opts)} />
+          <TextField label="Video caption (English)" value={s.content.caption_en} onChange={(v, opts) => updateContent({ caption_en: v }, opts)} />
+          <LinkPicker value={s.content.link} onChange={(link) => updateContent({ link })} placeholder="رابط عند الضغط على الفيديو" />
+          <div>
+            <Label className="text-xs">نسبة العرض</Label>
+            <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.aspectRatio ?? "16/9"} onChange={(e) => updateContent({ aspectRatio: e.target.value })}>
+              <option value="16/9">16:9</option><option value="4/3">4:3</option><option value="1/1">1:1</option><option value="9/16">9:16</option>
+            </select>
+          </div>
+          {([['controls', 'إظهار أدوات التشغيل'], ['autoplay', 'تشغيل تلقائي'], ['muted', 'كتم الصوت'], ['loop', 'تكرار الفيديو']] as const).map(([key, label]) => (
+            <label key={key} className="flex items-center justify-between text-xs"><span>{label}</span><Switch checked={s.content[key] ?? (key === 'controls' || key === 'muted')} onCheckedChange={(value) => updateContent({ [key]: value })} /></label>
+          ))}
+        </>
+      )}
+
+      {s.type === "countdown" && (
+        <>
+          <TextField label="العنوان (عربي)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (English)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
+          <TextField label="الوصف (عربي)" value={s.content.subtitle_ar} onChange={(v, opts) => updateContent({ subtitle_ar: v }, opts)} />
+          <TextField label="Subtitle (English)" value={s.content.subtitle_en} onChange={(v, opts) => updateContent({ subtitle_en: v }, opts)} />
+          <div><Label className="text-xs">موعد انتهاء العد</Label><Input type="datetime-local" value={s.content.targetDate?.slice(0, 16) ?? ""} onChange={(e) => updateContent({ targetDate: e.target.value ? new Date(e.target.value).toISOString() : "" })} /></div>
+          <TextField label="النص بعد الانتهاء (عربي)" value={s.content.expiredText_ar} onChange={(v, opts) => updateContent({ expiredText_ar: v }, opts)} />
+          <TextField label="Expired text (English)" value={s.content.expiredText_en} onChange={(v, opts) => updateContent({ expiredText_en: v }, opts)} />
+          <ImageField label="صورة الخلفية" value={s.content.backgroundImage} onChange={(backgroundImage) => updateContent({ backgroundImage })} allowLink={false} />
+          <ButtonsEditor buttons={s.content.button ? [s.content.button] : []} onChange={(buttons) => updateContent({ button: buttons[0] })} />
+        </>
+      )}
+
+      {s.type === "newsletter" && (
+        <>
+          <TextField label="العنوان (عربي)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
+          <TextField label="Title (English)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
+          <TextField label="الوصف (عربي)" value={s.content.subtitle_ar} onChange={(v, opts) => updateContent({ subtitle_ar: v }, opts)} />
+          <TextField label="Subtitle (English)" value={s.content.subtitle_en} onChange={(v, opts) => updateContent({ subtitle_en: v }, opts)} />
+          <TextField label="نص حقل البريد (عربي)" value={s.content.placeholder_ar} onChange={(v, opts) => updateContent({ placeholder_ar: v }, opts)} />
+          <TextField label="Email placeholder (English)" value={s.content.placeholder_en} onChange={(v, opts) => updateContent({ placeholder_en: v }, opts)} />
+          <TextField label="نص الزر (عربي)" value={s.content.buttonLabel_ar} onChange={(v, opts) => updateContent({ buttonLabel_ar: v }, opts)} />
+          <TextField label="Button label (English)" value={s.content.buttonLabel_en} onChange={(v, opts) => updateContent({ buttonLabel_en: v }, opts)} />
+          <TextField label="رسالة النجاح (عربي)" value={s.content.successText_ar} onChange={(v, opts) => updateContent({ successText_ar: v }, opts)} />
+          <TextField label="Success message (English)" value={s.content.successText_en} onChange={(v, opts) => updateContent({ successText_en: v }, opts)} />
+          <LinkPicker value={s.content.privacyUrl} onChange={(privacyUrl) => updateContent({ privacyUrl })} placeholder="رابط سياسة الخصوصية" />
+          <Input value={s.content.actionUrl ?? ""} onChange={(e) => updateContent({ actionUrl: e.target.value })} placeholder="Webhook اختياري لاستقبال البريد" />
+          <ImageField label="صورة الخلفية" value={s.content.backgroundImage} onChange={(backgroundImage) => updateContent({ backgroundImage })} allowLink={false} />
+        </>
+      )}
+
       {s.type === "cta" && (
         <>
           <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
           <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
           <TextField label="الوصف (ع)" multiline value={s.content.subtitle_ar} onChange={(v, opts) => updateContent({ subtitle_ar: v }, opts)} />
           <TextField label="Subtitle (EN)" multiline value={s.content.subtitle_en} onChange={(v, opts) => updateContent({ subtitle_en: v }, opts)} />
+          <div><Label className="text-xs">المحاذاة</Label><select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.alignment ?? "center"} onChange={(e) => updateContent({ alignment: e.target.value })}><option value="left">يسار</option><option value="center">وسط</option><option value="right">يمين</option></select></div>
           <ButtonsEditor buttons={s.content.buttons} onChange={(b) => updateContent({ buttons: b })} />
         </>
       )}
@@ -503,7 +582,7 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
 
       {s.type === "banner" && (
         <>
-          <ImageField label="صورة الخلفية" value={s.content.image} onChange={(v) => updateContent({ image: v })} />
+          <ImageField label="صورة الخلفية" value={s.content.image} onChange={(v) => updateContent({ image: v })} allowLink={false} />
           <TextField label="العنوان (ع)" value={s.content.title_ar} onChange={(v, opts) => updateContent({ title_ar: v }, opts)} />
           <TextField label="Title (EN)" value={s.content.title_en} onChange={(v, opts) => updateContent({ title_en: v }, opts)} />
           <TextField label="الفرعي (ع)" multiline value={s.content.subtitle_ar} onChange={(v, opts) => updateContent({ subtitle_ar: v }, opts)} />
@@ -550,6 +629,8 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
             <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.source ?? "newest"}
               onChange={(e) => updateContent({ source: e.target.value })}>
               <option value="newest">أحدث المنتجات</option>
+              <option value="best_sellers">الأكثر مبيعاً تلقائياً</option>
+              <option value="sale">منتجات التخفيض تلقائياً</option>
               <option value="category">من تصنيف</option>
               <option value="manual">منتجات مختارة</option>
             </select>

@@ -83,9 +83,9 @@ const BLOCK_TEMPLATES: StudioBlock[] = [
   ["divider", "فاصل أنيق", "Elegant divider", "layout"],
   ["spacer", "مسافة مرنة", "Flexible spacer", "layout"],
   ["html", "HTML مخصص", "Custom HTML", "advanced"],
-  ["hero", "واجهة فيديو", "Video-style hero", "campaign"],
+  ["video", "واجهة فيديو", "Video hero", "campaign"],
   ["banner", "شريط شحن مجاني", "Free shipping strip", "campaign"],
-  ["banner", "عد تنازلي للإطلاق", "Launch countdown", "campaign"],
+  ["countdown", "عد تنازلي للإطلاق", "Launch countdown", "campaign"],
   ["product_grid", "تسوقي حسب العمر", "Shop by age", "commerce"],
   ["product_grid", "هدايا مختارة", "Gift guide", "commerce"],
   ["feature_grid", "لماذا تختارنا", "Why choose us", "content"],
@@ -97,7 +97,7 @@ const BLOCK_TEMPLATES: StudioBlock[] = [
   ["testimonials", "اقتباس مميز", "Featured quote", "social"],
   ["stats", "عداد الثقة", "Trust counter", "social"],
   ["faq", "الشحن والاسترجاع", "Shipping & returns", "engagement"],
-  ["cta", "الاشتراك بالنشرة", "Newsletter signup", "engagement"],
+  ["newsletter", "الاشتراك بالنشرة", "Newsletter signup", "engagement"],
   ["html", "تطبيق خارجي", "Embedded app", "advanced"],
 ].map(([type, ar, en, category], index) => ({
   id: `${type}-${index}`,
@@ -477,6 +477,23 @@ export function SiteInlineEditor({
     const content = section.content as Record<string, unknown>;
     if ("title_ar" in content) content.title_ar = block.ar;
     if ("title_en" in content) content.title_en = block.en;
+    // Templates are real presets, not labels pointing to the same empty block.
+    if (block.en === "Split hero") content.layout = "split";
+    if (block.en === "Full image banner") content.height = "xl";
+    if (block.en === "Free shipping strip") {
+      content.height = "sm";
+      content.subtitle_ar = "شحن مجاني للطلبات المؤهلة";
+      content.subtitle_en = "Free shipping on eligible orders";
+      section.settings = { ...(section.settings ?? {}), backgroundColor: "#111111" };
+    }
+    if (block.en === "New arrivals") content.source = "newest";
+    if (block.en === "Best sellers") content.source = "best_sellers";
+    if (block.en === "Sale products") content.source = "sale";
+    if (["Curated products", "Gift guide"].includes(block.en)) content.source = "manual";
+    if (block.en === "Shop by age") content.source = "category";
+    if (block.en === "Lookbook") content.columns = 2;
+    if (["Instagram grid", "Customer photos"].includes(block.en)) content.columns = 4;
+    if (block.en === "Featured quote" && Array.isArray(content.items)) content.items = content.items.slice(0, 1);
     pageEditor.addSection(section);
     pageEditor.notifyChange(lang === "ar" ? `تمت إضافة ${block.ar}` : `Added ${block.en}`);
     setLibraryOpen(false);

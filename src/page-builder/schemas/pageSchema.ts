@@ -29,6 +29,10 @@ export type ButtonContent = {
 export type ImageContent = {
   url?: string;
   alt?: string;
+  link?: string;
+  newTab?: boolean;
+  caption_ar?: string;
+  caption_en?: string;
 };
 
 // --- Section variants ---
@@ -53,6 +57,7 @@ export type HeroSection = {
     image?: ImageContent;
     buttons?: ButtonContent[];
     alignment?: "left" | "center" | "right";
+    layout?: "overlay" | "split";
   };
   settings?: CommonSectionSettings & {
     backgroundType?: "color" | "image" | "gradient";
@@ -70,6 +75,7 @@ export type TextBlockSection = {
     body_ar?: string;
     body_en?: string;
     alignment?: "left" | "center" | "right";
+    buttons?: ButtonContent[];
   };
   settings?: CommonSectionSettings;
 };
@@ -97,6 +103,7 @@ export type FeatureCard = {
   description_ar?: string;
   description_en?: string;
   link?: string;
+  image?: ImageContent;
 };
 
 export type FeatureGridSection = {
@@ -119,6 +126,7 @@ export type FaqItem = {
   question_en?: string;
   answer_ar?: string;
   answer_en?: string;
+  link?: string;
 };
 
 export type FaqSection = {
@@ -140,6 +148,7 @@ export type TestimonialItem = {
   quote_ar?: string;
   quote_en?: string;
   avatar?: string;
+  link?: string;
 };
 
 export type TestimonialsSection = {
@@ -202,6 +211,65 @@ export type StatItem = {
   value?: string;
   label_ar?: string;
   label_en?: string;
+  link?: string;
+};
+
+export type VideoSection = {
+  id: string;
+  type: "video";
+  content: {
+    title_ar?: string;
+    title_en?: string;
+    videoUrl?: string;
+    poster?: ImageContent;
+    caption_ar?: string;
+    caption_en?: string;
+    autoplay?: boolean;
+    muted?: boolean;
+    loop?: boolean;
+    controls?: boolean;
+    aspectRatio?: "16/9" | "4/3" | "1/1" | "9/16";
+    link?: string;
+  };
+  settings?: CommonSectionSettings;
+};
+
+export type CountdownSection = {
+  id: string;
+  type: "countdown";
+  content: {
+    title_ar?: string;
+    title_en?: string;
+    subtitle_ar?: string;
+    subtitle_en?: string;
+    targetDate?: string;
+    expiredText_ar?: string;
+    expiredText_en?: string;
+    button?: ButtonContent;
+    backgroundImage?: ImageContent;
+  };
+  settings?: CommonSectionSettings;
+};
+
+export type NewsletterSection = {
+  id: string;
+  type: "newsletter";
+  content: {
+    title_ar?: string;
+    title_en?: string;
+    subtitle_ar?: string;
+    subtitle_en?: string;
+    placeholder_ar?: string;
+    placeholder_en?: string;
+    buttonLabel_ar?: string;
+    buttonLabel_en?: string;
+    successText_ar?: string;
+    successText_en?: string;
+    privacyUrl?: string;
+    actionUrl?: string;
+    backgroundImage?: ImageContent;
+  };
+  settings?: CommonSectionSettings;
 };
 
 export type StatsSection = {
@@ -266,7 +334,7 @@ export type ProductGridSection = {
   content: {
     title_ar?: string;
     title_en?: string;
-    source?: "category" | "manual" | "newest";
+    source?: "category" | "manual" | "newest" | "best_sellers" | "sale";
     categorySlug?: string;
     productSlugs?: string[];
     limit?: number;
@@ -314,6 +382,9 @@ export type Section =
   | CtaSection
   | GallerySection
   | BeforeAfterSection
+  | VideoSection
+  | CountdownSection
+  | NewsletterSection
   | StatsSection
   | ReviewsSection
   | ButtonSection
