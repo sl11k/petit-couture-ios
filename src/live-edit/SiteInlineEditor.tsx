@@ -10,6 +10,11 @@ import {
   Languages,
   RotateCcw,
   CheckCircle2,
+  GripVertical,
+  LayoutTemplate,
+  Monitor,
+  Tablet,
+  Smartphone,
 } from "lucide-react";
 import { HistoryPanel } from "./HistoryPanel";
 import { StylePopover, type StyleValue } from "./StylePopover";
@@ -28,6 +33,7 @@ import {
   type DraftMap,
   type OverrideProp,
 } from "./overrides";
+import "./live-editor.css";
 
 const EDITABLE_TAGS = new Set([
   "H1",
@@ -81,6 +87,9 @@ export function SiteInlineEditor({
     kind: "text" | "image" | "link";
   } | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [styleOpen, setStyleOpen] = useState(false);
+  const [regions, setRegions] = useState<Array<{ label: string; el: HTMLElement }>>([]);
+  const [device, setDevice] = useState<"desktop" | "tablet" | "mobile">("desktop");
   const draftRef = useRef<DraftMap>({});
   const langRef = useRef(lang);
   useEffect(() => {
@@ -161,11 +170,31 @@ export function SiteInlineEditor({
           el.dataset.lpeKind = "link";
         }
       });
+      const regionEls = Array.from(
+        root.querySelectorAll<HTMLElement>(
+          "[data-desktop-header], #main-content main > section, #main-content > section, footer",
+        ),
+      );
+      setRegions(
+        regionEls.map((el, index) => ({
+          el,
+          label: el.matches("[data-desktop-header]")
+            ? langRef.current === "ar"
+              ? "الهيدر"
+              : "Header"
+            : el.tagName === "FOOTER"
+              ? langRef.current === "ar"
+                ? "الفوتر"
+                : "Footer"
+              : `${langRef.current === "ar" ? "قسم" : "Section"} ${index}`,
+        })),
+      );
     };
 
     function onFocusText(e: Event) {
       const el = e.currentTarget as HTMLElement;
       setSelected({ el, kind: "text" });
+      setStyleOpen(true);
     }
     function onBlurText(e: Event) {
       const el = e.currentTarget as HTMLElement;
@@ -194,6 +223,7 @@ export function SiteInlineEditor({
       e.stopPropagation();
       const el = e.currentTarget as HTMLImageElement;
       setSelected({ el, kind: "image" });
+      setStyleOpen(true);
       const url = window.prompt("رابط الصورة الجديد:", el.src);
       if (url && url !== el.src) {
         const sel = computeSelector(root!, el);
@@ -238,6 +268,7 @@ export function SiteInlineEditor({
       // even when it isn't an editable text leaf (sections, footer rows, headers).
       if (target && root && root.contains(target)) {
         setSelected({ el: target, kind: target.tagName === "IMG" ? "image" : "text" });
+        setStyleOpen(true);
       }
     };
     document.addEventListener("click", blockNav, true);
@@ -314,7 +345,6 @@ export function SiteInlineEditor({
     }
   };
 
-  const [styleOpen, setStyleOpen] = useState(false);
   useEffect(() => {
     setSelected(null);
     setStyleOpen(false);
@@ -342,8 +372,13 @@ export function SiteInlineEditor({
   const dirtyCount = Object.keys(draft).length;
 
   return (
-    <>
-      <div ref={rootRef} data-live-root data-live-editing="true">
+    <div className="lpe-studio" data-lpe-ui-shell>
+      <div
+        ref={rootRef}
+        data-live-root
+        data-live-editing="true"
+        className={`lpe-canvas lpe-device-${device}`}
+      >
         {children}
       </div>
 
@@ -352,9 +387,13 @@ export function SiteInlineEditor({
         data-lpe-ui
         data-testid="live-design-toolbar"
         dir={lang === "ar" ? "rtl" : "ltr"}
-        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[10000] flex items-center gap-1 rounded-2xl border border-white/15 bg-[#211b1d]/95 text-white backdrop-blur-xl px-3 py-2 shadow-2xl"
+        className="lpe-topbar"
       >
-        <span className="text-[11px] text-white/65 me-2 inline-flex items-center gap-1.5">
+        <div className="lpe-brand">
+          <small>STOREFRONT</small>
+          <b>{lang === "ar" ? "محرر التصميم المرئي" : "Visual storefront editor"}</b>
+        </div>
+        <span className="lpe-save-state">
           <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
           {lang === "ar" ? "تعديل التصميم الحالي" : "Editing current design"}{" "}
           {dirtyCount > 0 ? `· ${dirtyCount}` : ""}
@@ -449,6 +488,82 @@ export function SiteInlineEditor({
         </Button>
       </div>
 
+      <aside data-lpe-ui className="lpe-sections-panel">
+        <div className="lpe-panel-heading">
+          <LayoutTemplate size={16} />
+          <div>
+            <b>{lang === "ar" ? "أقسام الصفحة الحالية" : "Current page sections"}</b>
+            <small>
+              {lang === "ar" ? "اختر قسمًا أو عنصرًا للتعديل" : "Select a section or element"}
+            </small>
+          </div>
+        </div>
+        <div className="lpe-region-list">
+          {regions.map((region, index) => (
+            <button
+              key={`${region.label}-${index}`}
+              className={selected?.el === region.el ? "active" : ""}
+              onClick={() => {
+                region.el.scrollIntoView({ behavior: "smooth", block: "center" });
+                setSelected({ el: region.el, kind: "text" });
+                setStyleOpen(true);
+              }}
+            >
+              <GripVertical size={14} />
+              <span>{index + 1}</span>
+              <b>{region.label}</b>
+            </button>
+          ))}
+        </div>
+        <div className="lpe-sidebar-tip">
+          <b>{lang === "ar" ? "تعديل مباشر" : "Direct editing"}</b>
+          <p>
+            {lang === "ar"
+              ? "اضغط على أي نص لتغييره، أو على أي عنصر لفتح إعداداته التفصيلية."
+              : "Click any text to edit it, or any element to open detailed settings."}
+          </p>
+        </div>
+      </aside>
+
+      <div data-lpe-ui className="lpe-preview-tools">
+        <span>
+          <CheckCircle2 size={14} />{" "}
+          {lang === "ar" ? "معاينة التصميم الحالي" : "Current design preview"}
+        </span>
+        <div>
+          <button
+            className={device === "desktop" ? "active" : ""}
+            onClick={() => setDevice("desktop")}
+          >
+            <Monitor size={14} />
+          </button>
+          <button
+            className={device === "tablet" ? "active" : ""}
+            onClick={() => setDevice("tablet")}
+          >
+            <Tablet size={14} />
+          </button>
+          <button
+            className={device === "mobile" ? "active" : ""}
+            onClick={() => setDevice("mobile")}
+          >
+            <Smartphone size={14} />
+          </button>
+        </div>
+      </div>
+
+      {!styleOpen && (
+        <aside data-lpe-ui className="lpe-empty-inspector">
+          <Palette size={24} />
+          <h3>{lang === "ar" ? "اختر عنصرًا من الموقع" : "Select an element"}</h3>
+          <p>
+            {lang === "ar"
+              ? "ستظهر هنا جميع إعدادات النص والألوان والمسافات والتخطيط والتأثيرات."
+              : "Text, color, spacing, layout and effect controls will appear here."}
+          </p>
+        </aside>
+      )}
+
       <HistoryPanel open={historyOpen} onOpenChange={setHistoryOpen} pagePath={pagePath} />
 
       {styleOpen && selected?.el && (
@@ -459,6 +574,6 @@ export function SiteInlineEditor({
           onClose={() => setStyleOpen(false)}
         />
       )}
-    </>
+    </div>
   );
 }
