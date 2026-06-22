@@ -17,12 +17,25 @@ drop policy if exists "theme customizations are publicly readable" on public.the
 create policy "theme customizations are publicly readable"
 on public.theme_customizations for select using (true);
 
--- Authenticated users may write. Existing admin authorization should be added here
--- before enabling cloud writes if non-admin authenticated accounts exist.
+-- Only storefront administrators may publish visual themes.
 drop policy if exists "authenticated users manage theme customizations" on public.theme_customizations;
-create policy "authenticated users manage theme customizations"
+drop policy if exists "storefront managers manage theme customizations" on public.theme_customizations;
+create policy "storefront managers manage theme customizations"
 on public.theme_customizations for all to authenticated
-using (true) with check (true);
+using (
+  public.has_role(auth.uid(), 'super_admin'::public.app_role)
+  or public.has_role(auth.uid(), 'admin'::public.app_role)
+  or public.has_role(auth.uid(), 'store_manager'::public.app_role)
+  or public.has_role(auth.uid(), 'content_manager'::public.app_role)
+  or public.has_permission(auth.uid(), 'storefront.manage')
+)
+with check (
+  public.has_role(auth.uid(), 'super_admin'::public.app_role)
+  or public.has_role(auth.uid(), 'admin'::public.app_role)
+  or public.has_role(auth.uid(), 'store_manager'::public.app_role)
+  or public.has_role(auth.uid(), 'content_manager'::public.app_role)
+  or public.has_permission(auth.uid(), 'storefront.manage')
+);
 
 create index if not exists theme_customizations_updated_at_idx
 on public.theme_customizations (updated_at desc);

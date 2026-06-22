@@ -1,13 +1,14 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { defaultThemeConfig } from "./defaults";
+import { defaultThemeConfig, normalizeThemeConfig } from "./defaults";
 import type { ThemeConfig } from "./types";
+import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_KEY = "lpp.visual-theme.v1";
 type Value = {
   config: ThemeConfig;
   hasSavedTheme: boolean;
-  save: (v: ThemeConfig) => void;
-  reset: () => void;
+  save: (v: ThemeConfig) => Promise<void>;
+  reset: () => Promise<void>;
 };
 const Context = createContext<Value | null>(null);
 
@@ -20,18 +21,36 @@ export function ThemeCustomizerProvider({ children }: { children: ReactNode }) {
   const [config, setConfig] = useState(defaultThemeConfig);
   const [hasSavedTheme, setHasSavedTheme] = useState(false);
   useEffect(() => {
+    let active = true;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (valid(parsed)) {
-          setConfig(parsed);
+          setConfig(normalizeThemeConfig(parsed));
           setHasSavedTheme(true);
         }
       }
     } catch {
       /* ignore malformed local data */
     }
+    // Generated Supabase types will include this table after the migration is regenerated.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.from("theme_customizations" as never) as any)
+      .select("config")
+      .eq("scope", "storefront")
+      .maybeSingle()
+      .then(({ data }: { data: { config?: unknown } | null }) => {
+        if (active && valid(data?.config)) {
+          const normalized = normalizeThemeConfig(data.config);
+          setConfig(normalized);
+          setHasSavedTheme(true);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+        }
+      });
+    return () => {
+      active = false;
+    };
   }, []);
   useEffect(() => {
     const g = config.global;
@@ -53,16 +72,41 @@ export function ThemeCustomizerProvider({ children }: { children: ReactNode }) {
     () => ({
       config,
       hasSavedTheme,
-      save(v) {
+      async save(v) {
         const next = { ...v, updatedAt: new Date().toISOString() };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
         setConfig(next);
         setHasSavedTheme(true);
+        const { data: auth } = await supabase.auth.getUser();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error } = await (supabase.from("theme_customizations" as never) as any).upsert(
+          {
+            scope: "storefront",
+            config: next,
+            updated_by: auth.user?.id ?? null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "scope" },
+        );
+        if (error) throw new Error(error.message);
       },
-      reset() {
-        localStorage.removeItem(STORAGE_KEY);
-        setConfig(defaultThemeConfig);
-        setHasSavedTheme(false);
+      async reset() {
+        const next = { ...defaultThemeConfig, updatedAt: new Date().toISOString() };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        setConfig(next);
+        setHasSavedTheme(true);
+        const { data: auth } = await supabase.auth.getUser();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error } = await (supabase.from("theme_customizations" as never) as any).upsert(
+          {
+            scope: "storefront",
+            config: next,
+            updated_by: auth.user?.id ?? null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "scope" },
+        );
+        if (error) throw new Error(error.message);
       },
     }),
     [config, hasSavedTheme],

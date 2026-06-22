@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useLiveEdit } from "@/live-edit/LiveEditContext";
+import { ThemeEditor } from "@/theme-customizer/ThemeEditor";
 
 /**
  * Floating "Edit this page" button for admins.
@@ -14,6 +15,7 @@ export function EditPageButton({ slug = "home" }: { slug?: string }) {
   const { isRTL } = useLanguage();
   const live = useLiveEdit();
   const [pageId, setPageId] = useState<string | null>(null);
+  const [studioOpen, setStudioOpen] = useState(false);
 
   const isAdmin = roles.some((r) =>
     ["super_admin", "admin", "content_manager", "manager", "store_manager"].includes(r),
@@ -23,17 +25,19 @@ export function EditPageButton({ slug = "home" }: { slug?: string }) {
     if (!isAdmin) return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from("cms_pages")
-        .select("id")
-        .eq("slug", slug)
-        .maybeSingle();
-      if (!cancelled) setPageId((data as any)?.id ?? null);
+      const { data } = await supabase.from("cms_pages").select("id").eq("slug", slug).maybeSingle();
+      if (!cancelled) setPageId(data?.id ?? null);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [isAdmin, slug]);
 
   const start = async () => {
+    if (slug === "home") {
+      setStudioOpen(true);
+      return;
+    }
     let id = pageId;
     if (!id) {
       const titleMap: Record<string, { ar: string; en: string; type: string }> = {
@@ -52,13 +56,16 @@ export function EditPageButton({ slug = "home" }: { slug?: string }) {
           title_en: meta.en,
           type: meta.type,
           status: "draft",
-          draft_content: { sections: [] } as any,
+          draft_content: { sections: [] } as never,
           is_system: ["home", "product", "product_card", "checkout", "category"].includes(slug),
         })
         .select("id")
         .maybeSingle();
-      if (error) { console.error(error); return; }
-      id = (data as any)?.id ?? null;
+      if (error) {
+        console.error(error);
+        return;
+      }
+      id = data?.id ?? null;
       setPageId(id);
     }
     if (id) live.start(slug, id);
@@ -66,17 +73,20 @@ export function EditPageButton({ slug = "home" }: { slug?: string }) {
 
   // Auto-start when URL contains ?edit=1 (admin-only)
   useEffect(() => {
-    if (!isAdmin || live.enabled) return;
+    if (!isAdmin || live.enabled || studioOpen) return;
     if (typeof window === "undefined") return;
     const url = new URL(window.location.href);
     if (url.searchParams.get("edit") === "1") {
-      const t = setTimeout(() => { start(); }, 200);
+      const t = setTimeout(() => {
+        start();
+      }, 200);
       return () => clearTimeout(t);
     }
-  }, [isAdmin, live.enabled, pageId]);
+  }, [isAdmin, live.enabled, pageId, studioOpen]);
 
   if (loading || !isAdmin) return null;
   if (live.enabled) return null;
+  if (studioOpen) return <ThemeEditor onClose={() => setStudioOpen(false)} />;
 
   return (
     <button

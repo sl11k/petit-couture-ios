@@ -1,14 +1,14 @@
 # Le Petit Paradis
 
-## Visual theme builder
+## Visual storefront studio
 
-Open **Admin → Themes** (`/admin/themes`) to customize the storefront with an instant preview. The editor supports global colors, type and spacing scales, header/card/background styles, full button styling, and ordered section-based content. Sections can be added, hidden, reordered, duplicated, edited, or deleted.
+Admins can press **Edit page** on the storefront homepage or open **Admin → Themes** (`/admin/themes`). Both entry points open the same full-screen visual studio with desktop, tablet, and mobile previews.
 
-Choose **Save** to publish the current draft to this browser. The saved configuration is loaded on app start and replaces the legacy homepage with the customized section renderer. Choose **Reset** to remove the saved configuration and restore the original homepage and default design.
+The studio includes 27 draggable blocks, global colors and spacing, responsive grids, real product feeds, media and editorial blocks, detailed button controls, duplication, visibility, ordering, and section-level layout controls. Clicking a preview section opens its controls immediately.
 
-The scalable config contract is in `src/theme-customizer/types.ts`; defaults and section factories are in `src/theme-customizer/defaults.ts`. To add a section type, extend `SectionType`, add its default copy/catalog entry, add its rendering branch in `ThemeRenderer.tsx`, and expose any specialized controls in `ThemeEditor.tsx`.
+Choose **Save** to publish the current draft to the storefront. The configuration is cached locally and synchronized through `theme_customizations`, so visitors and other devices receive the published homepage. **Reset** publishes the starter layout.
 
-Persistence currently uses `localStorage` under `lpp.visual-theme.v1`, so the feature works without database changes. `supabase/migrations/20260622000000_theme_customization.sql` is an optional, non-destructive schema for future cross-device persistence; review its write policy before manually applying it in Supabase.
+Run `supabase/migrations/20260622000000_theme_customization.sql` for cloud persistence and `supabase/migrations/20260622130000_secure_theme_customizations.sql` to restrict publishing to storefront administrators. Browser storage under `lpp.visual-theme.v1` remains a fast local cache.
 
 ## Development
 

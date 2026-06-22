@@ -1,5 +1,8 @@
 export type SectionType =
+  | "announcement"
+  | "marquee"
   | "hero"
+  | "slideshow"
   | "product_grid"
   | "featured_products"
   | "categories"
@@ -7,6 +10,20 @@ export type SectionType =
   | "collection"
   | "text"
   | "image"
+  | "image_text"
+  | "video"
+  | "gallery"
+  | "features"
+  | "stats"
+  | "testimonials"
+  | "reviews"
+  | "logo_cloud"
+  | "instagram"
+  | "newsletter"
+  | "countdown"
+  | "faq"
+  | "divider"
+  | "spacer"
   | "cta"
   | "footer";
 export type ButtonVariant = "solid" | "outline" | "ghost" | "glass";
@@ -26,14 +43,30 @@ export interface ButtonConfig {
 }
 
 export interface SectionSettings {
+  badge: string;
   title: string;
   subtitle: string;
   description: string;
   imageUrl: string;
+  secondaryImageUrl: string;
+  videoUrl: string;
+  itemsText: string;
   backgroundColor: string;
   textColor: string;
-  columns: 2 | 3 | 4;
+  accentColor: string;
+  columns: 2 | 3 | 4 | 5;
   itemCount: number;
+  alignment: "left" | "center" | "right";
+  layout: "classic" | "split" | "boxed" | "full" | "cards";
+  imagePosition: "left" | "right" | "background";
+  paddingY: number;
+  minHeight: number;
+  maxWidth: number;
+  gap: number;
+  borderRadius: number;
+  overlayOpacity: number;
+  autoplay: boolean;
+  showPrice: boolean;
   button: ButtonConfig;
 }
 

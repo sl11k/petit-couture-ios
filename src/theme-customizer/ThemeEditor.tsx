@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Check,
   ChevronDown,
@@ -6,10 +6,16 @@ import {
   Copy,
   Eye,
   EyeOff,
+  GripVertical,
+  Layers3,
+  Monitor,
   Plus,
   RotateCcw,
   Save,
+  Smartphone,
+  Tablet,
   Trash2,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { createSection, defaultThemeConfig } from "./defaults";
@@ -18,7 +24,10 @@ import { useThemeCustomizer } from "./ThemeProvider";
 import type { GlobalThemeSettings, SectionType, ThemeConfig, ThemeSection } from "./types";
 
 const catalog: { type: SectionType; label: string }[] = [
+  { type: "announcement", label: "Announcement bar" },
+  { type: "marquee", label: "Moving marquee" },
   { type: "hero", label: "Hero" },
+  { type: "slideshow", label: "Slideshow" },
   { type: "product_grid", label: "Product grid" },
   { type: "featured_products", label: "Featured products" },
   { type: "categories", label: "Categories" },
@@ -26,6 +35,20 @@ const catalog: { type: SectionType; label: string }[] = [
   { type: "collection", label: "Collection" },
   { type: "text", label: "Text" },
   { type: "image", label: "Image" },
+  { type: "image_text", label: "Image + text" },
+  { type: "video", label: "Video" },
+  { type: "gallery", label: "Gallery" },
+  { type: "features", label: "Feature cards" },
+  { type: "stats", label: "Stats" },
+  { type: "testimonials", label: "Testimonials" },
+  { type: "reviews", label: "Reviews" },
+  { type: "logo_cloud", label: "Brand logos" },
+  { type: "instagram", label: "Social gallery" },
+  { type: "newsletter", label: "Newsletter" },
+  { type: "countdown", label: "Countdown" },
+  { type: "faq", label: "FAQ" },
+  { type: "divider", label: "Divider" },
+  { type: "spacer", label: "Spacer" },
   { type: "cta", label: "Call to action" },
   { type: "footer", label: "Footer" },
 ];
@@ -185,6 +208,9 @@ function SectionPanel({
   return (
     <div className="theme-controls">
       <h2>{title(section.type)} settings</h2>
+      <Field label="Badge / label">
+        <input value={s.badge} onChange={(e) => settings({ badge: e.target.value })} />
+      </Field>
       <Field label="Title">
         <input value={s.title} onChange={(e) => settings({ title: e.target.value })} />
       </Field>
@@ -198,7 +224,7 @@ function SectionPanel({
           onChange={(e) => settings({ description: e.target.value })}
         />
       </Field>
-      <Field label="Image URL">
+      <Field label="Primary image URL">
         <input
           type="url"
           value={s.imageUrl}
@@ -206,6 +232,34 @@ function SectionPanel({
           onChange={(e) => settings({ imageUrl: e.target.value })}
         />
       </Field>
+      {section.type === "video" && (
+        <Field label="Video URL">
+          <input
+            type="url"
+            value={s.videoUrl}
+            onChange={(e) => settings({ videoUrl: e.target.value })}
+          />
+        </Field>
+      )}
+      {[
+        "gallery",
+        "instagram",
+        "features",
+        "stats",
+        "testimonials",
+        "reviews",
+        "logo_cloud",
+        "faq",
+        "categories",
+      ].includes(section.type) && (
+        <Field label="Items — one per line">
+          <textarea
+            rows={7}
+            value={s.itemsText}
+            onChange={(e) => settings({ itemsText: e.target.value })}
+          />
+        </Field>
+      )}
       <div className="theme-two-col">
         <ColorField
           label="Background"
@@ -213,28 +267,126 @@ function SectionPanel({
           onChange={(v) => settings({ backgroundColor: v })}
         />
         <ColorField label="Text" value={s.textColor} onChange={(v) => settings({ textColor: v })} />
+        <ColorField
+          label="Accent"
+          value={s.accentColor}
+          onChange={(v) => settings({ accentColor: v })}
+        />
       </div>
-      {(section.type.includes("product") || section.type === "categories") && (
+      <div className="theme-two-col">
+        <Field label="Alignment">
+          <select
+            value={s.alignment}
+            onChange={(e) => settings({ alignment: e.target.value as typeof s.alignment })}
+          >
+            <option value="left">Left</option>
+            <option value="center">Center</option>
+            <option value="right">Right</option>
+          </select>
+        </Field>
+        <Field label="Layout">
+          <select
+            value={s.layout}
+            onChange={(e) => settings({ layout: e.target.value as typeof s.layout })}
+          >
+            <option value="classic">Classic</option>
+            <option value="split">Split</option>
+            <option value="boxed">Boxed</option>
+            <option value="full">Full width</option>
+            <option value="cards">Cards</option>
+          </select>
+        </Field>
+      </div>
+      <Field label={`Vertical padding · ${s.paddingY}px`}>
+        <input
+          type="range"
+          min="0"
+          max="180"
+          value={s.paddingY}
+          onChange={(e) => settings({ paddingY: +e.target.value })}
+        />
+      </Field>
+      <Field label={`Minimum height · ${s.minHeight}px`}>
+        <input
+          type="range"
+          min="0"
+          max="900"
+          step="20"
+          value={s.minHeight}
+          onChange={(e) => settings({ minHeight: +e.target.value })}
+        />
+      </Field>
+      <Field label={`Section radius · ${s.borderRadius}px`}>
+        <input
+          type="range"
+          min="0"
+          max="48"
+          value={s.borderRadius}
+          onChange={(e) => settings({ borderRadius: +e.target.value })}
+        />
+      </Field>
+      {["hero", "banner", "collection", "slideshow"].includes(section.type) && (
+        <Field label={`Image overlay · ${s.overlayOpacity}%`}>
+          <input
+            type="range"
+            min="0"
+            max="80"
+            value={s.overlayOpacity}
+            onChange={(e) => settings({ overlayOpacity: +e.target.value })}
+          />
+        </Field>
+      )}
+      {(section.type.includes("product") ||
+        [
+          "categories",
+          "gallery",
+          "instagram",
+          "features",
+          "stats",
+          "testimonials",
+          "reviews",
+          "logo_cloud",
+        ].includes(section.type)) && (
         <>
           <Field label="Columns">
             <select
               value={s.columns}
-              onChange={(e) => settings({ columns: +e.target.value as 2 | 3 | 4 })}
+              onChange={(e) => settings({ columns: +e.target.value as 2 | 3 | 4 | 5 })}
             >
               <option value="2">2</option>
               <option value="3">3</option>
               <option value="4">4</option>
+              <option value="5">5</option>
             </select>
           </Field>
           <Field label={`Placeholder items · ${s.itemCount}`}>
             <input
               type="range"
               min="2"
-              max="8"
+              max="12"
               value={s.itemCount}
               onChange={(e) => settings({ itemCount: +e.target.value })}
             />
           </Field>
+          <Field label={`Grid gap · ${s.gap}px`}>
+            <input
+              type="range"
+              min="0"
+              max="48"
+              value={s.gap}
+              onChange={(e) => settings({ gap: +e.target.value })}
+            />
+          </Field>
+          {section.type.includes("product") && (
+            <label className="theme-check">
+              <input
+                type="checkbox"
+                checked={s.showPrice}
+                onChange={(e) => settings({ showPrice: e.target.checked })}
+              />{" "}
+              Show prices
+            </label>
+          )}
         </>
       )}
       {["hero", "banner", "collection", "cta"].includes(section.type) && (
@@ -324,11 +476,26 @@ function SectionPanel({
   );
 }
 
-export function ThemeEditor() {
+export function ThemeEditor({ onClose }: { onClose?: () => void } = {}) {
   const persisted = useThemeCustomizer();
   const [draft, setDraft] = useState(persisted.config);
   const [selected, setSelected] = useState<string | "global">("global");
   const [adding, setAdding] = useState(false);
+  const [dragging, setDragging] = useState<number | null>(null);
+  const [query, setQuery] = useState("");
+  const [device, setDevice] = useState<"desktop" | "tablet" | "mobile">("desktop");
+  const visibleCatalog = useMemo(
+    () => catalog.filter((x) => x.label.toLowerCase().includes(query.toLowerCase())),
+    [query],
+  );
+  useEffect(() => {
+    if (!onClose) return;
+    const prior = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prior;
+    };
+  }, [onClose]);
   const index = selected === "global" ? -1 : draft.sections.findIndex((s) => s.id === selected);
   const selectedSection = index >= 0 ? draft.sections[index] : null;
   const updateSection = (value: ThemeSection) =>
@@ -337,32 +504,50 @@ export function ThemeEditor() {
     const next = [...draft.sections];
     const target = i + delta;
     if (target < 0 || target >= next.length) return;
-    [next[i], next[target]] = [next[target], next[i]];
+    const [moved] = next.splice(i, 1);
+    next.splice(target, 0, moved);
     setDraft({ ...draft, sections: next });
   };
   return (
-    <div className="theme-editor" dir="ltr">
+    <div
+      className={`theme-editor ${onClose ? "theme-editor-overlay" : ""}`}
+      dir="ltr"
+      data-theme-studio
+    >
       <header className="theme-editor-top">
         <div>
           <small>STOREFRONT</small>
           <h1>Visual theme builder</h1>
         </div>
         <div className="theme-editor-actions">
+          {onClose && (
+            <button onClick={onClose}>
+              <X size={16} /> Exit
+            </button>
+          )}
           <button
-            onClick={() => {
+            onClick={async () => {
               setDraft(defaultThemeConfig);
-              persisted.reset();
-              setSelected("global");
-              toast.success("Customization reset");
+              try {
+                await persisted.reset();
+                setSelected("global");
+                toast.success("Customization reset everywhere");
+              } catch (error) {
+                toast.error(error instanceof Error ? error.message : "Could not reset theme");
+              }
             }}
           >
             <RotateCcw size={16} /> Reset
           </button>
           <button
             className="primary"
-            onClick={() => {
-              persisted.save(draft);
-              toast.success("Theme saved and applied to the storefront");
+            onClick={async () => {
+              try {
+                await persisted.save(draft);
+                toast.success("Theme published to the storefront");
+              } catch (error) {
+                toast.error(error instanceof Error ? error.message : "Could not publish theme");
+              }
             }}
           >
             <Save size={16} /> Save
@@ -386,7 +571,14 @@ export function ThemeEditor() {
           </div>
           {adding && (
             <div className="theme-add-menu">
-              {catalog.map((x) => (
+              <input
+                className="theme-block-search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search 27 blocks…"
+                autoFocus
+              />
+              {visibleCatalog.map((x) => (
                 <button
                   key={x.type}
                   onClick={() => {
@@ -402,8 +594,20 @@ export function ThemeEditor() {
             </div>
           )}
           {draft.sections.map((s, i) => (
-            <div className={`theme-section-row ${selected === s.id ? "active" : ""}`} key={s.id}>
+            <div
+              className={`theme-section-row ${selected === s.id ? "active" : ""} ${dragging === i ? "dragging" : ""}`}
+              key={s.id}
+              draggable
+              onDragStart={() => setDragging(i)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={() => {
+                if (dragging !== null && dragging !== i) move(dragging, i - dragging);
+                setDragging(null);
+              }}
+              onDragEnd={() => setDragging(null)}
+            >
               <button className="theme-section-select" onClick={() => setSelected(s.id)}>
+                <GripVertical size={14} className="theme-drag-handle" />
                 <span>{i + 1}</span>
                 <b>{title(s.type)}</b>
               </button>
@@ -452,7 +656,7 @@ export function ThemeEditor() {
             <div className="theme-list-empty">Your page is empty. Add a section to begin.</div>
           )}
           <button className="theme-add-button" onClick={() => setAdding(!adding)}>
-            <Plus size={16} /> Add section
+            <Layers3 size={16} /> Add from block library
           </button>
         </aside>
         <main className="theme-preview-wrap">
@@ -460,10 +664,40 @@ export function ThemeEditor() {
             <span>
               <Check size={14} /> Live preview
             </span>
-            <span>Changes appear instantly · Save to publish</span>
+            <div className="theme-device-switcher">
+              <button
+                className={device === "desktop" ? "active" : ""}
+                onClick={() => setDevice("desktop")}
+                title="Desktop"
+              >
+                <Monitor size={14} />
+              </button>
+              <button
+                className={device === "tablet" ? "active" : ""}
+                onClick={() => setDevice("tablet")}
+                title="Tablet"
+              >
+                <Tablet size={14} />
+              </button>
+              <button
+                className={device === "mobile" ? "active" : ""}
+                onClick={() => setDevice("mobile")}
+                title="Mobile"
+              >
+                <Smartphone size={14} />
+              </button>
+            </div>
           </div>
-          <div className="theme-preview-frame">
-            <ThemeRenderer config={draft} preview />
+          <div
+            className="theme-preview-frame"
+            style={{ width: device === "mobile" ? 390 : device === "tablet" ? 768 : "100%" }}
+          >
+            <ThemeRenderer
+              config={draft}
+              preview
+              selectedSectionId={selected === "global" ? null : selected}
+              onSelectSection={setSelected}
+            />
           </div>
         </main>
         <aside className="theme-settings-panel">
