@@ -21,6 +21,7 @@ export function WhatsAppButton() {
 
   return (
     <a
+      data-live-id="whatsapp-support"
       href={href}
       target="_blank"
       rel="noopener noreferrer"

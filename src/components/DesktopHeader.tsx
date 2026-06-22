@@ -64,6 +64,7 @@ export function DesktopHeader() {
   return (
     <header
       data-desktop-header
+      data-live-id="site-header"
       className="hidden lg:block sticky top-0 z-40 bg-background/92 backdrop-blur-md border-b border-border"
     >
       {/* Announcement strip */}

@@ -55,6 +55,7 @@ export function MobileHeader({
 
   return (
     <header
+      data-live-id="mobile-header"
       className={cn(
         "lg:hidden sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border",
         "pt-[env(safe-area-inset-top)]",
@@ -162,6 +163,7 @@ export function MobileBottomNav() {
     <>
       <div className="lg:hidden h-[calc(64px+env(safe-area-inset-bottom))]" aria-hidden />
       <nav
+        data-live-id="mobile-bottom-nav"
         className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur-md border-t border-border pb-[env(safe-area-inset-bottom)]"
         aria-label="Primary"
       >

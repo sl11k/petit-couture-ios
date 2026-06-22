@@ -37,6 +37,8 @@ import {
   publishDraft,
   resetDraftToPublished,
   keyOf,
+  GLOBAL_FOOTER_PATH,
+  GLOBAL_HEADER_PATH,
   type DraftMap,
   type OverrideProp,
 } from "./overrides";
@@ -168,6 +170,7 @@ export function SiteInlineEditor({
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
   const [draggedSection, setDraggedSection] = useState<number | null>(null);
   const draftRef = useRef<DraftMap>({});
+  const loadedOverridesRef = useRef<Awaited<ReturnType<typeof loadOverrides>>>([]);
   const langRef = useRef(lang);
   useEffect(() => {
     langRef.current = lang;
@@ -191,11 +194,24 @@ export function SiteInlineEditor({
     );
   }, [blockQuery]);
 
+  const scopeForSelector = (selector: string) => {
+    const root = rootRef.current;
+    const target = root ? resolveSelector(root, selector) : null;
+    if (target?.closest("footer")) return GLOBAL_FOOTER_PATH;
+    if (target?.closest("[data-desktop-header]")) return GLOBAL_HEADER_PATH;
+    // Everything outside the page's main content is shared storefront chrome
+    // (mobile navigation, floating support, banners, and similar controls).
+    // Persist it globally so editing it on one route updates every route.
+    if (target && !target.closest("#main-content")) return GLOBAL_HEADER_PATH;
+    return pagePath;
+  };
+
   const setField = (selector: string, prop: OverrideProp, value: any) => {
     const currentLang = langRef.current;
+    const fieldPagePath = scopeForSelector(selector);
     const next = {
       ...draftRef.current,
-      [keyOf(selector, prop, currentLang)]: { selector, prop, lang: currentLang, value },
+      [keyOf(selector, prop, currentLang, fieldPagePath)]: { selector, prop, lang: currentLang, value, pagePath: fieldPagePath },
     };
     draftRef.current = next;
     setDraft(next);
@@ -211,19 +227,39 @@ export function SiteInlineEditor({
   // Load existing drafts/published into the DOM
   useEffect(() => {
     let cancelled = false;
+    let observer: MutationObserver | null = null;
+    let frame = 0;
     (async () => {
       const overrides = await loadOverrides(pagePath, true);
       if (cancelled) return;
+      loadedOverridesRef.current = overrides;
       const root = rootRef.current;
       if (!root) return;
-      for (const o of overrides) {
-        if (o.lang && o.lang !== lang && (o.prop === "text" || o.prop === "html")) continue;
-        const el = resolveSelector(root, o.selector);
-        if (el) applyOverrideToEl(el, o.prop, o.value);
-      }
+      const applyAll = () => {
+        const current = [
+          ...loadedOverridesRef.current,
+          ...Object.values(draftRef.current).map((item) => ({ ...item, value: item.value })),
+        ];
+        for (const o of current) {
+          if (o.lang && o.lang !== langRef.current && (o.prop === "text" || o.prop === "html")) continue;
+          const el = resolveSelector(root, o.selector);
+          // Do not fight the browser while the admin is typing. The value is
+          // captured on blur and then becomes the newest in-memory override.
+          if (el && el !== document.activeElement) applyOverrideToEl(el, o.prop, o.value);
+        }
+      };
+      const schedule = () => {
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(applyAll);
+      };
+      applyAll();
+      observer = new MutationObserver(schedule);
+      observer.observe(root, { childList: true, characterData: true, subtree: true });
     })();
     return () => {
       cancelled = true;
+      observer?.disconnect();
+      cancelAnimationFrame(frame);
     };
   }, [pagePath, lang]);
 
@@ -385,6 +421,7 @@ export function SiteInlineEditor({
       toast.error(lang === "ar" ? "فشل حفظ المسودة" : "Could not save draft");
       return;
     }
+    loadedOverridesRef.current = await loadOverrides(pagePath, true);
     draftRef.current = {};
     setDraft({});
     toast.success(lang === "ar" ? "تم حفظ المسودة" : "Draft saved");
@@ -400,6 +437,7 @@ export function SiteInlineEditor({
       toast.error(lang === "ar" ? "فشل نشر التعديلات" : "Could not publish changes");
       return;
     }
+    loadedOverridesRef.current = await loadOverrides(pagePath, true);
     draftRef.current = {};
     setDraft({});
     toast.success(lang === "ar" ? "تم النشر على المتجر" : "Published to storefront");
@@ -458,7 +496,7 @@ export function SiteInlineEditor({
   const selectedStyleInitial: StyleValue = (() => {
     if (!selected?.el) return {};
     const sel = computeSelector(rootRef.current!, selected.el);
-    const key = keyOf(sel, "style", lang);
+    const key = keyOf(sel, "style", lang, scopeForSelector(sel));
     const saved = draft[key]?.value;
     return (saved && typeof saved === "object" ? saved : {}) as StyleValue;
   })();

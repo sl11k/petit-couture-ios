@@ -16,6 +16,9 @@ export function useApplyOverrides(
 
   useEffect(() => {
     let cancelled = false;
+    let observer: MutationObserver | null = null;
+    let frame = 0;
+    const timers: ReturnType<typeof setTimeout>[] = [];
     (async () => {
       const overrides = await loadOverrides(pagePath, includeDraft);
       if (cancelled) return;
@@ -32,17 +35,24 @@ export function useApplyOverrides(
           if (el) applyOverrideToEl(el, o.prop, o.value);
         }
       };
+      const schedule = () => {
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(apply);
+      };
       apply();
       // Catch deferred mounts
-      const t1 = setTimeout(apply, 300);
-      const t2 = setTimeout(apply, 1200);
-      return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-      };
+      timers.push(setTimeout(apply, 300), setTimeout(apply, 1200));
+      const root = document.querySelector("[data-live-root]");
+      if (root) {
+        observer = new MutationObserver(schedule);
+        observer.observe(root, { childList: true, characterData: true, subtree: true });
+      }
     })();
     return () => {
       cancelled = true;
+      observer?.disconnect();
+      cancelAnimationFrame(frame);
+      timers.forEach(clearTimeout);
     };
   }, [pagePath, lang, includeDraft, ...(opts?.deps ?? [])]);
 }

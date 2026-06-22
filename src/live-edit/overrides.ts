@@ -14,10 +14,12 @@ export type OverrideRow = {
 
 export type DraftMap = Record<
   string,
-  { selector: string; prop: OverrideProp; lang: string; value: any }
+  { selector: string; prop: OverrideProp; lang: string; value: any; pagePath?: string }
 >;
 
-const keyOf = (selector: string, prop: OverrideProp, lang: string) => `${lang}|${prop}|${selector}`;
+export const GLOBAL_HEADER_PATH = "__global_header__";
+export const GLOBAL_FOOTER_PATH = "__global_footer__";
+const keyOf = (selector: string, prop: OverrideProp, lang: string, pagePath = "") => `${pagePath}|${lang}|${prop}|${selector}`;
 
 /** Compute a stable CSS-ish path from [data-live-root] to el using nth-of-type. */
 export function computeSelector(root: Element, el: Element): string {
@@ -26,6 +28,11 @@ export function computeSelector(root: Element, el: Element): string {
   while (cur && cur !== root) {
     const parent: Element | null = cur.parentElement;
     if (!parent) break;
+    const liveId = cur.getAttribute("data-live-id");
+    if (liveId) {
+      parts.unshift(`[data-live-id="${liveId.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"]`);
+      break;
+    }
     const tag = cur.tagName.toLowerCase();
     const tagName = cur.tagName;
     const sibs = Array.from(parent.children).filter((c: Element) => c.tagName === tagName);
@@ -39,7 +46,9 @@ export function computeSelector(root: Element, el: Element): string {
 export function resolveSelector(root: Element, selector: string): Element | null {
   if (!selector) return null;
   try {
-    return root.querySelector(":scope>" + selector);
+    return selector.startsWith("[data-live-id=")
+      ? root.querySelector(selector)
+      : root.querySelector(":scope>" + selector);
   } catch {
     return null;
   }
@@ -48,17 +57,22 @@ export function resolveSelector(root: Element, selector: string): Element | null
 export async function loadOverrides(pagePath: string, includeDraft: boolean) {
   const { data, error } = await supabase
     .from("live_overrides")
-    .select("selector,prop,lang,draft_value,published_value")
-    .eq("page_path", pagePath);
+    .select("page_path,selector,prop,lang,draft_value,published_value")
+    .in("page_path", [pagePath, GLOBAL_HEADER_PATH, GLOBAL_FOOTER_PATH]);
   if (error) return [];
-  return (data ?? [])
+  const rows = (data ?? [])
+    .sort((a: any, b: any) => Number(a.page_path !== pagePath) - Number(b.page_path !== pagePath))
     .map((r: any) => ({
+      pagePath: r.page_path as string,
       selector: r.selector as string,
       prop: r.prop as OverrideProp,
       lang: r.lang as string,
       value: includeDraft ? (r.draft_value ?? r.published_value) : r.published_value,
     }))
     .filter((r) => r.value !== null && r.value !== undefined);
+  const deduped = new Map<string, (typeof rows)[number]>();
+  rows.forEach((row) => deduped.set(`${row.lang}|${row.prop}|${row.selector}`, row));
+  return [...deduped.values()];
 }
 
 export function applyOverrideToEl(el: Element, prop: OverrideProp, value: any) {
@@ -68,7 +82,8 @@ export function applyOverrideToEl(el: Element, prop: OverrideProp, value: any) {
       if (el.textContent !== String(value)) el.textContent = String(value);
       break;
     case "html":
-      (el as HTMLElement).innerHTML = String(value);
+      if ((el as HTMLElement).innerHTML !== String(value))
+        (el as HTMLElement).innerHTML = String(value);
       break;
     case "src":
       if (el.tagName === "IMG") (el as HTMLImageElement).src = String(value);
@@ -79,7 +94,8 @@ export function applyOverrideToEl(el: Element, prop: OverrideProp, value: any) {
     case "style":
       if (value && typeof value === "object") {
         Object.entries(value as Record<string, string>).forEach(([k, v]) => {
-          (el as HTMLElement).style.setProperty(k, v as string);
+          if ((el as HTMLElement).style.getPropertyValue(k) !== String(v))
+            (el as HTMLElement).style.setProperty(k, String(v));
         });
       }
       break;
@@ -88,7 +104,7 @@ export function applyOverrideToEl(el: Element, prop: OverrideProp, value: any) {
 
 export async function persistDraft(pagePath: string, draft: DraftMap) {
   const rows = Object.values(draft).map((d) => ({
-    page_path: pagePath,
+    page_path: d.pagePath ?? pagePath,
     selector: d.selector,
     prop: d.prop,
     lang: d.lang,
@@ -106,10 +122,14 @@ export async function publishDraft(pagePath: string, draft: DraftMap) {
   const persisted = await persistDraft(pagePath, draft);
   if (persisted.error) return { error: persisted.error };
   // Then promote all rows for this page: published_value = coalesce(draft_value, published_value)
+  // Include global scopes even when the user saved a draft earlier and opened
+  // the editor again. In that case the in-memory draft is empty, but the
+  // header/footer draft values still need to be promoted on Publish.
+  const scopes = [pagePath, GLOBAL_HEADER_PATH, GLOBAL_FOOTER_PATH];
   const { data, error: loadError } = await supabase
     .from("live_overrides")
     .select("id,draft_value,published_value")
-    .eq("page_path", pagePath);
+    .in("page_path", scopes);
   if (loadError || !data) return { error: loadError ?? new Error("Could not load draft") };
   const updates = data
     .filter((r: any) => r.draft_value !== null && r.draft_value !== undefined)
@@ -129,7 +149,7 @@ export async function resetDraftToPublished(pagePath: string) {
   const { data, error } = await supabase
     .from("live_overrides")
     .select("id,published_value")
-    .eq("page_path", pagePath);
+    .in("page_path", [pagePath, GLOBAL_HEADER_PATH, GLOBAL_FOOTER_PATH]);
   if (error || !data) return { error };
   const results = await Promise.all(
     data.map((row: any) =>
