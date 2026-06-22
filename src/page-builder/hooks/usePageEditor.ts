@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { isPageContent, type CmsPage, type PageContent, EMPTY_PAGE_CONTENT, type Section } from "../schemas/pageSchema";
+import {
+  isPageContent,
+  type CmsPage,
+  type PageContent,
+  EMPTY_PAGE_CONTENT,
+  type Section,
+} from "../schemas/pageSchema";
 import { getDefaultSectionsForPage } from "../utils/pageDefaults";
 
 const MAX_HISTORY = 100;
@@ -29,8 +35,12 @@ export function usePageEditor(pageId: string | undefined) {
   const futureRef = useRef<HistoryEntry[]>([]);
   const pageRef = useRef<CmsPage | null>(null);
   const contentRef = useRef<PageContent>(EMPTY_PAGE_CONTENT);
-  useEffect(() => { pageRef.current = page; }, [page]);
-  useEffect(() => { contentRef.current = content; }, [content]);
+  useEffect(() => {
+    pageRef.current = page;
+  }, [page]);
+  useEffect(() => {
+    contentRef.current = content;
+  }, [content]);
 
   // Load
   useEffect(() => {
@@ -53,7 +63,8 @@ export function usePageEditor(pageId: string | undefined) {
       setPage(p);
       let initial = isPageContent(p.draft_content) ? p.draft_content : EMPTY_PAGE_CONTENT;
       // If both draft and published are empty, seed with starter design so the canvas isn't blank.
-      const pubEmpty = !isPageContent(p.published_content) || (p.published_content?.sections?.length ?? 0) === 0;
+      const pubEmpty =
+        !isPageContent(p.published_content) || (p.published_content?.sections?.length ?? 0) === 0;
       if (initial.sections.length === 0 && pubEmpty) {
         initial = { sections: getDefaultSectionsForPage(p.type) };
         setDirty(true); // mark dirty so it saves; user can undo to revert to empty
@@ -66,13 +77,18 @@ export function usePageEditor(pageId: string | undefined) {
       setHistVer((v) => v + 1);
       setLoading(false);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [pageId]);
 
   // Warn on unload
   useEffect(() => {
     if (!dirty) return;
-    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [dirty]);
@@ -96,57 +112,89 @@ export function usePageEditor(pageId: string | undefined) {
     setHistVer((v) => v + 1);
   }, []);
 
-  const updateContent = useCallback((updater: (c: PageContent) => PageContent, opts?: UpdateOpts) => {
-    setContent((curr) => {
-      pushHistory(curr, opts);
-      const next = updater(curr);
-      setDirty(true);
-      return next;
-    });
-  }, [pushHistory]);
+  const updateContent = useCallback(
+    (updater: (c: PageContent) => PageContent, opts?: UpdateOpts) => {
+      setContent((curr) => {
+        pushHistory(curr, opts);
+        const next = updater(curr);
+        setDirty(true);
+        return next;
+      });
+    },
+    [pushHistory],
+  );
 
-  const updateSection = useCallback((sectionId: string, updater: (s: Section) => Section, opts?: UpdateOpts) => {
-    updateContent((c) => ({
-      ...c,
-      sections: c.sections.map((s) => (s.id === sectionId ? updater(s) : s)),
-    }), opts);
-  }, [updateContent]);
+  const updateSection = useCallback(
+    (sectionId: string, updater: (s: Section) => Section, opts?: UpdateOpts) => {
+      updateContent(
+        (c) => ({
+          ...c,
+          sections: c.sections.map((s) => (s.id === sectionId ? updater(s) : s)),
+        }),
+        opts,
+      );
+    },
+    [updateContent],
+  );
 
-  const addSection = useCallback((s: Section, index?: number) => {
-    updateContent((c) => {
-      const arr = [...c.sections];
-      if (typeof index === "number") arr.splice(index, 0, s);
-      else arr.push(s);
-      return { ...c, sections: arr };
-    }, { label: `إضافة قسم: ${s.type}` });
-    setSelectedSectionId(s.id);
-  }, [updateContent]);
+  const addSection = useCallback(
+    (s: Section, index?: number) => {
+      updateContent(
+        (c) => {
+          const arr = [...c.sections];
+          if (typeof index === "number") arr.splice(index, 0, s);
+          else arr.push(s);
+          return { ...c, sections: arr };
+        },
+        { label: `إضافة قسم: ${s.type}` },
+      );
+      setSelectedSectionId(s.id);
+    },
+    [updateContent],
+  );
 
-  const removeSection = useCallback((id: string) => {
-    updateContent((c) => ({ ...c, sections: c.sections.filter((s) => s.id !== id) }), { label: "حذف قسم" });
-    setSelectedSectionId((cur) => (cur === id ? null : cur));
-  }, [updateContent]);
+  const removeSection = useCallback(
+    (id: string) => {
+      updateContent((c) => ({ ...c, sections: c.sections.filter((s) => s.id !== id) }), {
+        label: "حذف قسم",
+      });
+      setSelectedSectionId((cur) => (cur === id ? null : cur));
+    },
+    [updateContent],
+  );
 
-  const duplicateSection = useCallback((id: string) => {
-    updateContent((c) => {
-      const idx = c.sections.findIndex((s) => s.id === id);
-      if (idx === -1) return c;
-      const copy = JSON.parse(JSON.stringify(c.sections[idx])) as Section;
-      copy.id = `${copy.type}-${Date.now()}`;
-      const arr = [...c.sections];
-      arr.splice(idx + 1, 0, copy);
-      return { ...c, sections: arr };
-    }, { label: "تكرار قسم" });
-  }, [updateContent]);
+  const duplicateSection = useCallback(
+    (id: string) => {
+      updateContent(
+        (c) => {
+          const idx = c.sections.findIndex((s) => s.id === id);
+          if (idx === -1) return c;
+          const copy = JSON.parse(JSON.stringify(c.sections[idx])) as Section;
+          copy.id = `${copy.type}-${Date.now()}`;
+          const arr = [...c.sections];
+          arr.splice(idx + 1, 0, copy);
+          return { ...c, sections: arr };
+        },
+        { label: "تكرار قسم" },
+      );
+    },
+    [updateContent],
+  );
 
-  const moveSection = useCallback((fromIdx: number, toIdx: number) => {
-    updateContent((c) => {
-      const arr = [...c.sections];
-      const [moved] = arr.splice(fromIdx, 1);
-      arr.splice(toIdx, 0, moved);
-      return { ...c, sections: arr };
-    }, { label: "إعادة ترتيب الأقسام", key: "reorder" });
-  }, [updateContent]);
+  const moveSection = useCallback(
+    (fromIdx: number, toIdx: number) => {
+      updateContent(
+        (c) => {
+          const arr = [...c.sections];
+          const [moved] = arr.splice(fromIdx, 1);
+          arr.splice(toIdx, 0, moved);
+          return { ...c, sections: arr };
+        },
+        { label: "إعادة ترتيب الأقسام", key: "reorder" },
+      );
+    },
+    [updateContent],
+  );
 
   const undo = useCallback(() => {
     setContent((curr) => {
@@ -197,7 +245,9 @@ export function usePageEditor(pageId: string | undefined) {
 
   // Debounced "last change" toast with quick-undo button.
   const undoRef = useRef(undo);
-  useEffect(() => { undoRef.current = undo; }, [undo]);
+  useEffect(() => {
+    undoRef.current = undo;
+  }, [undo]);
   const pendingLabelRef = useRef<string | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const notifyChange = useCallback((label: string) => {
@@ -218,7 +268,6 @@ export function usePageEditor(pageId: string | undefined) {
     setPage((p) => (p ? { ...p, ...patch } : p));
     setDirty(true);
   }, []);
-
 
   const saveDraft = useCallback(async (silent = false) => {
     const page = pageRef.current;
@@ -242,7 +291,10 @@ export function usePageEditor(pageId: string | undefined) {
       })
       .eq("id", page.id);
     setSaving(false);
-    if (error) { if (!silent) toast.error("فشل حفظ المسودة: " + error.message); return; }
+    if (error) {
+      if (!silent) toast.error("فشل حفظ المسودة: " + error.message);
+      return;
+    }
     setDirty(false);
     setLastSavedAt(new Date());
     if (!silent) toast.success("تم حفظ المسودة");
@@ -251,7 +303,9 @@ export function usePageEditor(pageId: string | undefined) {
   // Auto-save draft 1.5s after the last change (silent).
   useEffect(() => {
     if (!autoSaveEnabled || !dirty || !page) return;
-    const t = setTimeout(() => { saveDraft(true); }, 1500);
+    const t = setTimeout(() => {
+      saveDraft(true);
+    }, 1500);
     return () => clearTimeout(t);
   }, [content, page, dirty, autoSaveEnabled, saveDraft]);
 
@@ -285,11 +339,42 @@ export function usePageEditor(pageId: string | undefined) {
       });
     }
     setPublishing(false);
-    if (error) { toast.error("فشل النشر: " + error.message); return; }
+    if (error) {
+      toast.error("فشل النشر: " + error.message);
+      return;
+    }
     setDirty(false);
-    setPage({ ...page, status: "published", published_content: content, published_at: new Date().toISOString() });
+    setPage({
+      ...page,
+      status: "published",
+      published_content: content,
+      published_at: new Date().toISOString(),
+    });
     toast.success("تم النشر — التغييرات ظاهرة على الموقع الآن");
   }, [page, content]);
+
+  const resetToPublished = useCallback(async () => {
+    const currentPage = pageRef.current;
+    if (!currentPage) return;
+    const restored = isPageContent(currentPage.published_content)
+      ? currentPage.published_content
+      : EMPTY_PAGE_CONTENT;
+    const { error } = await supabase
+      .from("cms_pages")
+      .update({ draft_content: restored as any })
+      .eq("id", currentPage.id);
+    if (error) {
+      toast.error("تعذرت استعادة النسخة المنشورة: " + error.message);
+      return;
+    }
+    contentRef.current = restored;
+    setContent(restored);
+    setDirty(false);
+    setSelectedSectionId(null);
+    historyRef.current = [];
+    futureRef.current = [];
+    setHistVer((value) => value + 1);
+  }, []);
 
   // Derive reactive history list for UI (most-recent first)
   const historyItems: HistoryItem[] = (() => {
@@ -302,14 +387,32 @@ export function usePageEditor(pageId: string | undefined) {
   })();
 
   return {
-    page, content, loading, saving, publishing, dirty,
-    lastSavedAt, autoSaveEnabled, setAutoSaveEnabled,
-    selectedSectionId, setSelectedSectionId,
-    updateContent, updateSection, addSection, removeSection, duplicateSection, moveSection,
-    updatePageMeta, undo, redo, jumpToHistory, notifyChange,
+    page,
+    content,
+    loading,
+    saving,
+    publishing,
+    dirty,
+    lastSavedAt,
+    autoSaveEnabled,
+    setAutoSaveEnabled,
+    selectedSectionId,
+    setSelectedSectionId,
+    updateContent,
+    updateSection,
+    addSection,
+    removeSection,
+    duplicateSection,
+    moveSection,
+    updatePageMeta,
+    undo,
+    redo,
+    jumpToHistory,
+    notifyChange,
     historyItems,
     saveDraft: () => saveDraft(false),
     publish,
+    resetToPublished,
     canUndo: historyRef.current.length > 0,
     canRedo: futureRef.current.length > 0,
   };

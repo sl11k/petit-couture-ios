@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import {
   Save,
@@ -15,6 +16,12 @@ import {
   Monitor,
   Tablet,
   Smartphone,
+  Plus,
+  Copy,
+  Trash2,
+  ChevronUp,
+  ChevronDown,
+  Search,
 } from "lucide-react";
 import { HistoryPanel } from "./HistoryPanel";
 import { StylePopover, type StyleValue } from "./StylePopover";
@@ -34,6 +41,71 @@ import {
   type OverrideProp,
 } from "./overrides";
 import "./live-editor.css";
+import { usePageEditor } from "@/page-builder/hooks/usePageEditor";
+import { PageRenderer } from "@/page-builder/components/PageRenderer";
+import { SectionEditor } from "@/page-builder/components/SectionEditor";
+import { createDefaultSection } from "@/page-builder/utils/pageDefaults";
+import type { SectionType } from "@/page-builder/schemas/pageSchema";
+
+type StudioBlock = { id: string; type: SectionType; ar: string; en: string; category: string };
+const BLOCK_TEMPLATES: StudioBlock[] = [
+  ["hero", "واجهة فاخرة", "Luxury hero", "campaign"],
+  ["hero", "واجهة منقسمة", "Split hero", "campaign"],
+  ["hero", "إطلاق مجموعة", "Collection launch", "campaign"],
+  ["banner", "بنر تخفيضات", "Sale banner", "campaign"],
+  ["banner", "بنر صورة كامل", "Full image banner", "campaign"],
+  ["banner", "بنر مناسبة", "Occasion banner", "campaign"],
+  ["product_grid", "وصل حديثًا", "New arrivals", "commerce"],
+  ["product_grid", "الأكثر مبيعًا", "Best sellers", "commerce"],
+  ["product_grid", "مختاراتنا", "Curated products", "commerce"],
+  ["product_grid", "منتجات التخفيض", "Sale products", "commerce"],
+  ["image_text", "قصة العلامة", "Brand story", "content"],
+  ["image_text", "صورة مع نص", "Image with text", "content"],
+  ["image_text", "رسالة المؤسس", "Founder note", "content"],
+  ["text_block", "عنوان قسم", "Section heading", "content"],
+  ["text_block", "محتوى غني", "Rich text", "content"],
+  ["gallery", "معرض صور", "Photo gallery", "media"],
+  ["gallery", "لوك بوك", "Lookbook", "media"],
+  ["gallery", "صور العملاء", "Customer photos", "media"],
+  ["feature_grid", "مزايا المتجر", "Store benefits", "commerce"],
+  ["feature_grid", "أيقونات الخدمات", "Service icons", "content"],
+  ["stats", "أرقام وإحصائيات", "Stats & numbers", "social"],
+  ["testimonials", "آراء العملاء", "Testimonials", "social"],
+  ["testimonials", "قصص العملاء", "Customer stories", "social"],
+  ["reviews", "تقييمات حقيقية", "Live reviews", "social"],
+  ["faq", "أسئلة شائعة", "FAQ", "engagement"],
+  ["faq", "دليل المقاسات", "Size guide", "engagement"],
+  ["cta", "دعوة للتسوق", "Shop callout", "engagement"],
+  ["cta", "واتساب كونسيرج", "WhatsApp concierge", "engagement"],
+  ["cta", "حجز موعد", "Book appointment", "engagement"],
+  ["button", "زر تسوق", "Shop button", "engagement"],
+  ["button", "زر تواصل", "Contact button", "engagement"],
+  ["divider", "فاصل أنيق", "Elegant divider", "layout"],
+  ["spacer", "مسافة مرنة", "Flexible spacer", "layout"],
+  ["html", "HTML مخصص", "Custom HTML", "advanced"],
+  ["hero", "واجهة فيديو", "Video-style hero", "campaign"],
+  ["banner", "شريط شحن مجاني", "Free shipping strip", "campaign"],
+  ["banner", "عد تنازلي للإطلاق", "Launch countdown", "campaign"],
+  ["product_grid", "تسوقي حسب العمر", "Shop by age", "commerce"],
+  ["product_grid", "هدايا مختارة", "Gift guide", "commerce"],
+  ["feature_grid", "لماذا تختارنا", "Why choose us", "content"],
+  ["feature_grid", "شارات الثقة", "Trust badges", "social"],
+  ["image_text", "تحرير المجلة", "Editorial feature", "content"],
+  ["image_text", "خلف الكواليس", "Behind the scenes", "content"],
+  ["gallery", "شبكة إنستغرام", "Instagram grid", "media"],
+  ["gallery", "صور قبل وبعد", "Before & after", "media"],
+  ["testimonials", "اقتباس مميز", "Featured quote", "social"],
+  ["stats", "عداد الثقة", "Trust counter", "social"],
+  ["faq", "الشحن والاسترجاع", "Shipping & returns", "engagement"],
+  ["cta", "الاشتراك بالنشرة", "Newsletter signup", "engagement"],
+  ["html", "تطبيق خارجي", "Embedded app", "advanced"],
+].map(([type, ar, en, category], index) => ({
+  id: `${type}-${index}`,
+  type: type as SectionType,
+  ar,
+  en,
+  category,
+}));
 
 const EDITABLE_TAGS = new Set([
   "H1",
@@ -76,8 +148,9 @@ export function SiteInlineEditor({
   children: ReactNode;
   pagePath: string;
 }) {
-  const { stop } = useLiveEdit();
+  const { stop, pageId } = useLiveEdit();
   const { lang, toggle: toggleLanguage } = useLanguage();
+  const pageEditor = usePageEditor(pageId ?? undefined);
   const rootRef = useRef<HTMLDivElement>(null);
   const [draft, setDraft] = useState<DraftMap>({});
   const [saving, setSaving] = useState(false);
@@ -90,11 +163,33 @@ export function SiteInlineEditor({
   const [styleOpen, setStyleOpen] = useState(false);
   const [regions, setRegions] = useState<Array<{ label: string; el: HTMLElement }>>([]);
   const [device, setDevice] = useState<"desktop" | "tablet" | "mobile">("desktop");
+  const [libraryOpen, setLibraryOpen] = useState(false);
+  const [blockQuery, setBlockQuery] = useState("");
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+  const [draggedSection, setDraggedSection] = useState<number | null>(null);
   const draftRef = useRef<DraftMap>({});
   const langRef = useRef(lang);
   useEffect(() => {
     langRef.current = lang;
   }, [lang]);
+
+  useEffect(() => {
+    setPortalTarget(rootRef.current?.querySelector<HTMLElement>("#main-content") ?? null);
+  }, []);
+
+  const addedSections = pageEditor.content.sections.filter(
+    (section) => section.type !== "legacy_home",
+  );
+  const selectedAddedSection = addedSections.find(
+    (section) => section.id === pageEditor.selectedSectionId,
+  );
+  const visibleBlocks = useMemo(() => {
+    const needle = blockQuery.trim().toLowerCase();
+    return BLOCK_TEMPLATES.filter(
+      (block) =>
+        !needle || `${block.ar} ${block.en} ${block.category}`.toLowerCase().includes(needle),
+    );
+  }, [blockQuery]);
 
   const setField = (selector: string, prop: OverrideProp, value: any) => {
     const currentLang = langRef.current;
@@ -140,6 +235,7 @@ export function SiteInlineEditor({
     const attach = () => {
       const all = root.querySelectorAll<HTMLElement>("*");
       all.forEach((el) => {
+        if (el.closest(".lpe-added-sections")) return;
         if (el.dataset.lpeBound === "1") return;
         if (isLeafText(el)) {
           el.dataset.lpeBound = "1";
@@ -283,6 +379,7 @@ export function SiteInlineEditor({
     captureFocusedText();
     setSaving(true);
     const { error } = (await persistDraft(pagePath, draftRef.current)) as any;
+    await pageEditor.saveDraft();
     setSaving(false);
     if (error) {
       toast.error(lang === "ar" ? "فشل حفظ المسودة" : "Could not save draft");
@@ -297,6 +394,7 @@ export function SiteInlineEditor({
     captureFocusedText();
     setPublishing(true);
     const { error } = await publishDraft(pagePath, draftRef.current);
+    await pageEditor.publish();
     setPublishing(false);
     if (error) {
       toast.error(lang === "ar" ? "فشل نشر التعديلات" : "Could not publish changes");
@@ -315,6 +413,7 @@ export function SiteInlineEditor({
     if (!window.confirm(message)) return;
     setSaving(true);
     const { error } = await resetDraftToPublished(pagePath);
+    await pageEditor.resetToPublished();
     setSaving(false);
     if (error) {
       toast.error(
@@ -369,6 +468,30 @@ export function SiteInlineEditor({
     setField(sel, "style", next);
   };
 
+  const addBlock = (block: StudioBlock) => {
+    const section = createDefaultSection(block.type);
+    const content = section.content as Record<string, unknown>;
+    if ("title_ar" in content) content.title_ar = block.ar;
+    if ("title_en" in content) content.title_en = block.en;
+    pageEditor.addSection(section);
+    pageEditor.notifyChange(lang === "ar" ? `تمت إضافة ${block.ar}` : `Added ${block.en}`);
+    setLibraryOpen(false);
+  };
+
+  const removeCurrentRegion = (region: { label: string; el: HTMLElement }) => {
+    if (
+      !window.confirm(
+        lang === "ar"
+          ? `إخفاء «${region.label}» من الصفحة؟`
+          : `Hide “${region.label}” from the page?`,
+      )
+    )
+      return;
+    const selector = computeSelector(rootRef.current!, region.el);
+    region.el.style.display = "none";
+    setField(selector, "style", { display: "none" });
+  };
+
   const dirtyCount = Object.keys(draft).length;
 
   return (
@@ -381,6 +504,43 @@ export function SiteInlineEditor({
       >
         {children}
       </div>
+
+      {portalTarget &&
+        createPortal(
+          <div className="lpe-added-sections">
+            {addedSections.map((section) => (
+              <div
+                key={section.id}
+                className={`lpe-added-section ${pageEditor.selectedSectionId === section.id ? "selected" : ""}`}
+                onClick={() => {
+                  pageEditor.setSelectedSectionId(section.id);
+                  setStyleOpen(false);
+                }}
+              >
+                <div data-lpe-ui className="lpe-added-actions">
+                  <button onClick={() => pageEditor.duplicateSection(section.id)} title="Duplicate">
+                    <Copy size={13} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (window.confirm(lang === "ar" ? "حذف القسم؟" : "Delete section?"))
+                        pageEditor.removeSection(section.id);
+                    }}
+                    title="Delete"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+                <PageRenderer
+                  content={{ sections: [section] }}
+                  device={device}
+                  onSectionUpdate={pageEditor.updateSection}
+                />
+              </div>
+            ))}
+          </div>,
+          portalTarget,
+        )}
 
       {/* Floating toolbar */}
       <div
@@ -500,21 +660,88 @@ export function SiteInlineEditor({
         </div>
         <div className="lpe-region-list">
           {regions.map((region, index) => (
-            <button
-              key={`${region.label}-${index}`}
-              className={selected?.el === region.el ? "active" : ""}
-              onClick={() => {
-                region.el.scrollIntoView({ behavior: "smooth", block: "center" });
-                setSelected({ el: region.el, kind: "text" });
-                setStyleOpen(true);
-              }}
-            >
-              <GripVertical size={14} />
-              <span>{index + 1}</span>
-              <b>{region.label}</b>
-            </button>
+            <div className="lpe-region-row" key={`${region.label}-${index}`}>
+              <button
+                className={selected?.el === region.el ? "active" : ""}
+                onClick={() => {
+                  region.el.scrollIntoView({ behavior: "smooth", block: "center" });
+                  setSelected({ el: region.el, kind: "text" });
+                  setStyleOpen(true);
+                }}
+              >
+                <GripVertical size={14} />
+                <span>{index + 1}</span>
+                <b>{region.label}</b>
+              </button>
+              <button
+                className="lpe-delete-region"
+                onClick={() => removeCurrentRegion(region)}
+                title={lang === "ar" ? "إخفاء القسم" : "Hide section"}
+              >
+                <Trash2 size={13} />
+              </button>
+            </div>
           ))}
+          {addedSections.map((section, index) => {
+            const realIndex = pageEditor.content.sections.findIndex(
+              (item) => item.id === section.id,
+            );
+            return (
+              <div
+                className="lpe-region-row lpe-added-row"
+                key={section.id}
+                draggable
+                onDragStart={() => setDraggedSection(realIndex)}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={() => {
+                  if (draggedSection !== null) pageEditor.moveSection(draggedSection, realIndex);
+                  setDraggedSection(null);
+                }}
+              >
+                <button
+                  className={pageEditor.selectedSectionId === section.id ? "active" : ""}
+                  onClick={() => {
+                    pageEditor.setSelectedSectionId(section.id);
+                    setStyleOpen(false);
+                  }}
+                >
+                  <GripVertical size={14} />
+                  <span>{regions.length + index + 1}</span>
+                  <b>
+                    {lang === "ar" ? "قسم مضاف" : "Added section"} · {section.type}
+                  </b>
+                </button>
+                <div className="lpe-row-actions">
+                  <button
+                    onClick={() => pageEditor.moveSection(realIndex, Math.max(0, realIndex - 1))}
+                  >
+                    <ChevronUp size={12} />
+                  </button>
+                  <button
+                    onClick={() =>
+                      pageEditor.moveSection(
+                        realIndex,
+                        Math.min(pageEditor.content.sections.length - 1, realIndex + 1),
+                      )
+                    }
+                  >
+                    <ChevronDown size={12} />
+                  </button>
+                  <button onClick={() => pageEditor.duplicateSection(section.id)}>
+                    <Copy size={12} />
+                  </button>
+                  <button onClick={() => pageEditor.removeSection(section.id)}>
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
+        <button className="lpe-library-button" onClick={() => setLibraryOpen(true)}>
+          <Plus size={16} />
+          {lang === "ar" ? "إضافة قسم من المكتبة" : "Add section from library"}
+        </button>
         <div className="lpe-sidebar-tip">
           <b>{lang === "ar" ? "تعديل مباشر" : "Direct editing"}</b>
           <p>
@@ -552,7 +779,23 @@ export function SiteInlineEditor({
         </div>
       </div>
 
-      {!styleOpen && (
+      {selectedAddedSection && !styleOpen && (
+        <aside data-lpe-ui className="lpe-section-inspector">
+          <div className="lpe-inspector-title">
+            <small>SECTION SETTINGS</small>
+            <h3>{lang === "ar" ? "تخصيص القسم" : "Customize section"}</h3>
+          </div>
+          <SectionEditor
+            section={selectedAddedSection}
+            onChange={(updater, opts) =>
+              pageEditor.updateSection(selectedAddedSection.id, updater, opts)
+            }
+            notify={pageEditor.notifyChange}
+          />
+        </aside>
+      )}
+
+      {!styleOpen && !selectedAddedSection && (
         <aside data-lpe-ui className="lpe-empty-inspector">
           <Palette size={24} />
           <h3>{lang === "ar" ? "اختر عنصرًا من الموقع" : "Select an element"}</h3>
@@ -562,6 +805,50 @@ export function SiteInlineEditor({
               : "Text, color, spacing, layout and effect controls will appear here."}
           </p>
         </aside>
+      )}
+
+      {libraryOpen && (
+        <div data-lpe-ui className="lpe-library-backdrop" onMouseDown={() => setLibraryOpen(false)}>
+          <section className="lpe-library-modal" onMouseDown={(event) => event.stopPropagation()}>
+            <header>
+              <div>
+                <small>BLOCK LIBRARY</small>
+                <h2>{lang === "ar" ? "أضف شيئًا استثنائيًا" : "Add something exceptional"}</h2>
+                <p>
+                  {lang === "ar"
+                    ? `${BLOCK_TEMPLATES.length} قسمًا جاهزًا وقابلًا للتخصيص بالكامل`
+                    : `${BLOCK_TEMPLATES.length} fully customizable sections`}
+                </p>
+              </div>
+              <button onClick={() => setLibraryOpen(false)}>
+                <X size={19} />
+              </button>
+            </header>
+            <div className="lpe-library-search">
+              <Search size={16} />
+              <input
+                value={blockQuery}
+                onChange={(event) => setBlockQuery(event.target.value)}
+                placeholder={lang === "ar" ? "ابحث في الأقسام…" : "Search sections…"}
+                autoFocus
+              />
+            </div>
+            <div className="lpe-block-grid">
+              {visibleBlocks.map((block) => (
+                <button key={block.id} onClick={() => addBlock(block)}>
+                  <span className={`lpe-block-icon block-${block.type}`}>
+                    <LayoutTemplate size={20} />
+                  </span>
+                  <span>
+                    <b>{lang === "ar" ? block.ar : block.en}</b>
+                    <small>{block.category}</small>
+                  </span>
+                  <Plus size={15} />
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
       )}
 
       <HistoryPanel open={historyOpen} onOpenChange={setHistoryOpen} pagePath={pagePath} />
