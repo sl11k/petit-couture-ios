@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useLiveEdit } from "@/live-edit/LiveEditContext";
-import { ThemeEditor } from "@/theme-customizer/ThemeEditor";
 
 /**
  * Floating "Edit this page" button for admins.
@@ -15,7 +14,6 @@ export function EditPageButton({ slug = "home" }: { slug?: string }) {
   const { isRTL } = useLanguage();
   const live = useLiveEdit();
   const [pageId, setPageId] = useState<string | null>(null);
-  const [studioOpen, setStudioOpen] = useState(false);
 
   const isAdmin = roles.some((r) =>
     ["super_admin", "admin", "content_manager", "manager", "store_manager"].includes(r),
@@ -34,10 +32,6 @@ export function EditPageButton({ slug = "home" }: { slug?: string }) {
   }, [isAdmin, slug]);
 
   const start = async () => {
-    if (slug === "home") {
-      setStudioOpen(true);
-      return;
-    }
     let id = pageId;
     if (!id) {
       const titleMap: Record<string, { ar: string; en: string; type: string }> = {
@@ -73,7 +67,7 @@ export function EditPageButton({ slug = "home" }: { slug?: string }) {
 
   // Auto-start when URL contains ?edit=1 (admin-only)
   useEffect(() => {
-    if (!isAdmin || live.enabled || studioOpen) return;
+    if (!isAdmin || live.enabled) return;
     if (typeof window === "undefined") return;
     const url = new URL(window.location.href);
     if (url.searchParams.get("edit") === "1") {
@@ -82,12 +76,10 @@ export function EditPageButton({ slug = "home" }: { slug?: string }) {
       }, 200);
       return () => clearTimeout(t);
     }
-  }, [isAdmin, live.enabled, pageId, studioOpen]);
+  }, [isAdmin, live.enabled, pageId]);
 
   if (loading || !isAdmin) return null;
   if (live.enabled) return null;
-  if (studioOpen) return <ThemeEditor onClose={() => setStudioOpen(false)} />;
-
   return (
     <button
       onClick={start}

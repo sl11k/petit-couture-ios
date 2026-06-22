@@ -12,7 +12,10 @@ export type OverrideRow = {
   published_value: any;
 };
 
-export type DraftMap = Record<string, { selector: string; prop: OverrideProp; lang: string; value: any }>;
+export type DraftMap = Record<
+  string,
+  { selector: string; prop: OverrideProp; lang: string; value: any }
+>;
 
 const keyOf = (selector: string, prop: OverrideProp, lang: string) => `${lang}|${prop}|${selector}`;
 
@@ -48,12 +51,14 @@ export async function loadOverrides(pagePath: string, includeDraft: boolean) {
     .select("selector,prop,lang,draft_value,published_value")
     .eq("page_path", pagePath);
   if (error) return [];
-  return (data ?? []).map((r: any) => ({
-    selector: r.selector as string,
-    prop: r.prop as OverrideProp,
-    lang: r.lang as string,
-    value: includeDraft ? (r.draft_value ?? r.published_value) : r.published_value,
-  })).filter((r) => r.value !== null && r.value !== undefined);
+  return (data ?? [])
+    .map((r: any) => ({
+      selector: r.selector as string,
+      prop: r.prop as OverrideProp,
+      lang: r.lang as string,
+      value: includeDraft ? (r.draft_value ?? r.published_value) : r.published_value,
+    }))
+    .filter((r) => r.value !== null && r.value !== undefined);
 }
 
 export function applyOverrideToEl(el: Element, prop: OverrideProp, value: any) {
@@ -90,19 +95,22 @@ export async function persistDraft(pagePath: string, draft: DraftMap) {
     draft_value: d.value,
   }));
   if (!rows.length) return { error: null };
-  return await supabase.from("live_overrides").upsert(rows, { onConflict: "page_path,selector,prop,lang" });
+  return await supabase
+    .from("live_overrides")
+    .upsert(rows, { onConflict: "page_path,selector,prop,lang" });
 }
 
 export async function publishDraft(pagePath: string, draft: DraftMap) {
   // Publish current drafts (and any existing draft_value on the page) by copying draft into published.
   // Upsert what we have in memory first.
-  await persistDraft(pagePath, draft);
+  const persisted = await persistDraft(pagePath, draft);
+  if (persisted.error) return { error: persisted.error };
   // Then promote all rows for this page: published_value = coalesce(draft_value, published_value)
-  const { data } = await supabase
+  const { data, error: loadError } = await supabase
     .from("live_overrides")
     .select("id,draft_value,published_value")
     .eq("page_path", pagePath);
-  if (!data) return;
+  if (loadError || !data) return { error: loadError ?? new Error("Could not load draft") };
   const updates = data
     .filter((r: any) => r.draft_value !== null && r.draft_value !== undefined)
     .map((r: any) =>
@@ -111,7 +119,24 @@ export async function publishDraft(pagePath: string, draft: DraftMap) {
         .update({ published_value: r.draft_value, published_at: new Date().toISOString() })
         .eq("id", r.id),
     );
-  await Promise.all(updates);
+  const results = await Promise.all(updates);
+  const failed = results.find((result) => result.error);
+  return { error: failed?.error ?? null };
+}
+
+/** Discard every unpublished value and restore the last published storefront. */
+export async function resetDraftToPublished(pagePath: string) {
+  const { data, error } = await supabase
+    .from("live_overrides")
+    .select("id,published_value")
+    .eq("page_path", pagePath);
+  if (error || !data) return { error };
+  const results = await Promise.all(
+    data.map((row: any) =>
+      supabase.from("live_overrides").update({ draft_value: row.published_value }).eq("id", row.id),
+    ),
+  );
+  return { error: results.find((result) => result.error)?.error ?? null };
 }
 
 export { keyOf };

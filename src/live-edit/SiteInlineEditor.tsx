@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { Save, Upload, X, Link as LinkIcon, History as HistoryIcon, Palette } from "lucide-react";
+import {
+  Save,
+  Upload,
+  X,
+  Link as LinkIcon,
+  History as HistoryIcon,
+  Palette,
+  Languages,
+  RotateCcw,
+  CheckCircle2,
+} from "lucide-react";
 import { HistoryPanel } from "./HistoryPanel";
 import { StylePopover, type StyleValue } from "./StylePopover";
 import { toast } from "sonner";
@@ -13,20 +23,37 @@ import {
   loadOverrides,
   persistDraft,
   publishDraft,
+  resetDraftToPublished,
   keyOf,
   type DraftMap,
   type OverrideProp,
 } from "./overrides";
 
 const EDITABLE_TAGS = new Set([
-  "H1","H2","H3","H4","H5","H6","P","SPAN","A","BUTTON","LI","LABEL","STRONG","EM","SMALL","FIGCAPTION","BLOCKQUOTE",
+  "H1",
+  "H2",
+  "H3",
+  "H4",
+  "H5",
+  "H6",
+  "P",
+  "SPAN",
+  "A",
+  "BUTTON",
+  "LI",
+  "LABEL",
+  "STRONG",
+  "EM",
+  "SMALL",
+  "FIGCAPTION",
+  "BLOCKQUOTE",
 ]);
 
 function isLeafText(el: Element): boolean {
   if (!EDITABLE_TAGS.has(el.tagName)) return false;
   // Leaf = only text or inline children, no block descendants
   for (const child of Array.from(el.children)) {
-    if (!["SPAN","STRONG","EM","SMALL","B","I","U"].includes(child.tagName)) return false;
+    if (!["SPAN", "STRONG", "EM", "SMALL", "B", "I", "U"].includes(child.tagName)) return false;
   }
   const txt = el.textContent?.trim() ?? "";
   return txt.length > 0;
@@ -36,18 +63,45 @@ function isLeafText(el: Element): boolean {
  * Wraps existing rendered children. When LiveEdit is on, walks the DOM and makes
  * text leaves contentEditable, images clickable, and persists changes to live_overrides.
  */
-export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; pagePath: string }) {
+export function SiteInlineEditor({
+  children,
+  pagePath,
+}: {
+  children: ReactNode;
+  pagePath: string;
+}) {
   const { stop } = useLiveEdit();
-  const { lang } = useLanguage();
+  const { lang, toggle: toggleLanguage } = useLanguage();
   const rootRef = useRef<HTMLDivElement>(null);
   const [draft, setDraft] = useState<DraftMap>({});
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
-  const [selected, setSelected] = useState<{ el: HTMLElement; kind: "text" | "image" | "link" } | null>(null);
+  const [selected, setSelected] = useState<{
+    el: HTMLElement;
+    kind: "text" | "image" | "link";
+  } | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const draftRef = useRef<DraftMap>({});
+  const langRef = useRef(lang);
+  useEffect(() => {
+    langRef.current = lang;
+  }, [lang]);
 
   const setField = (selector: string, prop: OverrideProp, value: any) => {
-    setDraft((d) => ({ ...d, [keyOf(selector, prop, lang)]: { selector, prop, lang, value } }));
+    const currentLang = langRef.current;
+    const next = {
+      ...draftRef.current,
+      [keyOf(selector, prop, currentLang)]: { selector, prop, lang: currentLang, value },
+    };
+    draftRef.current = next;
+    setDraft(next);
+  };
+
+  const captureFocusedText = () => {
+    const root = rootRef.current;
+    const active = document.activeElement as HTMLElement | null;
+    if (!root || !active || !root.contains(active) || active.dataset.lpeKind !== "text") return;
+    setField(computeSelector(root, active), "text", active.innerText);
   };
 
   // Load existing drafts/published into the DOM
@@ -64,7 +118,9 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
         if (el) applyOverrideToEl(el, o.prop, o.value);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [pagePath, lang]);
 
   // Attach editing behavior
@@ -88,8 +144,12 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
           // visual hint
           el.style.outline = "1px dashed transparent";
           el.style.outlineOffset = "2px";
-          el.addEventListener("mouseenter", () => { el.style.outline = "1px dashed hsl(var(--primary))"; });
-          el.addEventListener("mouseleave", () => { if (document.activeElement !== el) el.style.outline = "1px dashed transparent"; });
+          el.addEventListener("mouseenter", () => {
+            el.style.outline = "1px dashed hsl(var(--primary))";
+          });
+          el.addEventListener("mouseleave", () => {
+            if (document.activeElement !== el) el.style.outline = "1px dashed transparent";
+          });
         } else if (el.tagName === "IMG") {
           el.dataset.lpeBound = "1";
           el.dataset.lpeKind = "image";
@@ -115,7 +175,7 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
       el.style.outline = "1px dashed transparent";
     }
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Enter" && !(e.shiftKey)) {
+      if (e.key === "Enter" && !e.shiftKey) {
         // prevent newlines in headings/buttons
         const tag = (e.currentTarget as HTMLElement).tagName;
         if (tag !== "P" && tag !== "LI") {
@@ -189,25 +249,63 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
   }, []);
 
   const onSave = async () => {
+    captureFocusedText();
     setSaving(true);
-    const { error } = (await persistDraft(pagePath, draft)) as any;
+    const { error } = (await persistDraft(pagePath, draftRef.current)) as any;
     setSaving(false);
-    if (error) { toast.error("فشل الحفظ"); return; }
-    toast.success("حُفظت كمسودة");
+    if (error) {
+      toast.error(lang === "ar" ? "فشل حفظ المسودة" : "Could not save draft");
+      return;
+    }
+    draftRef.current = {};
+    setDraft({});
+    toast.success(lang === "ar" ? "تم حفظ المسودة" : "Draft saved");
   };
 
   const onPublish = async () => {
+    captureFocusedText();
     setPublishing(true);
-    await publishDraft(pagePath, draft);
+    const { error } = await publishDraft(pagePath, draftRef.current);
     setPublishing(false);
-    toast.success("تم النشر");
+    if (error) {
+      toast.error(lang === "ar" ? "فشل نشر التعديلات" : "Could not publish changes");
+      return;
+    }
+    draftRef.current = {};
+    setDraft({});
+    toast.success(lang === "ar" ? "تم النشر على المتجر" : "Published to storefront");
+  };
+
+  const onReset = async () => {
+    const message =
+      lang === "ar"
+        ? "سيتم حذف جميع التعديلات غير المنشورة وإعادة آخر نسخة منشورة. هل أنت متأكد؟"
+        : "Discard all unpublished changes and restore the last published version?";
+    if (!window.confirm(message)) return;
+    setSaving(true);
+    const { error } = await resetDraftToPublished(pagePath);
+    setSaving(false);
+    if (error) {
+      toast.error(
+        lang === "ar" ? "تعذرت استعادة النسخة المنشورة" : "Could not restore published version",
+      );
+      return;
+    }
+    draftRef.current = {};
+    setDraft({});
+    const url = new URL(window.location.href);
+    url.searchParams.set("edit", "1");
+    window.location.replace(url.toString());
   };
 
   const editLink = () => {
     const el = selected?.el;
     if (!el) return;
     const a = el.closest("a") as HTMLAnchorElement | null;
-    if (!a) { toast.message("اختر نصاً داخل رابط"); return; }
+    if (!a) {
+      toast.message("اختر نصاً داخل رابط");
+      return;
+    }
     const url = window.prompt("الرابط:", a.href);
     if (url) {
       const sel = computeSelector(rootRef.current!, a);
@@ -217,6 +315,10 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
   };
 
   const [styleOpen, setStyleOpen] = useState(false);
+  useEffect(() => {
+    setSelected(null);
+    setStyleOpen(false);
+  }, [lang]);
   const openStyleEditor = () => {
     if (!selected?.el) {
       toast.message("اختر عنصراً أولاً");
@@ -241,40 +343,106 @@ export function SiteInlineEditor({ children, pagePath }: { children: ReactNode; 
 
   return (
     <>
-      <div ref={rootRef} data-live-root>
+      <div ref={rootRef} data-live-root data-live-editing="true">
         {children}
       </div>
 
       {/* Floating toolbar */}
-      <div data-lpe-ui className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[80] flex items-center gap-1 rounded-full border border-border bg-background/95 backdrop-blur px-3 py-2 shadow-2xl">
-        <span className="text-[11px] text-muted-foreground me-2">
-          تحرير مباشر (هيدر · محتوى · فوتر) {dirtyCount > 0 ? `● ${dirtyCount} تغيير` : ""}
+      <div
+        data-lpe-ui
+        data-testid="live-design-toolbar"
+        dir={lang === "ar" ? "rtl" : "ltr"}
+        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[10000] flex items-center gap-1 rounded-2xl border border-white/15 bg-[#211b1d]/95 text-white backdrop-blur-xl px-3 py-2 shadow-2xl"
+      >
+        <span className="text-[11px] text-white/65 me-2 inline-flex items-center gap-1.5">
+          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+          {lang === "ar" ? "تعديل التصميم الحالي" : "Editing current design"}{" "}
+          {dirtyCount > 0 ? `· ${dirtyCount}` : ""}
         </span>
-        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="رابط للنص المحدد" onClick={editLink}>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-8 w-8 p-0"
+          title="رابط للنص المحدد"
+          onClick={editLink}
+        >
           <LinkIcon className="h-4 w-4" />
-        </Button>
-        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="نمط العنصر (لون/خلفية/حجم)" onClick={openStyleEditor}>
-          <Palette className="h-4 w-4" />
-        </Button>
-        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="سجل التعديلات والمقارنة" onClick={() => setHistoryOpen(true)}>
-          <HistoryIcon className="h-4 w-4" />
-        </Button>
-        <div className="w-px h-6 bg-border mx-1" />
-        <Button size="sm" variant="outline" className="h-8" onClick={onSave} disabled={saving || !dirtyCount}>
-          <Save className="h-3.5 w-3.5 me-1" /> {saving ? "..." : "حفظ"}
-        </Button>
-        <Button size="sm" className="h-8" onClick={onPublish} disabled={publishing}>
-          <Upload className="h-3.5 w-3.5 me-1" /> {publishing ? "..." : "نشر"}
         </Button>
         <Button
           size="sm"
           variant="ghost"
           className="h-8 w-8 p-0"
-          title="خروج"
+          title="نمط العنصر (لون/خلفية/حجم)"
+          onClick={openStyleEditor}
+        >
+          <Palette className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-8 w-8 p-0"
+          title="سجل التعديلات والمقارنة"
+          onClick={() => setHistoryOpen(true)}
+        >
+          <HistoryIcon className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-8 px-2 text-white hover:text-white hover:bg-white/10"
+          title={lang === "ar" ? "التعديل بالإنجليزية" : "Edit in Arabic"}
+          onClick={toggleLanguage}
+        >
+          <Languages className="h-4 w-4 me-1" /> {lang === "ar" ? "EN" : "عربي"}
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-8 w-8 p-0 text-white hover:text-white hover:bg-white/10"
+          title={lang === "ar" ? "استعادة آخر نسخة منشورة" : "Restore published version"}
+          onClick={onReset}
+          disabled={saving}
+        >
+          <RotateCcw className="h-4 w-4" />
+        </Button>
+        <div className="w-px h-6 bg-border mx-1" />
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-8 border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white"
+          onClick={onSave}
+          disabled={saving}
+        >
+          <Save className="h-3.5 w-3.5 me-1" /> {saving ? "..." : lang === "ar" ? "حفظ" : "Save"}
+        </Button>
+        <Button
+          size="sm"
+          className="h-8 bg-white text-[#211b1d] hover:bg-white/90"
+          onClick={onPublish}
+          disabled={publishing}
+        >
+          <Upload className="h-3.5 w-3.5 me-1" />{" "}
+          {publishing ? "..." : lang === "ar" ? "نشر" : "Publish"}
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-8 w-8 p-0 text-white hover:text-white hover:bg-white/10"
+          title={lang === "ar" ? "خروج" : "Exit"}
           onClick={() => {
-            if (dirtyCount > 0 && !confirm("هناك تغييرات غير محفوظة. الخروج؟")) return;
+            if (
+              dirtyCount > 0 &&
+              !confirm(
+                lang === "ar"
+                  ? "هناك تغييرات غير محفوظة. الخروج دون حفظ؟"
+                  : "You have unsaved changes. Exit without saving?",
+              )
+            )
+              return;
             stop();
-            window.location.reload();
+            const url = new URL(window.location.href);
+            url.searchParams.delete("edit");
+            window.location.replace(url.toString());
           }}
         >
           <X className="h-4 w-4" />

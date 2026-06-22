@@ -1,4 +1,11 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouterState } from "@tanstack/react-router";
+import {
+  Outlet,
+  Link,
+  createRootRoute,
+  HeadContent,
+  Scripts,
+  useRouterState,
+} from "@tanstack/react-router";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { AuthProvider } from "@/state/AuthContext";
 import { WishlistProvider } from "@/state/WishlistContext";
@@ -36,7 +43,6 @@ const queryClient = new QueryClient({
 // Dev-only: warn about /admin parent routes missing <Outlet />.
 if (import.meta.env.DEV) checkAdminOutlets();
 
-
 function NotFoundComponent() {
   // Note: i18n context isn't available at the route-not-found boundary,
   // so we render bilingually with Arabic primary (site default) and English fallback.
@@ -45,7 +51,9 @@ function NotFoundComponent() {
       <div className="max-w-md text-center" dir="auto">
         <p className="text-[10.5px] tracking-[0.22em] text-gold-deep mb-3">LE PETIT PARADIS</p>
         <h1 className="font-serif text-[88px] leading-none text-foreground">404</h1>
-        <h2 className="mt-4 font-serif text-2xl text-foreground">الصفحة غير موجودة · Page not found</h2>
+        <h2 className="mt-4 font-serif text-2xl text-foreground">
+          الصفحة غير موجودة · Page not found
+        </h2>
         <p className="mt-2 text-sm text-muted-foreground tracking-soft">
           الصفحة التي تبحث عنها غير متوفرة أو تم نقلها.
           <br />
@@ -82,7 +90,11 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#F8F5EF" },
       { title: "Le Petit Paradis — أزياء الأطفال الفاخرة" },
-      { name: "description", content: "بوتيك Le Petit Paradis: أزياء أطفال فاخرة مختارة بعناية — فساتين، أحذية، وهدايا للرضّع والبنات والأولاد. توصيل سريع وإرجاع مجاني." },
+      {
+        name: "description",
+        content:
+          "بوتيك Le Petit Paradis: أزياء أطفال فاخرة مختارة بعناية — فساتين، أحذية، وهدايا للرضّع والبنات والأولاد. توصيل سريع وإرجاع مجاني.",
+      },
       { name: "author", content: "Le Petit Paradis" },
       { property: "og:site_name", content: "Le Petit Paradis" },
       { rel: "icon", href: "/favicon.ico" },
@@ -90,10 +102,26 @@ export const Route = createRootRoute({
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:title", content: "Le Petit Paradis — أزياء الأطفال الفاخرة" },
       { name: "twitter:title", content: "Le Petit Paradis — أزياء الأطفال الفاخرة" },
-      { property: "og:description", content: "بوتيك Le Petit Paradis: أزياء أطفال فاخرة مختارة بعناية — فساتين، أحذية، وهدايا للرضّع والبنات والأولاد. توصيل سريع وإرجاع مجاني." },
-      { name: "twitter:description", content: "بوتيك Le Petit Paradis: أزياء أطفال فاخرة مختارة بعناية — فساتين، أحذية، وهدايا للرضّع والبنات والأولاد. توصيل سريع وإرجاع مجاني." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f6e8661e-ba3d-47a5-9107-e53a9bcff783/id-preview-15119ac1--13365939-5efa-4765-9cfc-35d137638f66.lovable.app-1778942541281.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f6e8661e-ba3d-47a5-9107-e53a9bcff783/id-preview-15119ac1--13365939-5efa-4765-9cfc-35d137638f66.lovable.app-1778942541281.png" },
+      {
+        property: "og:description",
+        content:
+          "بوتيك Le Petit Paradis: أزياء أطفال فاخرة مختارة بعناية — فساتين، أحذية، وهدايا للرضّع والبنات والأولاد. توصيل سريع وإرجاع مجاني.",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "بوتيك Le Petit Paradis: أزياء أطفال فاخرة مختارة بعناية — فساتين، أحذية، وهدايا للرضّع والبنات والأولاد. توصيل سريع وإرجاع مجاني.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f6e8661e-ba3d-47a5-9107-e53a9bcff783/id-preview-15119ac1--13365939-5efa-4765-9cfc-35d137638f66.lovable.app-1778942541281.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f6e8661e-ba3d-47a5-9107-e53a9bcff783/id-preview-15119ac1--13365939-5efa-4765-9cfc-35d137638f66.lovable.app-1778942541281.png",
+      },
       { name: "google-site-verification", content: "VlzVDbZFLTDQ_yVwf8NIbUAtfW4QjVcXhzzaMIc_IRc" },
     ],
     links: [
@@ -127,13 +155,17 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   useEffect(() => {
     startWebVitals();
-    flushErrorBuffer().catch(() => { /* noop */ });
+    flushErrorBuffer().catch(() => {
+      /* noop */
+    });
   }, []);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = pathname.startsWith("/admin");
   const isAuth = pathname.startsWith("/login");
   const isMachine =
-    pathname.startsWith("/sitemap") || pathname.startsWith("/robots") || pathname.startsWith("/debug");
+    pathname.startsWith("/sitemap") ||
+    pathname.startsWith("/robots") ||
+    pathname.startsWith("/debug");
 
   // Footer renders on storefront and admin pages alike, hidden only on focused flows
   // (auth, checkout, invoice) and machine routes (sitemap/robots/debug).
@@ -213,17 +245,23 @@ function StorefrontShell({
     </div>
   );
 
-  // When live-edit is active on a storefront page, wrap the ENTIRE shell
-  // (header + content + footer) so every element becomes editable and link
-  // clicks are intercepted instead of navigating away.
-  const maybeLive = live.enabled && !isAdmin
-    ? <SiteInlineEditor key={pathname} pagePath={pathname}>{wrapped}</SiteInlineEditor>
-    : wrapped;
+  const localized =
+    isAdmin || lang === "ar" ? (
+      wrapped
+    ) : (
+      <TranslateScope enabled toLang={lang} scopeKey={lang}>
+        {wrapped}
+      </TranslateScope>
+    );
 
-  if (isAdmin || lang === "ar") return maybeLive;
-  return (
-    <TranslateScope enabled toLang={lang} scopeKey={lang}>
-      {maybeLive}
-    </TranslateScope>
-  );
+  // Keep the editor itself mounted while switching language. Only its child
+  // storefront changes translation direction, preserving unsaved AR/EN drafts.
+  if (live.enabled && !isAdmin) {
+    return (
+      <SiteInlineEditor key={pathname} pagePath={pathname}>
+        {localized}
+      </SiteInlineEditor>
+    );
+  }
+  return localized;
 }
