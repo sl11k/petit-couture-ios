@@ -51,7 +51,10 @@ export function LinkPicker({
   const [loading, setLoading] = useState(false);
   const [custom, setCustom] = useState(value ?? "");
 
-  useEffect(() => { setCustom(value ?? ""); }, [value]);
+  useEffect(() => {
+    setCustom(value ?? "");
+    setType(detectType(value));
+  }, [value]);
 
   useEffect(() => {
     if (!open) return;
@@ -85,15 +88,41 @@ export function LinkPicker({
 
   const display = value ? (value.length > 32 ? value.slice(0, 32) + "…" : value) : placeholder;
 
+  const commit = (url: string) => {
+    setCustom(url);
+    onChange(url);
+  };
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button type="button" variant="outline" size="sm" className="w-full justify-start font-normal">
-          <Link2 className="h-3.5 w-3.5 me-2 shrink-0" />
-          <span className="truncate text-xs">{display}</span>
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-80 p-3 space-y-3" align="start">
+    <div className="space-y-1.5" data-lpe-ui>
+      <div className="flex gap-1.5">
+        <Input
+          className="h-9 min-w-0 flex-1 text-xs"
+          dir="ltr"
+          placeholder={placeholder}
+          value={custom}
+          onChange={(event) => setCustom(event.target.value)}
+          onBlur={(event) => commit(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              event.currentTarget.blur();
+            }
+          }}
+        />
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button type="button" variant="outline" size="sm" className="h-9 shrink-0 px-2.5" title={display}>
+              <Link2 className="h-3.5 w-3.5" />
+              <span className="sr-only">{placeholder}</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            data-lpe-ui
+            className="w-80 p-3 space-y-3"
+            align="end"
+            style={{ zIndex: 10070 }}
+          >
         <div>
           <Label className="text-xs mb-1 block">نوع الرابط</Label>
           <div className="grid grid-cols-4 gap-1">
@@ -123,7 +152,7 @@ export function LinkPicker({
                 <button
                   key={it.url}
                   type="button"
-                  onClick={() => { onChange(it.url); setCustom(it.url); setOpen(false); }}
+                  onClick={() => { commit(it.url); setOpen(false); }}
                   className={`w-full text-start px-2 py-1.5 text-xs hover:bg-muted border-b border-border last:border-b-0 ${value === it.url ? "bg-muted" : ""}`}
                 >
                   <div className="truncate">{it.label}</div>
@@ -145,12 +174,14 @@ export function LinkPicker({
               placeholder={type === "external" ? "https://example.com" : "/مسار-مخصص"}
               value={custom}
               onChange={(e) => setCustom(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { onChange(custom); setOpen(false); } }}
+              onKeyDown={(e) => { if (e.key === "Enter") { commit(custom); setOpen(false); } }}
             />
-            <Button type="button" size="sm" className="h-8" onClick={() => { onChange(custom); setOpen(false); }}>حفظ</Button>
+            <Button type="button" size="sm" className="h-8" onClick={() => { commit(custom); setOpen(false); }}>حفظ</Button>
           </div>
         </div>
-      </PopoverContent>
-    </Popover>
+          </PopoverContent>
+        </Popover>
+      </div>
+    </div>
   );
 }
