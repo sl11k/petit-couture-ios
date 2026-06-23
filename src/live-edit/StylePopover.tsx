@@ -79,6 +79,41 @@ export function StylePopover({
       </nav>
       {tab === "text" && (
         <Panel>
+          <SelectRow
+            label="نوع الخط"
+            value={(style["font-family"] || "").split(",")[0].replace(/['"]/g, "").trim() || "inherit"}
+            options={[
+              "inherit",
+              "system-ui, -apple-system, sans-serif",
+              "'Cairo', sans-serif",
+              "'Tajawal', sans-serif",
+              "'Almarai', sans-serif",
+              "'IBM Plex Sans Arabic', sans-serif",
+              "'Noto Naskh Arabic', serif",
+              "'Amiri', serif",
+              "'Inter', sans-serif",
+              "'Playfair Display', serif",
+              "'Cormorant Garamond', serif",
+              "'Montserrat', sans-serif",
+              "'Poppins', sans-serif",
+            ]}
+            labels={[
+              "افتراضي",
+              "النظام",
+              "Cairo",
+              "Tajawal",
+              "Almarai",
+              "IBM Plex Arabic",
+              "Noto Naskh",
+              "Amiri",
+              "Inter",
+              "Playfair",
+              "Cormorant",
+              "Montserrat",
+              "Poppins",
+            ]}
+            onChange={(v) => set("font-family", v === "inherit" ? "" : v)}
+          />
           <ColorRow
             label="لون النص"
             value={style.color || getComputedStyle(el).color}

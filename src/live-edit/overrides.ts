@@ -22,9 +22,25 @@ export const GLOBAL_FOOTER_PATH = "__global_footer__";
 const keyOf = (selector: string, prop: OverrideProp, lang: string, pagePath = "") => `${pagePath}|${lang}|${prop}|${selector}`;
 
 function effectiveLanguage(selector: string, prop: OverrideProp, lang: string) {
+  // Styles, image sources, and link destinations are language-agnostic —
+  // color/font/size/position/href/src do not differ between Arabic and English.
+  // Only visible text/html is per-language.
+  if (prop !== "text" && prop !== "html") return "*";
   // Phone and email are shared contact values, not translations. Historical
   // rows were saved under whichever language the admin happened to be using.
   if (prop === "text" && /data-live-id=["']footer-(phone|email)["']/.test(selector)) return "*";
+  return lang;
+}
+
+/** Language slot to persist a draft under, based on the prop type. */
+export function persistLangFor(prop: OverrideProp, lang: string, selector?: string) {
+  if (prop !== "text" && prop !== "html") return "*";
+  if (
+    prop === "text" &&
+    selector &&
+    /data-live-id=["']footer-(phone|email)["']/.test(selector)
+  )
+    return "*";
   return lang;
 }
 

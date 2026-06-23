@@ -37,6 +37,7 @@ import {
   publishDraft,
   resetDraftToPublished,
   keyOf,
+  persistLangFor,
   GLOBAL_FOOTER_PATH,
   GLOBAL_HEADER_PATH,
   type DraftMap,
@@ -209,9 +210,10 @@ export function SiteInlineEditor({
   const setField = (selector: string, prop: OverrideProp, value: any) => {
     const currentLang = langRef.current;
     const fieldPagePath = scopeForSelector(selector);
+    const persistLang = persistLangFor(prop, currentLang, selector);
     const next = {
       ...draftRef.current,
-      [keyOf(selector, prop, currentLang, fieldPagePath)]: { selector, prop, lang: currentLang, value, pagePath: fieldPagePath },
+      [keyOf(selector, prop, persistLang, fieldPagePath)]: { selector, prop, lang: persistLang, value, pagePath: fieldPagePath },
     };
     draftRef.current = next;
     setDraft(next);
@@ -531,7 +533,7 @@ export function SiteInlineEditor({
   const selectedStyleInitial: StyleValue = (() => {
     if (!selected?.el) return {};
     const sel = computeSelector(rootRef.current!, selected.el);
-    const key = keyOf(sel, "style", lang, scopeForSelector(sel));
+    const key = keyOf(sel, "style", persistLangFor("style", lang, sel), scopeForSelector(sel));
     const saved = draft[key]?.value;
     return (saved && typeof saved === "object" ? saved : {}) as StyleValue;
   })();
