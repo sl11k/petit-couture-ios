@@ -533,7 +533,7 @@ export function SiteInlineEditor({
   const selectedStyleInitial: StyleValue = (() => {
     if (!selected?.el) return {};
     const sel = computeSelector(rootRef.current!, selected.el);
-    const key = keyOf(sel, "style", lang, scopeForSelector(sel));
+    const key = keyOf(sel, "style", persistLangFor("style", lang, sel), scopeForSelector(sel));
     const saved = draft[key]?.value;
     return (saved && typeof saved === "object" ? saved : {}) as StyleValue;
   })();
