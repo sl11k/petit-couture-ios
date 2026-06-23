@@ -37,6 +37,7 @@ import {
   publishDraft,
   resetDraftToPublished,
   keyOf,
+  persistLangFor,
   GLOBAL_FOOTER_PATH,
   GLOBAL_HEADER_PATH,
   type DraftMap,
