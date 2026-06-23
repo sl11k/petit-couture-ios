@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { amountsMatch, money } from "@/lib/payment-validation";
+import type { Json } from "@/integrations/supabase/types";
 
 export { amountsMatch, money } from "@/lib/payment-validation";
 
@@ -15,7 +16,20 @@ type PaymentOrder = {
   currency: string;
   customer_email: string;
   customer_name: string;
+  customer_phone: string;
+  subtotal: number;
+  shipping_fee: number;
+  tax: number;
+  discount_amount: number;
+  coupon_code: string | null;
+  shipping_address: Json;
+  created_at: string;
 };
+
+function asJson(value: unknown): Json {
+  if (value === undefined) return null;
+  return JSON.parse(JSON.stringify(value)) as Json;
+}
 
 export async function loadCheckoutOrder(
   orderId: string,
@@ -65,7 +79,7 @@ export async function recordPaymentSession(input: {
     gateway_transaction_id: input.gatewayTransactionId ?? null,
     status: "pending",
     idempotency_key: idempotencyKey,
-    raw_response: input.rawResponse ?? null,
+    raw_response: asJson(input.rawResponse),
   };
 
   const { data: existing } = await supabaseAdmin
@@ -127,7 +141,7 @@ async function findOrCreateEventTransaction(input: {
         gateway_transaction_id: input.gatewayTransactionId,
         status: input.status,
         idempotency_key: idempotencyKey,
-        raw_response: input.rawResponse,
+        raw_response: asJson(input.rawResponse),
         webhook_verified: true,
       },
       { onConflict: "idempotency_key" },
@@ -199,7 +213,7 @@ export async function completeGatewayPayment(input: {
       status: "captured",
       captured_at: new Date().toISOString(),
       webhook_verified: true,
-      raw_response: input.rawResponse,
+      raw_response: asJson(input.rawResponse),
     })
     .eq("id", transactionId);
   if (transactionError) {
@@ -242,7 +256,7 @@ export async function failGatewayPayment(input: {
       failed_at: new Date().toISOString(),
       error_message: input.reason.slice(0, 500),
       webhook_verified: true,
-      raw_response: input.rawResponse,
+      raw_response: asJson(input.rawResponse),
     })
     .eq("id", transactionId);
   if (transactionError) {
@@ -281,9 +295,8 @@ export async function refundGatewayPayment(input: {
     .from("payment_transactions")
     .update({
       status: "refunded",
-      refunded_at: new Date().toISOString(),
       webhook_verified: true,
-      raw_response: input.rawResponse,
+      raw_response: asJson(input.rawResponse),
     })
     .eq("id", transactionId);
   if (transactionError) {
@@ -311,7 +324,7 @@ export async function logPaymentWebhook(input: {
       signature: input.signature ?? null,
       signature_valid: input.signatureValid,
       ip_address: input.ip ?? null,
-      payload: input.payload,
+      payload: asJson(input.payload),
       processing_error: input.processingError ?? null,
       processed: input.processed ?? false,
       related_transaction_id: input.transactionId ?? null,

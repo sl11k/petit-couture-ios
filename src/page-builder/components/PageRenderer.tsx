@@ -322,6 +322,7 @@ function RenderHero({ s }: { s: HeroSection }) {
 
 function RenderTextBlock({ s }: { s: TextBlockSection }) {
   const align = (s.content as any).alignment ?? "left";
+  const bgImage = s.content.image?.url;
   const ctx = useContext(EditContext);
   const { lang } = useLanguage();
   const ar = ctx?.ar ?? lang === "ar";
@@ -818,17 +819,23 @@ function RenderProductGrid({ s }: { s: ProductGridSection }) {
       let q = supabase.from("products")
         .select("id, slug, name_ar, name_en, image_url, price, currency, status, is_active")
         .eq("status", "active").eq("is_active", true).limit(lim);
-      if (c.source === "manual" && c.productSlugs && c.productSlugs.length > 0) {
+      if (c.source === "manual") {
+        if (!c.productSlugs?.length) {
+          if (!cancelled) { setItems([]); setLoading(false); }
+          return;
+        }
         q = q.in("slug", c.productSlugs);
       } else if (c.source === "category" && c.categorySlug) {
         const { data: cat } = await supabase.from("categories").select("id").eq("slug", c.categorySlug).maybeSingle();
-        if (cat?.id) {
-          const ids = await getCategoryProductIds(cat.id, lim);
-          if (ids.length === 0) { if (!cancelled) { setItems([]); setLoading(false); } return; }
-          q = supabase.from("products")
-            .select("id, slug, name_ar, name_en, image_url, price, currency, status, is_active")
-            .eq("status", "active").eq("is_active", true).in("id", ids).limit(lim);
-        }
+        if (!cat?.id) { if (!cancelled) { setItems([]); setLoading(false); } return; }
+        const ids = await getCategoryProductIds(cat.id, lim);
+        if (ids.length === 0) { if (!cancelled) { setItems([]); setLoading(false); } return; }
+        q = supabase.from("products")
+          .select("id, slug, name_ar, name_en, image_url, price, currency, status, is_active")
+          .eq("status", "active").eq("is_active", true).in("id", ids).limit(lim);
+      } else if (c.source === "category") {
+        if (!cancelled) { setItems([]); setLoading(false); }
+        return;
       } else if (c.source === "best_sellers") {
         q = q.order("sales_count", { ascending: false });
       } else if (c.source === "sale") {
@@ -838,11 +845,16 @@ function RenderProductGrid({ s }: { s: ProductGridSection }) {
       }
       const { data } = await q;
       if (cancelled) return;
-      setItems((data ?? []).map((r: any) => ({
+      const mapped = (data ?? []).map((r: any) => ({
         id: r.id, slug: r.slug,
         name: (ar ? r.name_ar : r.name_en) || r.name_en || r.name_ar || "",
         image: r.image_url, price: r.price, currency: r.currency,
-      })));
+      }));
+      if (c.source === "manual" && c.productSlugs) {
+        const order = new Map(c.productSlugs.map((slug, index) => [slug, index]));
+        mapped.sort((a, b) => (order.get(a.slug) ?? Number.MAX_SAFE_INTEGER) - (order.get(b.slug) ?? Number.MAX_SAFE_INTEGER));
+      }
+      setItems(mapped);
       setLoading(false);
     })();
     return () => { cancelled = true; };

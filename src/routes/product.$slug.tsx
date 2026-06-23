@@ -41,13 +41,25 @@ import { ProductOptionsPicker } from "@/components/product/ProductOptionsPicker"
 
 import { buildMeta, productJsonLd, breadcrumbJsonLd, canonical } from "@/lib/seo";
 import { devValidateJsonLd } from "@/lib/seoValidate";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/product/$slug")({
-  head: ({ params }) => {
+  loader: async ({ params }) => {
+    const { data } = await supabase
+      .from("products")
+      .select("slug,name_ar,name_en,description_ar,description_en,image_url,images,sku,brand,price,currency,stock,is_active,status")
+      .eq("slug", params.slug)
+      .eq("is_active", true)
+      .eq("status", "active")
+      .maybeSingle();
+    return { dbProduct: data };
+  },
+  head: ({ params, loaderData }) => {
+    const dbProduct = loaderData?.dbProduct;
     const cat = categories.find((c) => c.slug === params.slug);
     const product = productsByCategory[params.slug];
     const path = `/product/${params.slug}`;
-    if (!cat) {
+    if (!dbProduct && !cat) {
       return buildMeta({
         title: "غير موجود — Le Petit Paradis",
         description: "هذه الصفحة غير متوفرة.",
@@ -56,29 +68,33 @@ export const Route = createFileRoute("/product/$slug")({
         robots: "noindex, follow",
       });
     }
-    const title = `${cat.name} — Le Petit Paradis`;
-    const description = product
-      ? `${product.name} من ${product.brand}. ${cat.name} — أزياء أطفال فاخرة من Le Petit Paradis.`
-      : `تشكيلة ${cat.name} الفاخرة من Le Petit Paradis للأطفال.`;
-    const image = product?.images?.[0] ?? cat.img;
-    const inStock = product && (product as any).inStock !== false;
+    const dbName = dbProduct?.name_ar || dbProduct?.name_en;
+    const title = `${dbName || cat?.name || "منتج"} — Le Petit Paradis`;
+    const description = dbProduct
+      ? dbProduct.description_ar || dbProduct.description_en || `${dbName} — أزياء أطفال فاخرة من Le Petit Paradis.`
+      : product
+      ? `${product.name} من ${product.brand}. ${cat?.name ?? "منتج"} — أزياء أطفال فاخرة من Le Petit Paradis.`
+      : `تشكيلة ${cat?.name} الفاخرة من Le Petit Paradis للأطفال.`;
+    const dbImages = Array.isArray(dbProduct?.images) ? dbProduct.images.filter((item): item is string => typeof item === "string") : [];
+    const image = dbProduct?.image_url ?? dbImages[0] ?? product?.images?.[0] ?? cat?.img;
+    const inStock = dbProduct ? (dbProduct.stock ?? 0) > 0 : Boolean(product && (product as any).inStock !== false);
     const jsonLd: Array<Record<string, unknown>> = [
       breadcrumbJsonLd([
         { name: "الرئيسية", path: "/" },
         { name: "الأقسام", path: "/category" },
-        { name: cat.name, path },
+        { name: dbName || cat?.name || "منتج", path },
       ]),
     ];
-    if (product) {
+    if (dbProduct || product) {
       jsonLd.push(
         productJsonLd({
-          name: product.name,
+          name: dbName || product?.name || "منتج",
           description,
-          image: product.images ?? [image],
-          sku: product.sku,
-          brand: product.brand,
-          price: product.price,
-          currency: (product as any).currency ?? "SAR",
+          image: dbProduct ? (dbImages.length ? dbImages : image ? [image] : []) : product?.images ?? (image ? [image] : []),
+          sku: dbProduct?.sku ?? product?.sku,
+          brand: dbProduct?.brand ?? product?.brand,
+          price: dbProduct?.price ?? product?.price ?? 0,
+          currency: dbProduct?.currency ?? (product as any)?.currency ?? "SAR",
           availability: inStock ? "in_stock" : "out_of_stock",
           url: canonical(path),
           rating: (product as any).rating
@@ -95,7 +111,7 @@ export const Route = createFileRoute("/product/$slug")({
       description,
       path,
       image: typeof image === "string" ? image : undefined,
-      type: product ? "product" : "website",
+      type: dbProduct || product ? "product" : "website",
       robots: inStock ? undefined : "noindex, follow",
       jsonLd,
     });

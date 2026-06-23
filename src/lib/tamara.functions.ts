@@ -77,7 +77,7 @@ export const createTamaraCheckout = createServerFn({ method: "POST" })
         reference_id: item.product_slug,
         type: "Physical",
         name: item.product_name,
-        sku: item.sku || item.product_slug,
+        sku: item.product_slug,
         quantity: item.qty,
         total_amount: amount(Number(item.unit_price) * Number(item.qty)),
         unit_price: amount(item.unit_price),

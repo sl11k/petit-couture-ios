@@ -3,8 +3,10 @@ import { DetailPage } from "@/features/admin/components/DetailPage";
 import { integrationDetailConfig } from "@/features/admin/configs/detail.configs";
 
 export const Route = createFileRoute("/admin/integrations/$id")({
-  component: () => {
-    const { id } = useParams({ from: "/admin/integrations/$id" });
-    return <DetailPage config={integrationDetailConfig} id={id} />;
-  },
+  component: IntegrationDetailRoute,
 });
+
+function IntegrationDetailRoute() {
+  const { id } = useParams({ from: "/admin/integrations/$id" });
+  return <DetailPage config={integrationDetailConfig} id={id} />;
+}

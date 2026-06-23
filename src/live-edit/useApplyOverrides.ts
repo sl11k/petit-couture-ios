@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { loadOverrides, resolveSelector, applyOverrideToEl } from "./overrides";
 import { useLanguage } from "@/i18n/LanguageContext";
 
@@ -13,8 +13,10 @@ export function useApplyOverrides(
 ) {
   const { lang } = useLanguage();
   const includeDraft = opts?.includeDraft ?? false;
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    setReady(false);
     let cancelled = false;
     let observer: MutationObserver | null = null;
     let frame = 0;
@@ -40,6 +42,7 @@ export function useApplyOverrides(
         frame = requestAnimationFrame(apply);
       };
       apply();
+      setReady(true);
       // Catch deferred mounts
       timers.push(setTimeout(apply, 300), setTimeout(apply, 1200));
       const root = document.querySelector("[data-live-root]");
@@ -55,4 +58,6 @@ export function useApplyOverrides(
       timers.forEach(clearTimeout);
     };
   }, [pagePath, lang, includeDraft, ...(opts?.deps ?? [])]);
+
+  return ready;
 }

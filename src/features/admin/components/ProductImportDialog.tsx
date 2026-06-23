@@ -149,7 +149,7 @@ export function ProductImportDialog({
           if (price === undefined) { failed.push({ row: i + 2, reason: t("السعر غير صالح", "Invalid price") }); continue; }
 
           const sku = get("sku") ? String(get("sku")).trim() : null;
-          let slug = get("slug") ? slugify(String(get("slug"))) : slugify(name_en || name_ar);
+          const slug = get("slug") ? slugify(String(get("slug"))) : slugify(name_en || name_ar);
 
           let category_id: string | null = null;
           const catRaw = get("category");

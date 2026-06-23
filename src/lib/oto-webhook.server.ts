@@ -1,4 +1,3 @@
-// @ts-nocheck — Supabase generated types lag behind newly-added oto_webhook_* tables.
 // Server-only OTO webhook registration helpers.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getOtoAccessToken } from "@/lib/oto.server";

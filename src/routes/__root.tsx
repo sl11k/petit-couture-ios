@@ -227,7 +227,7 @@ function StorefrontShell({
   const pageIdentity = getEditablePageIdentity(pathname);
   const allowPageEditing = !isAdmin && !pathname.startsWith("/login") && !pathname.startsWith("/sitemap") && !pathname.startsWith("/robots") && !pathname.startsWith("/debug");
   useCustomCss();
-  useApplyOverrides(pathname);
+  const overridesReady = useApplyOverrides(pathname);
   if (!themeReady && !isAdmin) {
     return <div className="min-h-screen bg-background" aria-label="Loading storefront" />;
   }
@@ -286,5 +286,13 @@ function StorefrontShell({
       </SiteInlineEditor>
     );
   }
-  return <div data-live-root>{localized}</div>;
+  return (
+    <div
+      data-live-root
+      style={{ visibility: overridesReady ? "visible" : "hidden" }}
+      aria-busy={!overridesReady}
+    >
+      {localized}
+    </div>
+  );
 }

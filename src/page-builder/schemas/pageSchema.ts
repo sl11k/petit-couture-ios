@@ -70,12 +70,18 @@ export type TextBlockSection = {
   id: string;
   type: "text_block";
   content: {
+    eyebrow_ar?: string;
+    eyebrow_en?: string;
     title_ar?: string;
     title_en?: string;
+    subtitle_ar?: string;
+    subtitle_en?: string;
     body_ar?: string;
     body_en?: string;
     alignment?: "left" | "center" | "right";
     buttons?: ButtonContent[];
+    layout?: "standard" | "split";
+    image?: ImageContent;
   };
   settings?: CommonSectionSettings;
 };

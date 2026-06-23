@@ -1,4 +1,3 @@
-// @ts-nocheck — Supabase generated types lag behind newly-added tables (oto_webhook_*). Runtime is safe; remove this when types regenerate.
 // Public OTO inbound webhook endpoint.
 // OTO POSTs orderStatus / shipmentError / newOrders payloads here after
 // we register this URL via POST /rest/v2/webhook.
@@ -9,7 +8,14 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { Database, Json } from "@/integrations/supabase/types";
 import { normalizeOtoPayload, verifyOtoWebhookSignature, mapOtoStatus } from "@/lib/oto-webhook";
+
+type ShipmentUpdate = Database["public"]["Tables"]["shipments"]["Update"];
+
+function asJson(value: unknown): Json {
+  return JSON.parse(JSON.stringify(value)) as Json;
+}
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -68,7 +74,7 @@ export const Route = createFileRoute("/api/public/oto/webhook")({
           tracking_number: (normalized as { trackingNumber?: string }).trackingNumber ?? null,
           status_value: (normalized as { status?: string }).status ?? null,
           error_code: (normalized as { errorCode?: string }).errorCode ?? null,
-          raw: json,
+          raw: asJson(json),
           signature_present: signaturePresent,
           signature_valid: signatureValid,
           auth_present: authPresent,
@@ -153,10 +159,10 @@ export const Route = createFileRoute("/api/public/oto/webhook")({
               throw new Error(`Unsupported OTO status: ${normalized.status || "empty"}`);
             }
             if (shipmentId) {
-              const update: Record<string, unknown> = {
+              const update: ShipmentUpdate = {
                 status: internal,
                 updated_at: new Date().toISOString(),
-                raw_response: normalized.raw,
+                raw_response: asJson(normalized.raw),
               };
               if (internal === "picked_up") update.shipped_at = new Date().toISOString();
               if (internal === "delivered") update.delivered_at = new Date().toISOString();
@@ -178,7 +184,7 @@ export const Route = createFileRoute("/api/public/oto/webhook")({
                   description: normalized.note ?? normalized.dcStatus ?? null,
                   source: "webhook",
                   occurred_at: normalized.timestamp,
-                  raw: normalized.raw,
+                  raw: asJson(normalized.raw),
                 });
               if (eventError) throw new Error(`Tracking event failed: ${eventError.message}`);
 
@@ -212,7 +218,7 @@ export const Route = createFileRoute("/api/public/oto/webhook")({
                   status: "failed",
                   failure_reason:
                     normalized.errorMessage || normalized.errorCode || "Shipment error",
-                  raw_response: normalized.raw,
+                  raw_response: asJson(normalized.raw),
                   updated_at: new Date().toISOString(),
                 })
                 .eq("id", shipmentId);
@@ -229,7 +235,7 @@ export const Route = createFileRoute("/api/public/oto/webhook")({
                     normalized.errorCode,
                   source: "webhook",
                   occurred_at: normalized.timestamp,
-                  raw: normalized.raw,
+                  raw: asJson(normalized.raw),
                 });
               if (eventError) throw new Error(`Tracking event failed: ${eventError.message}`);
             }

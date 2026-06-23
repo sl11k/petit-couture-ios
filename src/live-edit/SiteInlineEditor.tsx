@@ -452,9 +452,9 @@ export function SiteInlineEditor({
     captureFocusedText();
     setSaving(true);
     const { error } = (await persistDraft(pagePath, draftRef.current)) as any;
-    await pageEditor.saveDraft();
+    const pageSaved = await pageEditor.saveDraft();
     setSaving(false);
-    if (error) {
+    if (error || !pageSaved) {
       toast.error(lang === "ar" ? "فشل حفظ المسودة" : "Could not save draft");
       return;
     }
@@ -468,9 +468,9 @@ export function SiteInlineEditor({
     captureFocusedText();
     setPublishing(true);
     const { error } = await publishDraft(pagePath, draftRef.current);
-    await pageEditor.publish();
+    const pagePublished = await pageEditor.publish();
     setPublishing(false);
-    if (error) {
+    if (error || !pagePublished) {
       toast.error(lang === "ar" ? "فشل نشر التعديلات" : "Could not publish changes");
       return;
     }
@@ -488,9 +488,9 @@ export function SiteInlineEditor({
     if (!window.confirm(message)) return;
     setSaving(true);
     const { error } = await resetDraftToPublished(pagePath);
-    await pageEditor.resetToPublished();
+    const pageReset = await pageEditor.resetToPublished();
     setSaving(false);
-    if (error) {
+    if (error || !pageReset) {
       toast.error(
         lang === "ar" ? "تعذرت استعادة النسخة المنشورة" : "Could not restore published version",
       );
@@ -724,7 +724,7 @@ export function SiteInlineEditor({
           title={lang === "ar" ? "خروج" : "Exit"}
           onClick={() => {
             if (
-              dirtyCount > 0 &&
+              (dirtyCount > 0 || pageEditor.dirty) &&
               !confirm(
                 lang === "ar"
                   ? "هناك تغييرات غير محفوظة. الخروج دون حفظ؟"

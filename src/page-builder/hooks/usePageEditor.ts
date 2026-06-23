@@ -272,7 +272,7 @@ export function usePageEditor(pageId: string | undefined) {
   const saveDraft = useCallback(async (silent = false) => {
     const page = pageRef.current;
     const content = contentRef.current;
-    if (!page) return;
+    if (!page) return false;
     setSaving(true);
     const { error } = await supabase
       .from("cms_pages")
@@ -293,11 +293,12 @@ export function usePageEditor(pageId: string | undefined) {
     setSaving(false);
     if (error) {
       if (!silent) toast.error("فشل حفظ المسودة: " + error.message);
-      return;
+      return false;
     }
     setDirty(false);
     setLastSavedAt(new Date());
     if (!silent) toast.success("تم حفظ المسودة");
+    return true;
   }, []);
 
   // Auto-save draft 1.5s after the last change (silent).
@@ -310,7 +311,7 @@ export function usePageEditor(pageId: string | undefined) {
   }, [content, page, dirty, autoSaveEnabled, saveDraft]);
 
   const publish = useCallback(async () => {
-    if (!page) return;
+    if (!page) return false;
     setPublishing(true);
     const { error } = await supabase
       .from("cms_pages")
@@ -341,7 +342,7 @@ export function usePageEditor(pageId: string | undefined) {
     setPublishing(false);
     if (error) {
       toast.error("فشل النشر: " + error.message);
-      return;
+      return false;
     }
     setDirty(false);
     setPage({
@@ -351,11 +352,12 @@ export function usePageEditor(pageId: string | undefined) {
       published_at: new Date().toISOString(),
     });
     toast.success("تم النشر — التغييرات ظاهرة على الموقع الآن");
+    return true;
   }, [page, content]);
 
   const resetToPublished = useCallback(async () => {
     const currentPage = pageRef.current;
-    if (!currentPage) return;
+    if (!currentPage) return false;
     const restored = isPageContent(currentPage.published_content)
       ? currentPage.published_content
       : EMPTY_PAGE_CONTENT;
@@ -365,7 +367,7 @@ export function usePageEditor(pageId: string | undefined) {
       .eq("id", currentPage.id);
     if (error) {
       toast.error("تعذرت استعادة النسخة المنشورة: " + error.message);
-      return;
+      return false;
     }
     contentRef.current = restored;
     setContent(restored);
@@ -374,6 +376,7 @@ export function usePageEditor(pageId: string | undefined) {
     historyRef.current = [];
     futureRef.current = [];
     setHistVer((value) => value + 1);
+    return true;
   }, []);
 
   // Derive reactive history list for UI (most-recent first)

@@ -32,8 +32,8 @@ export async function logAudit(entry: AuditEntry): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    let ip: string | null = null;
-    let ua: string | null = typeof navigator !== "undefined" ? navigator.userAgent : null;
+    const ip: string | null = null;
+    const ua: string | null = typeof navigator !== "undefined" ? navigator.userAgent : null;
 
     await supabase.from("audit_logs").insert({
       actor_id: user.id,
