@@ -210,9 +210,10 @@ export function SiteInlineEditor({
   const setField = (selector: string, prop: OverrideProp, value: any) => {
     const currentLang = langRef.current;
     const fieldPagePath = scopeForSelector(selector);
+    const persistLang = persistLangFor(prop, currentLang, selector);
     const next = {
       ...draftRef.current,
-      [keyOf(selector, prop, currentLang, fieldPagePath)]: { selector, prop, lang: currentLang, value, pagePath: fieldPagePath },
+      [keyOf(selector, prop, persistLang, fieldPagePath)]: { selector, prop, lang: persistLang, value, pagePath: fieldPagePath },
     };
     draftRef.current = next;
     setDraft(next);
