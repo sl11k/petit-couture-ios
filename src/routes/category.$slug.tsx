@@ -9,6 +9,7 @@ import { categories as seedCategories, productsByCategory } from "@/data/categor
 import { usePriceFormatter } from "@/state/CurrencyContext";
 import { AGE_ORDER, ageBucketLabel, sizeToAgeBucket, type AgeBucket } from "@/lib/ageSort";
 import { buildMeta, breadcrumbJsonLd, collectionJsonLd, canonical } from "@/lib/seo";
+import { getCategoryProductIds } from "@/lib/productCategories";
 
 type DbCategory = {
   id: string;
@@ -54,14 +55,7 @@ async function loadCategory(slug: string): Promise<{
 
   let products: DbProduct[] = [];
   if (category?.id) {
-    // Try category_products link table first
-    const { data: links } = await supabase
-      .from("category_products")
-      .select("product_id, display_order")
-      .eq("category_id", category.id)
-      .order("display_order", { ascending: true });
-
-    const ids = (links ?? []).map((l: any) => l.product_id);
+    const ids = await getCategoryProductIds(category.id, 500);
     if (ids.length > 0) {
       const { data } = await supabase
         .from("products")
@@ -72,17 +66,6 @@ async function loadCategory(slug: string): Promise<{
         .eq("is_active", true);
       const byId = new Map((data ?? []).map((p: any) => [p.id, p]));
       products = ids.map((id: string) => byId.get(id)).filter(Boolean) as DbProduct[];
-    } else {
-      // Fallback: products with category_id pointing to this category
-      const { data } = await supabase
-        .from("products")
-        .select(
-          "id, slug, name_ar, name_en, price, compare_at_price, image_url, stock, sales_count, created_at, sizes",
-        )
-        .eq("category_id", category.id)
-        .eq("is_active", true)
-        .order("created_at", { ascending: false });
-      products = (data ?? []) as DbProduct[];
     }
   }
 

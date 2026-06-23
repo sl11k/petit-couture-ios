@@ -217,6 +217,24 @@ export function SiteInlineEditor({
     setDraft(next);
   };
 
+  const setAnchorLink = (anchor: HTMLAnchorElement, rawUrl: string) => {
+    const url = rawUrl.trim();
+    const selector = computeSelector(rootRef.current!, anchor);
+    anchor.setAttribute("href", url);
+    setField(selector, "href", url);
+
+    const liveId = anchor.getAttribute("data-live-id");
+    const contactText = liveId === "footer-email" && /^mailto:/i.test(url)
+      ? url.replace(/^mailto:/i, "").trim()
+      : liveId === "footer-phone" && /^tel:/i.test(url)
+        ? url.replace(/^tel:/i, "").trim()
+        : null;
+    if (contactText) {
+      anchor.textContent = contactText;
+      setField(selector, "text", contactText);
+    }
+  };
+
   const captureFocusedText = () => {
     const root = rootRef.current;
     const active = document.activeElement as HTMLElement | null;
@@ -241,7 +259,7 @@ export function SiteInlineEditor({
           ...Object.values(draftRef.current).map((item) => ({ ...item, value: item.value })),
         ];
         for (const o of current) {
-          if (o.lang && o.lang !== langRef.current && (o.prop === "text" || o.prop === "html")) continue;
+          if (o.lang && o.lang !== "*" && o.lang !== langRef.current && (o.prop === "text" || o.prop === "html")) continue;
           const el = resolveSelector(root, o.selector);
           // Do not fight the browser while the admin is typing. The value is
           // captured on blur and then becomes the newest in-memory override.
@@ -333,6 +351,20 @@ export function SiteInlineEditor({
       const sel = computeSelector(root!, el);
       const value = el.innerText;
       setField(sel, "text", value);
+      // Keep the clickable destination and visible footer contact value in
+      // sync. Editing the phone/email must never leave an old tel:/mailto: URL.
+      if (el instanceof HTMLAnchorElement) {
+        const liveId = el.getAttribute("data-live-id");
+        if (liveId === "footer-email") {
+          const href = `mailto:${value.trim()}`;
+          el.setAttribute("href", href);
+          setField(sel, "href", href);
+        } else if (liveId === "footer-phone") {
+          const href = `tel:${value.trim()}`;
+          el.setAttribute("href", href);
+          setField(sel, "href", href);
+        }
+      }
       el.style.outline = "1px dashed transparent";
     }
     function onKey(e: KeyboardEvent) {
@@ -380,13 +412,18 @@ export function SiteInlineEditor({
       if (a) {
         e.preventDefault();
         e.stopPropagation();
+        // Product cards are data-driven preview content rather than editable
+        // link fields. Let the admin verify them without leaving and losing
+        // the current editor session.
+        if (a.getAttribute("data-live-navigation") === "product") {
+          window.open((a as HTMLAnchorElement).href, "_blank", "noopener,noreferrer");
+          return;
+        }
         // If anchor wraps a non-text element (image/icon), open href editor
         if (selected?.kind !== "text") {
           const url = window.prompt("الرابط:", (a as HTMLAnchorElement).href);
           if (url && url !== (a as HTMLAnchorElement).href) {
-            const sel = computeSelector(root!, a);
-            (a as HTMLAnchorElement).href = url;
-            setField(sel, "href", url);
+            setAnchorLink(a as HTMLAnchorElement, url);
           }
         }
         return;
@@ -476,9 +513,7 @@ export function SiteInlineEditor({
     }
     const url = window.prompt("الرابط:", a.href);
     if (url) {
-      const sel = computeSelector(rootRef.current!, a);
-      a.href = url;
-      setField(sel, "href", url);
+      setAnchorLink(a, url);
     }
   };
 

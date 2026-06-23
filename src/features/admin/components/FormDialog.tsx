@@ -481,7 +481,21 @@ export function FormDialog({
 
       if (productId && junctionLookupFields.length) {
         for (const f of junctionLookupFields) {
-          try { await syncJunction(f.lookup!.junction!, productId, (values[f.key] as string[]) ?? []); }
+          try {
+            const selectedIds = (values[f.key] as string[]) ?? [];
+            const junction = f.lookup!.junction!;
+            await syncJunction(junction, productId, selectedIds);
+            // Mirror the first selected category onto the legacy product
+            // column. This keeps old integrations working while the complete
+            // many-to-many assignment remains in product_categories.
+            if (table === "products" && junction.itemColumn === "category_id") {
+              const { error: mirrorError } = await supabase
+                .from("products")
+                .update({ category_id: selectedIds[0] ?? null })
+                .eq("id", productId);
+              if (mirrorError) throw mirrorError;
+            }
+          }
           catch (err: any) { setSaving(false); console.error("[FormDialog] junction sync failed", { field: f.key, err }); toast.error(err?.message || `${ar ? f.label.ar : f.label.en}: ${ar ? "فشل الحفظ" : "save failed"}`); return; }
         }
       }

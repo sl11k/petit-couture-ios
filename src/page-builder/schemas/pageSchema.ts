@@ -300,7 +300,7 @@ export type ButtonSection = {
   id: string;
   type: "button";
   content: {
-    button: ButtonContent;
+    button?: ButtonContent;
     alignment?: "left" | "center" | "right";
     size?: "sm" | "md" | "lg" | "xl";
     shape?: "square" | "rounded" | "pill";

@@ -30,7 +30,7 @@ export function useApplyOverrides(
         // is currently typing.
         if (!includeDraft && root.getAttribute("data-live-editing") === "true") return;
         for (const o of overrides) {
-          if (o.lang && o.lang !== lang && (o.prop === "text" || o.prop === "html")) continue;
+          if (o.lang && o.lang !== "*" && o.lang !== lang && (o.prop === "text" || o.prop === "html")) continue;
           const el = resolveSelector(root, o.selector);
           if (el) applyOverrideToEl(el, o.prop, o.value);
         }

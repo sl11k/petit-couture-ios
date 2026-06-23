@@ -1,5 +1,6 @@
 // Helpers for fetching storefront content (banners, categories, popular picks, announcements, settings)
 import { supabase } from "@/integrations/supabase/client";
+import { getCategoryProductIds } from "@/lib/productCategories";
 
 export type Banner = {
   id: string;
@@ -301,19 +302,14 @@ export async function resolveSectionProducts(section: HomeSection, limit = 8): P
   }
 
   if (section.data_source === "category" && section.source_ref) {
-    // Look up category_id by slug, then category_products → products
+    // Resolve the same multi-category assignments written by the admin.
     const { data: cat } = await supabase
       .from("categories")
       .select("id")
       .eq("slug", section.source_ref)
       .maybeSingle();
     if (!cat) return [];
-    const { data: rows } = await supabase
-      .from("category_products")
-      .select("product_id")
-      .eq("category_id", (cat as any).id)
-      .limit(limit * 2);
-    const ids = ((rows ?? []) as any[]).map((r) => r.product_id).filter(Boolean);
+    const ids = await getCategoryProductIds((cat as any).id, limit * 2);
     if (ids.length === 0) return [];
     const { data } = await supabase
       .from("products")

@@ -613,9 +613,7 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
 
       {s.type === "button" && (
         <>
-          <Input placeholder="نص (ع)" value={s.content.button?.label_ar ?? ""} onChange={(e) => updateContent((c: any) => ({ button: { ...(c.button ?? {}), label_ar: e.target.value } }))} />
-          <Input placeholder="Label (EN)" value={s.content.button?.label_en ?? ""} onChange={(e) => updateContent((c: any) => ({ button: { ...(c.button ?? {}), label_en: e.target.value } }))} />
-          <LinkPicker value={s.content.button?.url} onChange={(url) => updateContent((c: any) => ({ button: { ...(c.button ?? {}), url } }))} placeholder="رابط الزر" />
+          <ButtonsEditor buttons={s.content.button ? [s.content.button] : []} onChange={(buttons) => updateContent({ button: buttons[0] })} />
           <div>
             <Label className="text-xs">نمط</Label>
             <select className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" value={s.content.button?.variant ?? "primary"}
@@ -660,9 +658,7 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
           <TextField label="Subtitle (EN)" multiline value={s.content.subtitle_en} onChange={(v, opts) => updateContent({ subtitle_en: v }, opts)} />
           <div className="rounded-md border border-border p-2 space-y-2">
             <Label className="text-xs">زر CTA</Label>
-            <Input placeholder="نص (ع)" value={s.content.button?.label_ar ?? ""} onChange={(e) => updateContent((c: any) => ({ button: { ...(c.button ?? {}), label_ar: e.target.value } }))} />
-            <Input placeholder="Label (EN)" value={s.content.button?.label_en ?? ""} onChange={(e) => updateContent((c: any) => ({ button: { ...(c.button ?? {}), label_en: e.target.value } }))} />
-            <LinkPicker value={s.content.button?.url} onChange={(url) => updateContent((c: any) => ({ button: { ...(c.button ?? {}), url } }))} placeholder="الرابط" />
+            <ButtonsEditor buttons={s.content.button ? [s.content.button] : []} onChange={(buttons) => updateContent({ button: buttons[0] })} />
           </div>
           <div>
             <Label className="text-xs">الارتفاع</Label>

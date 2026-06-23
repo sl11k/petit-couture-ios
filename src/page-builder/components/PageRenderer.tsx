@@ -29,6 +29,7 @@ import type {
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getCategoryProductIds } from "@/lib/productCategories";
 
 function pick(ar: boolean, valAr?: string, valEn?: string) {
   return (ar ? valAr : valEn) ?? valEn ?? valAr ?? "";
@@ -754,8 +755,10 @@ function RenderButton({ s }: { s: ButtonSection }) {
   const { lang } = useLanguage();
   const ar = lang === "ar";
   const c = s.content;
-  const b = c.button ?? {};
-  const label = pick(ar, b.label_ar, b.label_en) || (ar ? "زر" : "Button");
+  const b = c.button;
+  if (!b) return null;
+  const label = pick(ar, b.label_ar, b.label_en);
+  if (!label) return null;
   const align = c.alignment === "left" ? "text-start" : c.alignment === "right" ? "text-end" : "text-center";
   return (
     <section style={sectionStyle(s)} className={align + " px-4"}>
@@ -820,8 +823,7 @@ function RenderProductGrid({ s }: { s: ProductGridSection }) {
       } else if (c.source === "category" && c.categorySlug) {
         const { data: cat } = await supabase.from("categories").select("id").eq("slug", c.categorySlug).maybeSingle();
         if (cat?.id) {
-          const { data: rels } = await supabase.from("category_products").select("product_id").eq("category_id", cat.id).limit(lim);
-          const ids = (rels ?? []).map((r: any) => r.product_id);
+          const ids = await getCategoryProductIds(cat.id, lim);
           if (ids.length === 0) { if (!cancelled) { setItems([]); setLoading(false); } return; }
           q = supabase.from("products")
             .select("id, slug, name_ar, name_en, image_url, price, currency, status, is_active")
@@ -852,7 +854,7 @@ function RenderProductGrid({ s }: { s: ProductGridSection }) {
   const title = pick(ar, c.title_ar, c.title_en);
   const carouselWidth = c.carouselCardSize === "compact" ? "w-[155px] sm:w-[185px]" : c.carouselCardSize === "large" ? "w-[260px] sm:w-[310px]" : "w-[205px] sm:w-[235px]";
   const renderCard = (p: (typeof items)[number], carousel = false) => (
-    <a key={p.id} href={`/product/${p.slug}`} draggable={false} onClick={(event) => { if (dragRef.current.moved) { event.preventDefault(); dragRef.current.moved = false; } }} className={cn("block overflow-hidden border border-border bg-card hover:shadow-md transition", cardRound, carousel && `shrink-0 snap-start select-none ${carouselWidth}`)}>
+    <a key={p.id} href={`/product/${encodeURIComponent(p.slug)}`} data-live-navigation="product" draggable={false} onClick={(event) => { if (dragRef.current.moved) { event.preventDefault(); dragRef.current.moved = false; } }} className={cn("block overflow-hidden border border-border bg-card hover:shadow-md transition", cardRound, carousel && `shrink-0 snap-start select-none ${carouselWidth}`)}>
       {p.image ? <img src={p.image} alt={p.name} draggable={false} loading="lazy" className="w-full aspect-square object-cover" /> : <div className="aspect-square bg-muted" />}
       <div className="p-2.5"><div className="text-sm font-medium line-clamp-2">{p.name}</div>{c.showPrice !== false && p.price != null && <div className="text-sm text-primary font-semibold mt-1">{p.price} {p.currency || "SAR"}</div>}</div>
     </a>

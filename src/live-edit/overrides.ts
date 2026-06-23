@@ -21,6 +21,13 @@ export const GLOBAL_HEADER_PATH = "__global_header__";
 export const GLOBAL_FOOTER_PATH = "__global_footer__";
 const keyOf = (selector: string, prop: OverrideProp, lang: string, pagePath = "") => `${pagePath}|${lang}|${prop}|${selector}`;
 
+function effectiveLanguage(selector: string, prop: OverrideProp, lang: string) {
+  // Phone and email are shared contact values, not translations. Historical
+  // rows were saved under whichever language the admin happened to be using.
+  if (prop === "text" && /data-live-id=["']footer-(phone|email)["']/.test(selector)) return "*";
+  return lang;
+}
+
 /** Compute a stable CSS-ish path from [data-live-root] to el using nth-of-type. */
 export function computeSelector(root: Element, el: Element): string {
   const parts: string[] = [];
@@ -66,10 +73,22 @@ export async function loadOverrides(pagePath: string, includeDraft: boolean) {
       pagePath: r.page_path as string,
       selector: r.selector as string,
       prop: r.prop as OverrideProp,
-      lang: r.lang as string,
+      lang: effectiveLanguage(r.selector as string, r.prop as OverrideProp, r.lang as string),
       value: includeDraft ? (r.draft_value ?? r.published_value) : r.published_value,
     }))
     .filter((r) => r.value !== null && r.value !== undefined);
+  // Repair historical contact edits where the admin changed only the anchor
+  // destination. The visible value and clickable value are one logical field.
+  for (const contact of [
+    { selector: '[data-live-id="footer-email"]', prefix: /^mailto:/i },
+    { selector: '[data-live-id="footer-phone"]', prefix: /^tel:/i },
+  ]) {
+    const href = [...rows].reverse().find((row) => row.selector === contact.selector && row.prop === "href");
+    if (href) {
+      const visible = String(href.value).replace(contact.prefix, "").trim();
+      if (visible) rows.push({ ...href, prop: "text" as OverrideProp, lang: "*", value: visible });
+    }
+  }
   const deduped = new Map<string, (typeof rows)[number]>();
   rows.forEach((row) => deduped.set(`${row.lang}|${row.prop}|${row.selector}`, row));
   return [...deduped.values()];
