@@ -2835,13 +2835,17 @@ export type Database = {
           last_transaction_id: string | null
           notes: string | null
           order_number: string
+          oto_creation_error: string | null
+          oto_creation_started_at: string | null
           payment_attempts: number
           payment_failure_reason: string | null
           payment_gateway: string | null
+          payment_inventory_released_at: string | null
           payment_link: string | null
           payment_link_sent_at: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_status: string
+          payment_stock_finalized_at: string | null
           refunded_amount: number | null
           shipping_address: Json
           shipping_carrier: string | null
@@ -2887,13 +2891,17 @@ export type Database = {
           last_transaction_id?: string | null
           notes?: string | null
           order_number?: string
+          oto_creation_error?: string | null
+          oto_creation_started_at?: string | null
           payment_attempts?: number
           payment_failure_reason?: string | null
           payment_gateway?: string | null
+          payment_inventory_released_at?: string | null
           payment_link?: string | null
           payment_link_sent_at?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_status?: string
+          payment_stock_finalized_at?: string | null
           refunded_amount?: number | null
           shipping_address?: Json
           shipping_carrier?: string | null
@@ -2939,13 +2947,17 @@ export type Database = {
           last_transaction_id?: string | null
           notes?: string | null
           order_number?: string
+          oto_creation_error?: string | null
+          oto_creation_started_at?: string | null
           payment_attempts?: number
           payment_failure_reason?: string | null
           payment_gateway?: string | null
+          payment_inventory_released_at?: string | null
           payment_link?: string | null
           payment_link_sent_at?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_status?: string
+          payment_stock_finalized_at?: string | null
           refunded_amount?: number | null
           shipping_address?: Json
           shipping_carrier?: string | null
@@ -6004,6 +6016,33 @@ export type Database = {
         }
         Relationships: []
       }
+      theme_customizations: {
+        Row: {
+          config: Json
+          created_at: string
+          id: string
+          scope: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          config: Json
+          created_at?: string
+          id?: string
+          scope?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          id?: string
+          scope?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       unsubscribe_tokens: {
         Row: {
           channel: string
@@ -6690,9 +6729,33 @@ export type Database = {
           remaining_attempts: number
         }[]
       }
+      claim_oto_shipment_creation: {
+        Args: { _order_id: string }
+        Returns: boolean
+      }
+      complete_async_payment: {
+        Args: {
+          _amount: number
+          _currency: string
+          _gateway: string
+          _gateway_transaction_id: string
+          _order_id: string
+          _transaction_id: string
+        }
+        Returns: boolean
+      }
       emit_webhook_event: {
         Args: { _event_type: string; _payload: Json }
         Returns: string
+      }
+      fail_async_payment: {
+        Args: {
+          _gateway: string
+          _order_id: string
+          _reason: string
+          _transaction_id: string
+        }
+        Returns: boolean
       }
       finalize_order_stock: { Args: { _order_id: string }; Returns: undefined }
       get_all_users_with_roles: {
@@ -6816,6 +6879,16 @@ export type Database = {
         }[]
       }
       refresh_product_sales_counts: { Args: never; Returns: undefined }
+      refund_async_payment: {
+        Args: {
+          _amount: number
+          _currency: string
+          _gateway: string
+          _order_id: string
+          _transaction_id: string
+        }
+        Returns: boolean
+      }
       register_failed_login: { Args: { _email: string }; Returns: undefined }
       release_expired_order_stock: {
         Args: { _order_id: string }
