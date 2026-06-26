@@ -313,6 +313,8 @@ function TextStyleEditor({
             <option value="serif">Luxury serif</option>
             <option value="sans">Modern sans</option>
             <option value="mono">Mono</option>
+            <option value="damas">TS Damas Slab</option>
+            <option value="tek-arabic">TEK Arabic</option>
           </select>
         </div>
         <div>
@@ -366,6 +368,27 @@ function TextStyleEditor({
               set({ marginTop: e.target.value ? Number(e.target.value) : undefined })
             }
           />
+        </div>
+      </div>
+      <div className="rounded-md border border-border/70 p-2 space-y-2">
+        <label className="flex items-center justify-between gap-2 text-xs">
+          <span>عرض النص فوق الصورة</span>
+          <Switch
+            checked={v.overlayMode ?? false}
+            onCheckedChange={(overlayMode) => set({ overlayMode })}
+          />
+        </label>
+        <div>
+          <Label className="text-xs">مكانه فوق الصورة</Label>
+          <select
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+            value={v.verticalPosition ?? "bottom"}
+            onChange={(e) => set({ verticalPosition: e.target.value as any })}
+          >
+            <option value="top">أعلى الصورة</option>
+            <option value="center">منتصف الصورة</option>
+            <option value="bottom">أسفل الصورة</option>
+          </select>
         </div>
       </div>
     </div>
@@ -780,6 +803,8 @@ function TypographyFields({
             <option value="serif">Luxury serif</option>
             <option value="sans">Modern sans</option>
             <option value="mono">Mono</option>
+            <option value="damas">TS Damas Slab</option>
+            <option value="tek-arabic">TEK Arabic</option>
           </select>
         </div>
         <div>
@@ -2210,6 +2235,28 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
               className="h-9 w-full rounded border border-border"
             />
           </div>
+          <div>
+            <Label className="text-xs">مكان النص فوق الصورة</Label>
+            <select
+              className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+              value={s.content.verticalAlignment ?? "center"}
+              onChange={(e) => updateContent({ verticalAlignment: e.target.value as any })}
+            >
+              <option value="top">أعلى الصورة</option>
+              <option value="center">منتصف الصورة</option>
+              <option value="bottom">أسفل الصورة</option>
+            </select>
+          </div>
+          <TextStyleEditor
+            label="تنسيق عنوان البنر"
+            value={s.content.titleStyle}
+            onChange={(titleStyle) => updateContent({ titleStyle })}
+          />
+          <TextStyleEditor
+            label="تنسيق وصف البنر"
+            value={s.content.subtitleStyle}
+            onChange={(subtitleStyle) => updateContent({ subtitleStyle })}
+          />
         </>
       )}
 

@@ -22,7 +22,7 @@ import { CookieBanner } from "@/components/CookieBanner";
 import { Footer } from "@/components/Footer";
 import { TranslateScope } from "@/i18n/TranslateScope";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { startWebVitals } from "@/lib/perf";
 import { GlobalErrorBoundary, OfflineBanner } from "@/components/ErrorDisplay";
 import { flushErrorBuffer } from "@/lib/errors";
@@ -230,6 +230,7 @@ function StorefrontShell({
   const { ready: themeReady } = useThemeCustomizer();
   const live = useLiveEdit();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [replaceRouteWithPublished, setReplaceRouteWithPublished] = useState(false);
   const pageIdentity = getEditablePageIdentity(pathname);
   const allowPageEditing =
     !isAdmin &&
@@ -239,6 +240,12 @@ function StorefrontShell({
     !pathname.startsWith("/debug");
   useCustomCss();
   const overridesReady = useApplyOverrides(pathname);
+  useEffect(() => {
+    setReplaceRouteWithPublished(false);
+  }, [pageIdentity.slug]);
+  const onPublishedSectionsLoaded = useCallback((hasSections: boolean) => {
+    setReplaceRouteWithPublished(hasSections);
+  }, []);
   if (!themeReady && !isAdmin) {
     return <div className="min-h-screen bg-background" aria-label="Loading storefront" />;
   }
@@ -252,9 +259,15 @@ function StorefrontShell({
       {showStoreChrome && <StorefrontMobileHeader />}
       <AnalyticsTracker />
       <div id="main-content" tabIndex={-1}>
-        <Outlet />
+        <div hidden={pathname !== "/" && !live.enabled && replaceRouteWithPublished}>
+          <Outlet />
+        </div>
         {pathname !== "/" && allowPageEditing && (
-          <PublishedPageSections key={pageIdentity.slug} slug={pageIdentity.slug} />
+          <PublishedPageSections
+            key={pageIdentity.slug}
+            slug={pageIdentity.slug}
+            onLoaded={onPublishedSectionsLoaded}
+          />
         )}
       </div>
       {allowPageEditing && (

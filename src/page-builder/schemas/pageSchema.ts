@@ -19,7 +19,7 @@ export type CommonSectionSettings = {
   typography?: {
     color?: string;
     fontSize?: number;
-    fontFamily?: "inherit" | "serif" | "sans" | "mono";
+    fontFamily?: "inherit" | "serif" | "sans" | "mono" | "damas" | "tek-arabic";
     fontWeight?: "300" | "400" | "500" | "600" | "700" | "800";
     textAlign?: "left" | "center" | "right" | "start" | "end";
     lineHeight?: number;
@@ -48,13 +48,15 @@ export type TextStyleSettings = {
   color?: string;
   opacity?: number; // 0..1
   fontSize?: number;
-  fontFamily?: "inherit" | "serif" | "sans" | "mono";
+  fontFamily?: "inherit" | "serif" | "sans" | "mono" | "damas" | "tek-arabic";
   fontWeight?: "300" | "400" | "500" | "600" | "700" | "800";
   textAlign?: "left" | "center" | "right" | "start" | "end";
   lineHeight?: number;
   letterSpacing?: number;
   textTransform?: "none" | "uppercase" | "lowercase" | "capitalize";
   marginTop?: number;
+  verticalPosition?: "top" | "center" | "bottom";
+  overlayMode?: boolean;
 };
 
 export type ImageAspectRatio = "1/1" | "4/3" | "3/4" | "16/9";
@@ -360,8 +362,11 @@ export type BannerSection = {
     height?: "sm" | "md" | "lg" | "xl";
     overlay?: number;
     alignment?: "left" | "center" | "right";
+    verticalAlignment?: "top" | "center" | "bottom";
     shape?: "square" | "rounded" | "pill";
     textColor?: string;
+    titleStyle?: TextStyleSettings;
+    subtitleStyle?: TextStyleSettings;
   };
   settings?: CommonSectionSettings;
 };

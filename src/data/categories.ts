@@ -32,6 +32,8 @@ export type Product = {
   careInstructions: string[];
   sizes: string[];
   sizeChart: { size: string; chest: string; length: string; age: string }[];
+  sizeGuideImageUrl?: string;
+  sizeGuideContent?: string;
   colors: { name: string; hex: string; image?: string }[];
   images: string[];
   videoUrl?: string;

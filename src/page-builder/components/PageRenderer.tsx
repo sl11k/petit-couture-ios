@@ -53,7 +53,11 @@ function styleFontFamily(font?: TextStyleSettings["fontFamily"]): string | undef
       ? "Inter, ui-sans-serif, system-ui, sans-serif"
       : font === "mono"
         ? "ui-monospace, SFMono-Regular, Menlo, monospace"
-        : undefined;
+        : font === "damas"
+          ? '"TS Damas Slab", "Damas", "Noto Naskh Arabic", serif'
+          : font === "tek-arabic"
+            ? '"TEK Arabic", "Tajawal", "IBM Plex Sans Arabic", sans-serif'
+            : undefined;
 }
 
 function textStyle(style?: TextStyleSettings): React.CSSProperties | undefined {
@@ -70,6 +74,30 @@ function textStyle(style?: TextStyleSettings): React.CSSProperties | undefined {
     textTransform: style.textTransform,
     marginTop: style.marginTop,
   };
+}
+
+function verticalClass(position?: "top" | "center" | "bottom") {
+  return position === "top"
+    ? "justify-start"
+    : position === "bottom"
+      ? "justify-end"
+      : "justify-center";
+}
+
+function verticalItemsClass(position?: "top" | "center" | "bottom") {
+  return position === "top" ? "items-start" : position === "bottom" ? "items-end" : "items-center";
+}
+
+function captionPlacementClasses(style?: TextStyleSettings) {
+  if (!style?.overlayMode) return "mt-3";
+  const pos = style.verticalPosition ?? "bottom";
+  return cn(
+    "absolute inset-x-0 z-10 flex px-4 py-3 text-white",
+    verticalItemsClass(pos),
+    pos === "top" && "top-0 bottom-auto",
+    pos === "center" && "top-0 bottom-0",
+    pos === "bottom" && "bottom-0 top-auto",
+  );
 }
 
 function aspectClass(ratio?: ImageAspectRatio): string {
@@ -382,7 +410,11 @@ function sectionWrapStyle(s: Section): React.CSSProperties {
         ? "Inter, ui-sans-serif, system-ui, sans-serif"
         : typography.fontFamily === "mono"
           ? "ui-monospace, SFMono-Regular, Menlo, monospace"
-          : undefined;
+          : typography.fontFamily === "damas"
+            ? '"TS Damas Slab", "Damas", "Noto Naskh Arabic", serif'
+            : typography.fontFamily === "tek-arabic"
+              ? '"TEK Arabic", "Tajawal", "IBM Plex Sans Arabic", sans-serif'
+              : undefined;
   return {
     paddingTop: settings.spacing?.paddingTop,
     paddingBottom: settings.spacing?.paddingBottom,
@@ -667,39 +699,47 @@ function RenderFeatureGrid({ s }: { s: FeatureGridSection }) {
                 className="rounded-2xl border border-border p-4 sm:p-6 bg-card min-w-0"
               >
                 {c.icon && <div className="mb-3 text-3xl">{c.icon}</div>}
-                {c.image?.url &&
-                  (c.image.link ? (
-                    <a
-                      href={c.image.link}
-                      target={c.image.newTab ? "_blank" : undefined}
-                      rel={c.image.newTab ? "noreferrer" : undefined}
-                    >
+                {c.image?.url && (
+                  <div
+                    className={cn(
+                      "relative mb-4 overflow-hidden rounded-xl",
+                      aspectClass(s.content.imageAspectRatio),
+                    )}
+                  >
+                    {c.image.link ? (
+                      <a
+                        href={c.image.link}
+                        target={c.image.newTab ? "_blank" : undefined}
+                        rel={c.image.newTab ? "noreferrer" : undefined}
+                        className="block h-full w-full"
+                      >
+                        <img
+                          src={c.image.url}
+                          alt={c.image.alt || ""}
+                          className="h-full w-full object-cover"
+                        />
+                      </a>
+                    ) : (
                       <img
                         src={c.image.url}
                         alt={c.image.alt || ""}
-                        className={cn(
-                          "mb-4 w-full rounded-xl object-cover",
-                          aspectClass(s.content.imageAspectRatio),
-                        )}
+                        className="h-full w-full object-cover"
                       />
-                    </a>
-                  ) : (
-                    <img
-                      src={c.image.url}
-                      alt={c.image.alt || ""}
-                      className={cn(
-                        "mb-4 w-full rounded-xl object-cover",
-                        aspectClass(s.content.imageAspectRatio),
-                      )}
-                    />
-                  ))}
-                {pick(ar, c.image?.caption_ar, c.image?.caption_en) && (
-                  <p
-                    className="mb-3 text-xs opacity-60 break-words"
-                    style={textStyle(s.content.captionStyle)}
-                  >
-                    {pick(ar, c.image?.caption_ar, c.image?.caption_en)}
-                  </p>
+                    )}
+                    {pick(ar, c.image?.caption_ar, c.image?.caption_en) && (
+                      <p
+                        className={cn(
+                          "text-xs break-words",
+                          s.content.captionStyle?.overlayMode
+                            ? captionPlacementClasses(s.content.captionStyle)
+                            : "mt-2 opacity-60",
+                        )}
+                        style={textStyle(s.content.captionStyle)}
+                      >
+                        {pick(ar, c.image?.caption_ar, c.image?.caption_en)}
+                      </p>
+                    )}
+                  </div>
                 )}
                 <EditCustom
                   s={s}
@@ -991,7 +1031,7 @@ function RenderGallery({ s }: { s: GallerySection }) {
         >
           {s.content.images.map((im, i) => {
             const media = (
-              <figure className="min-w-0">
+              <figure className="relative min-w-0 overflow-hidden rounded-xl">
                 <img
                   src={im.url}
                   alt={im.alt || ""}
@@ -1002,7 +1042,12 @@ function RenderGallery({ s }: { s: GallerySection }) {
                 />
                 {pick(ar, im.caption_ar, im.caption_en) && (
                   <figcaption
-                    className="mt-2 text-xs opacity-60 break-words"
+                    className={cn(
+                      "text-xs break-words",
+                      s.content.captionStyle?.overlayMode
+                        ? captionPlacementClasses(s.content.captionStyle)
+                        : "mt-2 opacity-60",
+                    )}
                     style={textStyle(s.content.captionStyle)}
                   >
                     {pick(ar, im.caption_ar, im.caption_en)}
@@ -1520,6 +1565,7 @@ function RenderBanner({ s }: { s: BannerSection }) {
       : c.alignment === "right"
         ? "items-end text-end"
         : "items-center text-center";
+  const vertical = verticalClass(c.verticalAlignment ?? "center");
   const shape =
     c.shape === "pill" ? "rounded-full" : c.shape === "square" ? "rounded-none" : "rounded-2xl";
   const overlay = c.overlay ?? 0.35;
@@ -1532,10 +1578,11 @@ function RenderBanner({ s }: { s: BannerSection }) {
     <section style={sectionStyle(s)} className="px-4">
       <div
         className={cn(
-          "relative w-full overflow-hidden flex flex-col justify-center mx-auto max-w-6xl",
+          "relative w-full overflow-hidden flex flex-col mx-auto max-w-6xl",
           h,
           shape,
           align,
+          vertical,
         )}
         style={{
           backgroundImage: img ? `url(${img})` : undefined,
@@ -1548,8 +1595,16 @@ function RenderBanner({ s }: { s: BannerSection }) {
           <div className="absolute inset-0" style={{ background: `rgba(0,0,0,${overlay})` }} />
         )}
         <div className="relative p-8 max-w-3xl">
-          {title && <h2 className="text-3xl md:text-4xl font-bold mb-2">{title}</h2>}
-          {subtitle && <p className="text-base md:text-lg opacity-90 mb-4">{subtitle}</p>}
+          {title && (
+            <h2 className="text-3xl md:text-4xl font-bold mb-2" style={textStyle(c.titleStyle)}>
+              {title}
+            </h2>
+          )}
+          {subtitle && (
+            <p className="text-base md:text-lg opacity-90 mb-4" style={textStyle(c.subtitleStyle)}>
+              {subtitle}
+            </p>
+          )}
           {b && btnLabel && (
             <a
               href={b.url || "#"}
@@ -1882,7 +1937,11 @@ function sectionStyle(s: Section): React.CSSProperties {
         ? "Inter, ui-sans-serif, system-ui, sans-serif"
         : typography.fontFamily === "mono"
           ? "ui-monospace, SFMono-Regular, Menlo, monospace"
-          : undefined;
+          : typography.fontFamily === "damas"
+            ? '"TS Damas Slab", "Damas", "Noto Naskh Arabic", serif'
+            : typography.fontFamily === "tek-arabic"
+              ? '"TEK Arabic", "Tajawal", "IBM Plex Sans Arabic", sans-serif'
+              : undefined;
   return {
     paddingTop: s.settings?.spacing?.paddingTop,
     paddingBottom: s.settings?.spacing?.paddingBottom,

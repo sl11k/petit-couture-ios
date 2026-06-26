@@ -156,9 +156,7 @@ function CategoryView() {
   const name = ar
     ? (category?.name_ar ?? seed?.name_ar ?? "تصنيف")
     : (category?.name_en ?? seed?.name_en ?? "Category");
-  const description = ar
-    ? (category?.description_ar ?? "")
-    : (category?.description_en ?? "");
+  const description = ar ? (category?.description_ar ?? "") : (category?.description_en ?? "");
   const banner = category?.banner_url ?? category?.image_url ?? seed?.image ?? null;
 
   // Seed fallback: when DB has no products yet, render a single "preview card" using seed data
@@ -178,7 +176,9 @@ function CategoryView() {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [onSaleOnly, setOnSaleOnly] = useState(false);
   const [ageFilter, setAgeFilter] = useState<string | null>(null);
-  useEffect(() => { setPriceMax(priceBounds[1]); }, [priceBounds[1]]);
+  useEffect(() => {
+    setPriceMax(priceBounds[1]);
+  }, [priceBounds[1]]);
 
   // Build the set of age buckets available across products
   const ageBuckets = useMemo(() => {
@@ -197,7 +197,8 @@ function CategoryView() {
     return (products as DbProduct[]).filter((p) => {
       if ((p.price ?? 0) > priceMax) return false;
       if (inStockOnly && (p.stock ?? 0) <= 0) return false;
-      if (onSaleOnly && !(p.compare_at_price && p.price && p.compare_at_price > p.price)) return false;
+      if (onSaleOnly && !(p.compare_at_price && p.price && p.compare_at_price > p.price))
+        return false;
       if (ageFilter) {
         const sizes = Array.isArray(p.sizes) ? (p.sizes as string[]) : [];
         const buckets = sizes.map((s) => sizeToAgeBucket(String(s))).filter(Boolean) as string[];
@@ -419,8 +420,12 @@ function FilterSortBar({
 
       {openFilter && (
         <>
-          <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setOpenFilter(false)} aria-hidden />
-          <div className="fixed inset-x-0 bottom-0 z-50 bg-background rounded-t-2xl border-t border-border p-5 max-w-[600px] mx-auto animate-in slide-in-from-bottom duration-200">
+          <div
+            className="fixed inset-0 z-[140] bg-black/40"
+            onClick={() => setOpenFilter(false)}
+            aria-hidden
+          />
+          <div className="fixed inset-x-0 bottom-0 z-[150] bg-background rounded-t-2xl border-t border-border p-5 max-w-[600px] mx-auto animate-in slide-in-from-bottom duration-200 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-semibold">{ar ? "تصفية" : "Filter"}</h3>
               <button onClick={() => setOpenFilter(false)} className="text-sm text-primary">
@@ -432,7 +437,9 @@ function FilterSortBar({
               <div>
                 <div className="flex justify-between text-[13px] mb-2">
                   <span>{ar ? "أقصى سعر" : "Max price"}</span>
-                  <span className="text-primary font-medium">{priceMax} {ar ? "ر.س" : "SAR"}</span>
+                  <span className="text-primary font-medium">
+                    {priceMax} {ar ? "ر.س" : "SAR"}
+                  </span>
                 </div>
                 <input
                   type="range"
@@ -512,11 +519,7 @@ function ProductCard({
   const wished = wishlist.has(wishId);
   return (
     <div className="group relative">
-      <Link
-        to="/product/$slug"
-        params={{ slug: p.slug ?? p.id }}
-        className="block"
-      >
+      <Link to="/product/$slug" params={{ slug: p.slug ?? p.id }} className="block">
         {p.image_url ? (
           <LazyImage
             src={p.image_url}
@@ -532,11 +535,7 @@ function ProductCard({
         <div className="mt-2.5">
           <p className="text-sm text-foreground line-clamp-1">{name}</p>
           <div className="flex items-baseline gap-2 mt-0.5">
-            {p.price != null && (
-              <p className="text-[13px] text-gold-deep">
-                {fmt(p.price)}
-              </p>
-            )}
+            {p.price != null && <p className="text-[13px] text-gold-deep">{fmt(p.price)}</p>}
             {p.compare_at_price != null && p.price != null && p.compare_at_price > p.price && (
               <p className="text-[12px] text-muted-foreground line-through">
                 {fmt(p.compare_at_price)}

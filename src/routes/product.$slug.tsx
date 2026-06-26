@@ -52,7 +52,7 @@ export const Route = createFileRoute("/product/$slug")({
     const { data } = await supabase
       .from("products")
       .select(
-        "slug,name_ar,name_en,description_ar,description_en,image_url,images,sku,brand,price,currency,stock,is_active,status",
+        "slug,name_ar,name_en,description_ar,description_en,size_guide_image_url,size_guide_content_ar,size_guide_content_en,image_url,images,sku,brand,price,currency,stock,is_active,status",
       )
       .eq("slug", params.slug)
       .eq("is_active", true)
@@ -1524,6 +1524,19 @@ function ProductDetails() {
                 <X className="h-4 w-4" />
               </button>
             </div>
+            {product.sizeGuideImageUrl && (
+              <img
+                src={product.sizeGuideImageUrl}
+                alt={t.sizeGuide}
+                className="mb-4 max-h-[55vh] w-full rounded-2xl object-contain bg-muted"
+                loading="eager"
+              />
+            )}
+            {product.sizeGuideContent && (
+              <p className="mb-4 whitespace-pre-wrap rounded-2xl bg-muted/50 p-3 text-[13px] leading-6 text-foreground/80">
+                {product.sizeGuideContent}
+              </p>
+            )}
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="text-muted-foreground text-[11.5px] tracking-luxury">

@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  getProductForCategory,
-  type Product as StaticProduct,
-} from "@/data/categories";
+import { getProductForCategory, type Product as StaticProduct } from "@/data/categories";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { sortByAge } from "@/lib/ageSort";
 
@@ -24,6 +21,9 @@ type DbRow = {
   description_en: string | null;
   short_description_ar: string | null;
   short_description_en: string | null;
+  size_guide_image_url?: string | null;
+  size_guide_content_ar?: string | null;
+  size_guide_content_en?: string | null;
   price: number | null;
   compare_at_price: number | null;
   currency: string | null;
@@ -54,9 +54,15 @@ function arr<T = unknown>(v: unknown): T[] {
         const p = JSON.parse(s);
         if (Array.isArray(p)) return p as T[];
         if (p && typeof p === "object") return [p as T];
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
-    if (s.includes(",")) return s.split(",").map((x) => x.trim()).filter(Boolean) as unknown as T[];
+    if (s.includes(","))
+      return s
+        .split(",")
+        .map((x) => x.trim())
+        .filter(Boolean) as unknown as T[];
     return [s as unknown as T];
   }
   if (v && typeof v === "object") return [v as T];
@@ -68,10 +74,7 @@ function mergeRowOntoBase(slug: string, row: DbRow | null, lang: "ar" | "en"): M
   if (!row) return base;
 
   const name =
-    (lang === "ar" ? row.name_ar : row.name_en) ||
-    row.name_en ||
-    row.name_ar ||
-    base.name;
+    (lang === "ar" ? row.name_ar : row.name_en) || row.name_en || row.name_ar || base.name;
   const shortDescription =
     (lang === "ar" ? row.short_description_ar : row.short_description_en) ||
     row.short_description_en ||
@@ -82,13 +85,17 @@ function mergeRowOntoBase(slug: string, row: DbRow | null, lang: "ar" | "en"): M
     row.description_en ||
     row.description_ar ||
     base.description;
+  const sizeGuideContent =
+    (lang === "ar" ? row.size_guide_content_ar : row.size_guide_content_en) ||
+    row.size_guide_content_en ||
+    row.size_guide_content_ar ||
+    base.sizeGuideContent;
 
   const imgs = arr<string>(row.images).filter(Boolean);
   // Combine main image_url with images[]; dedupe to avoid showing the same picture twice.
-  const combined = [
-    ...(row.image_url ? [row.image_url] : []),
-    ...imgs,
-  ].filter((v, i, a) => v && a.indexOf(v) === i);
+  const combined = [...(row.image_url ? [row.image_url] : []), ...imgs].filter(
+    (v, i, a) => v && a.indexOf(v) === i,
+  );
   const images = combined.length ? combined : base.images;
 
   const sizes = sortByAge(arr<string>(row.sizes).filter(Boolean), (s: string) => s);
@@ -131,12 +138,14 @@ function mergeRowOntoBase(slug: string, row: DbRow | null, lang: "ar" | "en"): M
     lowStockThreshold,
     status,
     videoUrl: row.video_url ?? base.videoUrl,
+    sizeGuideImageUrl: row.size_guide_image_url ?? base.sizeGuideImageUrl,
+    sizeGuideContent,
     __fromDb: true,
   };
 }
 
 const SELECT_COLS =
-  "id,slug,name_ar,name_en,brand,description_ar,description_en,short_description_ar,short_description_en,price,compare_at_price,currency,image_url,images,sizes,colors,stock,low_stock_threshold,status,video_url,sku,is_active";
+  "id,slug,name_ar,name_en,brand,description_ar,description_en,short_description_ar,short_description_en,size_guide_image_url,size_guide_content_ar,size_guide_content_en,price,compare_at_price,currency,image_url,images,sizes,colors,stock,low_stock_threshold,status,video_url,sku,is_active";
 
 export type SizeVariant = {
   size: string;
@@ -173,8 +182,13 @@ export function useProductSizeVariants(productId: string | null): {
       .order("sort_order", { ascending: true })
       .then(({ data }: { data: unknown }) => {
         if (cancelled) return;
-        const rows: SizeVariant[] = (arr<any>(data))
-          .filter((r) => r?.attributes?.kind === "size" && r?.is_active !== false && String(r?.size ?? "").trim() !== "")
+        const rows: SizeVariant[] = arr<any>(data)
+          .filter(
+            (r) =>
+              r?.attributes?.kind === "size" &&
+              r?.is_active !== false &&
+              String(r?.size ?? "").trim() !== "",
+          )
           .map((r) => ({
             size: String(r.size).trim(),
             sku: r.sku ?? null,
@@ -325,4 +339,3 @@ export function useDbRelatedProducts(
     .filter((p) => p.slug !== slug);
   return { products, loading };
 }
-

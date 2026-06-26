@@ -26,7 +26,15 @@ export function DesktopHeader() {
   const bagCount = mounted ? bag.count : 0;
 
   const tree = useDbCategoryTree();
-  const [navItems, setNavItems] = useState<Array<{slug:string; name_ar:string; name_en:string; href:string}>>([]);
+  const [navItems, setNavItems] = useState<
+    Array<{
+      slug: string;
+      name_ar: string;
+      name_en: string;
+      href: string;
+      category_id?: string | null;
+    }>
+  >([]);
   const [navLoaded, setNavLoaded] = useState(false);
   useEffect(() => {
     let active = true;
@@ -34,7 +42,7 @@ export function DesktopHeader() {
       try {
         const { data } = await (supabase as any)
           .from("header_nav_items")
-          .select("label_ar, label_en, href, is_active, display_order")
+          .select("label_ar, label_en, href, category_id, is_active, display_order")
           .eq("is_active", true)
           .order("display_order", { ascending: true });
         if (Array.isArray(data) && data.length) {
@@ -43,15 +51,19 @@ export function DesktopHeader() {
             name_ar: r.label_ar || r.label_en || "",
             name_en: r.label_en || r.label_ar || "",
             href: r.href as string,
+            category_id: r.category_id ?? null,
           }));
           if (active) setNavItems(rows);
         }
-      } catch (e) { console.error("[DesktopHeader] nav fetch failed", e); }
-      finally {
+      } catch (e) {
+        console.error("[DesktopHeader] nav fetch failed", e);
+      } finally {
         if (active) setNavLoaded(true);
       }
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
   const isActive = (path: string) =>
@@ -106,14 +118,20 @@ export function DesktopHeader() {
           </Link>
         </div>
 
-        <Link to="/" className="flex flex-col items-center select-none group" aria-label="Le Petit Paradis">
+        <Link
+          to="/"
+          className="flex flex-col items-center select-none group"
+          aria-label="Le Petit Paradis"
+        >
           <BrandLogo height={48} className="group-hover:opacity-90 transition" />
           <span className="mt-1 text-[9px] tracking-luxury text-muted-foreground">
             {isRTL ? "بوتيك أطفال فاخر" : "LUXURY KIDS BOUTIQUE"}
           </span>
         </Link>
 
-        <div className={["flex items-center gap-1", isRTL ? "justify-start" : "justify-end"].join(" ")}>
+        <div
+          className={["flex items-center gap-1", isRTL ? "justify-start" : "justify-end"].join(" ")}
+        >
           <Link
             to="/account"
             aria-label={isRTL ? "الحساب" : "Account"}
@@ -171,18 +189,37 @@ export function DesktopHeader() {
       <nav className="border-t border-border/60">
         <div className="mx-auto max-w-[1480px] px-10 h-12 flex items-center justify-center gap-1">
           {/* Shop by Age — hover dropdown */}
-          {showFallbackNav && <HoverDropdown
-            liveId="header-shop-by-age"
-            label={isRTL ? "تسوّق حسب العمر" : "SHOP BY AGE"}
-            items={ageGroups.map((g) => ({
-              slug: g.slug,
-              label: isRTL ? g.ar : g.en,
-            }))}
-          />}
+          {showFallbackNav && (
+            <HoverDropdown
+              liveId="header-shop-by-age"
+              label={isRTL ? "تسوّق حسب العمر" : "SHOP BY AGE"}
+              items={ageGroups.map((g) => ({
+                slug: g.slug,
+                label: isRTL ? g.ar : g.en,
+              }))}
+            />
+          )}
 
           {/* Custom header_nav_items override, if any */}
           {navItems.map((c) => {
             const active = location.pathname === c.href;
+            const linkedCategory =
+              (c.category_id ? tree.find((node) => node.id === c.category_id) : null) ??
+              tree.find((node) => c.href === `/category/${node.slug}`);
+            if (linkedCategory?.children?.length) {
+              return (
+                <HoverDropdown
+                  key={c.href}
+                  liveId={`header-nav-${c.slug}`}
+                  label={lang === "en" ? c.name_en.toUpperCase() : c.name_ar}
+                  parentHref={c.href}
+                  items={linkedCategory.children.map((ch) => ({
+                    slug: ch.slug,
+                    label: isRTL ? ch.name_ar : ch.name_en,
+                  }))}
+                />
+              );
+            }
             return (
               <Link
                 key={c.href}
@@ -190,7 +227,9 @@ export function DesktopHeader() {
                 to={c.href as any}
                 className={[
                   "px-4 h-9 inline-flex items-center rounded-xl text-[11.5px] tracking-luxury transition",
-                  active ? "bg-foreground text-background" : "text-foreground/70 hover:text-foreground hover:bg-cream-warm",
+                  active
+                    ? "bg-foreground text-background"
+                    : "text-foreground/70 hover:text-foreground hover:bg-cream-warm",
                 ].join(" ")}
               >
                 {lang === "en" ? c.name_en.toUpperCase() : c.name_ar}
@@ -199,40 +238,44 @@ export function DesktopHeader() {
           })}
 
           {/* Top-level DB categories. If a category has children, render as dropdown. */}
-          {showFallbackNav && tree.slice(0, 8).map((c) => {
-            const label = lang === "en"
-              ? (t.categories[c.slug] ?? c.name_en).toUpperCase()
-              : (t.categories[c.slug] ?? c.name_ar);
-            if (c.children.length > 0) {
+          {showFallbackNav &&
+            tree.slice(0, 8).map((c) => {
+              const label =
+                lang === "en"
+                  ? (t.categories[c.slug] ?? c.name_en).toUpperCase()
+                  : (t.categories[c.slug] ?? c.name_ar);
+              if (c.children.length > 0) {
+                return (
+                  <HoverDropdown
+                    key={c.slug}
+                    liveId={`header-category-${c.slug}`}
+                    label={label}
+                    parentHref={`/category/${c.slug}`}
+                    items={c.children.map((ch) => ({
+                      slug: ch.slug,
+                      label: isRTL ? ch.name_ar : ch.name_en,
+                    }))}
+                  />
+                );
+              }
+              const active = location.pathname === `/category/${c.slug}`;
               return (
-                <HoverDropdown
+                <Link
                   key={c.slug}
-                  liveId={`header-category-${c.slug}`}
-                  label={label}
-                  parentHref={`/category/${c.slug}`}
-                  items={c.children.map((ch) => ({
-                    slug: ch.slug,
-                    label: isRTL ? ch.name_ar : ch.name_en,
-                  }))}
-                />
+                  data-live-id={`header-category-${c.slug}`}
+                  to="/category/$slug"
+                  params={{ slug: c.slug }}
+                  className={[
+                    "px-4 h-9 inline-flex items-center rounded-xl text-[11.5px] tracking-luxury transition",
+                    active
+                      ? "bg-foreground text-background"
+                      : "text-foreground/70 hover:text-foreground hover:bg-cream-warm",
+                  ].join(" ")}
+                >
+                  {label}
+                </Link>
               );
-            }
-            const active = location.pathname === `/category/${c.slug}`;
-            return (
-              <Link
-                key={c.slug}
-                data-live-id={`header-category-${c.slug}`}
-                to="/category/$slug"
-                params={{ slug: c.slug }}
-                className={[
-                  "px-4 h-9 inline-flex items-center rounded-xl text-[11.5px] tracking-luxury transition",
-                  active ? "bg-foreground text-background" : "text-foreground/70 hover:text-foreground hover:bg-cream-warm",
-                ].join(" ")}
-              >
-                {label}
-              </Link>
-            );
-          })}
+            })}
         </div>
       </nav>
     </header>
