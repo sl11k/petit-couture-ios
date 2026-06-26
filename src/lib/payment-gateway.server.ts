@@ -4,7 +4,8 @@ import type { Json } from "@/integrations/supabase/types";
 
 export { amountsMatch, money } from "@/lib/payment-validation";
 
-export type AsyncPaymentGateway = "tabby" | "tamara";
+export type AsyncPaymentGateway = "stripe" | "tabby" | "tamara";
+export type CheckoutPaymentMethod = AsyncPaymentGateway | "card" | "apple_pay";
 
 type PaymentOrder = {
   id: string;
@@ -34,7 +35,7 @@ function asJson(value: unknown): Json {
 export async function loadCheckoutOrder(
   orderId: string,
   sessionId: string,
-  gateway: AsyncPaymentGateway,
+  gateway: CheckoutPaymentMethod,
 ): Promise<PaymentOrder & Record<string, unknown>> {
   const { data: order, error } = await supabaseAdmin
     .from("orders")

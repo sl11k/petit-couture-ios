@@ -125,6 +125,7 @@ import { Route as ApiV1InventoryRouteImport } from './routes/api.v1.inventory'
 import { Route as ApiPublicWebhooksRetryRouteImport } from './routes/api.public.webhooks-retry'
 import { Route as ApiPublicTamaraWebhookRouteImport } from './routes/api.public.tamara-webhook'
 import { Route as ApiPublicTabbyWebhookRouteImport } from './routes/api.public.tabby-webhook'
+import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe-webhook'
 import { Route as ApiPublicShippingWebhookRouteImport } from './routes/api.public.shipping-webhook'
 import { Route as ApiPublicPaymentWebhookRouteImport } from './routes/api.public.payment-webhook'
 import { Route as AdminWebhooksIdRouteImport } from './routes/admin.webhooks.$id'
@@ -728,6 +729,11 @@ const ApiPublicTabbyWebhookRoute = ApiPublicTabbyWebhookRouteImport.update({
   path: '/api/public/tabby-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
+  id: '/api/public/stripe-webhook',
+  path: '/api/public/stripe-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicShippingWebhookRoute =
   ApiPublicShippingWebhookRouteImport.update({
     id: '/api/public/shipping-webhook',
@@ -941,6 +947,7 @@ export interface FileRoutesByFullPath {
   '/admin/webhooks/$id': typeof AdminWebhooksIdRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/tabby-webhook': typeof ApiPublicTabbyWebhookRoute
   '/api/public/tamara-webhook': typeof ApiPublicTamaraWebhookRoute
   '/api/public/webhooks-retry': typeof ApiPublicWebhooksRetryRoute
@@ -1065,6 +1072,7 @@ export interface FileRoutesByTo {
   '/admin/webhooks/$id': typeof AdminWebhooksIdRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/tabby-webhook': typeof ApiPublicTabbyWebhookRoute
   '/api/public/tamara-webhook': typeof ApiPublicTamaraWebhookRoute
   '/api/public/webhooks-retry': typeof ApiPublicWebhooksRetryRoute
@@ -1203,6 +1211,7 @@ export interface FileRoutesById {
   '/admin/webhooks/$id': typeof AdminWebhooksIdRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/tabby-webhook': typeof ApiPublicTabbyWebhookRoute
   '/api/public/tamara-webhook': typeof ApiPublicTamaraWebhookRoute
   '/api/public/webhooks-retry': typeof ApiPublicWebhooksRetryRoute
@@ -1342,6 +1351,7 @@ export interface FileRouteTypes {
     | '/admin/webhooks/$id'
     | '/api/public/payment-webhook'
     | '/api/public/shipping-webhook'
+    | '/api/public/stripe-webhook'
     | '/api/public/tabby-webhook'
     | '/api/public/tamara-webhook'
     | '/api/public/webhooks-retry'
@@ -1466,6 +1476,7 @@ export interface FileRouteTypes {
     | '/admin/webhooks/$id'
     | '/api/public/payment-webhook'
     | '/api/public/shipping-webhook'
+    | '/api/public/stripe-webhook'
     | '/api/public/tabby-webhook'
     | '/api/public/tamara-webhook'
     | '/api/public/webhooks-retry'
@@ -1603,6 +1614,7 @@ export interface FileRouteTypes {
     | '/admin/webhooks/$id'
     | '/api/public/payment-webhook'
     | '/api/public/shipping-webhook'
+    | '/api/public/stripe-webhook'
     | '/api/public/tabby-webhook'
     | '/api/public/tamara-webhook'
     | '/api/public/webhooks-retry'
@@ -1657,6 +1669,7 @@ export interface RootRouteChildren {
   SupportNewRoute: typeof SupportNewRoute
   ApiPublicPaymentWebhookRoute: typeof ApiPublicPaymentWebhookRoute
   ApiPublicShippingWebhookRoute: typeof ApiPublicShippingWebhookRoute
+  ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiPublicTabbyWebhookRoute: typeof ApiPublicTabbyWebhookRoute
   ApiPublicTamaraWebhookRoute: typeof ApiPublicTamaraWebhookRoute
   ApiPublicWebhooksRetryRoute: typeof ApiPublicWebhooksRetryRoute
@@ -2481,6 +2494,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTabbyWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/stripe-webhook': {
+      id: '/api/public/stripe-webhook'
+      path: '/api/public/stripe-webhook'
+      fullPath: '/api/public/stripe-webhook'
+      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/shipping-webhook': {
       id: '/api/public/shipping-webhook'
       path: '/api/public/shipping-webhook'
@@ -3007,6 +3027,7 @@ const rootRouteChildren: RootRouteChildren = {
   SupportNewRoute: SupportNewRoute,
   ApiPublicPaymentWebhookRoute: ApiPublicPaymentWebhookRoute,
   ApiPublicShippingWebhookRoute: ApiPublicShippingWebhookRoute,
+  ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiPublicTabbyWebhookRoute: ApiPublicTabbyWebhookRoute,
   ApiPublicTamaraWebhookRoute: ApiPublicTamaraWebhookRoute,
   ApiPublicWebhooksRetryRoute: ApiPublicWebhooksRetryRoute,

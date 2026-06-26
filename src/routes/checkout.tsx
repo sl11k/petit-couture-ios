@@ -33,16 +33,13 @@ import { validateCoupon } from "@/lib/coupons.functions";
 import { FreeShippingProgress } from "@/components/FreeShippingProgress";
 
 // Map only loads on the client when entering step 2.
-const LocationPicker = lazy(
-  () => import("@/components/checkout/LocationPicker"),
-);
+const LocationPicker = lazy(() => import("@/components/checkout/LocationPicker"));
 
 export const Route = createFileRoute("/checkout")({
   head: () =>
     buildMeta({
       title: "إتمام الطلب — Le Petit Paradis",
-      description:
-        "أكمل طلبك بأمان: بيانات التواصل، موقع التوصيل، ودفع آمن في خطوات قليلة.",
+      description: "أكمل طلبك بأمان: بيانات التواصل، موقع التوصيل، ودفع آمن في خطوات قليلة.",
       path: "/checkout",
       noindex: true,
     }),
@@ -62,10 +59,38 @@ const SHIPPING_METHODS: Array<{
   eta_en: string;
   fee: number;
 }> = [
-  { id: "standard", label_ar: "توصيل قياسي داخل السعودية", label_en: "Standard (KSA)", eta_ar: "٣–٥ أيام عمل", eta_en: "3–5 business days", fee: 25 },
-  { id: "express", label_ar: "توصيل سريع داخل السعودية", label_en: "Express (KSA)", eta_ar: "خلال ٢٤ ساعة", eta_en: "Within 24 hours", fee: 45 },
-  { id: "international", label_ar: "شحن دولي (دول الخليج)", label_en: "International (GCC)", eta_ar: "٧–١٤ يوم عمل", eta_en: "7–14 business days", fee: 120 },
-  { id: "pickup", label_ar: "استلام من الفرع", label_en: "Store pickup", eta_ar: "جاهز خلال ساعتين", eta_en: "Ready in 2 hours", fee: 0 },
+  {
+    id: "standard",
+    label_ar: "توصيل قياسي داخل السعودية",
+    label_en: "Standard (KSA)",
+    eta_ar: "٣–٥ أيام عمل",
+    eta_en: "3–5 business days",
+    fee: 25,
+  },
+  {
+    id: "express",
+    label_ar: "توصيل سريع داخل السعودية",
+    label_en: "Express (KSA)",
+    eta_ar: "خلال ٢٤ ساعة",
+    eta_en: "Within 24 hours",
+    fee: 45,
+  },
+  {
+    id: "international",
+    label_ar: "شحن دولي (دول الخليج)",
+    label_en: "International (GCC)",
+    eta_ar: "٧–١٤ يوم عمل",
+    eta_en: "7–14 business days",
+    fee: 120,
+  },
+  {
+    id: "pickup",
+    label_ar: "استلام من الفرع",
+    label_en: "Store pickup",
+    eta_ar: "جاهز خلال ساعتين",
+    eta_en: "Ready in 2 hours",
+    fee: 0,
+  },
 ];
 
 const FREE_SHIPPING_THRESHOLD = 500;
@@ -161,10 +186,17 @@ function CheckoutPage() {
         });
         if (cancelled) return;
         if (res.ok) setCoupon({ code: res.code, discount: res.discount_amount });
-        else { setCoupon(null); setCouponError(isRTL ? res.message_ar : res.message_en); }
-      } catch { /* keep current */ }
+        else {
+          setCoupon(null);
+          setCouponError(isRTL ? res.message_ar : res.message_en);
+        }
+      } catch {
+        /* keep current */
+      }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bag.subtotal]);
 
@@ -197,7 +229,11 @@ function CheckoutPage() {
     }
   };
 
-  const removeCoupon = () => { setCoupon(null); setCouponInput(""); setCouponError(null); };
+  const removeCoupon = () => {
+    setCoupon(null);
+    setCouponInput("");
+    setCouponError(null);
+  };
 
   // ───── Validation per step ─────
   const errs = useMemo(() => {
@@ -266,7 +302,9 @@ function CheckoutPage() {
           },
           { onConflict: "session_id" },
         );
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bagEmpty]);
@@ -293,7 +331,7 @@ function CheckoutPage() {
       lng: loc.lng,
       geoAddress: loc.geoAddress,
     } as Address);
-    setStep((s) => (Math.min(4, s + 1) as Step));
+    setStep((s) => Math.min(4, s + 1) as Step);
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const prev = () => {
@@ -301,7 +339,7 @@ function CheckoutPage() {
       router.history.back();
       return;
     }
-    setStep((s) => (Math.max(1, s - 1) as Step));
+    setStep((s) => Math.max(1, s - 1) as Step);
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -425,6 +463,36 @@ function CheckoutPage() {
         }
       }
 
+      // Stripe: card and Apple Pay go through the hosted Stripe Checkout page.
+      // Apple Pay is surfaced by Stripe automatically when the domain/device supports it.
+      if (payment === "card" || payment === "apple_pay") {
+        try {
+          const { createStripeCheckout } = await import("@/lib/stripe.functions");
+          const result = await createStripeCheckout({
+            data: {
+              order_id: order.id,
+              session_id: getCurrentSessionId(),
+              method: payment,
+              lang: isRTL ? "ar" : "en",
+            },
+          });
+          if (result.ok) {
+            placedRef.current = true;
+            bag.clear();
+            window.location.href = result.checkout_url;
+            return;
+          }
+          toast.error(result.message);
+          setPlacing(false);
+          return;
+        } catch (err) {
+          console.error("Stripe checkout error", err);
+          toast.error(isRTL ? "تعذّر بدء دفع البطاقة" : "Could not start card payment");
+          setPlacing(false);
+          return;
+        }
+      }
+
       placedRef.current = true;
       bag.clear();
       navigate({
@@ -446,9 +514,10 @@ function CheckoutPage() {
     ].join(" ");
 
   // ───── UI ─────
-  const stepLabels = lang === "ar"
-    ? ["معلوماتك", "العنوان", "الشحن والدفع", "المراجعة"]
-    : ["Your info", "Address", "Shipping & Pay", "Review"];
+  const stepLabels =
+    lang === "ar"
+      ? ["معلوماتك", "العنوان", "الشحن والدفع", "المراجعة"]
+      : ["Your info", "Address", "Shipping & Pay", "Review"];
 
   return (
     <div className="min-h-screen w-full bg-cream flex justify-center">
@@ -509,11 +578,17 @@ function CheckoutPage() {
                   {isRTL ? "معلومات التواصل" : "Contact information"}
                 </h1>
                 <p className="mt-1 text-[12px] text-muted-foreground">
-                  {isRTL ? "نحتاجها لإرسال تفاصيل طلبك وتأكيد التوصيل" : "Used to send your order details and confirm delivery"}
+                  {isRTL
+                    ? "نحتاجها لإرسال تفاصيل طلبك وتأكيد التوصيل"
+                    : "Used to send your order details and confirm delivery"}
                 </p>
               </div>
 
-              <Field icon={<User className="h-4 w-4" />} label={isRTL ? "الاسم الكامل" : "Full name"} error={errs.fullName}>
+              <Field
+                icon={<User className="h-4 w-4" />}
+                label={isRTL ? "الاسم الكامل" : "Full name"}
+                error={errs.fullName}
+              >
                 <input
                   className={fieldClass(!!errs.fullName)}
                   value={contact.fullName}
@@ -522,7 +597,11 @@ function CheckoutPage() {
                   autoComplete="name"
                 />
               </Field>
-              <Field icon={<Phone className="h-4 w-4" />} label={isRTL ? "رقم الجوال" : "Mobile number"} error={errs.phone}>
+              <Field
+                icon={<Phone className="h-4 w-4" />}
+                label={isRTL ? "رقم الجوال" : "Mobile number"}
+                error={errs.phone}
+              >
                 <input
                   className={fieldClass(!!errs.phone)}
                   value={contact.phone}
@@ -533,7 +612,11 @@ function CheckoutPage() {
                   dir="ltr"
                 />
               </Field>
-              <Field icon={<Mail className="h-4 w-4" />} label={isRTL ? "البريد الإلكتروني" : "Email"} error={errs.email}>
+              <Field
+                icon={<Mail className="h-4 w-4" />}
+                label={isRTL ? "البريد الإلكتروني" : "Email"}
+                error={errs.email}
+              >
                 <input
                   className={fieldClass(!!errs.email)}
                   value={contact.email}
@@ -553,12 +636,16 @@ function CheckoutPage() {
                   onChange={(e) => setContact({ ...contact, createAccount: e.target.checked })}
                 />
                 <span className="text-[12.5px] text-foreground/80 leading-snug">
-                  {isRTL ? "أنشئ حساباً بعد إكمال الطلب لتتبع الطلبات وحفظ العناوين" : "Create an account after this order to track orders and save addresses"}
+                  {isRTL
+                    ? "أنشئ حساباً بعد إكمال الطلب لتتبع الطلبات وحفظ العناوين"
+                    : "Create an account after this order to track orders and save addresses"}
                 </span>
               </label>
 
               <p className="text-[11px] text-muted-foreground text-center">
-                {isRTL ? "أو يمكنك إكمال الطلب كزائر — لا حاجة لحساب." : "Or check out as guest — no account needed."}
+                {isRTL
+                  ? "أو يمكنك إكمال الطلب كزائر — لا حاجة لحساب."
+                  : "Or check out as guest — no account needed."}
               </p>
             </section>
           )}
@@ -571,7 +658,9 @@ function CheckoutPage() {
                   {isRTL ? "عنوان التوصيل" : "Delivery address"}
                 </h1>
                 <p className="mt-1 text-[12px] text-muted-foreground">
-                  {isRTL ? "حدّد موقعك على الخريطة لتوصيل أسرع وأدق" : "Set your location on the map for faster, accurate delivery"}
+                  {isRTL
+                    ? "حدّد موقعك على الخريطة لتوصيل أسرع وأدق"
+                    : "Set your location on the map for faster, accurate delivery"}
                 </p>
               </div>
 
@@ -640,7 +729,9 @@ function CheckoutPage() {
                   className="w-full min-h-[72px] rounded-[16px] bg-cream-warm/40 px-4 py-3 text-[14px] text-foreground placeholder:text-muted-foreground/70 outline-none border border-border focus:border-gold resize-none"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder={isRTL ? "بجانب البقالة، الباب الخلفي…" : "Next to the grocery, back door…"}
+                  placeholder={
+                    isRTL ? "بجانب البقالة، الباب الخلفي…" : "Next to the grocery, back door…"
+                  }
                   rows={3}
                   maxLength={240}
                 />
@@ -678,7 +769,9 @@ function CheckoutPage() {
                         onClick={() => setShippingId(m.id)}
                         className={[
                           "w-full text-start p-4 rounded-[16px] border transition flex items-center gap-3",
-                          active ? "border-gold bg-gold/5 shadow-sm" : "border-border bg-cream-warm/30",
+                          active
+                            ? "border-gold bg-gold/5 shadow-sm"
+                            : "border-border bg-cream-warm/30",
                         ].join(" ")}
                       >
                         <div
@@ -703,7 +796,9 @@ function CheckoutPage() {
                               {isRTL ? "مجاني" : "FREE"}
                             </span>
                           ) : (
-                            <span>{fmt(fee)} {isRTL ? "ر.س" : "SAR"}</span>
+                            <span>
+                              {fmt(fee)} {isRTL ? "ر.س" : "SAR"}
+                            </span>
                           )}
                         </div>
                       </button>
@@ -805,7 +900,9 @@ function CheckoutPage() {
                   {isRTL ? "مراجعة الطلب" : "Review your order"}
                 </h1>
                 <p className="mt-1 text-[12px] text-muted-foreground">
-                  {isRTL ? "تأكد من التفاصيل قبل التأكيد" : "Confirm everything before placing the order"}
+                  {isRTL
+                    ? "تأكد من التفاصيل قبل التأكيد"
+                    : "Confirm everything before placing the order"}
                 </p>
               </div>
 
@@ -819,7 +916,11 @@ function CheckoutPage() {
                   {bag.items.map((it, i) => (
                     <li key={i} className="flex gap-3">
                       {it.image ? (
-                        <img src={it.image} alt={it.name} className="h-14 w-14 rounded-[10px] object-cover bg-cream-warm" />
+                        <img
+                          src={it.image}
+                          alt={it.name}
+                          className="h-14 w-14 rounded-[10px] object-cover bg-cream-warm"
+                        />
                       ) : (
                         <div className="h-14 w-14 rounded-[10px] bg-cream-warm" />
                       )}
@@ -845,7 +946,9 @@ function CheckoutPage() {
               >
                 <div className="text-[13px] text-foreground">{contact.fullName}</div>
                 <div className="text-[12px] text-muted-foreground">{contact.email}</div>
-                <div className="text-[12px] text-muted-foreground" dir="ltr">{contact.phone}</div>
+                <div className="text-[12px] text-muted-foreground" dir="ltr">
+                  {contact.phone}
+                </div>
               </ReviewBlock>
 
               {/* Address */}
@@ -857,14 +960,17 @@ function CheckoutPage() {
                 <div className="flex items-start gap-2">
                   <MapPin className="h-4 w-4 text-gold mt-0.5 shrink-0" />
                   <div className="flex-1 text-[12.5px] text-foreground/90 leading-snug">
-                    {loc.geoAddress ?? [loc.street, loc.district, loc.city].filter(Boolean).join("، ")}
+                    {loc.geoAddress ??
+                      [loc.street, loc.district, loc.city].filter(Boolean).join("، ")}
                     {buildingNumber && (
                       <span className="block text-[11.5px] text-muted-foreground mt-0.5">
                         {isRTL ? "مبنى" : "Bldg."} {buildingNumber}
                       </span>
                     )}
                     {notes && (
-                      <span className="block text-[11.5px] text-muted-foreground mt-1 italic">"{notes}"</span>
+                      <span className="block text-[11.5px] text-muted-foreground mt-1 italic">
+                        "{notes}"
+                      </span>
                     )}
                   </div>
                 </div>
@@ -878,23 +984,32 @@ function CheckoutPage() {
               >
                 <div className="flex items-center gap-2 text-[12.5px]">
                   <Truck className="h-4 w-4 text-gold" />
-                  <span className="text-foreground">{lang === "ar" ? shipping.label_ar : shipping.label_en}</span>
-                  <span className="text-muted-foreground">· {lang === "ar" ? shipping.eta_ar : shipping.eta_en}</span>
+                  <span className="text-foreground">
+                    {lang === "ar" ? shipping.label_ar : shipping.label_en}
+                  </span>
+                  <span className="text-muted-foreground">
+                    · {lang === "ar" ? shipping.eta_ar : shipping.eta_en}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2 text-[12.5px] mt-2">
                   {payment === "card" && <CreditCard className="h-4 w-4 text-gold" />}
                   {payment === "apple_pay" && <Apple className="h-4 w-4 text-gold" />}
                   {payment === "bank_transfer" && <Landmark className="h-4 w-4 text-gold" />}
                   {payment === "cod" && <Wallet className="h-4 w-4 text-gold" />}
-                  {payment === "tabby" && <span className="text-[10px] font-bold text-gold">tabby</span>}
-                  {payment === "tamara" && <span className="text-[10px] font-bold text-gold">tamara</span>}
+                  {payment === "tabby" && (
+                    <span className="text-[10px] font-bold text-gold">tabby</span>
+                  )}
+                  {payment === "tamara" && (
+                    <span className="text-[10px] font-bold text-gold">tamara</span>
+                  )}
                   <span className="text-foreground">
                     {payment === "card" && (isRTL ? "بطاقة ائتمان" : "Credit card")}
                     {payment === "apple_pay" && "Apple Pay"}
                     {payment === "bank_transfer" && (isRTL ? "تحويل بنكي" : "Bank transfer")}
                     {payment === "cod" && (isRTL ? "الدفع عند الاستلام" : "Cash on delivery")}
                     {payment === "tabby" && (isRTL ? "تابي — 4 دفعات" : "Tabby — 4 installments")}
-                    {payment === "tamara" && (isRTL ? "تمارا — 4 دفعات" : "Tamara — 4 installments")}
+                    {payment === "tamara" &&
+                      (isRTL ? "تمارا — 4 دفعات" : "Tamara — 4 installments")}
                   </span>
                 </div>
               </ReviewBlock>
@@ -908,7 +1023,9 @@ function CheckoutPage() {
                   <div className="flex items-center justify-between gap-3 p-3 rounded-[12px] bg-gold/5 border border-gold/40">
                     <div className="flex items-center gap-2">
                       <Check className="h-4 w-4 text-gold" />
-                      <span className="text-[13px] font-medium text-foreground tracking-soft">{coupon.code}</span>
+                      <span className="text-[13px] font-medium text-foreground tracking-soft">
+                        {coupon.code}
+                      </span>
                       <span className="text-[11.5px] text-muted-foreground">
                         −{fmt(coupon.discount)} {isRTL ? "ر.س" : "SAR"}
                       </span>
@@ -927,8 +1044,16 @@ function CheckoutPage() {
                       <input
                         className={fieldClass(false) + " flex-1 uppercase"}
                         value={couponInput}
-                        onChange={(e) => { setCouponInput(e.target.value); setCouponError(null); }}
-                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void applyCoupon(); } }}
+                        onChange={(e) => {
+                          setCouponInput(e.target.value);
+                          setCouponError(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            void applyCoupon();
+                          }
+                        }}
                         placeholder={isRTL ? "أدخل كود الكوبون" : "Enter coupon code"}
                         dir="ltr"
                         autoCapitalize="characters"
@@ -939,28 +1064,63 @@ function CheckoutPage() {
                         disabled={couponBusy || !couponInput.trim()}
                         className="h-[52px] px-5 rounded-[16px] bg-foreground text-background text-[13px] tracking-soft transition active:scale-[0.98] disabled:opacity-50"
                       >
-                        {couponBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : (isRTL ? "تطبيق" : "Apply")}
+                        {couponBusy ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : isRTL ? (
+                          "تطبيق"
+                        ) : (
+                          "Apply"
+                        )}
                       </button>
                     </div>
-                    {couponError && <p className="mt-2 text-[11.5px] text-destructive">{couponError}</p>}
+                    {couponError && (
+                      <p className="mt-2 text-[11.5px] text-destructive">{couponError}</p>
+                    )}
                   </>
                 )}
               </div>
 
               {/* Pricing breakdown */}
               <div className="rounded-[16px] border border-border bg-cream-warm/30 p-4 space-y-2">
-                <Row label={isRTL ? "المجموع الفرعي" : "Subtotal"} value={`${fmt(pricing.subtotal)} ${isRTL ? "ر.س" : "SAR"}`} />
-                <Row label={isRTL ? "الشحن" : "Shipping"} value={pricing.shipping_fee === 0 ? (isRTL ? "مجاني" : "FREE") : `${fmt(pricing.shipping_fee)} ${isRTL ? "ر.س" : "SAR"}`} />
-                <Row label={isRTL ? "ضريبة القيمة المضافة (15%)" : "VAT (15%)"} value={`${fmt(pricing.tax)} ${isRTL ? "ر.س" : "SAR"}`} />
+                <Row
+                  label={isRTL ? "المجموع الفرعي" : "Subtotal"}
+                  value={`${fmt(pricing.subtotal)} ${isRTL ? "ر.س" : "SAR"}`}
+                />
+                <Row
+                  label={isRTL ? "الشحن" : "Shipping"}
+                  value={
+                    pricing.shipping_fee === 0
+                      ? isRTL
+                        ? "مجاني"
+                        : "FREE"
+                      : `${fmt(pricing.shipping_fee)} ${isRTL ? "ر.س" : "SAR"}`
+                  }
+                />
+                <Row
+                  label={isRTL ? "ضريبة القيمة المضافة (15%)" : "VAT (15%)"}
+                  value={`${fmt(pricing.tax)} ${isRTL ? "ر.س" : "SAR"}`}
+                />
                 {pricing.discount > 0 && (
                   <Row
-                    label={<span className="text-gold">{isRTL ? `خصم (${coupon?.code})` : `Discount (${coupon?.code})`}</span>}
-                    value={<span className="text-gold">−{fmt(pricing.discount)} {isRTL ? "ر.س" : "SAR"}</span>}
+                    label={
+                      <span className="text-gold">
+                        {isRTL ? `خصم (${coupon?.code})` : `Discount (${coupon?.code})`}
+                      </span>
+                    }
+                    value={
+                      <span className="text-gold">
+                        −{fmt(pricing.discount)} {isRTL ? "ر.س" : "SAR"}
+                      </span>
+                    }
                   />
                 )}
                 <div className="h-px bg-border my-2" />
                 <Row
-                  label={<span className="font-medium text-foreground">{isRTL ? "الإجمالي" : "Total"}</span>}
+                  label={
+                    <span className="font-medium text-foreground">
+                      {isRTL ? "الإجمالي" : "Total"}
+                    </span>
+                  }
                   value={
                     <span className="font-serif text-[18px] text-foreground">
                       {fmt(pricing.total)} {isRTL ? "ر.س" : "SAR"}
@@ -992,20 +1152,31 @@ function CheckoutPage() {
               </label>
 
               <div className="flex items-center justify-center gap-4 text-[10.5px] tracking-luxury text-muted-foreground pt-2">
-                <span className="inline-flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" />{isRTL ? "دفع آمن" : "SECURE"}</span>
-                <span className="inline-flex items-center gap-1"><Lock className="h-3.5 w-3.5" />{isRTL ? "بيانات مشفّرة" : "ENCRYPTED"}</span>
-                <span className="inline-flex items-center gap-1"><Building2 className="h-3.5 w-3.5" />{isRTL ? "ضمان رسمي" : "WARRANTY"}</span>
+                <span className="inline-flex items-center gap-1">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  {isRTL ? "دفع آمن" : "SECURE"}
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <Lock className="h-3.5 w-3.5" />
+                  {isRTL ? "بيانات مشفّرة" : "ENCRYPTED"}
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <Building2 className="h-3.5 w-3.5" />
+                  {isRTL ? "ضمان رسمي" : "WARRANTY"}
+                </span>
               </div>
             </section>
           )}
         </main>
 
         {/* ───── Sticky bottom bar ───── */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none">
+        <div className="fixed bottom-[calc(64px+env(safe-area-inset-bottom))] lg:bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none">
           <div className="w-full max-w-[460px] bg-background/98 backdrop-blur-md border-t border-border px-5 pt-3 pb-5 pointer-events-auto shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.08)]">
             {step < 4 && (
               <div className="flex items-center justify-between mb-2 text-[12px]">
-                <span className="text-muted-foreground">{isRTL ? "الإجمالي المؤقت" : "Estimated total"}</span>
+                <span className="text-muted-foreground">
+                  {isRTL ? "الإجمالي المؤقت" : "Estimated total"}
+                </span>
                 <span className="font-serif text-[16px] text-foreground">
                   {fmt(pricing.total)} {isRTL ? "ر.س" : "SAR"}
                 </span>
@@ -1034,7 +1205,9 @@ function CheckoutPage() {
               ) : (
                 <>
                   <Lock className="h-4 w-4" />
-                  {isRTL ? `تأكيد الطلب · ${fmt(pricing.total)} ر.س` : `Place order · ${fmt(pricing.total)} SAR`}
+                  {isRTL
+                    ? `تأكيد الطلب · ${fmt(pricing.total)} ر.س`
+                    : `Place order · ${fmt(pricing.total)} SAR`}
                 </>
               )}
             </button>
@@ -1092,9 +1265,7 @@ function PayOption({
         active ? "border-gold bg-gold/5 shadow-sm" : "border-border bg-cream-warm/30",
       ].join(" ")}
     >
-      {active && (
-        <Check className="absolute top-2 end-2 h-3.5 w-3.5 text-gold" />
-      )}
+      {active && <Check className="absolute top-2 end-2 h-3.5 w-3.5 text-gold" />}
       <div className="text-foreground inline-flex items-center gap-1.5 text-[13px] font-medium">
         {icon}
         {label}
@@ -1133,13 +1304,7 @@ function ReviewBlock({
   );
 }
 
-function Row({
-  label,
-  value,
-}: {
-  label: React.ReactNode;
-  value: React.ReactNode;
-}) {
+function Row({ label, value }: { label: React.ReactNode; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between text-[13px]">
       <span className="text-muted-foreground">{label}</span>

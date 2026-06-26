@@ -28,6 +28,7 @@ import { StylePopover, type StyleValue } from "./StylePopover";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useLiveEdit } from "./LiveEditContext";
+import { supabase } from "@/integrations/supabase/client";
 import {
   computeSelector,
   resolveSelector,
@@ -171,6 +172,7 @@ export function SiteInlineEditor({
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
   const [draggedSection, setDraggedSection] = useState<number | null>(null);
   const draftRef = useRef<DraftMap>({});
+  const storefrontSettingsRef = useRef<Record<string, string>>({});
   const loadedOverridesRef = useRef<Awaited<ReturnType<typeof loadOverrides>>>([]);
   const langRef = useRef(lang);
   useEffect(() => {
@@ -243,14 +245,42 @@ export function SiteInlineEditor({
     if (contactText) {
       anchor.textContent = contactText;
       setField(selector, "text", contactText);
+      if (liveId === "footer-email") storefrontSettingsRef.current.footer_email = contactText;
+      if (liveId === "footer-phone") storefrontSettingsRef.current.footer_phone = contactText;
     }
+  };
+
+  const syncStorefrontSettings = async () => {
+    const payload = storefrontSettingsRef.current;
+    if (!Object.keys(payload).length) return { error: null };
+    const { error } = await supabase
+      .from("storefront_settings")
+      .upsert({ id: true, ...payload }, { onConflict: "id" });
+    if (!error) storefrontSettingsRef.current = {};
+    return { error };
   };
 
   const captureFocusedText = () => {
     const root = rootRef.current;
     const active = document.activeElement as HTMLElement | null;
     if (!root || !active || !root.contains(active) || active.dataset.lpeKind !== "text") return;
-    setField(computeSelector(root, active), "text", active.innerText);
+    const value = active.innerText.trim();
+    const selector = computeSelector(root, active);
+    setField(selector, "text", active.innerText);
+    if (active instanceof HTMLAnchorElement) {
+      const liveId = active.getAttribute("data-live-id");
+      if (liveId === "footer-email") {
+        const href = `mailto:${value}`;
+        active.setAttribute("href", href);
+        setField(selector, "href", href);
+        storefrontSettingsRef.current.footer_email = value;
+      } else if (liveId === "footer-phone") {
+        const href = `tel:${value}`;
+        active.setAttribute("href", href);
+        setField(selector, "href", href);
+        storefrontSettingsRef.current.footer_phone = value;
+      }
+    }
   };
 
   // Load existing drafts/published into the DOM
@@ -383,7 +413,9 @@ export function SiteInlineEditor({
           const href = `tel:${value.trim()}`;
           el.setAttribute("href", href);
           setField(sel, "href", href);
+          storefrontSettingsRef.current.footer_phone = value.trim();
         }
+        if (liveId === "footer-email") storefrontSettingsRef.current.footer_email = value.trim();
       }
       el.style.outline = "1px dashed transparent";
     }
@@ -471,9 +503,10 @@ export function SiteInlineEditor({
     captureFocusedText();
     setSaving(true);
     const { error } = (await persistDraft(pagePath, draftRef.current)) as any;
+    const settingsResult = await syncStorefrontSettings();
     const pageSaved = await pageEditor.saveDraft();
     setSaving(false);
-    if (error || !pageSaved) {
+    if (error || settingsResult.error || !pageSaved) {
       toast.error(lang === "ar" ? "فشل حفظ المسودة" : "Could not save draft");
       return;
     }
@@ -487,9 +520,10 @@ export function SiteInlineEditor({
     captureFocusedText();
     setPublishing(true);
     const { error } = await publishDraft(pagePath, draftRef.current);
+    const settingsResult = await syncStorefrontSettings();
     const pagePublished = await pageEditor.publish();
     setPublishing(false);
-    if (error || !pagePublished) {
+    if (error || settingsResult.error || !pagePublished) {
       toast.error(lang === "ar" ? "فشل نشر التعديلات" : "Could not publish changes");
       return;
     }

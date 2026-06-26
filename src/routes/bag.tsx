@@ -27,8 +27,7 @@ export const Route = createFileRoute("/bag")({
   head: () =>
     buildMeta({
       title: "حقيبتك — Le Petit Paradis",
-      description:
-        "راجع القطع التي اخترتها وأكمل عملية الشراء عبر دفع آمن.",
+      description: "راجع القطع التي اخترتها وأكمل عملية الشراء عبر دفع آمن.",
       path: "/bag",
       noindex: true,
     }),
@@ -38,7 +37,6 @@ export const Route = createFileRoute("/bag")({
 const FREE_SHIPPING_THRESHOLD = 500;
 const SHIPPING_FEE = 25;
 const TAX_RATE = 0.15;
-
 
 function BagPage() {
   const router = useRouter();
@@ -78,14 +76,12 @@ function BagPage() {
   // avoid mismatches between the bag preview and the real order total.
   const subtotal = bag.subtotal;
   const qualifiesFreeShip = subtotal >= FREE_SHIPPING_THRESHOLD;
-  const shipping = bag.items.length === 0 ? 0 : (qualifiesFreeShip ? 0 : SHIPPING_FEE);
+  const shipping = bag.items.length === 0 ? 0 : qualifiesFreeShip ? 0 : SHIPPING_FEE;
   const tax = Math.round(subtotal * TAX_RATE);
   const total = subtotal + shipping + tax;
 
   const remainingForFreeShip = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
   const freeShipProgress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
-
-
 
   const moveToWishlist = (itemId: string, slug: string) => {
     wishlist.toggle(`product:${slug}`, "wishlist_screen");
@@ -122,8 +118,8 @@ function BagPage() {
     color: ar ? "اللون" : "Color",
     remove: ar ? "حذف" : "Remove",
     moveToWishlist: ar ? "نقل للمفضلة" : "Move to wishlist",
-    lowStock: (n: number) => ar ? `بقي ${n} فقط` : `Only ${n} left`,
-    overStock: (n: number) => ar ? `الحد الأقصى المتاح ${n}` : `Max available: ${n}`,
+    lowStock: (n: number) => (ar ? `بقي ${n} فقط` : `Only ${n} left`),
+    overStock: (n: number) => (ar ? `الحد الأقصى المتاح ${n}` : `Max available: ${n}`),
     priceChanged: ar ? "السعر تغيّر" : "Price changed",
     subtotal: ar ? "إجمالي المنتجات" : "Subtotal",
     discount: ar ? "الخصم" : "Discount",
@@ -131,11 +127,14 @@ function BagPage() {
     tax: ar ? "ضريبة (15%)" : "Tax (15%)",
     free: ar ? "مجاني" : "Free",
     total: ar ? "الإجمالي" : "Total",
-    shippingNote: ar ? "تكلفة الشحن قد تتغير حسب موقعك في الخطوة التالية" : "Shipping may vary based on your delivery address",
+    shippingNote: ar
+      ? "تكلفة الشحن قد تتغير حسب موقعك في الخطوة التالية"
+      : "Shipping may vary based on your delivery address",
     promoCode: ar ? "كود الخصم" : "Promo code",
     apply: ar ? "تطبيق" : "Apply",
-    promoApplied: (c: string) => ar ? `تم تطبيق كود ${c}` : `Code ${c} applied`,
-    freeShipBar: (n: number) => ar ? `أضف ${fmt(n)} ر.س للحصول على شحن مجاني` : `Add ${fmt(n)} SAR more for free shipping`,
+    promoApplied: (c: string) => (ar ? `تم تطبيق كود ${c}` : `Code ${c} applied`),
+    freeShipBar: (n: number) =>
+      ar ? `أضف ${fmt(n)} ر.س للحصول على شحن مجاني` : `Add ${fmt(n)} SAR more for free shipping`,
     freeShipUnlocked: ar ? "🎉 حصلت على شحن مجاني!" : "🎉 You unlocked free shipping!",
     youMayNeed: ar ? "قد تحتاج هذه أيضًا" : "You may also need",
     checkout: ar ? "إكمال الشراء" : "Checkout securely",
@@ -153,14 +152,22 @@ function BagPage() {
       <div className="relative w-full max-w-[440px] bg-background min-h-screen overflow-hidden shadow-soft">
         {/* Header */}
         <header className="px-5 pt-2 pb-3 flex items-center justify-between sticky top-0 z-30 bg-background/95 backdrop-blur">
-          <button aria-label={ar ? "رجوع" : "Back"} onClick={() => router.history.back()} className="h-10 w-10 -ms-2 grid place-items-center rounded-xl text-foreground/80 active:scale-95 transition">
+          <button
+            aria-label={ar ? "رجوع" : "Back"}
+            onClick={() => router.history.back()}
+            className="h-10 w-10 -ms-2 grid place-items-center rounded-xl text-foreground/80 active:scale-95 transition"
+          >
             <BackIcon className="h-[22px] w-[22px]" strokeWidth={1.6} />
           </button>
           <span className="text-[10.5px] tracking-luxury text-muted-foreground">
             {lang === "en" ? tt.title.toUpperCase() : tt.title}
           </span>
           {bag.items.length > 0 ? (
-            <button aria-label={tt.shareBag} onClick={onShareBag} className="h-10 w-10 -me-2 grid place-items-center rounded-xl text-foreground/70 active:scale-95 transition">
+            <button
+              aria-label={tt.shareBag}
+              onClick={onShareBag}
+              className="h-10 w-10 -me-2 grid place-items-center rounded-xl text-foreground/70 active:scale-95 transition"
+            >
               <Share2 className="h-[18px] w-[18px]" strokeWidth={1.5} />
             </button>
           ) : (
@@ -175,8 +182,13 @@ function BagPage() {
                 <ShoppingBag className="h-[30px] w-[30px] text-gold-deep" strokeWidth={1.4} />
               </div>
               <h1 className="mt-6 font-serif text-[28px] text-foreground">{tt.empty}</h1>
-              <p className="mt-2 text-[13px] text-muted-foreground tracking-soft max-w-[280px]">{tt.emptyDesc}</p>
-              <Link to="/" className="mt-8 h-[52px] px-10 rounded-xl bg-foreground text-background text-[13px] tracking-soft font-medium grid place-items-center active:scale-[0.97] transition shadow-soft">
+              <p className="mt-2 text-[13px] text-muted-foreground tracking-soft max-w-[280px]">
+                {tt.emptyDesc}
+              </p>
+              <Link
+                to="/"
+                className="mt-8 h-[52px] px-10 rounded-xl bg-foreground text-background text-[13px] tracking-soft font-medium grid place-items-center active:scale-[0.97] transition shadow-soft"
+              >
                 {tt.continueShopping}
               </Link>
             </section>
@@ -196,7 +208,9 @@ function BagPage() {
                   <div className="flex items-center gap-2 text-[12.5px] text-foreground/85">
                     <Truck className="h-[15px] w-[15px] text-gold-deep" />
                     <span className="flex-1">
-                      {qualifiesFreeShip || freeShipProgress >= 100 ? tt.freeShipUnlocked : tt.freeShipBar(remainingForFreeShip)}
+                      {qualifiesFreeShip || freeShipProgress >= 100
+                        ? tt.freeShipUnlocked
+                        : tt.freeShipBar(remainingForFreeShip)}
                     </span>
                   </div>
                   <div className="mt-2 h-1.5 rounded-full bg-background overflow-hidden">
@@ -211,29 +225,54 @@ function BagPage() {
               {/* Items */}
               <section className="px-5 mt-5 space-y-4">
                 {itemsMeta.map(({ it, currentPrice, priceChanged, stock, overStock, lowStock }) => (
-                  <article key={it.id} className="rounded-[22px] border border-border bg-cream-warm/40 p-3">
+                  <article
+                    key={it.id}
+                    className="rounded-[22px] border border-border bg-cream-warm/40 p-3"
+                  >
                     <div className="flex gap-4">
-                      <Link to="/product/$slug" params={{ slug: it.slug }} className="h-[112px] w-[92px] overflow-hidden rounded-[16px] bg-pastel-peach shrink-0">
-                        <img src={it.image} alt={it.name} loading="lazy" className="w-full h-full object-cover" />
+                      <Link
+                        to="/product/$slug"
+                        params={{ slug: it.slug }}
+                        className="h-[112px] w-[92px] overflow-hidden rounded-[16px] bg-pastel-peach shrink-0"
+                      >
+                        <img
+                          src={it.image}
+                          alt={it.name}
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                        />
                       </Link>
                       <div className="flex-1 min-w-0 flex flex-col">
                         <span className="text-[10px] tracking-luxury text-gold-deep">
                           {lang === "en" ? it.brand.toUpperCase() : it.brand}
                         </span>
-                        <h2 className="font-serif text-[15.5px] leading-snug text-foreground mt-0.5 line-clamp-2">{it.name}</h2>
+                        <h2 className="font-serif text-[15.5px] leading-snug text-foreground mt-0.5 line-clamp-2">
+                          {it.name}
+                        </h2>
                         <p className="mt-1 text-[11.5px] text-muted-foreground tracking-soft">
                           {tt.size} {it.size} · {tt.color} {it.color}
                         </p>
                         {it.sku && (
-                          <p className="mt-0.5 text-[10.5px] text-muted-foreground/80 font-mono" dir="ltr">SKU: {it.sku}</p>
+                          <p
+                            className="mt-0.5 text-[10.5px] text-muted-foreground/80 font-mono"
+                            dir="ltr"
+                          >
+                            SKU: {it.sku}
+                          </p>
                         )}
 
                         <div className="mt-auto pt-2 flex items-center justify-between">
                           <div className="inline-flex items-center rounded-xl border border-border bg-background">
-                            <button aria-label={ar ? "إنقاص" : "Decrease"} onClick={() => bag.setQty(it.id, it.qty - 1)} className="h-8 w-8 grid place-items-center text-foreground/70 active:scale-95">
+                            <button
+                              aria-label={ar ? "إنقاص" : "Decrease"}
+                              onClick={() => bag.setQty(it.id, it.qty - 1)}
+                              className="h-8 w-8 grid place-items-center text-foreground/70 active:scale-95"
+                            >
                               <Minus className="h-[14px] w-[14px]" strokeWidth={1.6} />
                             </button>
-                            <span className="w-7 text-center text-[13px] tabular-nums">{fmt(it.qty)}</span>
+                            <span className="w-7 text-center text-[13px] tabular-nums">
+                              {fmt(it.qty)}
+                            </span>
                             <button
                               aria-label={ar ? "زيادة" : "Increase"}
                               onClick={() => {
@@ -266,7 +305,9 @@ function BagPage() {
                         {priceChanged && (
                           <div className="flex items-center gap-2 text-[11.5px] text-amber-700 bg-amber-50 rounded-lg px-2.5 py-1.5">
                             <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                            <span>{tt.priceChanged}: {fmtPrice(currentPrice)}</span>
+                            <span>
+                              {tt.priceChanged}: {fmtPrice(currentPrice)}
+                            </span>
                           </div>
                         )}
                         {overStock && (
@@ -286,10 +327,17 @@ function BagPage() {
 
                     {/* Item actions */}
                     <div className="mt-3 pt-3 border-t border-border flex items-center justify-between">
-                      <button onClick={() => moveToWishlist(it.id, it.slug)} className="text-[11.5px] text-foreground/75 inline-flex items-center gap-1.5 active:scale-95">
-                        <Heart className="h-[13px] w-[13px]" strokeWidth={1.5} /> {tt.moveToWishlist}
+                      <button
+                        onClick={() => moveToWishlist(it.id, it.slug)}
+                        className="text-[11.5px] text-foreground/75 inline-flex items-center gap-1.5 active:scale-95"
+                      >
+                        <Heart className="h-[13px] w-[13px]" strokeWidth={1.5} />{" "}
+                        {tt.moveToWishlist}
                       </button>
-                      <button onClick={() => bag.remove(it.id)} className="text-[11.5px] text-red-600 inline-flex items-center gap-1.5 active:scale-95">
+                      <button
+                        onClick={() => bag.remove(it.id)}
+                        className="text-[11.5px] text-red-600 inline-flex items-center gap-1.5 active:scale-95"
+                      >
                         <Trash2 className="h-[13px] w-[13px]" strokeWidth={1.5} /> {tt.remove}
                       </button>
                     </div>
@@ -326,9 +374,13 @@ function BagPage() {
                     <span className="text-[12px] tracking-luxury text-muted-foreground">
                       {lang === "en" ? tt.total.toUpperCase() : tt.total}
                     </span>
-                    <span className="font-serif text-[24px] text-foreground tabular-nums">{fmtPrice(total)}</span>
+                    <span className="font-serif text-[24px] text-foreground tabular-nums">
+                      {fmtPrice(total)}
+                    </span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground tracking-soft pt-1">{tt.shippingNote}</p>
+                  <p className="text-[11px] text-muted-foreground tracking-soft pt-1">
+                    {tt.shippingNote}
+                  </p>
                 </div>
               </section>
 
@@ -338,12 +390,26 @@ function BagPage() {
                   <h2 className="px-5 font-serif text-[18px] text-foreground">{tt.youMayNeed}</h2>
                   <div className="mt-3 flex gap-3 overflow-x-auto scrollbar-none px-5 pb-2">
                     {recommendations.map((p) => (
-                      <Link key={p.slug} to="/category/$slug" params={{ slug: p.slug }} className="shrink-0 w-[130px]">
+                      <Link
+                        key={p.slug}
+                        to="/category/$slug"
+                        params={{ slug: p.slug }}
+                        className="shrink-0 w-[130px]"
+                      >
                         <div className="aspect-[4/5] rounded-[14px] overflow-hidden bg-pastel-peach">
-                          <img src={p.images[0]} alt={p.category} className="w-full h-full object-cover" loading="lazy" />
+                          <img
+                            src={p.images[0]}
+                            alt={p.category}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
                         </div>
-                        <p className="mt-2 text-[12px] text-foreground/85 line-clamp-1">{p.category}</p>
-                        <p className="text-[12px] text-muted-foreground tabular-nums">{fmtPrice(p.price)}</p>
+                        <p className="mt-2 text-[12px] text-foreground/85 line-clamp-1">
+                          {p.category}
+                        </p>
+                        <p className="text-[12px] text-muted-foreground tabular-nums">
+                          {fmtPrice(p.price)}
+                        </p>
                       </Link>
                     ))}
                   </div>
@@ -355,7 +421,10 @@ function BagPage() {
                 <Link to="/" className="text-[12.5px] tracking-luxury text-gold-deep">
                   {lang === "en" ? tt.continueShopping.toUpperCase() : tt.continueShopping}
                 </Link>
-                <button onClick={() => setConfirmClear(true)} className="text-[12px] text-red-600 inline-flex items-center gap-1.5">
+                <button
+                  onClick={() => setConfirmClear(true)}
+                  className="text-[12px] text-red-600 inline-flex items-center gap-1.5"
+                >
                   <Trash2 className="h-3.5 w-3.5" /> {tt.clearBag}
                 </button>
               </section>
@@ -365,32 +434,60 @@ function BagPage() {
 
         {/* Sticky checkout CTA */}
         {bag.items.length > 0 && (
-          <div className="fixed lg:absolute bottom-0 inset-x-0 max-w-[440px] mx-auto bg-background/95 backdrop-blur-md border-t border-border z-40">
+          <div className="fixed lg:absolute bottom-[calc(64px+env(safe-area-inset-bottom))] lg:bottom-0 inset-x-0 max-w-[440px] mx-auto bg-background/95 backdrop-blur-md border-t border-border z-50">
             <div className="px-5 pt-4 pb-6">
-              <button onClick={() => navigate({ to: "/checkout" })} className="w-full h-[56px] rounded-xl bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft">
+              <button
+                onClick={() => navigate({ to: "/checkout" })}
+                className="w-full h-[56px] rounded-xl bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft"
+              >
                 <Lock className="h-[15px] w-[15px]" strokeWidth={1.7} />
                 {tt.checkout} · {fmtPrice(total)}
               </button>
-              <p className="mt-2 text-center text-[10.5px] text-muted-foreground tracking-soft">{tt.secure}</p>
+              <p className="mt-2 text-center text-[10.5px] text-muted-foreground tracking-soft">
+                {tt.secure}
+              </p>
             </div>
           </div>
         )}
 
         {/* Clear-bag confirm */}
         {confirmClear && (
-          <div className="fixed inset-0 z-50 bg-black/50 grid place-items-center px-5" onClick={() => setConfirmClear(false)}>
-            <div className="w-full max-w-[360px] bg-background rounded-[20px] p-5" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="fixed inset-0 z-50 bg-black/50 grid place-items-center px-5"
+            onClick={() => setConfirmClear(false)}
+          >
+            <div
+              className="w-full max-w-[360px] bg-background rounded-[20px] p-5"
+              onClick={(e) => e.stopPropagation()}
+            >
               <h3 className="font-serif text-[18px] text-foreground">{tt.confirmClear}</h3>
               <div className="mt-5 flex gap-2">
-                <button onClick={() => setConfirmClear(false)} className="flex-1 h-11 rounded-xl border border-border text-[13px]">{tt.cancel}</button>
-                <button onClick={() => { bag.clear(); setConfirmClear(false); }} className="flex-1 h-11 rounded-xl bg-red-600 text-white text-[13px] font-medium">{tt.confirm}</button>
+                <button
+                  onClick={() => setConfirmClear(false)}
+                  className="flex-1 h-11 rounded-xl border border-border text-[13px]"
+                >
+                  {tt.cancel}
+                </button>
+                <button
+                  onClick={() => {
+                    bag.clear();
+                    setConfirmClear(false);
+                  }}
+                  className="flex-1 h-11 rounded-xl bg-red-600 text-white text-[13px] font-medium"
+                >
+                  {tt.confirm}
+                </button>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      <ShareSheet open={sharePayload !== null} onClose={() => setSharePayload(null)} payload={sharePayload} />
+      <ShareSheet
+        open={sharePayload !== null}
+        onClose={() => setSharePayload(null)}
+        payload={sharePayload}
+      />
     </div>
   );
 }
