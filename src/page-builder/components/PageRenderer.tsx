@@ -1773,8 +1773,8 @@ function RenderProductGrid({ s }: { s: ProductGridSection }) {
               dir={ar ? "rtl" : "ltr"}
               className="flex touch-pan-y cursor-grab snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-3 active:cursor-grabbing [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               onPointerDown={(event) => {
+                if (event.pointerType === "mouse" && event.button !== 0) return;
                 const el = event.currentTarget;
-                el.setPointerCapture(event.pointerId);
                 dragRef.current = {
                   active: true,
                   x: event.clientX,
@@ -1786,12 +1786,21 @@ function RenderProductGrid({ s }: { s: ProductGridSection }) {
                 const drag = dragRef.current;
                 if (!drag.active) return;
                 const delta = event.clientX - drag.x;
-                if (Math.abs(delta) > 5) drag.moved = true;
-                event.currentTarget.scrollLeft = drag.scroll - delta;
+                if (Math.abs(delta) > 5) {
+                  if (!drag.moved) {
+                    drag.moved = true;
+                    try {
+                      event.currentTarget.setPointerCapture(event.pointerId);
+                    } catch {}
+                  }
+                  event.currentTarget.scrollLeft = drag.scroll - delta;
+                }
               }}
               onPointerUp={(event) => {
                 dragRef.current.active = false;
-                event.currentTarget.releasePointerCapture(event.pointerId);
+                try {
+                  event.currentTarget.releasePointerCapture(event.pointerId);
+                } catch {}
               }}
               onPointerCancel={() => {
                 dragRef.current.active = false;

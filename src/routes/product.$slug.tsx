@@ -115,7 +115,7 @@ export const Route = createFileRoute("/product/$slug")({
           currency: dbProduct?.currency ?? (product as any)?.currency ?? "SAR",
           availability: inStock ? "in_stock" : "out_of_stock",
           url: canonical(path),
-          rating: (product as any).rating
+          rating: (product as any)?.rating
             ? {
                 value: (product as any).rating,
                 count: (product as any).reviewsCount ?? 0,
