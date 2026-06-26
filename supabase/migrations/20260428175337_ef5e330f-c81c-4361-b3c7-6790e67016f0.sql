@@ -6,7 +6,7 @@ ALTER TABLE public.site_settings
   ADD COLUMN IF NOT EXISTS store_address text,
   ADD COLUMN IF NOT EXISTS store_city text,
   ADD COLUMN IF NOT EXISTS store_country text DEFAULT 'SA',
-  ADD COLUMN IF NOT EXISTS store_phone text,
+  ADD COLUMN IF NOT EXISTS store_phone text DEFAULT '+96655 740 4827',
   ADD COLUMN IF NOT EXISTS invoice_logo_url text,
   ADD COLUMN IF NOT EXISTS invoice_prefix text DEFAULT 'INV',
   ADD COLUMN IF NOT EXISTS invoice_footer_note text,

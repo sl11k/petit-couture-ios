@@ -61,13 +61,13 @@ CREATE TABLE public.storefront_settings (
   announcement_rotate_seconds INTEGER NOT NULL DEFAULT 4,
   footer_about_ar TEXT,
   footer_about_en TEXT,
-  footer_phone TEXT,
+  footer_phone TEXT DEFAULT '+96655 740 4827',
   footer_email TEXT,
   footer_address_ar TEXT,
   footer_address_en TEXT,
   footer_instagram TEXT,
   footer_tiktok TEXT,
-  footer_whatsapp TEXT,
+  footer_whatsapp TEXT DEFAULT 'https://wa.me/966557404827',
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

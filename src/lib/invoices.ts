@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { CONTACT_PHONE_DISPLAY } from "@/lib/contactInfo";
 
 export type InvoiceItem = {
   product_id?: string | null;
@@ -33,7 +34,10 @@ export type CustomerSnapshot = {
 };
 
 export async function loadStoreSnapshot(): Promise<StoreSnapshot> {
-  const { data: s } = await supabase.from("public_site_settings" as any).select("*").maybeSingle() as { data: any };
+  const { data: s } = (await supabase
+    .from("public_site_settings" as any)
+    .select("*")
+    .maybeSingle()) as { data: any };
   if (!s) return {};
   return {
     store_name: s.store_name ?? "",
@@ -43,34 +47,46 @@ export async function loadStoreSnapshot(): Promise<StoreSnapshot> {
     address: s.store_address ?? "",
     city: s.store_city ?? "",
     country: s.store_country ?? "SA",
-    phone: s.store_phone ?? "",
+    phone: s.store_phone ?? CONTACT_PHONE_DISPLAY,
     email: s.support_email ?? "",
     logo_url: s.invoice_logo_url ?? "",
     footer_note: s.invoice_footer_note ?? "",
   };
 }
 
-export async function generateInvoiceForOrder(orderId: string, opts?: { type?: "tax_invoice" | "simplified" | "credit_note" }) {
+export async function generateInvoiceForOrder(
+  orderId: string,
+  opts?: { type?: "tax_invoice" | "simplified" | "credit_note" },
+) {
   // Idempotency: if an active invoice exists for the order, return it
   const { data: existing } = await supabase
-    .from("invoices").select("*").eq("order_id", orderId).neq("status", "cancelled").maybeSingle();
+    .from("invoices")
+    .select("*")
+    .eq("order_id", orderId)
+    .neq("status", "cancelled")
+    .maybeSingle();
   if (existing) return existing;
 
   const { data: order } = await supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
   if (!order) throw new Error("الطلب غير موجود");
   const { data: items } = await supabase.from("order_items").select("*").eq("order_id", orderId);
-  const { data: settings } = await supabase.from("public_site_settings" as any).select("*").maybeSingle() as { data: any };
+  const { data: settings } = (await supabase
+    .from("public_site_settings" as any)
+    .select("*")
+    .maybeSingle()) as { data: any };
 
   const taxRate = Number(settings?.tax_rate ?? 0);
   const taxInclusive = settings?.tax_inclusive ?? true;
   const subtotal = Number(order.subtotal);
   const shipping = Number(order.shipping_fee ?? 0);
-  const discount = Math.max(0, (subtotal + shipping + Number(order.tax ?? 0)) - Number(order.total));
+  const discount = Math.max(0, subtotal + shipping + Number(order.tax ?? 0) - Number(order.total));
   const taxTotal = Number(order.tax ?? 0);
 
   const store = await loadStoreSnapshot();
   const prefix = settings?.invoice_prefix ?? "INV";
-  const { data: numData, error: numErr } = await supabase.rpc("next_invoice_number", { _prefix: prefix });
+  const { data: numData, error: numErr } = await supabase.rpc("next_invoice_number", {
+    _prefix: prefix,
+  });
   if (numErr) throw numErr;
 
   const payload: any = {
@@ -111,19 +127,33 @@ export async function generateInvoiceForOrder(orderId: string, opts?: { type?: "
 }
 
 export async function cancelInvoice(invoiceId: string, reason: string) {
-  const { data: { user } } = await supabase.auth.getUser();
-  await supabase.from("invoices").update({
-    status: "cancelled", cancelled_at: new Date().toISOString(),
-    cancellation_reason: reason, cancelled_by: user?.id,
-  }).eq("id", invoiceId);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  await supabase
+    .from("invoices")
+    .update({
+      status: "cancelled",
+      cancelled_at: new Date().toISOString(),
+      cancellation_reason: reason,
+      cancelled_by: user?.id,
+    })
+    .eq("id", invoiceId);
 }
 
 export async function markInvoiceEmailed(invoiceId: string) {
-  const { data: inv } = await supabase.from("invoices").select("email_sent_count").eq("id", invoiceId).maybeSingle();
-  await supabase.from("invoices").update({
-    email_sent_at: new Date().toISOString(),
-    email_sent_count: (inv?.email_sent_count ?? 0) + 1,
-  }).eq("id", invoiceId);
+  const { data: inv } = await supabase
+    .from("invoices")
+    .select("email_sent_count")
+    .eq("id", invoiceId)
+    .maybeSingle();
+  await supabase
+    .from("invoices")
+    .update({
+      email_sent_at: new Date().toISOString(),
+      email_sent_count: (inv?.email_sent_count ?? 0) + 1,
+    })
+    .eq("id", invoiceId);
 }
 
 export function formatMoney(n: number, currency = "ر.س") {

@@ -46,6 +46,7 @@ import { ProductOptionsPicker } from "@/components/product/ProductOptionsPicker"
 import { buildMeta, productJsonLd, breadcrumbJsonLd, canonical } from "@/lib/seo";
 import { devValidateJsonLd } from "@/lib/seoValidate";
 import { supabase } from "@/integrations/supabase/client";
+import { CONTACT_WHATSAPP_NUMBER } from "@/lib/contactInfo";
 
 export const Route = createFileRoute("/product/$slug")({
   loader: async ({ params }) => {
@@ -397,8 +398,10 @@ function ProductDetails() {
     const text = ar
       ? `مرحبًا، عندي استفسار عن: ${product.name} (${product.sku})`
       : `Hi, I have a question about: ${product.name} (${product.sku})`;
-    const phone = "966500000000";
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank");
+    window.open(
+      `https://wa.me/${CONTACT_WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`,
+      "_blank",
+    );
   };
 
   const BackIcon = ar ? ChevronRight : ChevronLeft;

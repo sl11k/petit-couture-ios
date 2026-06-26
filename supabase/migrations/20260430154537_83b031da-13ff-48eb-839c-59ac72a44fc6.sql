@@ -132,7 +132,7 @@ INSERT INTO public.content_pages (slug, title_ar, title_en, body_ar, body_en, is
   ('about', 'من نحن', 'About Us', 'Le Petit Paradis متجر فاخر لملابس وإكسسوارات الأطفال…', 'Le Petit Paradis is a luxury boutique for children clothing and accessories…', true, true, 1),
   ('shipping', 'سياسة الشحن', 'Shipping Policy', 'نشحن إلى جميع مدن المملكة خلال 2-5 أيام عمل…', 'We ship across Saudi Arabia within 2-5 business days…', true, true, 2),
   ('returns', 'سياسة الاسترجاع', 'Returns Policy', 'يمكن استرجاع المنتجات خلال 14 يوماً من تاريخ الاستلام…', 'Products can be returned within 14 days of delivery…', true, true, 3),
-  ('contact', 'تواصل معنا', 'Contact Us', 'البريد: support@lppme.com\nالهاتف: +966...', 'Email: support@lppme.com\nPhone: +966...', true, true, 4)
+  ('contact', 'تواصل معنا', 'Contact Us', 'البريد: support@lppme.com\nالهاتف: +96655 740 4827', 'Email: support@lppme.com\nPhone: +96655 740 4827', true, true, 4)
 ON CONFLICT (slug) DO NOTHING;
 
 INSERT INTO public.admin_help_articles (category, title_ar, title_en, body_ar, body_en, sort_order) VALUES

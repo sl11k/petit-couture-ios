@@ -6,6 +6,7 @@ import { fetchStorefrontSettings, type StorefrontSettings } from "@/lib/storefro
 import { BrandLogo, BRAND_NAME } from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
 import { useDbCategories } from "@/hooks/useDbCategories";
+import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_TEL, CONTACT_WHATSAPP_URL } from "@/lib/contactInfo";
 
 type ContentPageLink = { slug: string; title_ar: string; title_en: string };
 
@@ -44,11 +45,11 @@ export function Footer() {
   const address = ar
     ? (settings?.footer_address_ar ?? "الرياض، المملكة العربية السعودية")
     : (settings?.footer_address_en ?? "Riyadh, Kingdom of Saudi Arabia");
-  const phone = settings?.footer_phone ?? "+966 50 000 0000";
+  const phone = CONTACT_PHONE_DISPLAY;
   const email = settings?.footer_email ?? "hello@lepetitparadis.com";
   const ig = settings?.footer_instagram ?? "https://instagram.com";
   const tiktok = settings?.footer_tiktok ?? "https://tiktok.com";
-  const wa = settings?.footer_whatsapp ?? "https://wa.me/966500000000";
+  const wa = CONTACT_WHATSAPP_URL;
 
   return (
     <footer
@@ -203,7 +204,7 @@ export function Footer() {
                 <Phone className="h-3.5 w-3.5 text-gold" />
                 <a
                   data-live-id="footer-phone"
-                  href={`tel:${phone}`}
+                  href={`tel:${CONTACT_PHONE_TEL}`}
                   dir="ltr"
                   className="hover:text-gold"
                 >

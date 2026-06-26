@@ -1,23 +1,7 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { CONTACT_WHATSAPP_NUMBER } from "@/lib/contactInfo";
 
 export function WhatsAppButton() {
-  const [number, setNumber] = useState<string>("");
-
-  useEffect(() => {
-    (supabase
-      .from("public_site_settings" as any)
-      .select("whatsapp_number")
-      .eq("id", 1)
-      .maybeSingle() as any)
-      .then(({ data }: { data: any }) => {
-        if (data?.whatsapp_number) setNumber(data.whatsapp_number);
-      });
-  }, []);
-
-  if (!number) return null;
-  const cleaned = number.replace(/[^\d]/g, "");
-  const href = `https://wa.me/${cleaned}?text=${encodeURIComponent("مرحباً، أحتاج مساعدة")}`;
+  const href = `https://wa.me/${CONTACT_WHATSAPP_NUMBER}?text=${encodeURIComponent("مرحباً، أحتاج مساعدة")}`;
 
   return (
     <a

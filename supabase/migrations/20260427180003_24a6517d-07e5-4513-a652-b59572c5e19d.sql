@@ -223,7 +223,7 @@ CREATE TABLE public.site_settings (
   hero_subtitle_ar TEXT DEFAULT 'اكتشف أحدث المجموعات',
   hero_image_url TEXT,
   primary_color TEXT DEFAULT '#000000',
-  whatsapp_number TEXT DEFAULT '',
+  whatsapp_number TEXT DEFAULT '+96655 740 4827',
   support_email TEXT DEFAULT '',
   free_shipping_threshold NUMERIC(12,2) DEFAULT 500,
   shipping_fee NUMERIC(12,2) DEFAULT 25,
