@@ -51,9 +51,7 @@ export const Route = createFileRoute("/product/$slug")({
   loader: async ({ params }) => {
     const { data } = await supabase
       .from("products")
-      .select(
-        "slug,name_ar,name_en,description_ar,description_en,size_guide_image_url,size_guide_content_ar,size_guide_content_en,image_url,images,sku,brand,price,currency,stock,is_active,status",
-      )
+      .select("*")
       .eq("slug", params.slug)
       .eq("is_active", true)
       .eq("status", "active")
@@ -189,6 +187,13 @@ function ProductDetails() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [Object.keys(sizeVariantBySize).join("|"), product.sizes.join("|")]);
+  const sizeLabel = (rawSize: string) => {
+    const variant = sizeVariantBySize[rawSize];
+    if (!variant) return rawSize;
+    return ar
+      ? variant.size_ar || variant.size_en || rawSize
+      : variant.size_en || variant.size_ar || rawSize;
+  };
   const [qty, setQty] = useState(1);
   const [giftWrap, setGiftWrap] = useState(false);
   const [selectedUpsells, setSelectedUpsells] = useState<string[]>([]);
@@ -878,7 +883,7 @@ function ProductDetails() {
                     title={soldOut ? (ar ? "غير متوفر" : "Out of stock") : undefined}
                     className={`min-h-12 rounded-xl px-2 py-2 text-[13px] tracking-soft border transition active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 whitespace-normal break-words ${active ? "bg-gold-soft border-gold text-gold-deep font-medium" : "bg-background border-border text-muted-foreground hover:border-foreground/40"} ${soldOut ? "opacity-40 line-through cursor-not-allowed" : ""}`}
                   >
-                    {s}
+                    {sizeLabel(s)}
                   </button>
                 );
               })}
@@ -1117,15 +1122,16 @@ function ProductDetails() {
               {tab === "shipping" && (
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 text-[13.5px] text-foreground/80">
-                    <Truck className="h-[16px] w-[16px] text-gold-deep" /> {t.deliveryEstimate}
+                    <Truck className="h-[16px] w-[16px] text-gold-deep" />{" "}
+                    {product.deliveryEstimate || t.deliveryEstimate}
                   </div>
                   <div className="flex items-center gap-3 text-[13.5px] text-foreground/80">
                     <Package className="h-[16px] w-[16px] text-gold-deep" />{" "}
-                    {t.freeShippingOver(500)}
+                    {product.shippingPolicy || t.freeShippingOver(500)}
                   </div>
                   <div className="flex items-center gap-3 text-[13.5px] text-foreground/80">
                     <RotateCcw className="h-[16px] w-[16px] text-gold-deep" />{" "}
-                    {product.returnPolicy}
+                    {product.returnPolicy || t.returnPolicy}
                   </div>
                   <div className="mt-3 rounded-[14px] border border-border p-3">
                     <p className="text-[12px] text-muted-foreground mb-2">{t.cityCheck}</p>
@@ -1176,7 +1182,7 @@ function ProductDetails() {
                 <div>
                   <p className="text-[12px] font-medium text-foreground/85">{t.returnPolicy}</p>
                   <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
-                    {product.returnPolicy}
+                    {product.returnPolicy || t.returnPolicy}
                   </p>
                 </div>
               </div>
@@ -1423,7 +1429,7 @@ function ProductDetails() {
         </main>
 
         {/* Sticky bottom CTA */}
-        <div className="fixed lg:absolute bottom-0 inset-x-0 max-w-[440px] mx-auto bg-background/95 backdrop-blur-md border-t border-border z-40">
+        <div className="fixed lg:absolute bottom-[calc(64px+env(safe-area-inset-bottom))] lg:bottom-0 inset-x-0 max-w-[440px] mx-auto bg-background/95 backdrop-blur-md border-t border-border z-50">
           {isOOS || isComingSoon ? (
             <div className="px-5 pt-3 pb-6 space-y-2">
               <p className="text-[12px] text-center text-muted-foreground">

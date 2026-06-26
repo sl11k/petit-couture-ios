@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Home,
   Search,
@@ -8,10 +8,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Menu as MenuIcon,
-  Baby,
-  Sparkles,
   ShoppingBasket,
-  Gift,
   Crown,
 } from "lucide-react";
 import { useBag } from "@/state/BagContext";
@@ -21,15 +18,9 @@ import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/Logo";
 import { AnnouncementBar } from "@/components/AnnouncementBar";
 import { useDbAnnouncements } from "@/hooks/useDbAnnouncements";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetClose,
-} from "@/components/ui/sheet";
-import { useDbCategories } from "@/hooks/useDbCategories";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
+import { supabase } from "@/integrations/supabase/client";
+import { useDbCategoryTree } from "@/hooks/useDbCategories";
 
 /**
  * MobileHeader — هيدر مدمج للجوال:
@@ -291,132 +282,82 @@ export function MobileBottomNav() {
 
 /** Category menu groups shown inside the Menu sheet */
 function CategoryMenu({ onNavigate, ar }: { onNavigate: () => void; ar: boolean }) {
-  const dbCats = useDbCategories();
+  const tree = useDbCategoryTree();
+  const [navItems, setNavItems] = useState<
+    Array<{
+      label_ar: string | null;
+      label_en: string | null;
+      href: string | null;
+      category_id: string | null;
+    }>
+  >([]);
+  const [loaded, setLoaded] = useState(false);
 
-  const dbGroup =
-    dbCats.length > 0
-      ? [
-          {
-            title: ar ? "كل التصنيفات" : "All Categories",
-            icon: Crown,
-            items: dbCats.map((c) => ({
-              label: ar ? c.name_ar : c.name_en,
-              to: "/category/$slug",
-              params: { slug: c.slug },
-            })),
-          },
-        ]
-      : [];
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("header_nav_items")
+        .select("label_ar,label_en,href,category_id,is_active,display_order")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true });
+      if (!active) return;
+      setNavItems(Array.isArray(data) ? data : []);
+      setLoaded(true);
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
-  const fallback: {
-    title: string;
-    icon: typeof Baby;
-    items: { label: string; to: string; params?: any }[];
-  }[] =
-    dbCats.length > 0
-      ? []
-      : [
-          {
-            title: ar ? "التسوق حسب العمر" : "Shop by Age",
-            icon: Baby,
-            items: [
-              {
-                label: ar ? "حديثي الولادة (0-12 شهر)" : "Newborn (0-12 months)",
-                to: "/category/$slug",
-                params: { slug: "babysuits" },
-              },
-              {
-                label: ar ? "أطفال (1-3 سنوات)" : "Toddlers (1-3 years)",
-                to: "/category/$slug",
-                params: { slug: "outfit-sets" },
-              },
-              {
-                label: ar ? "أطفال (4-7 سنوات)" : "Kids (4-7 years)",
-                to: "/category/$slug",
-                params: { slug: "dresses" },
-              },
-              {
-                label: ar ? "أطفال (8-12 سنة)" : "Kids (8-12 years)",
-                to: "/category/$slug",
-                params: { slug: "tops" },
-              },
-            ],
-          },
-          {
-            title: ar ? "التسوق حسب الفئة" : "Shop by Category",
-            icon: ShoppingBasket,
-            items: [
-              { label: ar ? "بنات" : "Girls", to: "/category/$slug", params: { slug: "dresses" } },
-              {
-                label: ar ? "أولاد" : "Boys",
-                to: "/category/$slug",
-                params: { slug: "outfit-sets" },
-              },
-              {
-                label: ar ? "رضّع" : "Babies",
-                to: "/category/$slug",
-                params: { slug: "babysuits" },
-              },
-            ],
-          },
-          {
-            title: ar ? "التصنيفات" : "Collections",
-            icon: Crown,
-            items: [
-              {
-                label: ar ? "الفساتين" : "Dresses",
-                to: "/category/$slug",
-                params: { slug: "dresses" },
-              },
-              { label: ar ? "الأحذية" : "Shoes", to: "/category/$slug", params: { slug: "shoes" } },
-              { label: ar ? "الحقائب" : "Bags", to: "/category/$slug", params: { slug: "bags" } },
-              {
-                label: ar ? "ملابس السباحة" : "Swimwear",
-                to: "/category/$slug",
-                params: { slug: "swimwear" },
-              },
-              {
-                label: ar ? "الأطقم" : "Outfit Sets",
-                to: "/category/$slug",
-                params: { slug: "outfit-sets" },
-              },
-            ],
-          },
-          {
-            title: ar ? "مميّز" : "Featured",
-            icon: Sparkles,
-            items: [
-              {
-                label: ar ? "الأكثر مبيعاً" : "Best Sellers",
-                to: "/category/$slug",
-                params: { slug: "best-sellers" },
-              },
-              {
-                label: ar ? "الجديد" : "New In",
-                to: "/category/$slug",
-                params: { slug: "new-in" },
-              },
-            ],
-          },
-          {
-            title: ar ? "الهدايا" : "Gifts",
-            icon: Gift,
-            items: [
-              {
-                label: ar ? "هدايا للرضّع" : "Baby Gifts",
-                to: "/category/$slug",
-                params: { slug: "gifts" },
-              },
-              {
-                label: ar ? "هدايا فاخرة" : "Luxury Gifts",
-                to: "/category/$slug",
-                params: { slug: "gifts" },
-              },
-            ],
-          },
-        ];
+  const categoryById = new Map(tree.map((c) => [c.id, c]));
+  const categoryByHref = new Map(tree.map((c) => [`/category/${c.slug}`, c]));
+  const adminItems = navItems.flatMap((item) => {
+    const linkedCategory =
+      (item.category_id ? categoryById.get(item.category_id) : undefined) ??
+      (item.href ? categoryByHref.get(item.href) : undefined);
+    const href = item.href || (linkedCategory ? `/category/${linkedCategory.slug}` : "/");
+    const label =
+      (ar ? item.label_ar || item.label_en : item.label_en || item.label_ar) ||
+      linkedCategory?.[ar ? "name_ar" : "name_en"] ||
+      href;
+    return [
+      { label, to: href, params: undefined as any },
+      ...(linkedCategory?.children?.map((child) => ({
+        label: ar ? child.name_ar : child.name_en,
+        to: "/category/$slug",
+        params: { slug: child.slug },
+      })) ?? []),
+    ];
+  });
 
-  const groups = [...dbGroup, ...fallback];
+  const fallbackItems = tree.flatMap((category) => [
+    {
+      label: ar ? category.name_ar : category.name_en,
+      to: "/category/$slug",
+      params: { slug: category.slug },
+    },
+    ...category.children.map((child) => ({
+      label: ar ? child.name_ar : child.name_en,
+      to: "/category/$slug",
+      params: { slug: child.slug },
+    })),
+  ]);
+
+  const groups = [
+    {
+      title:
+        adminItems.length > 0
+          ? ar
+            ? "روابط الهيدر"
+            : "Header links"
+          : ar
+            ? "كل التصنيفات"
+            : "All categories",
+      icon: adminItems.length > 0 ? Crown : ShoppingBasket,
+      items: adminItems.length > 0 ? adminItems : loaded ? fallbackItems : [],
+    },
+  ].filter((g) => g.items.length > 0);
 
   return (
     <div className="px-2 pb-8">
@@ -430,7 +371,7 @@ function CategoryMenu({ onNavigate, ar }: { onNavigate: () => void; ar: boolean 
             </div>
             <ul className="mt-1">
               {g.items.map((it) => (
-                <li key={it.label}>
+                <li key={`${it.to}-${it.label}`}>
                   <SheetClose asChild>
                     <Link
                       to={it.to as any}

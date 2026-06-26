@@ -47,10 +47,13 @@ export function DesktopHeader() {
           .order("display_order", { ascending: true });
         if (Array.isArray(data) && data.length) {
           const rows = data.map((r: any) => ({
-            slug: (r.href as string).replace(/^\//, "").replace(/^category\//, "") || "home",
+            slug:
+              ((r.href as string | null) || r.category_id || "home")
+                .replace?.(/^\//, "")
+                .replace?.(/^category\//, "") || "home",
             name_ar: r.label_ar || r.label_en || "",
             name_en: r.label_en || r.label_ar || "",
-            href: r.href as string,
+            href: (r.href as string | null) || "",
             category_id: r.category_id ?? null,
           }));
           if (active) setNavItems(rows);
@@ -202,17 +205,18 @@ export function DesktopHeader() {
 
           {/* Custom header_nav_items override, if any */}
           {navItems.map((c) => {
-            const active = location.pathname === c.href;
             const linkedCategory =
               (c.category_id ? tree.find((node) => node.id === c.category_id) : null) ??
               tree.find((node) => c.href === `/category/${node.slug}`);
+            const href = c.href || (linkedCategory ? `/category/${linkedCategory.slug}` : "/");
+            const active = location.pathname === href;
             if (linkedCategory?.children?.length) {
               return (
                 <HoverDropdown
-                  key={c.href}
+                  key={href}
                   liveId={`header-nav-${c.slug}`}
                   label={lang === "en" ? c.name_en.toUpperCase() : c.name_ar}
-                  parentHref={c.href}
+                  parentHref={href}
                   items={linkedCategory.children.map((ch) => ({
                     slug: ch.slug,
                     label: isRTL ? ch.name_ar : ch.name_en,
@@ -222,9 +226,9 @@ export function DesktopHeader() {
             }
             return (
               <Link
-                key={c.href}
+                key={href}
                 data-live-id={`header-nav-${c.slug}`}
-                to={c.href as any}
+                to={href as any}
                 className={[
                   "px-4 h-9 inline-flex items-center rounded-xl text-[11.5px] tracking-luxury transition",
                   active

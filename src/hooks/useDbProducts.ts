@@ -24,6 +24,12 @@ type DbRow = {
   size_guide_image_url?: string | null;
   size_guide_content_ar?: string | null;
   size_guide_content_en?: string | null;
+  delivery_estimate_ar?: string | null;
+  delivery_estimate_en?: string | null;
+  shipping_policy_ar?: string | null;
+  shipping_policy_en?: string | null;
+  return_policy_ar?: string | null;
+  return_policy_en?: string | null;
   price: number | null;
   compare_at_price: number | null;
   currency: string | null;
@@ -90,6 +96,21 @@ function mergeRowOntoBase(slug: string, row: DbRow | null, lang: "ar" | "en"): M
     row.size_guide_content_en ||
     row.size_guide_content_ar ||
     base.sizeGuideContent;
+  const deliveryEstimate =
+    (lang === "ar" ? row.delivery_estimate_ar : row.delivery_estimate_en) ||
+    row.delivery_estimate_en ||
+    row.delivery_estimate_ar ||
+    base.deliveryEstimate;
+  const shippingPolicy =
+    (lang === "ar" ? row.shipping_policy_ar : row.shipping_policy_en) ||
+    row.shipping_policy_en ||
+    row.shipping_policy_ar ||
+    base.shippingPolicy;
+  const returnPolicy =
+    (lang === "ar" ? row.return_policy_ar : row.return_policy_en) ||
+    row.return_policy_en ||
+    row.return_policy_ar ||
+    base.returnPolicy;
 
   const imgs = arr<string>(row.images).filter(Boolean);
   // Combine main image_url with images[]; dedupe to avoid showing the same picture twice.
@@ -140,15 +161,19 @@ function mergeRowOntoBase(slug: string, row: DbRow | null, lang: "ar" | "en"): M
     videoUrl: row.video_url ?? base.videoUrl,
     sizeGuideImageUrl: row.size_guide_image_url ?? base.sizeGuideImageUrl,
     sizeGuideContent,
+    deliveryEstimate,
+    shippingPolicy,
+    returnPolicy,
     __fromDb: true,
   };
 }
 
-const SELECT_COLS =
-  "id,slug,name_ar,name_en,brand,description_ar,description_en,short_description_ar,short_description_en,size_guide_image_url,size_guide_content_ar,size_guide_content_en,price,compare_at_price,currency,image_url,images,sizes,colors,stock,low_stock_threshold,status,video_url,sku,is_active";
+const SELECT_COLS = "*";
 
 export type SizeVariant = {
   size: string;
+  size_ar: string | null;
+  size_en: string | null;
   sku: string | null;
   price: number | null;
   stock: number;
@@ -191,6 +216,10 @@ export function useProductSizeVariants(productId: string | null): {
           )
           .map((r) => ({
             size: String(r.size).trim(),
+            size_ar: r?.attributes?.size_ar ? String(r.attributes.size_ar).trim() : null,
+            size_en: r?.attributes?.size_en
+              ? String(r.attributes.size_en).trim()
+              : String(r.size).trim(),
             sku: r.sku ?? null,
             price: r.price != null ? Number(r.price) : null,
             stock: Number(r.stock) || 0,

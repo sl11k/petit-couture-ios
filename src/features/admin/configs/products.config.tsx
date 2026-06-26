@@ -227,6 +227,49 @@ productsConfig.form = [
   },
 
   {
+    key: "delivery_estimate_ar",
+    label: { ar: "مدة التوصيل (عربي)", en: "Delivery estimate (AR)" },
+    type: "textarea",
+    rows: 2,
+    fullWidth: true,
+  },
+  {
+    key: "delivery_estimate_en",
+    label: { ar: "مدة التوصيل (إنجليزي)", en: "Delivery estimate (EN)" },
+    type: "textarea",
+    rows: 2,
+    fullWidth: true,
+  },
+  {
+    key: "shipping_policy_ar",
+    label: { ar: "الشحن داخل صفحة المنتج (عربي)", en: "Product shipping text (AR)" },
+    type: "textarea",
+    rows: 3,
+    fullWidth: true,
+  },
+  {
+    key: "shipping_policy_en",
+    label: { ar: "الشحن داخل صفحة المنتج (إنجليزي)", en: "Product shipping text (EN)" },
+    type: "textarea",
+    rows: 3,
+    fullWidth: true,
+  },
+  {
+    key: "return_policy_ar",
+    label: { ar: "الإرجاع داخل صفحة المنتج (عربي)", en: "Product return text (AR)" },
+    type: "textarea",
+    rows: 3,
+    fullWidth: true,
+  },
+  {
+    key: "return_policy_en",
+    label: { ar: "الإرجاع داخل صفحة المنتج (إنجليزي)", en: "Product return text (EN)" },
+    type: "textarea",
+    rows: 3,
+    fullWidth: true,
+  },
+
+  {
     key: "sizeSkus",
     label: { ar: "المقاسات والأكواد (SKU لكل مقاس)", en: "Sizes & SKUs (one SKU per size)" },
     type: "productSizes",

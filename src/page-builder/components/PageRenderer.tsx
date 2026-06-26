@@ -1846,7 +1846,9 @@ function RenderProductGrid({ s }: { s: ProductGridSection }) {
                     drag.moved = true;
                     try {
                       event.currentTarget.setPointerCapture(event.pointerId);
-                    } catch {}
+                    } catch {
+                      // Pointer capture can fail if the pointer is already released.
+                    }
                   }
                   event.currentTarget.scrollLeft = drag.scroll - delta;
                 }
@@ -1855,7 +1857,9 @@ function RenderProductGrid({ s }: { s: ProductGridSection }) {
                 dragRef.current.active = false;
                 try {
                   event.currentTarget.releasePointerCapture(event.pointerId);
-                } catch {}
+                } catch {
+                  // Safe to ignore when the browser has already released capture.
+                }
               }}
               onPointerCancel={() => {
                 dragRef.current.active = false;

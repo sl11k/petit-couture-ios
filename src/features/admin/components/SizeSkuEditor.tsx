@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils";
 export type SizeEntry = {
   id?: string;
   size: string;
+  size_ar?: string | null;
+  size_en?: string | null;
   sku?: string;
   price?: number | null;
   compare_at_price?: number | null;
@@ -20,7 +22,7 @@ export type SizeEntry = {
 };
 
 // digits inside a size label, e.g. "3 Years" -> "3"
-const digitsOf = (s: string) => (s.match(/\d+/)?.[0] ?? "");
+const digitsOf = (s: string) => s.match(/\d+/)?.[0] ?? "";
 
 // Grammatically correct age label per language.
 const ageLabel = (n: number, ar: boolean) => {
@@ -32,6 +34,7 @@ const ageLabel = (n: number, ar: boolean) => {
   }
   return `${n} ${n === 1 ? "Year" : "Years"}`;
 };
+const ageLabelPair = (n: number) => ({ ar: ageLabel(n, true), en: ageLabel(n, false) });
 
 const norm = (s?: string) => (s ?? "").trim().toLowerCase();
 
@@ -77,7 +80,15 @@ export function SizeSkuEditor({
   const add = () => {
     onChange([
       ...value,
-      { size: "", sku: "", price: basePrice || null, stock: 0, is_active: true },
+      {
+        size: "",
+        size_ar: "",
+        size_en: "",
+        sku: "",
+        price: basePrice || null,
+        stock: 0,
+        is_active: true,
+      },
     ]);
   };
 
@@ -88,16 +99,24 @@ export function SizeSkuEditor({
     const existing = new Set(value.map((r) => norm(r.size)).filter(Boolean));
     const added: SizeEntry[] = [];
     for (let n = lo; n <= hi; n++) {
-      const label = ageLabel(n, ar);
-      if (existing.has(norm(label))) continue;
-      added.push({ size: label, sku: "", price: basePrice || null, stock: 0, is_active: true });
+      const labels = ageLabelPair(n);
+      if (existing.has(norm(labels.en)) || existing.has(norm(labels.ar))) continue;
+      added.push({
+        size: labels.en,
+        size_ar: labels.ar,
+        size_en: labels.en,
+        sku: "",
+        price: basePrice || null,
+        stock: 0,
+        is_active: true,
+      });
     }
     if (added.length) onChange([...value, ...added]);
   };
 
   // Apply one price to every row (uses the typed value, else the base price).
   const applyPriceToAll = () => {
-    const p = priceAll.trim() === "" ? (basePrice || null) : Number(priceAll);
+    const p = priceAll.trim() === "" ? basePrice || null : Number(priceAll);
     onChange(value.map((r) => ({ ...r, price: p })));
   };
 
@@ -115,8 +134,16 @@ export function SizeSkuEditor({
   };
 
   // Duplicate detection + totals for the summary line.
-  const sizeCounts = value.reduce<Record<string, number>>((a, r) => { const k = norm(r.size); if (k) a[k] = (a[k] || 0) + 1; return a; }, {});
-  const skuCounts = value.reduce<Record<string, number>>((a, r) => { const k = norm(r.sku); if (k) a[k] = (a[k] || 0) + 1; return a; }, {});
+  const sizeCounts = value.reduce<Record<string, number>>((a, r) => {
+    const k = norm(r.size);
+    if (k) a[k] = (a[k] || 0) + 1;
+    return a;
+  }, {});
+  const skuCounts = value.reduce<Record<string, number>>((a, r) => {
+    const k = norm(r.sku);
+    if (k) a[k] = (a[k] || 0) + 1;
+    return a;
+  }, {});
   const totalQty = value.reduce((s, r) => s + (Number(r.stock) || 0), 0);
   const namedCount = value.filter((r) => (r.size || "").trim() !== "").length;
   const dupSizes = Object.values(sizeCounts).some((n) => n > 1);
@@ -137,10 +164,31 @@ export function SizeSkuEditor({
             <Wand2 className="h-3 w-3" /> {ar ? "توليد الأعمار" : "Generate ages"}
           </label>
           <div className="flex items-center gap-1.5">
-            <input type="number" min={0} max={30} value={fromAge} onChange={(e) => setFromAge(Number(e.target.value))} className="h-8 w-16 rounded-md border border-input bg-background px-2 text-xs" aria-label={ar ? "من عمر" : "From age"} />
+            <input
+              type="number"
+              min={0}
+              max={30}
+              value={fromAge}
+              onChange={(e) => setFromAge(Number(e.target.value))}
+              className="h-8 w-16 rounded-md border border-input bg-background px-2 text-xs"
+              aria-label={ar ? "من عمر" : "From age"}
+            />
             <span className="text-[11px] text-muted-foreground">{ar ? "إلى" : "to"}</span>
-            <input type="number" min={0} max={30} value={toAge} onChange={(e) => setToAge(Number(e.target.value))} className="h-8 w-16 rounded-md border border-input bg-background px-2 text-xs" aria-label={ar ? "إلى عمر" : "To age"} />
-            <button type="button" onClick={generateAges} disabled={disabled} className="inline-flex h-8 items-center gap-1 rounded-md bg-secondary px-2.5 text-[11px] hover:bg-secondary/80 disabled:opacity-50">
+            <input
+              type="number"
+              min={0}
+              max={30}
+              value={toAge}
+              onChange={(e) => setToAge(Number(e.target.value))}
+              className="h-8 w-16 rounded-md border border-input bg-background px-2 text-xs"
+              aria-label={ar ? "إلى عمر" : "To age"}
+            />
+            <button
+              type="button"
+              onClick={generateAges}
+              disabled={disabled}
+              className="inline-flex h-8 items-center gap-1 rounded-md bg-secondary px-2.5 text-[11px] hover:bg-secondary/80 disabled:opacity-50"
+            >
               <Plus className="h-3 w-3" /> {ar ? "توليد" : "Generate"}
             </button>
           </div>
@@ -151,14 +199,37 @@ export function SizeSkuEditor({
             <Hash className="h-3 w-3" /> {ar ? "تعبئة الأكواد تلقائياً" : "Auto-fill SKUs"}
           </label>
           <div className="flex items-center gap-1.5">
-            <input type="text" value={skuBase} onChange={(e) => setSkuBase(e.target.value)} placeholder={ar ? "بادئة الكود مثل VESTIDO481" : "base e.g. VESTIDO481"} className="h-8 flex-1 rounded-md border border-input bg-background px-2 text-xs font-mono" dir="ltr" />
-            <input type="text" value={skuSuffix} onChange={(e) => setSkuSuffix(e.target.value)} placeholder={ar ? "لاحقة" : "suffix"} className="h-8 w-14 rounded-md border border-input bg-background px-2 text-xs font-mono" dir="ltr" aria-label={ar ? "لاحقة الكود" : "SKU suffix"} />
-            <button type="button" onClick={() => autoFillSkus(false)} disabled={disabled || !skuBase.trim()} className="inline-flex h-8 items-center gap-1 rounded-md bg-secondary px-2.5 text-[11px] hover:bg-secondary/80 disabled:opacity-50" title={ar ? "تعبئة الأكواد الفارغة فقط" : "Fill empty SKUs only"}>
+            <input
+              type="text"
+              value={skuBase}
+              onChange={(e) => setSkuBase(e.target.value)}
+              placeholder={ar ? "بادئة الكود مثل VESTIDO481" : "base e.g. VESTIDO481"}
+              className="h-8 flex-1 rounded-md border border-input bg-background px-2 text-xs font-mono"
+              dir="ltr"
+            />
+            <input
+              type="text"
+              value={skuSuffix}
+              onChange={(e) => setSkuSuffix(e.target.value)}
+              placeholder={ar ? "لاحقة" : "suffix"}
+              className="h-8 w-14 rounded-md border border-input bg-background px-2 text-xs font-mono"
+              dir="ltr"
+              aria-label={ar ? "لاحقة الكود" : "SKU suffix"}
+            />
+            <button
+              type="button"
+              onClick={() => autoFillSkus(false)}
+              disabled={disabled || !skuBase.trim()}
+              className="inline-flex h-8 items-center gap-1 rounded-md bg-secondary px-2.5 text-[11px] hover:bg-secondary/80 disabled:opacity-50"
+              title={ar ? "تعبئة الأكواد الفارغة فقط" : "Fill empty SKUs only"}
+            >
               {ar ? "تعبئة" : "Fill"}
             </button>
           </div>
           <p className="text-[10px] text-muted-foreground" dir="ltr">
-            {skuBase.trim() ? `${skuBase.trim()}${digitsOf(value[0]?.size || "3")}${skuSuffix.trim()} …` : ""}
+            {skuBase.trim()
+              ? `${skuBase.trim()}${digitsOf(value[0]?.size || "3")}${skuSuffix.trim()} …`
+              : ""}
           </p>
         </div>
       </div>
@@ -169,14 +240,31 @@ export function SizeSkuEditor({
           <div className="flex items-center gap-1.5">
             <div className="flex items-center rounded-md border border-input bg-background">
               <span className="px-1.5 text-[10px] text-muted-foreground">{currency}</span>
-              <input type="number" min={0} step={0.01} value={priceAll} onChange={(e) => setPriceAll(e.target.value)} placeholder={String(basePrice || "")} className="h-7 w-20 bg-transparent px-1 text-xs outline-none" dir="ltr" aria-label={ar ? "سعر موحّد" : "Uniform price"} />
+              <input
+                type="number"
+                min={0}
+                step={0.01}
+                value={priceAll}
+                onChange={(e) => setPriceAll(e.target.value)}
+                placeholder={String(basePrice || "")}
+                className="h-7 w-20 bg-transparent px-1 text-xs outline-none"
+                dir="ltr"
+                aria-label={ar ? "سعر موحّد" : "Uniform price"}
+              />
             </div>
-            <button type="button" onClick={applyPriceToAll} disabled={disabled} className="h-7 rounded-md bg-secondary px-2.5 text-[11px] hover:bg-secondary/80 disabled:opacity-50">
+            <button
+              type="button"
+              onClick={applyPriceToAll}
+              disabled={disabled}
+              className="h-7 rounded-md bg-secondary px-2.5 text-[11px] hover:bg-secondary/80 disabled:opacity-50"
+            >
               {ar ? "طبّق السعر على الكل" : "Apply price to all"}
             </button>
           </div>
           <div className="text-[11px] text-muted-foreground">
-            {ar ? `${namedCount} مقاس · المخزون الكلي ${totalQty}` : `${namedCount} sizes · ${totalQty} total stock`}
+            {ar
+              ? `${namedCount} مقاس · المخزون الكلي ${totalQty}`
+              : `${namedCount} sizes · ${totalQty} total stock`}
           </div>
         </div>
       )}
@@ -191,14 +279,17 @@ export function SizeSkuEditor({
 
       {value.length === 0 && (
         <div className="rounded-md border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
-          {ar ? 'لا توجد مقاسات بعد — ولّد الأعمار بالأعلى أو اضغط "إضافة مقاس".' : 'No sizes yet — generate ages above or click "Add size".'}
+          {ar
+            ? 'لا توجد مقاسات بعد — ولّد الأعمار بالأعلى أو اضغط "إضافة مقاس".'
+            : 'No sizes yet — generate ages above or click "Add size".'}
         </div>
       )}
 
       {/* Header row (desktop) */}
       {value.length > 0 && (
-        <div className="hidden grid-cols-[1.4fr_1.6fr_1.1fr_0.8fr_auto] gap-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:grid">
-          <span>{ar ? "المقاس / العمر" : "Size / Age"}</span>
+        <div className="hidden grid-cols-[1.1fr_1.1fr_1.45fr_1fr_0.8fr_auto] gap-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:grid">
+          <span>{ar ? "المقاس عربي" : "Arabic size"}</span>
+          <span>{ar ? "المقاس إنجليزي" : "English size"}</span>
           <span>SKU</span>
           <span>{ar ? "السعر" : "Price"}</span>
           <span>{ar ? "الكمية" : "Qty"}</span>
@@ -215,45 +306,139 @@ export function SizeSkuEditor({
             <li
               key={row.id ?? `new-${idx}`}
               className={cn(
-                "grid grid-cols-1 items-center gap-2 rounded-lg border border-border bg-card p-2.5 sm:grid-cols-[1.4fr_1.6fr_1.1fr_0.8fr_auto]",
+                "grid grid-cols-1 items-center gap-2 rounded-lg border border-border bg-card p-2.5 sm:grid-cols-[1.1fr_1.1fr_1.45fr_1fr_0.8fr_auto]",
                 inactive && "opacity-60",
               )}
             >
               <div className="space-y-1">
-                <span className="text-[10px] text-muted-foreground sm:hidden">{ar ? "المقاس / العمر" : "Size / Age"}</span>
-                <input type="text" value={row.size} onChange={(e) => update(idx, { size: e.target.value })} placeholder={ar ? "مثال: 3 سنوات" : "e.g. 3 Years"} className={cn("h-8 w-full rounded-md border bg-background px-2 text-xs", sizeDup ? "border-red-400 ring-1 ring-red-300" : "border-input")} />
+                <span className="text-[10px] text-muted-foreground sm:hidden">
+                  {ar ? "المقاس عربي" : "Arabic size"}
+                </span>
+                <input
+                  type="text"
+                  value={row.size_ar ?? ""}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    update(idx, { size_ar: next, size: row.size_en || row.size || next });
+                  }}
+                  placeholder={ar ? "مثال: 3 سنوات" : "e.g. 3 سنوات"}
+                  className={cn(
+                    "h-8 w-full rounded-md border bg-background px-2 text-xs",
+                    sizeDup ? "border-red-400 ring-1 ring-red-300" : "border-input",
+                  )}
+                  dir="rtl"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-[10px] text-muted-foreground sm:hidden">
+                  {ar ? "المقاس إنجليزي" : "English size"}
+                </span>
+                <input
+                  type="text"
+                  value={row.size_en ?? row.size}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    update(idx, { size_en: next, size: next || row.size_ar || row.size });
+                  }}
+                  placeholder="e.g. 3 Years"
+                  className={cn(
+                    "h-8 w-full rounded-md border bg-background px-2 text-xs",
+                    sizeDup ? "border-red-400 ring-1 ring-red-300" : "border-input",
+                  )}
+                  dir="ltr"
+                />
               </div>
 
               <div className="space-y-1">
                 <span className="text-[10px] text-muted-foreground sm:hidden">SKU</span>
-                <input type="text" value={row.sku ?? ""} onChange={(e) => update(idx, { sku: e.target.value })} placeholder="VESTIDO4813Y" className={cn("h-8 w-full rounded-md border bg-background px-2 text-xs font-mono", skuDup ? "border-red-400 ring-1 ring-red-300" : "border-input")} dir="ltr" />
+                <input
+                  type="text"
+                  value={row.sku ?? ""}
+                  onChange={(e) => update(idx, { sku: e.target.value })}
+                  placeholder="VESTIDO4813Y"
+                  className={cn(
+                    "h-8 w-full rounded-md border bg-background px-2 text-xs font-mono",
+                    skuDup ? "border-red-400 ring-1 ring-red-300" : "border-input",
+                  )}
+                  dir="ltr"
+                />
               </div>
 
               <div className="space-y-1">
-                <span className="text-[10px] text-muted-foreground sm:hidden">{ar ? "السعر" : "Price"}</span>
+                <span className="text-[10px] text-muted-foreground sm:hidden">
+                  {ar ? "السعر" : "Price"}
+                </span>
                 <div className="flex items-center rounded-md border border-input bg-background">
                   <span className="px-2 text-[10px] text-muted-foreground">{currency}</span>
-                  <input type="number" min={0} step={0.01} value={row.price ?? ""} onChange={(e) => update(idx, { price: e.target.value === "" ? null : Number(e.target.value) })} placeholder={String(basePrice || "")} className="h-8 w-full rounded-md bg-transparent px-1 text-xs outline-none" dir="ltr" />
+                  <input
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    value={row.price ?? ""}
+                    onChange={(e) =>
+                      update(idx, { price: e.target.value === "" ? null : Number(e.target.value) })
+                    }
+                    placeholder={String(basePrice || "")}
+                    className="h-8 w-full rounded-md bg-transparent px-1 text-xs outline-none"
+                    dir="ltr"
+                  />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <span className="text-[10px] text-muted-foreground sm:hidden">{ar ? "الكمية" : "Qty"}</span>
-                <input type="number" min={0} value={row.stock ?? 0} onChange={(e) => update(idx, { stock: Number(e.target.value) })} className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs" dir="ltr" />
+                <span className="text-[10px] text-muted-foreground sm:hidden">
+                  {ar ? "الكمية" : "Qty"}
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  value={row.stock ?? 0}
+                  onChange={(e) => update(idx, { stock: Number(e.target.value) })}
+                  className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
+                  dir="ltr"
+                />
               </div>
 
               <div className="flex items-center justify-end gap-1.5">
-                <button type="button" onClick={() => move(idx, -1)} disabled={disabled || idx === 0} className="rounded p-1 text-muted-foreground hover:bg-muted disabled:opacity-30" aria-label={ar ? "تحريك للأعلى" : "Move up"} title={ar ? "تحريك للأعلى" : "Move up"}>
+                <button
+                  type="button"
+                  onClick={() => move(idx, -1)}
+                  disabled={disabled || idx === 0}
+                  className="rounded p-1 text-muted-foreground hover:bg-muted disabled:opacity-30"
+                  aria-label={ar ? "تحريك للأعلى" : "Move up"}
+                  title={ar ? "تحريك للأعلى" : "Move up"}
+                >
                   <ArrowUp className="h-3.5 w-3.5" />
                 </button>
-                <button type="button" onClick={() => move(idx, 1)} disabled={disabled || idx === value.length - 1} className="rounded p-1 text-muted-foreground hover:bg-muted disabled:opacity-30" aria-label={ar ? "تحريك للأسفل" : "Move down"} title={ar ? "تحريك للأسفل" : "Move down"}>
+                <button
+                  type="button"
+                  onClick={() => move(idx, 1)}
+                  disabled={disabled || idx === value.length - 1}
+                  className="rounded p-1 text-muted-foreground hover:bg-muted disabled:opacity-30"
+                  aria-label={ar ? "تحريك للأسفل" : "Move down"}
+                  title={ar ? "تحريك للأسفل" : "Move down"}
+                >
                   <ArrowDown className="h-3.5 w-3.5" />
                 </button>
-                <label className="flex items-center gap-1 text-[10px] text-muted-foreground" title={ar ? "متاح للبيع" : "Available for sale"}>
-                  <input type="checkbox" checked={row.is_active ?? true} onChange={(e) => update(idx, { is_active: e.target.checked })} />
+                <label
+                  className="flex items-center gap-1 text-[10px] text-muted-foreground"
+                  title={ar ? "متاح للبيع" : "Available for sale"}
+                >
+                  <input
+                    type="checkbox"
+                    checked={row.is_active ?? true}
+                    onChange={(e) => update(idx, { is_active: e.target.checked })}
+                  />
                   <span className="hidden sm:inline">{ar ? "متاح" : "Active"}</span>
                 </label>
-                <button type="button" onClick={() => remove(idx)} disabled={disabled} className="rounded p-1 text-destructive hover:bg-destructive/10 disabled:opacity-50" aria-label={ar ? "حذف المقاس" : "Remove size"}>
+                <button
+                  type="button"
+                  onClick={() => remove(idx)}
+                  disabled={disabled}
+                  className="rounded p-1 text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                  aria-label={ar ? "حذف المقاس" : "Remove size"}
+                >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>
@@ -262,7 +447,15 @@ export function SizeSkuEditor({
         })}
       </ul>
 
-      <button type="button" onClick={add} disabled={disabled} className={cn("flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border py-2 text-xs", "text-muted-foreground hover:bg-muted/40 hover:text-foreground disabled:opacity-50")}>
+      <button
+        type="button"
+        onClick={add}
+        disabled={disabled}
+        className={cn(
+          "flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border py-2 text-xs",
+          "text-muted-foreground hover:bg-muted/40 hover:text-foreground disabled:opacity-50",
+        )}
+      >
         <Plus className="h-3.5 w-3.5" />
         {ar ? "إضافة مقاس" : "Add size"}
       </button>

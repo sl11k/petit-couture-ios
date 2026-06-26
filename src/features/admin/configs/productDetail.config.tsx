@@ -37,6 +37,41 @@ function renderApplySizeGuideToAllButton(row: any) {
   );
 }
 
+function renderApplyShippingReturnsToAllButton(row: any) {
+  const payload = {
+    delivery_estimate_ar: row.delivery_estimate_ar ?? null,
+    delivery_estimate_en: row.delivery_estimate_en ?? null,
+    shipping_policy_ar: row.shipping_policy_ar ?? null,
+    shipping_policy_en: row.shipping_policy_en ?? null,
+    return_policy_ar: row.return_policy_ar ?? null,
+    return_policy_en: row.return_policy_en ?? null,
+  };
+  const hasContent = Object.values(payload).some((v) => typeof v === "string" && v.trim() !== "");
+  const apply = async () => {
+    if (!hasContent) {
+      toast.error("أضف نص الشحن أو الإرجاع أولاً");
+      return;
+    }
+    if (!window.confirm("تطبيق نصوص الشحن والإرجاع الحالية على كل المنتجات؟")) return;
+    const { error } = await (supabase as any).from("products").update(payload);
+    if (error) {
+      toast.error(error.message || "تعذر تطبيق الشحن والإرجاع على كل المنتجات");
+      return;
+    }
+    toast.success("تم تطبيق الشحن والإرجاع على كل المنتجات");
+  };
+  return (
+    <button
+      type="button"
+      onClick={apply}
+      disabled={!hasContent}
+      className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+    >
+      تطبيق الشحن والإرجاع على كل المنتجات
+    </button>
+  );
+}
+
 export const productDetailConfig: AdminDetailConfig = {
   table: "products",
   backTo: "/admin/products",
@@ -166,6 +201,47 @@ export const productDetailConfig: AdminDetailConfig = {
           key: "id",
           label: { ar: "تطبيق عام", en: "Global apply" },
           render: (_v: any, row: any) => renderApplySizeGuideToAllButton(row),
+        },
+        {
+          key: "delivery_estimate_ar",
+          label: { ar: "مدة التوصيل (عربي)", en: "Delivery estimate (AR)" },
+          type: "longtext",
+          hideIfEmpty: true,
+        },
+        {
+          key: "delivery_estimate_en",
+          label: { ar: "مدة التوصيل (إنجليزي)", en: "Delivery estimate (EN)" },
+          type: "longtext",
+          hideIfEmpty: true,
+        },
+        {
+          key: "shipping_policy_ar",
+          label: { ar: "الشحن (عربي)", en: "Shipping text (AR)" },
+          type: "longtext",
+          hideIfEmpty: true,
+        },
+        {
+          key: "shipping_policy_en",
+          label: { ar: "الشحن (إنجليزي)", en: "Shipping text (EN)" },
+          type: "longtext",
+          hideIfEmpty: true,
+        },
+        {
+          key: "return_policy_ar",
+          label: { ar: "الإرجاع (عربي)", en: "Return text (AR)" },
+          type: "longtext",
+          hideIfEmpty: true,
+        },
+        {
+          key: "return_policy_en",
+          label: { ar: "الإرجاع (إنجليزي)", en: "Return text (EN)" },
+          type: "longtext",
+          hideIfEmpty: true,
+        },
+        {
+          key: "id",
+          label: { ar: "تطبيق الشحن والإرجاع", en: "Apply shipping & returns" },
+          render: (_v: any, row: any) => renderApplyShippingReturnsToAllButton(row),
         },
         {
           key: "id",
