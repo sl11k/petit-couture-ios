@@ -215,7 +215,13 @@ export function SiteInlineEditor({
     const persistLang = persistLangFor(prop, currentLang, selector);
     const next = {
       ...draftRef.current,
-      [keyOf(selector, prop, persistLang, fieldPagePath)]: { selector, prop, lang: persistLang, value, pagePath: fieldPagePath },
+      [keyOf(selector, prop, persistLang, fieldPagePath)]: {
+        selector,
+        prop,
+        lang: persistLang,
+        value,
+        pagePath: fieldPagePath,
+      },
     };
     draftRef.current = next;
     setDraft(next);
@@ -228,11 +234,12 @@ export function SiteInlineEditor({
     setField(selector, "href", url);
 
     const liveId = anchor.getAttribute("data-live-id");
-    const contactText = liveId === "footer-email" && /^mailto:/i.test(url)
-      ? url.replace(/^mailto:/i, "").trim()
-      : liveId === "footer-phone" && /^tel:/i.test(url)
-        ? url.replace(/^tel:/i, "").trim()
-        : null;
+    const contactText =
+      liveId === "footer-email" && /^mailto:/i.test(url)
+        ? url.replace(/^mailto:/i, "").trim()
+        : liveId === "footer-phone" && /^tel:/i.test(url)
+          ? url.replace(/^tel:/i, "").trim()
+          : null;
     if (contactText) {
       anchor.textContent = contactText;
       setField(selector, "text", contactText);
@@ -258,13 +265,21 @@ export function SiteInlineEditor({
       const root = rootRef.current;
       if (!root) return;
       const applyAll = () => {
-      const current = [
+        const current = [
           ...loadedOverridesRef.current,
           ...Object.values(draftRef.current).map((item) => ({ ...item, value: item.value })),
         ];
-        const ordered = [...current].sort((a, b) => Number(a.prop !== "style") - Number(b.prop !== "style"));
+        const ordered = [...current].sort(
+          (a, b) => Number(a.prop !== "style") - Number(b.prop !== "style"),
+        );
         for (const o of ordered) {
-          if (o.lang && o.lang !== "*" && o.lang !== langRef.current && (o.prop === "text" || o.prop === "html")) continue;
+          if (
+            o.lang &&
+            o.lang !== "*" &&
+            o.lang !== langRef.current &&
+            (o.prop === "text" || o.prop === "html")
+          )
+            continue;
           const el = resolveSelector(root, o.selector);
           // Do not fight the browser while the admin is typing. The value is
           // captured on blur and then becomes the newest in-memory override.
@@ -415,15 +430,14 @@ export function SiteInlineEditor({
       if (target.closest("[role=dialog]")) return;
       const a = target.closest("a");
       if (a) {
-        e.preventDefault();
-        e.stopPropagation();
-        // Product cards are data-driven preview content rather than editable
-        // link fields. Let the admin verify them without leaving and losing
-        // the current editor session.
+        // Product cards must remain real navigation targets. The admin often
+        // verifies product pages from the live editor, and popup-based previews
+        // are easy for desktop/mobile browsers to block.
         if (a.getAttribute("data-live-navigation") === "product") {
-          window.open((a as HTMLAnchorElement).href, "_blank", "noopener,noreferrer");
           return;
         }
+        e.preventDefault();
+        e.stopPropagation();
         // If anchor wraps a non-text element (image/icon), open href editor
         if (selected?.kind !== "text") {
           const url = window.prompt("الرابط:", (a as HTMLAnchorElement).href);
@@ -531,7 +545,10 @@ export function SiteInlineEditor({
     if (el.closest("[data-lpe-ui]")) return;
     const stableTarget = (el.closest("[data-live-id]") as HTMLElement | null) ?? el;
     if (!rootRef.current.contains(stableTarget)) return;
-    const label = stableTarget.getAttribute("data-live-id") || stableTarget.textContent?.trim().slice(0, 40) || stableTarget.tagName.toLowerCase();
+    const label =
+      stableTarget.getAttribute("data-live-id") ||
+      stableTarget.textContent?.trim().slice(0, 40) ||
+      stableTarget.tagName.toLowerCase();
     if (
       !window.confirm(
         lang === "ar"
@@ -546,7 +563,11 @@ export function SiteInlineEditor({
     stableTarget.style.display = "none";
     setField(selector, "style", { display: "none" }, { lang: "*" });
     setSelected(null);
-    toast.success(lang === "ar" ? "تم إخفاء العنصر. اضغط نشر لتطبيقه للعملاء." : "Element hidden. Publish to apply it.");
+    toast.success(
+      lang === "ar"
+        ? "تم إخفاء العنصر. اضغط نشر لتطبيقه للعملاء."
+        : "Element hidden. Publish to apply it.",
+    );
   };
 
   useEffect(() => {
@@ -598,7 +619,8 @@ export function SiteInlineEditor({
     if (block.en === "Shop by age") content.source = "category";
     if (block.en === "Lookbook") content.columns = 2;
     if (["Instagram grid", "Customer photos"].includes(block.en)) content.columns = 4;
-    if (block.en === "Featured quote" && Array.isArray(content.items)) content.items = content.items.slice(0, 1);
+    if (block.en === "Featured quote" && Array.isArray(content.items))
+      content.items = content.items.slice(0, 1);
     pageEditor.addSection(section);
     pageEditor.notifyChange(lang === "ar" ? `تمت إضافة ${block.ar}` : `Added ${block.en}`);
     setLibraryOpen(false);

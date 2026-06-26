@@ -69,11 +69,21 @@ export function HomeScreen() {
   const [hasAnyCategories, setHasAnyCategories] = useState<boolean | null>(null);
 
   useEffect(() => {
-    fetchBanners().then(setBanners).catch(() => {});
-    fetchFeaturedCategories().then(setFeaturedCats).catch(() => {});
-    fetchPopularPicks().then(setPopular).catch(() => {});
-    fetchAnnouncements().then(setAnnouncements).catch(() => {});
-    fetchStorefrontSettings().then(setSettings).catch(() => {});
+    fetchBanners()
+      .then(setBanners)
+      .catch(() => {});
+    fetchFeaturedCategories()
+      .then(setFeaturedCats)
+      .catch(() => {});
+    fetchPopularPicks()
+      .then(setPopular)
+      .catch(() => {});
+    fetchAnnouncements()
+      .then(setAnnouncements)
+      .catch(() => {});
+    fetchStorefrontSettings()
+      .then(setSettings)
+      .catch(() => {});
     // Detect whether admin has added any real products/categories — used to hide mock content
     supabase
       .from("products")
@@ -85,20 +95,22 @@ export function HomeScreen() {
       .select("id", { count: "exact", head: true })
       .eq("is_active", true)
       .then(({ count }) => setHasAnyCategories((count ?? 0) > 0));
-    fetchHomeSections(true).then(async (secs) => {
-      setSections(secs);
-      const productKinds = new Set(["most_popular", "new_arrivals", "custom_collection"]);
-      const entries = await Promise.all(
-        secs
-          .filter((s) => productKinds.has(s.kind))
-          .map(async (s) => {
-            const limit = Number((s.config as any)?.limit ?? 8);
-            const items = await resolveSectionProducts(s, limit).catch(() => []);
-            return [s.id, items] as const;
-          }),
-      );
-      setSectionProducts(Object.fromEntries(entries));
-    }).catch(() => {});
+    fetchHomeSections(true)
+      .then(async (secs) => {
+        setSections(secs);
+        const productKinds = new Set(["most_popular", "new_arrivals", "custom_collection"]);
+        const entries = await Promise.all(
+          secs
+            .filter((s) => productKinds.has(s.kind))
+            .map(async (s) => {
+              const limit = Number((s.config as any)?.limit ?? 8);
+              const items = await resolveSectionProducts(s, limit).catch(() => []);
+              return [s.id, items] as const;
+            }),
+        );
+        setSectionProducts(Object.fromEntries(entries));
+      })
+      .catch(() => {});
   }, []);
 
   const displayMode = settings?.banner_display_mode ?? "rotate";
@@ -112,9 +124,10 @@ export function HomeScreen() {
   }, [banners.length, settings?.banner_autoplay_seconds, displayMode]);
 
   // Announcement rotate (DB-driven first, fallback to dictionary)
-  const annMessages = announcements.length > 0
-    ? announcements.map((a) => (ar ? a.message_ar : a.message_en))
-    : t.announcements;
+  const annMessages =
+    announcements.length > 0
+      ? announcements.map((a) => (ar ? a.message_ar : a.message_en))
+      : t.announcements;
   useEffect(() => {
     if (annMessages.length <= 1) return;
     const sec = settings?.announcement_rotate_seconds ?? 4;
@@ -122,36 +135,39 @@ export function HomeScreen() {
     return () => clearInterval(id);
   }, [annMessages.length, settings?.announcement_rotate_seconds]);
 
-  useEffect(() => { setAnnIdx(0); }, [lang, announcements.length]);
+  useEffect(() => {
+    setAnnIdx(0);
+  }, [lang, announcements.length]);
 
   // Popular cards: dynamic if popular_picks exist; otherwise show mock ONLY when no real
   // products/categories have been added by the admin yet.
   const dbCats = useDbCategories();
-  const popularCards = popular.length > 0
-    ? popular.map((p) => ({
-        key: p.id,
-        href: p.link_url,
-        img: p.image_url,
-        label: ar ? p.label_ar : p.label_en,
-        wishId: `popular:${p.id}`,
-      }))
-    : dbCats.length > 0
-      ? dbCats.map((c) => ({
-          key: c.slug,
-          href: `/category/${c.slug}`,
-          img: c.image_url ?? "",
-          label: ar ? c.name_ar : c.name_en,
-          wishId: `category:${c.slug}`,
+  const popularCards =
+    popular.length > 0
+      ? popular.map((p) => ({
+          key: p.id,
+          href: p.link_url,
+          img: p.image_url,
+          label: ar ? p.label_ar : p.label_en,
+          wishId: `popular:${p.id}`,
         }))
-      : (hasAnyProducts || hasAnyCategories)
-        ? []
-        : categories.map((c) => ({
+      : dbCats.length > 0
+        ? dbCats.map((c) => ({
             key: c.slug,
             href: `/category/${c.slug}`,
-            img: c.img,
-            label: t.categories[c.slug] ?? c.name,
+            img: c.image_url ?? "",
+            label: ar ? c.name_ar : c.name_en,
             wishId: `category:${c.slug}`,
-          }));
+          }))
+        : hasAnyProducts || hasAnyCategories
+          ? []
+          : categories.map((c) => ({
+              key: c.slug,
+              href: `/category/${c.slug}`,
+              img: c.img,
+              label: t.categories[c.slug] ?? c.name,
+              wishId: `category:${c.slug}`,
+            }));
 
   const currentBanner = banners[bannerIdx];
 
@@ -168,7 +184,11 @@ export function HomeScreen() {
             {lang === "en" ? "ع AR" : "EN"}
           </button>
 
-          <Link to="/" aria-label="Le Petit Paradis" className="flex flex-col items-center select-none">
+          <Link
+            to="/"
+            aria-label="Le Petit Paradis"
+            className="flex flex-col items-center select-none"
+          >
             <BrandLogo height={34} />
           </Link>
 
@@ -177,9 +197,16 @@ export function HomeScreen() {
             aria-label={isRTL ? "المفضلة" : "Wishlist"}
             className="relative h-10 w-10 -me-2 grid place-items-center rounded-xl border border-gold-soft text-gold-deep active:scale-95 transition"
           >
-            <Heart className="h-[18px] w-[18px]" strokeWidth={1.5} fill={wishlist.count > 0 ? "currentColor" : "none"} />
+            <Heart
+              className="h-[18px] w-[18px]"
+              strokeWidth={1.5}
+              fill={wishlist.count > 0 ? "currentColor" : "none"}
+            />
             {wishlist.count > 0 && (
-              <span aria-hidden="true" className="absolute -top-1 -end-1 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-background text-[10px] font-medium grid place-items-center shadow-soft">
+              <span
+                aria-hidden="true"
+                className="absolute -top-1 -end-1 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-background text-[10px] font-medium grid place-items-center shadow-soft"
+              >
                 {wishlist.count > 99 ? "99+" : wishlist.count}
               </span>
             )}
@@ -255,7 +282,10 @@ export function HomeScreen() {
                 {banners.length > 1 && (
                   <div className="mt-3 flex justify-center gap-1.5">
                     {banners.map((_, i) => (
-                      <span key={i} className={`h-1.5 rounded-full transition-all ${i === bannerIdx ? "w-6 bg-foreground" : "w-1.5 bg-foreground/40"}`} />
+                      <span
+                        key={i}
+                        className={`h-1.5 rounded-full transition-all ${i === bannerIdx ? "w-6 bg-foreground" : "w-1.5 bg-foreground/40"}`}
+                      />
                     ))}
                   </div>
                 )}
@@ -302,11 +332,20 @@ export function HomeScreen() {
                 ) : (
                   // Fallback hero (no banners configured yet)
                   <div>
-                    <img src={hero} alt="Le Petit Paradis" className="w-full h-[440px] object-cover" loading="eager" />
+                    <img
+                      src={hero}
+                      alt="Le Petit Paradis"
+                      className="w-full h-[440px] object-cover"
+                      loading="eager"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-background/45 via-transparent to-transparent" />
                     <div className="absolute inset-0 flex flex-col items-center justify-end pb-7 px-6 text-center">
-                      <h1 className="mt-2 font-serif text-[56px] leading-[0.95] text-foreground">Le Petit Paradis</h1>
-                      <p className="mt-1 font-serif italic text-[22px] text-foreground/85">{ar ? "أناقة الأطفال" : "Children's elegance"}</p>
+                      <h1 className="mt-2 font-serif text-[56px] leading-[0.95] text-foreground">
+                        Le Petit Paradis
+                      </h1>
+                      <p className="mt-1 font-serif italic text-[22px] text-foreground/85">
+                        {ar ? "أناقة الأطفال" : "Children's elegance"}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -319,18 +358,29 @@ export function HomeScreen() {
                       onClick={() => setBannerIdx((i) => (i - 1 + banners.length) % banners.length)}
                       className="absolute top-1/2 -translate-y-1/2 start-2 h-9 w-9 rounded-xl bg-background/80 backdrop-blur grid place-items-center text-foreground"
                     >
-                      {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                      {isRTL ? (
+                        <ChevronRight className="h-4 w-4" />
+                      ) : (
+                        <ChevronLeft className="h-4 w-4" />
+                      )}
                     </button>
                     <button
                       aria-label="Next"
                       onClick={() => setBannerIdx((i) => (i + 1) % banners.length)}
                       className="absolute top-1/2 -translate-y-1/2 end-2 h-9 w-9 rounded-xl bg-background/80 backdrop-blur grid place-items-center text-foreground"
                     >
-                      {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      {isRTL ? (
+                        <ChevronLeft className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
                     </button>
                     <div className="absolute bottom-3 inset-x-0 flex justify-center gap-1.5">
                       {banners.map((_, i) => (
-                        <span key={i} className={`h-1.5 rounded-full transition-all ${i === bannerIdx ? "w-6 bg-foreground" : "w-1.5 bg-foreground/40"}`} />
+                        <span
+                          key={i}
+                          className={`h-1.5 rounded-full transition-all ${i === bannerIdx ? "w-6 bg-foreground" : "w-1.5 bg-foreground/40"}`}
+                        />
                       ))}
                     </div>
                   </>
@@ -341,15 +391,31 @@ export function HomeScreen() {
 
           {/* Shop by category — DB-driven; mock shown only when no admin content exists */}
           {(() => {
-            const cats = featuredCats.length > 0
-              ? featuredCats
-              : (hasAnyCategories || hasAnyProducts)
-                ? []
-                : ([
-                    { id: "f1", label_ar: "رضّع", label_en: "Babies", link_url: "/category/babysuits" },
-                    { id: "f2", label_ar: "بنات", label_en: "Girls", link_url: "/category/dresses" },
-                    { id: "f3", label_ar: "أولاد", label_en: "Boys", link_url: "/category/outfit-sets" },
-                  ] as any[]);
+            const cats =
+              featuredCats.length > 0
+                ? featuredCats
+                : hasAnyCategories || hasAnyProducts
+                  ? []
+                  : ([
+                      {
+                        id: "f1",
+                        label_ar: "رضّع",
+                        label_en: "Babies",
+                        link_url: "/category/babysuits",
+                      },
+                      {
+                        id: "f2",
+                        label_ar: "بنات",
+                        label_en: "Girls",
+                        link_url: "/category/dresses",
+                      },
+                      {
+                        id: "f3",
+                        label_ar: "أولاد",
+                        label_en: "Boys",
+                        link_url: "/category/outfit-sets",
+                      },
+                    ] as any[]);
             if (cats.length === 0) return null;
             return (
               <section className="px-5 mt-8">
@@ -360,7 +426,9 @@ export function HomeScreen() {
                 </div>
                 <div
                   className="grid gap-3"
-                  style={{ gridTemplateColumns: `repeat(${Math.min(cats.length, 3)}, minmax(0, 1fr))` }}
+                  style={{
+                    gridTemplateColumns: `repeat(${Math.min(cats.length, 3)}, minmax(0, 1fr))`,
+                  }}
                 >
                   {cats.map((fc) => (
                     <a
@@ -380,8 +448,12 @@ export function HomeScreen() {
           {popularCards.length > 0 && (
             <section className="mt-12 px-5">
               <div className="text-center">
-                <span className="text-[10.5px] tracking-luxury text-gold-deep">{t.curatedEdit}</span>
-                <h2 className="font-serif text-[34px] leading-tight text-foreground mt-1.5">{t.mostPopular}</h2>
+                <span className="text-[10.5px] tracking-luxury text-gold-deep">
+                  {t.curatedEdit}
+                </span>
+                <h2 className="font-serif text-[34px] leading-tight text-foreground mt-1.5">
+                  {t.mostPopular}
+                </h2>
               </div>
 
               <div className="grid grid-cols-2 gap-x-4 gap-y-8 mt-7">
@@ -389,7 +461,10 @@ export function HomeScreen() {
                   const liked = wishlist.has(c.wishId);
                   return (
                     <ImpressionCell key={c.key} itemId={c.wishId} source="category_card">
-                      <a href={c.href} className="group flex flex-col items-center text-left active:scale-[0.99] transition">
+                      <a
+                        href={c.href}
+                        className="group flex flex-col items-center text-left active:scale-[0.99] transition"
+                      >
                         <div className="relative w-full overflow-hidden rounded-[22px] bg-cream-warm aspect-[1.35/1]">
                           <img
                             src={c.img}
@@ -398,7 +473,9 @@ export function HomeScreen() {
                             className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04]"
                           />
                         </div>
-                        <span className="mt-3 text-[15px] text-foreground/85 font-medium tracking-tight text-center">{c.label}</span>
+                        <span className="mt-3 text-[15px] text-foreground/85 font-medium tracking-tight text-center">
+                          {c.label}
+                        </span>
                       </a>
                     </ImpressionCell>
                   );
@@ -406,7 +483,10 @@ export function HomeScreen() {
               </div>
 
               <div className="mt-10 flex justify-center">
-                <Link to="/search" className="h-[52px] px-10 rounded-xl bg-background border border-border text-gold-deep text-[12px] tracking-luxury font-medium grid place-items-center active:scale-[0.97] transition">
+                <Link
+                  to="/search"
+                  className="h-[52px] px-10 rounded-xl bg-background border border-border text-gold-deep text-[12px] tracking-luxury font-medium grid place-items-center active:scale-[0.97] transition"
+                >
                   {t.shopAll}
                 </Link>
               </div>
@@ -418,33 +498,47 @@ export function HomeScreen() {
 
           {/* Dynamic sections from /admin/home-builder */}
           {sections
-            .filter((s) => ["most_popular", "new_arrivals", "custom_collection", "rich_text"].includes(s.kind))
+            .filter((s) =>
+              ["most_popular", "new_arrivals", "custom_collection", "rich_text"].includes(s.kind),
+            )
             .map((s) => (
-              <DynamicSection key={s.id} section={s} products={sectionProducts[s.id] ?? []} ar={ar} />
+              <DynamicSection
+                key={s.id}
+                section={s}
+                products={sectionProducts[s.id] ?? []}
+                ar={ar}
+              />
             ))}
 
           {/* Live customer reviews — auto-populates from /admin/reviews approvals */}
           <HomeReviews limit={6} />
         </main>
       </div>
-
     </div>
   );
 }
 
-function BestSellersSection({ ar, hasAnyProducts }: { ar: boolean; hasAnyProducts: boolean | null }) {
+function BestSellersSection({
+  ar,
+  hasAnyProducts,
+}: {
+  ar: boolean;
+  hasAnyProducts: boolean | null;
+}) {
   const fmt = usePriceFormatter();
   const wishlist = useWishlist();
   const { isRTL } = useLanguage();
-  const [items, setItems] = useState<Array<{
-    id: string;
-    name_ar: string | null;
-    name_en: string | null;
-    price: number;
-    compareAt: number | null;
-    image: string;
-    slug: string;
-  }>>([]);
+  const [items, setItems] = useState<
+    Array<{
+      id: string;
+      name_ar: string | null;
+      name_en: string | null;
+      price: number;
+      compareAt: number | null;
+      image: string;
+      slug: string;
+    }>
+  >([]);
 
   useEffect(() => {
     // Wait until we know whether the admin has added any real products.
@@ -481,15 +575,48 @@ function BestSellersSection({ ar, hasAnyProducts }: { ar: boolean; hasAnyProduct
       }
       // No real products at all → keep the demo preview so the page isn't empty.
       setItems([
-        { id: "bs1", name_ar: "فستان روزالي تول", name_en: "Rosalie Tulle Dress", price: 1250, compareAt: 1650, image: productDress1, slug: "best-sellers" },
-        { id: "bs2", name_ar: "فستان زهور كلاسيك", name_en: "Classic Floral Dress", price: 980, compareAt: 1280, image: productDress2, slug: "dresses" },
-        { id: "bs3", name_ar: "طقم احتفال أنيق", name_en: "Elegant Celebration Set", price: 1450, compareAt: null, image: productDress3, slug: "outfit-sets" },
-        { id: "bs4", name_ar: "فستان أميرة", name_en: "Princess Dress", price: 1180, compareAt: 1520, image: productDress1, slug: "dresses" },
+        {
+          id: "bs1",
+          name_ar: "فستان روزالي تول",
+          name_en: "Rosalie Tulle Dress",
+          price: 1250,
+          compareAt: 1650,
+          image: productDress1,
+          slug: "best-sellers",
+        },
+        {
+          id: "bs2",
+          name_ar: "فستان زهور كلاسيك",
+          name_en: "Classic Floral Dress",
+          price: 980,
+          compareAt: 1280,
+          image: productDress2,
+          slug: "dresses",
+        },
+        {
+          id: "bs3",
+          name_ar: "طقم احتفال أنيق",
+          name_en: "Elegant Celebration Set",
+          price: 1450,
+          compareAt: null,
+          image: productDress3,
+          slug: "outfit-sets",
+        },
+        {
+          id: "bs4",
+          name_ar: "فستان أميرة",
+          name_en: "Princess Dress",
+          price: 1180,
+          compareAt: 1520,
+          image: productDress1,
+          slug: "dresses",
+        },
       ]);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [hasAnyProducts]);
-
 
   if (items.length === 0) return null;
 
@@ -533,9 +660,7 @@ function BestSellersSection({ ar, hasAnyProducts }: { ar: boolean; hasAnyProduct
                   {ar ? p.name_ar : p.name_en}
                 </span>
                 <div className="mt-1 flex items-baseline gap-2">
-                  <span className="text-[13px] text-primary font-semibold">
-                    {fmt(p.price)}
-                  </span>
+                  <span className="text-[13px] text-primary font-semibold">{fmt(p.price)}</span>
                   {p.compareAt && (
                     <span className="text-[11.5px] text-muted-foreground line-through">
                       {fmt(p.compareAt)}
@@ -577,7 +702,15 @@ function BestSellersSection({ ar, hasAnyProducts }: { ar: boolean; hasAnyProduct
   );
 }
 
-function DynamicSection({ section, products, ar }: { section: HomeSection; products: ResolvedProduct[]; ar: boolean }) {
+function DynamicSection({
+  section,
+  products,
+  ar,
+}: {
+  section: HomeSection;
+  products: ResolvedProduct[];
+  ar: boolean;
+}) {
   const fmt = usePriceFormatter();
   const title = ar ? section.title_ar : section.title_en;
   const eyebrow = ar ? section.eyebrow_ar : section.eyebrow_en;
@@ -599,22 +732,38 @@ function DynamicSection({ section, products, ar }: { section: HomeSection; produ
     <section className="mt-12 px-5">
       <div className="text-center">
         {eyebrow && <span className="text-[10.5px] tracking-luxury text-gold-deep">{eyebrow}</span>}
-        {title && <h2 className="font-serif text-[30px] leading-tight text-foreground mt-1.5">{title}</h2>}
+        {title && (
+          <h2 className="font-serif text-[30px] leading-tight text-foreground mt-1.5">{title}</h2>
+        )}
       </div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-8 mt-7">
         {products.map((p) => {
           const name = ar ? (p.name_ar ?? p.name_en) : (p.name_en ?? p.name_ar);
-          const href = p.slug ? `/product/${p.slug}` : "#";
           return (
-            <a key={p.id} href={href} className="group flex flex-col items-center text-left active:scale-[0.99] transition">
+            <Link
+              key={p.id}
+              to="/product/$slug"
+              params={{ slug: p.slug || "missing-product" }}
+              data-live-navigation="product"
+              className="group flex flex-col items-center text-left active:scale-[0.99] transition"
+            >
               <div className="relative w-full overflow-hidden rounded-[22px] bg-cream-warm aspect-[1.35/1]">
                 {p.image_url && (
-                  <img src={p.image_url} alt={name ?? ""} loading="lazy" className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04]" />
+                  <img
+                    src={p.image_url}
+                    alt={name ?? ""}
+                    loading="lazy"
+                    className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04]"
+                  />
                 )}
               </div>
-              <span className="mt-3 text-[14px] text-foreground/85 font-medium tracking-tight text-center">{name}</span>
-              {p.price != null && <span className="mt-1 text-[12.5px] text-gold-deep">{fmt(p.price)}</span>}
-            </a>
+              <span className="mt-3 text-[14px] text-foreground/85 font-medium tracking-tight text-center">
+                {name}
+              </span>
+              {p.price != null && (
+                <span className="mt-1 text-[12.5px] text-gold-deep">{fmt(p.price)}</span>
+              )}
+            </Link>
           );
         })}
       </div>

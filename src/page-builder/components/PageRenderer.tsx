@@ -1223,14 +1223,12 @@ function RenderNewsletter({ s }: { s: NewsletterSection }) {
       setBusy(false);
       return;
     }
-    const { error: dbError } = await supabase
-      .from("contact_submissions")
-      .insert({
-        name: "Newsletter subscriber",
-        email: normalized,
-        subject: "Newsletter subscription",
-        message: `Newsletter subscription from section ${s.id}`,
-      });
+    const { error: dbError } = await supabase.from("contact_submissions").insert({
+      name: "Newsletter subscriber",
+      email: normalized,
+      subject: "Newsletter subscription",
+      message: `Newsletter subscription from section ${s.id}`,
+    });
     if (!dbError && s.content.actionUrl) {
       try {
         await fetch(s.content.actionUrl, {
