@@ -238,6 +238,8 @@ function StorefrontShell({
     !pathname.startsWith("/sitemap") &&
     !pathname.startsWith("/robots") &&
     !pathname.startsWith("/debug");
+  const isCheckoutFlow = pathname.startsWith("/checkout");
+  const allowPublishedPageReplacement = allowPageEditing && !isCheckoutFlow;
   useCustomCss();
   const overridesReady = useApplyOverrides(pathname);
   useEffect(() => {
@@ -259,10 +261,17 @@ function StorefrontShell({
       {showStoreChrome && <StorefrontMobileHeader />}
       <AnalyticsTracker />
       <div id="main-content" tabIndex={-1}>
-        <div hidden={pathname !== "/" && !live.enabled && replaceRouteWithPublished}>
+        <div
+          hidden={
+            pathname !== "/" &&
+            !live.enabled &&
+            allowPublishedPageReplacement &&
+            replaceRouteWithPublished
+          }
+        >
           <Outlet />
         </div>
-        {pathname !== "/" && allowPageEditing && (
+        {pathname !== "/" && allowPublishedPageReplacement && (
           <PublishedPageSections
             key={pageIdentity.slug}
             slug={pageIdentity.slug}
@@ -270,7 +279,7 @@ function StorefrontShell({
           />
         )}
       </div>
-      {allowPageEditing && (
+      {allowPublishedPageReplacement && (
         <EditPageButton
           key={pageIdentity.slug}
           slug={pageIdentity.slug}
