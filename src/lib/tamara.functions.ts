@@ -12,6 +12,32 @@ const InputSchema = z.object({
   lang: z.enum(["ar", "en"]).default("ar"),
 });
 
+async function getTamaraToken() {
+  if (process.env.TAMARA_API_TOKEN) return process.env.TAMARA_API_TOKEN;
+
+  const { data } = await supabaseAdmin
+    .from("integrations")
+    .select("api_key, api_secret, config")
+    .eq("category", "payment")
+    .eq("provider", "tamara")
+    .eq("enabled", true)
+    .maybeSingle();
+
+  const config = (data?.config && typeof data.config === "object" ? data.config : {}) as Record<
+    string,
+    unknown
+  >;
+  const candidates = [
+    data?.api_secret,
+    config.api_token,
+    config.tamara_api_token,
+    config.secret_key,
+    data?.api_key,
+  ].map((value) => String(value || "").trim());
+
+  return candidates.find(Boolean) || null;
+}
+
 function storefrontOrigin() {
   const configured = process.env.STOREFRONT_URL || process.env.SITE_URL;
   const origin = configured ? new URL(configured).origin : new URL(getRequest().url).origin;
@@ -24,7 +50,7 @@ function storefrontOrigin() {
 export const createTamaraCheckout = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }) => {
-    const token = process.env.TAMARA_API_TOKEN;
+    const token = await getTamaraToken();
     if (!token) throw new Error("TAMARA_API_TOKEN is not configured");
 
     const order = await loadCheckoutOrder(data.order_id, data.session_id, "tamara");

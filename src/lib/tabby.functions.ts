@@ -12,6 +12,59 @@ const InputSchema = z.object({
   lang: z.enum(["ar", "en"]).default("ar"),
 });
 
+async function getTabbySecret() {
+  if (process.env.TABBY_SECRET_KEY) return process.env.TABBY_SECRET_KEY;
+
+  const { data } = await supabaseAdmin
+    .from("integrations")
+    .select("api_key, api_secret, config")
+    .eq("category", "payment")
+    .eq("provider", "tabby")
+    .eq("enabled", true)
+    .maybeSingle();
+
+  const config = (data?.config && typeof data.config === "object" ? data.config : {}) as Record<
+    string,
+    unknown
+  >;
+  const candidates = [
+    data?.api_secret,
+    config.secret_key,
+    config.tabby_secret_key,
+    config.api_secret,
+    data?.api_key,
+  ].map((value) => String(value || "").trim());
+
+  return candidates.find(Boolean) || null;
+}
+
+async function getTabbyMerchantCode(currency: string) {
+  if (process.env.TABBY_MERCHANT_CODE) return process.env.TABBY_MERCHANT_CODE;
+
+  const { data } = await supabaseAdmin
+    .from("integrations")
+    .select("config")
+    .eq("category", "payment")
+    .eq("provider", "tabby")
+    .eq("enabled", true)
+    .maybeSingle();
+  const config = (data?.config && typeof data.config === "object" ? data.config : {}) as Record<
+    string,
+    unknown
+  >;
+  const configured = String(config.merchant_code || config.tabby_merchant_code || "").trim();
+  if (configured) return configured;
+
+  const merchantCodes: Record<string, string> = {
+    SAR: "sa",
+    AED: "ae",
+    KWD: "kw",
+    BHD: "bh",
+    QAR: "qa",
+  };
+  return merchantCodes[currency] || null;
+}
+
 function storefrontOrigin() {
   const configured = process.env.STOREFRONT_URL || process.env.SITE_URL;
   const origin = configured ? new URL(configured).origin : new URL(getRequest().url).origin;
@@ -24,7 +77,7 @@ function storefrontOrigin() {
 export const createTabbyCheckout = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }) => {
-    const secret = process.env.TABBY_SECRET_KEY;
+    const secret = await getTabbySecret();
     if (!secret) throw new Error("TABBY_SECRET_KEY is not configured");
 
     const order = await loadCheckoutOrder(data.order_id, data.session_id, "tabby");
@@ -40,14 +93,7 @@ export const createTabbyCheckout = createServerFn({ method: "POST" })
     const address = (order.shipping_address as Record<string, unknown>) || {};
     const phone = String(order.customer_phone || address.phone || "").replace(/\s/g, "");
     const currency = String(order.currency || "SAR").toUpperCase();
-    const merchantCodes: Record<string, string> = {
-      SAR: "sa",
-      AED: "ae",
-      KWD: "kw",
-      BHD: "bh",
-      QAR: "qa",
-    };
-    const merchantCode = process.env.TABBY_MERCHANT_CODE || merchantCodes[currency];
+    const merchantCode = await getTabbyMerchantCode(currency);
     if (!merchantCode) throw new Error(`Tabby does not support currency ${currency}`);
     const origin = storefrontOrigin();
 

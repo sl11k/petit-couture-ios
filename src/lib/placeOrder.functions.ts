@@ -41,9 +41,7 @@ const InputSchema = z.object({
   items: z.array(ItemSchema).min(1).max(100),
   address: AddressSchema,
   currency: z.string().min(3).max(8),
-  payment_method: z
-    .enum(["cod", "card", "apple_pay", "bank_transfer", "tabby", "tamara"])
-    .default("cod"),
+  payment_method: z.enum(["card", "apple_pay", "tabby", "tamara"]).default("card"),
   coupon_code: z.string().min(1).max(64).nullable().optional(),
   pricing: z.object({
     shipping_method: z.string().min(1).max(64),
@@ -157,14 +155,20 @@ export const placeOrder = createServerFn({ method: "POST" })
 
     const subtotal =
       Math.round(pricedItems.reduce((sum, item) => sum + item.price * item.qty, 0) * 100) / 100;
-    const shippingFees: Record<string, number> = {
-      standard: subtotal >= 500 ? 0 : 25,
-      express: 45,
-      international: 120,
-      pickup: 0,
+    const countryCode = String((data.address as any).countryCode || "SA").toUpperCase();
+    const shippingFees: Record<string, { fee: number; countries: string[] }> = {
+      standard: { fee: subtotal >= 500 ? 0 : 25, countries: ["SA"] },
+      express: { fee: 45, countries: ["SA"] },
+      uae: { fee: 65, countries: ["AE"] },
+      gcc: { fee: 85, countries: ["KW", "BH", "QA", "OM"] },
+      international: { fee: 140, countries: ["*"] },
     };
-    const shipping_fee = shippingFees[data.pricing.shipping_method];
-    if (shipping_fee === undefined) throw new Error("Invalid shipping method");
+    const shipping = shippingFees[data.pricing.shipping_method];
+    if (!shipping) throw new Error("Invalid shipping method");
+    if (!shipping.countries.includes("*") && !shipping.countries.includes(countryCode)) {
+      throw new Error("Shipping method is not available for selected country");
+    }
+    const shipping_fee = shipping.fee;
     const tax = Math.round(subtotal * 0.15 * 100) / 100;
 
     const cartHash = await hashCart(data, verifiedUserId);
@@ -285,9 +289,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     //  - Hosted/deferred methods reserve only until their webhook confirms payment.
     //    The payment webhook later calls finalize_order_stock on confirmation,
     //    or release_order_inventory on cancel/expiry.
-    const asyncPayment = ["card", "apple_pay", "bank_transfer", "tabby", "tamara"].includes(
-      data.payment_method,
-    );
+    const asyncPayment = ["card", "apple_pay", "tabby", "tamara"].includes(data.payment_method);
     const rpcName = asyncPayment ? "reserve_order_inventory" : "finalize_order_stock";
     try {
       const { error: stockErr } = await (supabaseAdmin as any).rpc(rpcName, {
@@ -336,20 +338,8 @@ export const placeOrder = createServerFn({ method: "POST" })
       .update({ converted: true, updated_at: new Date().toISOString() })
       .eq("session_id", data.session_id);
 
-    // 5. Auto-create OTO shipment ONLY for confirmed payments.
-    //    - COD: confirmed at placement → send to OTO immediately.
-    //    - card / apple_pay / bank_transfer / tabby / tamara: wait until the
-    //      payment webhook marks payment_status='paid', then the webhook
-    //      triggers createOtoShipmentForOrder (idempotent).
-    if (data.payment_method === "cod") {
-      try {
-        const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
-        const res = await createOtoShipmentForOrder(order.id, verifiedUserId);
-        if (!res.ok) console.error("[placeOrder] OTO auto-create failed:", res.error);
-      } catch (e: any) {
-        console.error("[placeOrder] OTO auto-create threw:", e?.message || e);
-      }
-    }
-
+    // 5. Auto-create OTO shipment ONLY after payment is confirmed.
+    //    Hosted/deferred methods wait until the payment webhook marks
+    //    payment_status='paid', then the webhook triggers OTO idempotently.
     return { order, duplicate: false as const };
   });

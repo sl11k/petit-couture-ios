@@ -19,6 +19,8 @@ export type Address = {
   street?: string;
   district?: string;
   city: string;
+  countryCode?: string;
+  countryName?: string;
   postalCode?: string;
   additionalNumber?: string;
   notes?: string;

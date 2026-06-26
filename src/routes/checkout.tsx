@@ -8,7 +8,6 @@ import {
   ChevronLeft,
   ChevronRight,
   CreditCard,
-  Landmark,
   Loader2,
   Lock,
   Mail,
@@ -18,8 +17,8 @@ import {
   ShieldCheck,
   Truck,
   User,
-  Wallet,
   Apple,
+  Globe2,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useCurrency } from "@/state/CurrencyContext";
@@ -31,6 +30,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { placeOrder } from "@/lib/placeOrder.functions";
 import { validateCoupon } from "@/lib/coupons.functions";
 import { FreeShippingProgress } from "@/components/FreeShippingProgress";
+import type { CurrencyCode } from "@/i18n/currencies";
 
 // Map only loads on the client when entering step 2.
 const LocationPicker = lazy(() => import("@/components/checkout/LocationPicker"));
@@ -46,13 +46,14 @@ export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
 });
 
-const phoneRegex = /^(?:\+9665\d{8}|009665\d{8}|05\d{8})$/;
+const phoneRegex = /^\+?[0-9][0-9\s().-]{5,23}$/;
 
 type Step = 1 | 2 | 3 | 4;
-type PayMethod = "card" | "apple_pay" | "bank_transfer" | "cod" | "tabby" | "tamara";
+type PayMethod = "card" | "apple_pay" | "tabby" | "tamara";
 
 const SHIPPING_METHODS: Array<{
   id: string;
+  countries: string[];
   label_ar: string;
   label_en: string;
   eta_ar: string;
@@ -61,6 +62,7 @@ const SHIPPING_METHODS: Array<{
 }> = [
   {
     id: "standard",
+    countries: ["SA"],
     label_ar: "توصيل قياسي داخل السعودية",
     label_en: "Standard (KSA)",
     eta_ar: "٣–٥ أيام عمل",
@@ -69,6 +71,7 @@ const SHIPPING_METHODS: Array<{
   },
   {
     id: "express",
+    countries: ["SA"],
     label_ar: "توصيل سريع داخل السعودية",
     label_en: "Express (KSA)",
     eta_ar: "خلال ٢٤ ساعة",
@@ -77,30 +80,70 @@ const SHIPPING_METHODS: Array<{
   },
   {
     id: "international",
-    label_ar: "شحن دولي (دول الخليج)",
-    label_en: "International (GCC)",
+    countries: ["*"],
+    label_ar: "شحن دولي",
+    label_en: "International delivery",
     eta_ar: "٧–١٤ يوم عمل",
     eta_en: "7–14 business days",
-    fee: 120,
+    fee: 140,
   },
   {
-    id: "pickup",
-    label_ar: "استلام من الفرع",
-    label_en: "Store pickup",
-    eta_ar: "جاهز خلال ساعتين",
-    eta_en: "Ready in 2 hours",
-    fee: 0,
+    id: "uae",
+    countries: ["AE"],
+    label_ar: "شحن إلى الإمارات",
+    label_en: "Delivery to United Arab Emirates",
+    eta_ar: "٣–٧ أيام عمل",
+    eta_en: "3–7 business days",
+    fee: 65,
+  },
+  {
+    id: "gcc",
+    countries: ["KW", "BH", "QA", "OM"],
+    label_ar: "شحن إلى دول الخليج",
+    label_en: "GCC delivery",
+    eta_ar: "٤–٨ أيام عمل",
+    eta_en: "4–8 business days",
+    fee: 85,
   },
 ];
 
 const FREE_SHIPPING_THRESHOLD = 500;
 const TAX_RATE = 0.15;
 
+const CHECKOUT_COUNTRIES = [
+  { code: "SA", ar: "السعودية", en: "Saudi Arabia", currency: "SAR" },
+  { code: "AE", ar: "الإمارات", en: "United Arab Emirates", currency: "AED" },
+  { code: "KW", ar: "الكويت", en: "Kuwait", currency: "KWD" },
+  { code: "BH", ar: "البحرين", en: "Bahrain", currency: "BHD" },
+  { code: "QA", ar: "قطر", en: "Qatar", currency: "QAR" },
+  { code: "OM", ar: "عمان", en: "Oman", currency: "OMR" },
+  { code: "EG", ar: "مصر", en: "Egypt", currency: "EGP" },
+  { code: "JO", ar: "الأردن", en: "Jordan", currency: "JOD" },
+  { code: "US", ar: "الولايات المتحدة", en: "United States", currency: "USD" },
+  { code: "GB", ar: "المملكة المتحدة", en: "United Kingdom", currency: "GBP" },
+  { code: "EU", ar: "أوروبا", en: "Europe", currency: "EUR" },
+  { code: "OTHER", ar: "دولة أخرى", en: "Other country", currency: "SAR" },
+];
+
+const COUNTRY_BY_CURRENCY: Record<string, string> = {
+  SAR: "SA",
+  AED: "AE",
+  KWD: "KW",
+  BHD: "BH",
+  QAR: "QA",
+  OMR: "OM",
+  EGP: "EG",
+  JOD: "JO",
+  USD: "US",
+  GBP: "GB",
+  EUR: "EU",
+};
+
 function CheckoutPage() {
   const router = useRouter();
   const navigate = useNavigate();
   const { isRTL, lang } = useLanguage();
-  const { currency: displayCurrency, format: fmtDisplay } = useCurrency();
+  const { currency: displayCurrency, setCurrency, format: fmtDisplay } = useCurrency();
   const bag = useBag();
   const { address, save } = useAddress();
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
@@ -117,6 +160,9 @@ function CheckoutPage() {
     phone: address?.phone ?? "",
     createAccount: false,
   });
+  const [countryCode, setCountryCode] = useState(
+    address?.countryCode ?? COUNTRY_BY_CURRENCY[displayCurrency] ?? "SA",
+  );
   const [loc, setLoc] = useState<{
     lat?: number;
     lng?: number;
@@ -155,11 +201,37 @@ function CheckoutPage() {
   }, [bagEmpty, navigate]);
 
   // ───── Pricing ─────
+  const selectedCountry =
+    CHECKOUT_COUNTRIES.find((country) => country.code === countryCode) ?? CHECKOUT_COUNTRIES[0];
+
+  const availableShippingMethods = useMemo(() => {
+    const exact = SHIPPING_METHODS.filter((method) => method.countries.includes(countryCode));
+    if (exact.length > 0) return exact;
+    return SHIPPING_METHODS.filter((method) => method.countries.includes("*"));
+  }, [countryCode]);
+
+  useEffect(() => {
+    if (!availableShippingMethods.some((method) => method.id === shippingId)) {
+      setShippingId(availableShippingMethods[0]?.id ?? "international");
+    }
+  }, [availableShippingMethods, shippingId]);
+
+  const changeCountry = (nextCountryCode: string) => {
+    const nextCountry =
+      CHECKOUT_COUNTRIES.find((country) => country.code === nextCountryCode) ??
+      CHECKOUT_COUNTRIES[0];
+    setCountryCode(nextCountry.code);
+    if (nextCountry.currency !== displayCurrency) setCurrency(nextCountry.currency as CurrencyCode);
+  };
+
   const shipping = useMemo(() => {
-    const sel = SHIPPING_METHODS.find((m) => m.id === shippingId) ?? SHIPPING_METHODS[0];
+    const sel =
+      availableShippingMethods.find((m) => m.id === shippingId) ??
+      availableShippingMethods[0] ??
+      SHIPPING_METHODS[0];
     const fee = bag.subtotal >= FREE_SHIPPING_THRESHOLD && sel.id === "standard" ? 0 : sel.fee;
     return { ...sel, fee };
-  }, [shippingId, bag.subtotal]);
+  }, [availableShippingMethods, shippingId, bag.subtotal]);
 
   const pricing = useMemo(() => {
     const subtotal = bag.subtotal;
@@ -244,14 +316,15 @@ function CheckoutPage() {
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(contact.email))
         e.email = isRTL ? "بريد غير صحيح" : "Invalid email";
       if (!phoneRegex.test(contact.phone.replace(/[\s-]/g, "")))
-        e.phone = isRTL ? "رقم جوال سعودي غير صحيح" : "Invalid Saudi phone";
+        e.phone = isRTL ? "أدخل رقم جوال دولي صحيح" : "Enter a valid international phone";
     }
     if (step >= 2) {
-      if (shipping.id !== "pickup") {
-        if (loc.lat == null || loc.lng == null)
-          e.location = isRTL ? "حدّد موقعك على الخريطة" : "Set your location on the map";
-        if (!loc.city) e.city = isRTL ? "المدينة مطلوبة" : "City required";
-      }
+      if (!countryCode) e.country = isRTL ? "اختر دولة التوصيل" : "Select delivery country";
+      if (!loc.city) e.city = isRTL ? "المدينة مطلوبة" : "City required";
+      if (!loc.street && !loc.geoAddress)
+        e.location = isRTL
+          ? "أدخل العنوان أو حدده على الخريطة"
+          : "Enter an address or set it on the map";
     }
     if (step >= 3) {
       if (!shippingId) e.shipping = isRTL ? "اختر طريقة الشحن" : "Select shipping";
@@ -260,11 +333,11 @@ function CheckoutPage() {
       e.agree = isRTL ? "يجب الموافقة على الشروط" : "Please accept the terms";
     }
     return e;
-  }, [step, contact, loc, shipping.id, shippingId, agree, isRTL]);
+  }, [step, contact, loc, countryCode, shippingId, agree, isRTL]);
 
   const canProceed = (s: Step) => {
     if (s === 1) return !errs.fullName && !errs.email && !errs.phone;
-    if (s === 2) return shipping.id === "pickup" || (!errs.location && !errs.city);
+    if (s === 2) return !errs.country && !errs.location && !errs.city;
     if (s === 3) return !errs.shipping;
     return !errs.agree;
   };
@@ -321,6 +394,8 @@ function CheckoutPage() {
       fullName: contact.fullName.trim(),
       email: contact.email.trim(),
       phone: contact.phone.replace(/[\s-]/g, ""),
+      countryCode,
+      countryName: lang === "ar" ? selectedCountry.ar : selectedCountry.en,
       city: loc.city ?? "",
       district: loc.district,
       street: loc.street,
@@ -357,6 +432,8 @@ function CheckoutPage() {
         fullName: contact.fullName.trim(),
         email: contact.email.trim(),
         phone: contact.phone.replace(/[\s-]/g, ""),
+        countryCode,
+        countryName: lang === "ar" ? selectedCountry.ar : selectedCountry.en,
         city: loc.city ?? "",
         district: loc.district,
         street: loc.street,
@@ -429,7 +506,8 @@ function CheckoutPage() {
           return;
         } catch (err) {
           console.error("Tabby checkout error", err);
-          toast.error(isRTL ? "تعذّر بدء دفع تابي" : "Could not start Tabby checkout");
+          const message = err instanceof Error ? err.message : "";
+          toast.error(message || (isRTL ? "تعذّر بدء دفع تابي" : "Could not start Tabby checkout"));
           setPlacing(false);
           return;
         }
@@ -457,7 +535,10 @@ function CheckoutPage() {
           return;
         } catch (err) {
           console.error("Tamara checkout error", err);
-          toast.error(isRTL ? "تعذّر بدء دفع تمارا" : "Could not start Tamara checkout");
+          const message = err instanceof Error ? err.message : "";
+          toast.error(
+            message || (isRTL ? "تعذّر بدء دفع تمارا" : "Could not start Tamara checkout"),
+          );
           setPlacing(false);
           return;
         }
@@ -487,7 +568,10 @@ function CheckoutPage() {
           return;
         } catch (err) {
           console.error("Stripe checkout error", err);
-          toast.error(isRTL ? "تعذّر بدء دفع البطاقة" : "Could not start card payment");
+          const message = err instanceof Error ? err.message : "";
+          toast.error(
+            message || (isRTL ? "تعذّر بدء دفع البطاقة" : "Could not start card payment"),
+          );
           setPlacing(false);
           return;
         }
@@ -520,10 +604,10 @@ function CheckoutPage() {
       : ["Your info", "Address", "Shipping & Pay", "Review"];
 
   return (
-    <div className="min-h-screen w-full bg-cream flex justify-center">
-      <div className="relative w-full max-w-[460px] bg-background min-h-screen shadow-soft">
+    <div className="min-h-screen w-full bg-gradient-to-b from-cream via-background to-cream-warm/40">
+      <div className="relative mx-auto w-full max-w-3xl bg-background/96 min-h-screen shadow-soft sm:my-6 sm:rounded-[28px] sm:border sm:border-border/70 sm:overflow-hidden">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/60 px-5 pt-2 pb-3 flex items-center justify-between">
+        <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/60 px-4 pt-[calc(10px+env(safe-area-inset-top))] pb-3 flex items-center justify-between">
           <button
             aria-label={isRTL ? "رجوع" : "Back"}
             onClick={prev}
@@ -569,12 +653,15 @@ function CheckoutPage() {
           </ol>
         </div>
 
-        <main className="px-5 pt-6 pb-[200px]">
+        <main className="px-4 sm:px-6 pt-6 pb-[160px]">
           {/* ───── STEP 1: Contact ───── */}
           {step === 1 && (
             <section className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div>
-                <h1 className="font-serif text-[26px] leading-tight text-foreground">
+              <div className="rounded-[24px] border border-border/70 bg-cream-warm/25 p-4 shadow-sm">
+                <p className="text-[10px] tracking-luxury text-gold mb-2">
+                  {isRTL ? "خطوة ١ من ٤" : "Step 1 of 4"}
+                </p>
+                <h1 className="font-serif text-[28px] leading-tight text-foreground">
                   {isRTL ? "معلومات التواصل" : "Contact information"}
                 </h1>
                 <p className="mt-1 text-[12px] text-muted-foreground">
@@ -653,8 +740,11 @@ function CheckoutPage() {
           {/* ───── STEP 2: Address + Map ───── */}
           {step === 2 && (
             <section className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div>
-                <h1 className="font-serif text-[26px] leading-tight text-foreground">
+              <div className="rounded-[24px] border border-border/70 bg-cream-warm/25 p-4 shadow-sm">
+                <p className="text-[10px] tracking-luxury text-gold mb-2">
+                  {isRTL ? "خطوة ٢ من ٤" : "Step 2 of 4"}
+                </p>
+                <h1 className="font-serif text-[28px] leading-tight text-foreground">
                   {isRTL ? "عنوان التوصيل" : "Delivery address"}
                 </h1>
                 <p className="mt-1 text-[12px] text-muted-foreground">
@@ -663,6 +753,24 @@ function CheckoutPage() {
                     : "Set your location on the map for faster, accurate delivery"}
                 </p>
               </div>
+
+              <Field
+                icon={<Globe2 className="h-4 w-4" />}
+                label={isRTL ? "دولة التوصيل" : "Delivery country"}
+                error={errs.country}
+              >
+                <select
+                  className={fieldClass(!!errs.country)}
+                  value={countryCode}
+                  onChange={(e) => changeCountry(e.target.value)}
+                >
+                  {CHECKOUT_COUNTRIES.map((country) => (
+                    <option key={country.code} value={country.code}>
+                      {lang === "ar" ? country.ar : country.en}
+                    </option>
+                  ))}
+                </select>
+              </Field>
 
               <Suspense
                 fallback={
@@ -742,10 +850,18 @@ function CheckoutPage() {
           {/* ───── STEP 3: Shipping + Payment ───── */}
           {step === 3 && (
             <section className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div>
-                <h1 className="font-serif text-[26px] leading-tight text-foreground">
+              <div className="rounded-[24px] border border-border/70 bg-cream-warm/25 p-4 shadow-sm">
+                <p className="text-[10px] tracking-luxury text-gold mb-2">
+                  {isRTL ? "خطوة ٣ من ٤" : "Step 3 of 4"}
+                </p>
+                <h1 className="font-serif text-[28px] leading-tight text-foreground">
                   {isRTL ? "الشحن والدفع" : "Shipping & payment"}
                 </h1>
+                <p className="mt-1 text-[12px] text-muted-foreground">
+                  {isRTL
+                    ? `خيارات الشحن المعروضة مخصصة لـ ${selectedCountry.ar}`
+                    : `Shipping options shown for ${selectedCountry.en}`}
+                </p>
               </div>
 
               {/* Free shipping progress */}
@@ -758,7 +874,7 @@ function CheckoutPage() {
                   {isRTL ? "طريقة التوصيل" : "DELIVERY METHOD"}
                 </h2>
                 <div className="space-y-2">
-                  {SHIPPING_METHODS.map((m) => {
+                  {availableShippingMethods.map((m) => {
                     const isFree = bag.subtotal >= FREE_SHIPPING_THRESHOLD && m.id === "standard";
                     const fee = isFree ? 0 : m.fee;
                     const active = shippingId === m.id;
@@ -829,20 +945,6 @@ function CheckoutPage() {
                     sub={isRTL ? "دفع سريع وآمن" : "Fast & secure"}
                   />
                   <PayOption
-                    active={payment === "bank_transfer"}
-                    onClick={() => setPayment("bank_transfer")}
-                    icon={<Landmark className="h-4 w-4" />}
-                    label={isRTL ? "تحويل بنكي" : "Bank transfer"}
-                    sub={isRTL ? "تعليمات بعد الطلب" : "Instructions after order"}
-                  />
-                  <PayOption
-                    active={payment === "cod"}
-                    onClick={() => setPayment("cod")}
-                    icon={<Wallet className="h-4 w-4" />}
-                    label={isRTL ? "الدفع عند الاستلام" : "Cash on delivery"}
-                    sub={isRTL ? "ادفع للمندوب" : "Pay the courier"}
-                  />
-                  <PayOption
                     active={payment === "tabby"}
                     onClick={() => setPayment("tabby")}
                     icon={<span className="text-[11px] font-bold tracking-wide">tabby</span>}
@@ -873,21 +975,6 @@ function CheckoutPage() {
                       : "You'll be redirected to Tamara to pay in 4 interest-free installments."}
                   </div>
                 )}
-
-                {payment === "bank_transfer" && (
-                  <div className="mt-3 p-3 rounded-[12px] bg-cream-warm/40 border border-border text-[12px] text-foreground/80 leading-relaxed">
-                    {isRTL
-                      ? "ستتلقى تفاصيل الحساب البنكي ورقم الطلب عبر البريد. يبقى الطلب معلقاً حتى تأكيد الإدارة للتحويل."
-                      : "You'll receive bank account details and your order number by email. Order stays pending until we confirm the transfer."}
-                  </div>
-                )}
-                {payment === "cod" && (
-                  <div className="mt-3 p-3 rounded-[12px] bg-cream-warm/40 border border-border text-[12px] text-foreground/80 leading-relaxed">
-                    {isRTL
-                      ? "جهّز المبلغ نقداً عند استلام الطلب من المندوب. قد تطبّق رسوم خدمة بسيطة."
-                      : "Have the cash ready when the courier arrives. A small service fee may apply."}
-                  </div>
-                )}
               </div>
             </section>
           )}
@@ -895,8 +982,11 @@ function CheckoutPage() {
           {/* ───── STEP 4: Review ───── */}
           {step === 4 && (
             <section className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div>
-                <h1 className="font-serif text-[26px] leading-tight text-foreground">
+              <div className="rounded-[24px] border border-border/70 bg-cream-warm/25 p-4 shadow-sm">
+                <p className="text-[10px] tracking-luxury text-gold mb-2">
+                  {isRTL ? "خطوة ٤ من ٤" : "Step 4 of 4"}
+                </p>
+                <h1 className="font-serif text-[28px] leading-tight text-foreground">
                   {isRTL ? "مراجعة الطلب" : "Review your order"}
                 </h1>
                 <p className="mt-1 text-[12px] text-muted-foreground">
@@ -960,6 +1050,9 @@ function CheckoutPage() {
                 <div className="flex items-start gap-2">
                   <MapPin className="h-4 w-4 text-gold mt-0.5 shrink-0" />
                   <div className="flex-1 text-[12.5px] text-foreground/90 leading-snug">
+                    <span className="block font-medium text-foreground mb-0.5">
+                      {lang === "ar" ? selectedCountry.ar : selectedCountry.en}
+                    </span>
                     {loc.geoAddress ??
                       [loc.street, loc.district, loc.city].filter(Boolean).join("، ")}
                     {buildingNumber && (
@@ -994,8 +1087,6 @@ function CheckoutPage() {
                 <div className="flex items-center gap-2 text-[12.5px] mt-2">
                   {payment === "card" && <CreditCard className="h-4 w-4 text-gold" />}
                   {payment === "apple_pay" && <Apple className="h-4 w-4 text-gold" />}
-                  {payment === "bank_transfer" && <Landmark className="h-4 w-4 text-gold" />}
-                  {payment === "cod" && <Wallet className="h-4 w-4 text-gold" />}
                   {payment === "tabby" && (
                     <span className="text-[10px] font-bold text-gold">tabby</span>
                   )}
@@ -1005,8 +1096,6 @@ function CheckoutPage() {
                   <span className="text-foreground">
                     {payment === "card" && (isRTL ? "بطاقة ائتمان" : "Credit card")}
                     {payment === "apple_pay" && "Apple Pay"}
-                    {payment === "bank_transfer" && (isRTL ? "تحويل بنكي" : "Bank transfer")}
-                    {payment === "cod" && (isRTL ? "الدفع عند الاستلام" : "Cash on delivery")}
                     {payment === "tabby" && (isRTL ? "تابي — 4 دفعات" : "Tabby — 4 installments")}
                     {payment === "tamara" &&
                       (isRTL ? "تمارا — 4 دفعات" : "Tamara — 4 installments")}
@@ -1170,8 +1259,8 @@ function CheckoutPage() {
         </main>
 
         {/* ───── Sticky bottom bar ───── */}
-        <div className="fixed bottom-[calc(64px+env(safe-area-inset-bottom))] lg:bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none">
-          <div className="w-full max-w-[460px] bg-background/98 backdrop-blur-md border-t border-border px-5 pt-3 pb-5 pointer-events-auto shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.08)]">
+        <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none">
+          <div className="w-full max-w-3xl bg-background/98 backdrop-blur-md border-t border-border px-4 sm:px-6 pt-3 pb-[calc(16px+env(safe-area-inset-bottom))] pointer-events-auto shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.12)]">
             {step < 4 && (
               <div className="flex items-center justify-between mb-2 text-[12px]">
                 <span className="text-muted-foreground">
