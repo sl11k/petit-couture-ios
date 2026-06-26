@@ -128,6 +128,14 @@ export function applyOverrideToEl(el: Element, prop: OverrideProp, value: any) {
       break;
     case "style":
       if (value && typeof value === "object") {
+        const style = value as Record<string, string>;
+        if (style.display === "none") {
+          (el as HTMLElement).hidden = true;
+          (el as HTMLElement).setAttribute("aria-hidden", "true");
+        } else if ((el as HTMLElement).hidden && style.display !== "none") {
+          (el as HTMLElement).hidden = false;
+          (el as HTMLElement).removeAttribute("aria-hidden");
+        }
         Object.entries(value as Record<string, string>).forEach(([k, v]) => {
           if ((el as HTMLElement).style.getPropertyValue(k) !== String(v))
             (el as HTMLElement).style.setProperty(k, String(v));

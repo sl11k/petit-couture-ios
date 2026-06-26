@@ -16,6 +16,15 @@ export type CommonSectionSettings = {
   spacing?: SectionSpacing;
   backgroundColor?: string;
   visibility?: DeviceVisibility;
+  typography?: {
+    color?: string;
+    fontSize?: number;
+    fontFamily?: "inherit" | "serif" | "sans" | "mono";
+    fontWeight?: "300" | "400" | "500" | "600" | "700" | "800";
+    textAlign?: "left" | "center" | "right" | "start" | "end";
+    lineHeight?: number;
+    letterSpacing?: number;
+  };
 };
 
 export type ButtonContent = {

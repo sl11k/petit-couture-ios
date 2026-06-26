@@ -262,10 +262,26 @@ function EditCustom({
 
 function sectionWrapStyle(s: Section): React.CSSProperties {
   const settings: any = s.settings ?? {};
+  const typography = settings.typography ?? {};
+  const fontFamily =
+    typography.fontFamily === "serif"
+      ? "Cormorant Garamond, Georgia, serif"
+      : typography.fontFamily === "sans"
+        ? "Inter, ui-sans-serif, system-ui, sans-serif"
+        : typography.fontFamily === "mono"
+          ? "ui-monospace, SFMono-Regular, Menlo, monospace"
+          : undefined;
   return {
     paddingTop: settings.spacing?.paddingTop,
     paddingBottom: settings.spacing?.paddingBottom,
     backgroundColor: settings.backgroundColor,
+    color: typography.color,
+    fontSize: typography.fontSize,
+    fontFamily,
+    fontWeight: typography.fontWeight,
+    textAlign: typography.textAlign,
+    lineHeight: typography.lineHeight,
+    letterSpacing: typography.letterSpacing,
   };
 }
 
@@ -284,7 +300,7 @@ function ButtonsRow({ buttons, ar }: { buttons?: ButtonContent[]; ar: boolean })
           variant === "ghost" && "text-foreground hover:bg-muted",
         );
         return (
-          <a key={i} href={b.url || "#"} target={b.newTab ? "_blank" : undefined} rel={b.newTab ? "noreferrer" : undefined} className={cls}>
+          <a key={i} href={b.url || "#"} target={b.newTab ? "_blank" : undefined} rel={b.newTab ? "noreferrer" : undefined} className={cls} data-no-translate>
             {label}
           </a>
         );
@@ -873,7 +889,7 @@ function RenderProductGrid({ s }: { s: ProductGridSection }) {
   );
   const scrollCarousel = (direction: -1 | 1) => trackRef.current?.scrollBy({ left: direction * (ar ? -1 : 1) * trackRef.current.clientWidth * 0.82, behavior: "smooth" });
   return (
-    <section style={sectionStyle(s)} className="px-4 py-6">
+    <section style={sectionStyle(s)} className="px-4 py-6" data-no-translate>
       <div className="max-w-6xl mx-auto">
         {title && <h2 className="text-2xl font-bold mb-4 text-center">{title}</h2>}
         {loading ? (
@@ -924,10 +940,26 @@ function RenderHtml({ s }: { s: HtmlSection }) {
 }
 
 function sectionStyle(s: Section): React.CSSProperties {
+  const typography = s.settings?.typography ?? {};
+  const fontFamily =
+    typography.fontFamily === "serif"
+      ? "Cormorant Garamond, Georgia, serif"
+      : typography.fontFamily === "sans"
+        ? "Inter, ui-sans-serif, system-ui, sans-serif"
+        : typography.fontFamily === "mono"
+          ? "ui-monospace, SFMono-Regular, Menlo, monospace"
+          : undefined;
   return {
     paddingTop: s.settings?.spacing?.paddingTop,
     paddingBottom: s.settings?.spacing?.paddingBottom,
     backgroundColor: s.settings?.backgroundColor,
+    color: typography.color,
+    fontSize: typography.fontSize,
+    fontFamily,
+    fontWeight: typography.fontWeight,
+    textAlign: typography.textAlign,
+    lineHeight: typography.lineHeight,
+    letterSpacing: typography.letterSpacing,
   };
 }
 
@@ -1000,10 +1032,10 @@ export function PageRenderer({ content, device, onSectionUpdate }: PageRendererP
       })}
     </>
   );
-  if (!onSectionUpdate) return inner;
+  if (!onSectionUpdate) return <div className="contents" data-no-translate>{inner}</div>;
   return (
     <EditContext.Provider value={{ updateSection: onSectionUpdate, ar }}>
-      {inner}
+      <div className="contents" data-no-translate>{inner}</div>
     </EditContext.Provider>
   );
 }

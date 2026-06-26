@@ -207,8 +207,8 @@ export function SiteInlineEditor({
     return pagePath;
   };
 
-  const setField = (selector: string, prop: OverrideProp, value: any) => {
-    const currentLang = langRef.current;
+  const setField = (selector: string, prop: OverrideProp, value: any, opts?: { lang?: string }) => {
+    const currentLang = opts?.lang ?? langRef.current;
     const fieldPagePath = scopeForSelector(selector);
     const persistLang = persistLangFor(prop, currentLang, selector);
     const next = {
@@ -256,11 +256,12 @@ export function SiteInlineEditor({
       const root = rootRef.current;
       if (!root) return;
       const applyAll = () => {
-        const current = [
+      const current = [
           ...loadedOverridesRef.current,
           ...Object.values(draftRef.current).map((item) => ({ ...item, value: item.value })),
         ];
-        for (const o of current) {
+        const ordered = [...current].sort((a, b) => Number(a.prop !== "style") - Number(b.prop !== "style"));
+        for (const o of ordered) {
           if (o.lang && o.lang !== "*" && o.lang !== langRef.current && (o.prop === "text" || o.prop === "html")) continue;
           const el = resolveSelector(root, o.selector);
           // Do not fight the browser while the admin is typing. The value is
@@ -324,7 +325,7 @@ export function SiteInlineEditor({
       });
       const regionEls = Array.from(
         root.querySelectorAll<HTMLElement>(
-          "[data-desktop-header], #main-content main > section, #main-content > section, footer",
+          "[data-desktop-header], #main-content main > section, #main-content > section, footer, [data-live-region]",
         ),
       );
       setRegions(
@@ -519,6 +520,33 @@ export function SiteInlineEditor({
     }
   };
 
+  const hideSelectedElement = () => {
+    const el = selected?.el;
+    if (!el || !rootRef.current?.contains(el)) {
+      toast.message(lang === "ar" ? "اختر العنصر أولاً" : "Select an element first");
+      return;
+    }
+    if (el.closest("[data-lpe-ui]")) return;
+    const stableTarget = (el.closest("[data-live-id]") as HTMLElement | null) ?? el;
+    if (!rootRef.current.contains(stableTarget)) return;
+    const label = stableTarget.getAttribute("data-live-id") || stableTarget.textContent?.trim().slice(0, 40) || stableTarget.tagName.toLowerCase();
+    if (
+      !window.confirm(
+        lang === "ar"
+          ? `حذف/إخفاء «${label}» من الموقع؟`
+          : `Delete/hide “${label}” from the storefront?`,
+      )
+    )
+      return;
+    const selector = computeSelector(rootRef.current, stableTarget);
+    stableTarget.hidden = true;
+    stableTarget.setAttribute("aria-hidden", "true");
+    stableTarget.style.display = "none";
+    setField(selector, "style", { display: "none" }, { lang: "*" });
+    setSelected(null);
+    toast.success(lang === "ar" ? "تم إخفاء العنصر. اضغط نشر لتطبيقه للعملاء." : "Element hidden. Publish to apply it.");
+  };
+
   useEffect(() => {
     setSelected(null);
     setStyleOpen(false);
@@ -584,8 +612,10 @@ export function SiteInlineEditor({
     )
       return;
     const selector = computeSelector(rootRef.current!, region.el);
+    region.el.hidden = true;
+    region.el.setAttribute("aria-hidden", "true");
     region.el.style.display = "none";
-    setField(selector, "style", { display: "none" });
+    setField(selector, "style", { display: "none" }, { lang: "*" });
   };
 
   const dirtyCount = Object.keys(draft).length;
@@ -671,6 +701,15 @@ export function SiteInlineEditor({
           onClick={openStyleEditor}
         >
           <Palette className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-8 w-8 p-0 text-white hover:text-white hover:bg-white/10"
+          title={lang === "ar" ? "حذف/إخفاء العنصر المحدد" : "Delete/hide selected element"}
+          onClick={hideSelectedElement}
+        >
+          <Trash2 className="h-4 w-4" />
         </Button>
         <Button
           size="sm"

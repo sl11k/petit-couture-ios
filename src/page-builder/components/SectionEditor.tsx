@@ -251,6 +251,143 @@ function VisibilityFields({ s, onChange, notify }: { s: Section; onChange: Props
   );
 }
 
+function TypographyFields({ s, onChange, notify }: { s: Section; onChange: Props["onChange"]; notify?: (l: string) => void }) {
+  const typography = s.settings?.typography ?? {};
+  const setTypography = (patch: NonNullable<Section["settings"]>["typography"], label: string, key: string) => {
+    onChange(
+      (cur) => ({
+        ...cur,
+        settings: {
+          ...(cur.settings ?? {}),
+          typography: { ...((cur.settings as any)?.typography ?? {}), ...patch },
+        },
+      } as Section),
+      { label, key: `typography:${s.id}:${key}` },
+    );
+    notify?.(label);
+  };
+  const clearTypography = () => {
+    onChange(
+      (cur) => {
+        const settings = { ...(cur.settings ?? {}) } as any;
+        delete settings.typography;
+        return { ...cur, settings } as Section;
+      },
+      { label: "Reset typography", key: `typography:${s.id}:clear` },
+    );
+    notify?.("Reset typography");
+  };
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <Label className="text-xs">Text color</Label>
+        <div className="mt-1 flex items-center gap-2">
+          <input
+            type="color"
+            value={/^#[0-9a-fA-F]{6}$/.test(typography.color ?? "") ? typography.color : "#111111"}
+            onChange={(e) => setTypography({ color: e.target.value }, `Text color → ${e.target.value}`, "color")}
+            className="h-9 w-12 rounded border border-border bg-transparent"
+          />
+          <Input
+            placeholder="Theme default"
+            value={typography.color ?? ""}
+            onChange={(e) => setTypography({ color: e.target.value || undefined }, "Text color", "color")}
+          />
+        </div>
+      </div>
+      <div>
+        <div className="flex items-center justify-between">
+          <Label className="text-xs">Text size</Label>
+          <span className="text-xs text-muted-foreground">
+            {typography.fontSize ? `${typography.fontSize}px` : "auto"}
+          </span>
+        </div>
+        <input
+          type="range"
+          min={10}
+          max={72}
+          value={typography.fontSize ?? 16}
+          onChange={(e) => setTypography({ fontSize: Number(e.target.value) }, `Text size → ${e.target.value}px`, "fontSize")}
+          className="w-full accent-primary"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <Label className="text-xs">Font</Label>
+          <select
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+            value={typography.fontFamily ?? "inherit"}
+            onChange={(e) => setTypography({ fontFamily: e.target.value as any }, "Font family", "fontFamily")}
+          >
+            <option value="inherit">Theme</option>
+            <option value="serif">Luxury serif</option>
+            <option value="sans">Modern sans</option>
+            <option value="mono">Mono</option>
+          </select>
+        </div>
+        <div>
+          <Label className="text-xs">Weight</Label>
+          <select
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+            value={typography.fontWeight ?? "400"}
+            onChange={(e) => setTypography({ fontWeight: e.target.value as any }, "Font weight", "fontWeight")}
+          >
+            <option value="300">Light</option>
+            <option value="400">Regular</option>
+            <option value="500">Medium</option>
+            <option value="600">Semi bold</option>
+            <option value="700">Bold</option>
+            <option value="800">Heavy</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <Label className="text-xs">Text position</Label>
+        <select
+          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          value={typography.textAlign ?? "start"}
+          onChange={(e) => setTypography({ textAlign: e.target.value as any }, "Text alignment", "textAlign")}
+        >
+          <option value="start">Language start</option>
+          <option value="center">Center</option>
+          <option value="end">Language end</option>
+          <option value="left">Left</option>
+          <option value="right">Right</option>
+        </select>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <Label className="text-xs">Line height</Label>
+          <Input
+            type="number"
+            step="0.1"
+            min="0.8"
+            max="3"
+            value={typography.lineHeight ?? ""}
+            placeholder="auto"
+            onChange={(e) => setTypography({ lineHeight: e.target.value ? Number(e.target.value) : undefined }, "Line height", "lineHeight")}
+          />
+        </div>
+        <div>
+          <Label className="text-xs">Letter spacing</Label>
+          <Input
+            type="number"
+            min="-4"
+            max="20"
+            value={typography.letterSpacing ?? ""}
+            placeholder="0"
+            onChange={(e) => setTypography({ letterSpacing: e.target.value ? Number(e.target.value) : undefined }, "Letter spacing", "letterSpacing")}
+          />
+        </div>
+      </div>
+      <Button size="sm" variant="ghost" className="w-full text-xs" onClick={clearTypography}>
+        Reset text styling for this section
+      </Button>
+    </div>
+  );
+}
+
 export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Props) {
   const s = section;
 
@@ -812,6 +949,11 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
       <div className="pt-3 border-t border-border">
         <h4 className="font-medium mb-2 text-xs">المسافات والخلفية</h4>
         <SpacingFields s={s} onChange={onChange} notify={notify} />
+      </div>
+
+      <div className="pt-3 border-t border-border">
+        <h4 className="font-medium mb-2 text-xs">Typography / تحكم النصوص</h4>
+        <TypographyFields s={s} onChange={onChange} notify={notify} />
       </div>
 
       <div className="pt-3 border-t border-border">

@@ -38,10 +38,10 @@ export const Route = createFileRoute("/")({
 function Index() {
   const live = useLiveEdit();
   const content = Route.useLoaderData();
+  const hasPublishedDesign = content.sections.length > 0;
   return (
     <>
-      <HomeScreen />
-      {!live.enabled && content.sections.length > 0 && <PageRenderer content={content} />}
+      {live.enabled || !hasPublishedDesign ? <HomeScreen /> : <PageRenderer content={content} />}
     </>
   );
 }

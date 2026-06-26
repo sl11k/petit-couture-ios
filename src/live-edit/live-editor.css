@@ -251,6 +251,60 @@
   left: calc(var(--lpe-left) + max(12px, (100vw - var(--lpe-left) - var(--lpe-right) - 390px) / 2));
 }
 
+/* Force common Tailwind breakpoint behaviours inside the narrow preview.
+   CSS media queries normally look at the browser viewport, not the preview box,
+   so these overrides make the editor's mobile/tablet preview match phones more closely. */
+.lpe-device-mobile .lg\:block,
+.lpe-device-mobile .md\:block,
+.lpe-device-mobile .sm\:block {
+  display: none !important;
+}
+.lpe-device-mobile .lg\:hidden,
+.lpe-device-mobile .md\:hidden,
+.lpe-device-mobile .sm\:hidden {
+  display: block !important;
+}
+.lpe-device-mobile .lg\:flex,
+.lpe-device-mobile .md\:flex,
+.lpe-device-mobile .sm\:flex {
+  display: none !important;
+}
+.lpe-device-mobile .lg\:grid,
+.lpe-device-mobile .md\:grid,
+.lpe-device-mobile .sm\:grid {
+  display: block !important;
+}
+.lpe-device-mobile [class*="md:grid-cols"],
+.lpe-device-mobile [class*="lg:grid-cols"],
+.lpe-device-mobile [class*="xl:grid-cols"] {
+  grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+}
+.lpe-device-mobile .grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+.lpe-device-mobile [class*="md:px-"],
+.lpe-device-mobile [class*="lg:px-"] {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+.lpe-device-mobile [class*="md:text-"],
+.lpe-device-mobile [class*="lg:text-"] {
+  font-size: inherit;
+}
+.lpe-device-mobile img,
+.lpe-device-mobile video {
+  max-width: 100%;
+  object-fit: cover;
+}
+.lpe-device-mobile section {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.lpe-device-tablet [class*="lg:grid-cols"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
 .lpe-empty-inspector {
   position: fixed;
   z-index: 10000;

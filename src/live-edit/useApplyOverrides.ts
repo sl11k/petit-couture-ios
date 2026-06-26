@@ -31,7 +31,8 @@ export function useApplyOverrides(
         // published values here after a delay would overwrite what the admin
         // is currently typing.
         if (!includeDraft && root.getAttribute("data-live-editing") === "true") return;
-        for (const o of overrides) {
+        const ordered = [...overrides].sort((a, b) => Number(a.prop !== "style") - Number(b.prop !== "style"));
+        for (const o of ordered) {
           if (o.lang && o.lang !== "*" && o.lang !== lang && (o.prop === "text" || o.prop === "html")) continue;
           const el = resolveSelector(root, o.selector);
           if (el) applyOverrideToEl(el, o.prop, o.value);

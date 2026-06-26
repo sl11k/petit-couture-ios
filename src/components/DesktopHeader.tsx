@@ -164,6 +164,7 @@ export function DesktopHeader() {
         <div className="mx-auto max-w-[1480px] px-10 h-12 flex items-center justify-center gap-1">
           {/* Shop by Age — hover dropdown */}
           <HoverDropdown
+            liveId="header-shop-by-age"
             label={isRTL ? "تسوّق حسب العمر" : "SHOP BY AGE"}
             items={ageGroups.map((g) => ({
               slug: g.slug,
@@ -177,6 +178,7 @@ export function DesktopHeader() {
             return (
               <Link
                 key={c.href}
+                data-live-id={`header-nav-${c.slug}`}
                 to={c.href as any}
                 className={[
                   "px-4 h-9 inline-flex items-center rounded-xl text-[11.5px] tracking-luxury transition",
@@ -197,6 +199,7 @@ export function DesktopHeader() {
               return (
                 <HoverDropdown
                   key={c.slug}
+                  liveId={`header-category-${c.slug}`}
                   label={label}
                   parentHref={`/category/${c.slug}`}
                   items={c.children.map((ch) => ({
@@ -236,12 +239,14 @@ function HoverDropdown({
   items,
   columns = 1,
   parentHref,
+  liveId,
 }: {
   label: string;
   items: Array<{ slug: string; label: string }>;
   columns?: 1 | 2;
   /** If provided, the trigger label itself navigates to this URL (the parent category). */
   parentHref?: string;
+  liveId?: string;
 }) {
   const [open, setOpen] = useState(false);
   if (!items || items.length === 0) {
@@ -249,6 +254,8 @@ function HoverDropdown({
   }
   return (
     <div
+      data-live-id={liveId}
+      data-live-region={liveId}
       className="relative"
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}

@@ -82,14 +82,14 @@ export function Footer() {
               {ar ? "خدمة العملاء" : "Customer Care"}
             </h3>
             <ul className="space-y-2 text-[13px]">
-              <li><Link to="/our-story" className="hover:text-gold transition">{ar ? "قصتنا" : "Our Story"}</Link></li>
-              <li><Link to="/help" className="hover:text-gold transition">{ar ? "الأسئلة الشائعة" : "FAQ"}</Link></li>
-              <li><Link to="/contact" className="hover:text-gold transition">{ar ? "تواصل معنا" : "Contact us"}</Link></li>
-              <li><Link to="/track-order" className="hover:text-gold transition">{ar ? "تتبع الطلب" : "Track order"}</Link></li>
-              <li><Link to="/shipping" className="hover:text-gold transition">{ar ? "الشحن والتوصيل" : "Shipping & Delivery"}</Link></li>
-              <li><Link to="/privacy" className="hover:text-gold transition">{ar ? "الخصوصية" : "Privacy"}</Link></li>
+              <li data-live-id="footer-static-our-story"><Link to="/our-story" className="hover:text-gold transition">{ar ? "قصتنا" : "Our Story"}</Link></li>
+              <li data-live-id="footer-static-help"><Link to="/help" className="hover:text-gold transition">{ar ? "الأسئلة الشائعة" : "FAQ"}</Link></li>
+              <li data-live-id="footer-static-contact"><Link to="/contact" className="hover:text-gold transition">{ar ? "تواصل معنا" : "Contact us"}</Link></li>
+              <li data-live-id="footer-static-track-order"><Link to="/track-order" className="hover:text-gold transition">{ar ? "تتبع الطلب" : "Track order"}</Link></li>
+              <li data-live-id="footer-static-shipping"><Link to="/shipping" className="hover:text-gold transition">{ar ? "الشحن والتوصيل" : "Shipping & Delivery"}</Link></li>
+              <li data-live-id="footer-static-privacy"><Link to="/privacy" className="hover:text-gold transition">{ar ? "الخصوصية" : "Privacy"}</Link></li>
               {pages.map((p) => (
-                <li key={p.slug}>
+                <li key={p.slug} data-live-id={`footer-page-row-${p.slug}`}>
                   <Link
                     data-live-id={`footer-page-${p.slug}`}
                     to="/page/$slug"
