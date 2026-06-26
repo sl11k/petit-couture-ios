@@ -229,7 +229,7 @@ function TextStyleEditor({
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <Label className="text-xs">Ø§Ù„Ø­Ø¬Ù…</Label>
+          <Label className="text-xs">حجم النص</Label>
           <Input
             type="number"
             min={8}
@@ -240,7 +240,7 @@ function TextStyleEditor({
           />
         </div>
         <div>
-          <Label className="text-xs">Ø§Ù„Ø´ÙØ§ÙÙŠØ©</Label>
+          <Label className="text-xs">الشفافية %</Label>
           <Input
             type="number"
             min={0}
@@ -265,28 +265,28 @@ function TextStyleEditor({
           className="h-9 w-12 rounded border border-border bg-transparent"
         />
         <Input
-          placeholder="Ø§Ù„Ù„ÙˆÙ†"
+          placeholder="لون النص"
           value={v.color ?? ""}
           onChange={(e) => set({ color: e.target.value || undefined })}
         />
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <Label className="text-xs">Ø§Ù„Ù…ÙƒØ§Ù†</Label>
+          <Label className="text-xs">مكان النص</Label>
           <select
             className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
             value={v.textAlign ?? "center"}
             onChange={(e) => set({ textAlign: e.target.value as any })}
           >
-            <option value="start">Ø¨Ø¯Ø§ÙŠØ© Ø§Ù„Ù„ØºØ©</option>
-            <option value="center">ÙˆØ³Ø·</option>
-            <option value="end">Ù†Ù‡Ø§ÙŠØ© Ø§Ù„Ù„ØºØ©</option>
-            <option value="left">ÙŠØ³Ø§Ø±</option>
-            <option value="right">ÙŠÙ…ÙŠÙ†</option>
+            <option value="start">بداية اللغة</option>
+            <option value="center">وسط</option>
+            <option value="end">نهاية اللغة</option>
+            <option value="left">يسار</option>
+            <option value="right">يمين</option>
           </select>
         </div>
         <div>
-          <Label className="text-xs">Ø§Ù„Ø³Ù…Ùƒ</Label>
+          <Label className="text-xs">سُمك الخط</Label>
           <select
             className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
             value={v.fontWeight ?? "400"}
@@ -303,7 +303,7 @@ function TextStyleEditor({
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <Label className="text-xs">Ø§Ù„Ø®Ø·</Label>
+          <Label className="text-xs">نوع الخط</Label>
           <select
             className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
             value={v.fontFamily ?? "inherit"}
@@ -316,13 +316,13 @@ function TextStyleEditor({
           </select>
         </div>
         <div>
-          <Label className="text-xs">Ø­Ø±ÙˆÙ</Label>
+          <Label className="text-xs">شكل الحروف</Label>
           <select
             className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
             value={v.textTransform ?? "none"}
             onChange={(e) => set({ textTransform: e.target.value as any })}
           >
-            <option value="none">Ø¹Ø§Ø¯ÙŠ</option>
+            <option value="none">عادي</option>
             <option value="uppercase">UPPER</option>
             <option value="lowercase">lower</option>
             <option value="capitalize">Capitalize</option>
@@ -356,7 +356,7 @@ function TextStyleEditor({
           />
         </div>
         <div>
-          <Label className="text-xs">Ø§Ù„Ù…Ø³Ø§ÙØ© ÙÙˆÙ‚</Label>
+          <Label className="text-xs">المسافة فوق</Label>
           <Input
             type="number"
             min={-40}
