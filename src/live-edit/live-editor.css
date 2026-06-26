@@ -240,6 +240,12 @@
 .lpe-canvas .storefront-shell {
   min-height: 100%;
 }
+.lpe-canvas[data-lpe-replace-main="true"] #main-content > :not(.lpe-added-sections) {
+  display: none !important;
+}
+.lpe-canvas[data-lpe-replace-main="true"] #main-content > .lpe-added-sections {
+  display: block !important;
+}
 .lpe-device-tablet {
   right: auto;
   width: min(768px, calc(100vw - var(--lpe-left) - var(--lpe-right) - 24px));

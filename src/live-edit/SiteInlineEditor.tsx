@@ -184,6 +184,8 @@ export function SiteInlineEditor({
   const addedSections = pageEditor.content.sections.filter(
     (section) => section.type !== "legacy_home",
   );
+  const replaceHomeMainWithBuilder =
+    pagePath === "/" && !pageEditor.loading && addedSections.length > 0;
   const selectedAddedSection = addedSections.find(
     (section) => section.id === pageEditor.selectedSectionId,
   );
@@ -626,6 +628,7 @@ export function SiteInlineEditor({
         ref={rootRef}
         data-live-root
         data-live-editing="true"
+        data-lpe-replace-main={replaceHomeMainWithBuilder ? "true" : undefined}
         className={`lpe-canvas lpe-device-${device}`}
       >
         {children}

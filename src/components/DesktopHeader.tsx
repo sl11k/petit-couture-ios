@@ -27,7 +27,9 @@ export function DesktopHeader() {
 
   const tree = useDbCategoryTree();
   const [navItems, setNavItems] = useState<Array<{slug:string; name_ar:string; name_en:string; href:string}>>([]);
+  const [navLoaded, setNavLoaded] = useState(false);
   useEffect(() => {
+    let active = true;
     (async () => {
       try {
         const { data } = await (supabase as any)
@@ -42,10 +44,14 @@ export function DesktopHeader() {
             name_en: r.label_en || r.label_ar || "",
             href: r.href as string,
           }));
-          setNavItems(rows);
+          if (active) setNavItems(rows);
         }
       } catch (e) { console.error("[DesktopHeader] nav fetch failed", e); }
+      finally {
+        if (active) setNavLoaded(true);
+      }
     })();
+    return () => { active = false; };
   }, []);
 
   const isActive = (path: string) =>
@@ -60,6 +66,8 @@ export function DesktopHeader() {
   ];
 
   const announcementMessages = useDbAnnouncements(t.announcements, lang as "ar" | "en");
+  const hasCustomNav = navItems.length > 0;
+  const showFallbackNav = navLoaded && !hasCustomNav;
 
   return (
     <header
@@ -163,14 +171,14 @@ export function DesktopHeader() {
       <nav className="border-t border-border/60">
         <div className="mx-auto max-w-[1480px] px-10 h-12 flex items-center justify-center gap-1">
           {/* Shop by Age — hover dropdown */}
-          <HoverDropdown
+          {showFallbackNav && <HoverDropdown
             liveId="header-shop-by-age"
             label={isRTL ? "تسوّق حسب العمر" : "SHOP BY AGE"}
             items={ageGroups.map((g) => ({
               slug: g.slug,
               label: isRTL ? g.ar : g.en,
             }))}
-          />
+          />}
 
           {/* Custom header_nav_items override, if any */}
           {navItems.map((c) => {
@@ -191,7 +199,7 @@ export function DesktopHeader() {
           })}
 
           {/* Top-level DB categories. If a category has children, render as dropdown. */}
-          {navItems.length === 0 && tree.slice(0, 8).map((c) => {
+          {showFallbackNav && tree.slice(0, 8).map((c) => {
             const label = lang === "en"
               ? (t.categories[c.slug] ?? c.name_en).toUpperCase()
               : (t.categories[c.slug] ?? c.name_ar);
@@ -213,6 +221,7 @@ export function DesktopHeader() {
             return (
               <Link
                 key={c.slug}
+                data-live-id={`header-category-${c.slug}`}
                 to="/category/$slug"
                 params={{ slug: c.slug }}
                 className={[
