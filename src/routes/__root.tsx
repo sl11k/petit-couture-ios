@@ -15,7 +15,7 @@ import { CurrencyProvider } from "@/state/CurrencyContext";
 import { Toaster } from "@/components/ui/sonner";
 import { WishlistBanner } from "@/components/WishlistBanner";
 import { DesktopHeader } from "@/components/DesktopHeader";
-import { MobileBottomNav } from "@/components/mobile/MobileNav";
+import { MobileBottomNav, StorefrontMobileHeader } from "@/components/mobile/MobileNav";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { CookieBanner } from "@/components/CookieBanner";
@@ -231,7 +231,12 @@ function StorefrontShell({
   const live = useLiveEdit();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const pageIdentity = getEditablePageIdentity(pathname);
-  const allowPageEditing = !isAdmin && !pathname.startsWith("/login") && !pathname.startsWith("/sitemap") && !pathname.startsWith("/robots") && !pathname.startsWith("/debug");
+  const allowPageEditing =
+    !isAdmin &&
+    !pathname.startsWith("/login") &&
+    !pathname.startsWith("/sitemap") &&
+    !pathname.startsWith("/robots") &&
+    !pathname.startsWith("/debug");
   useCustomCss();
   const overridesReady = useApplyOverrides(pathname);
   if (!themeReady && !isAdmin) {
@@ -244,6 +249,7 @@ function StorefrontShell({
     <div className="storefront-shell">
       <SkipLink />
       {showStoreChrome && <DesktopHeader />}
+      {showStoreChrome && <StorefrontMobileHeader />}
       <AnalyticsTracker />
       <div id="main-content" tabIndex={-1}>
         <Outlet />

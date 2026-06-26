@@ -288,6 +288,15 @@
 .lpe-device-mobile .grid-cols-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
 }
+.lpe-device-mobile [data-mobile-columns="1"] {
+  grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+}
+.lpe-device-mobile [data-mobile-columns="2"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+.lpe-device-mobile [data-mobile-columns="3"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
 .lpe-device-mobile [class*="md:px-"],
 .lpe-device-mobile [class*="lg:px-"] {
   padding-left: 1rem !important;

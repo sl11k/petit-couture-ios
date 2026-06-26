@@ -44,6 +44,21 @@ export type ImageContent = {
   caption_en?: string;
 };
 
+export type TextStyleSettings = {
+  color?: string;
+  opacity?: number; // 0..1
+  fontSize?: number;
+  fontFamily?: "inherit" | "serif" | "sans" | "mono";
+  fontWeight?: "300" | "400" | "500" | "600" | "700" | "800";
+  textAlign?: "left" | "center" | "right" | "start" | "end";
+  lineHeight?: number;
+  letterSpacing?: number;
+  textTransform?: "none" | "uppercase" | "lowercase" | "capitalize";
+  marginTop?: number;
+};
+
+export type ImageAspectRatio = "1/1" | "4/3" | "3/4" | "16/9";
+
 // --- Section variants ---
 
 export type LegacyHomeSection = {
@@ -130,6 +145,11 @@ export type FeatureGridSection = {
     subtitle_ar?: string;
     subtitle_en?: string;
     columns?: 2 | 3 | 4;
+    mobileColumns?: 1 | 2 | 3;
+    imageAspectRatio?: ImageAspectRatio;
+    titleStyle?: TextStyleSettings;
+    descriptionStyle?: TextStyleSettings;
+    captionStyle?: TextStyleSettings;
     cards: FeatureCard[];
   };
   settings?: CommonSectionSettings;
@@ -199,6 +219,9 @@ export type GallerySection = {
     title_en?: string;
     images: ImageContent[];
     columns?: 2 | 3 | 4;
+    mobileColumns?: 1 | 2 | 3;
+    imageAspectRatio?: ImageAspectRatio;
+    captionStyle?: TextStyleSettings;
   };
   settings?: CommonSectionSettings;
 };
@@ -359,6 +382,10 @@ export type ProductGridSection = {
     showNavigation?: boolean;
     cardShape?: "square" | "rounded";
     showPrice?: boolean;
+    mobileColumns?: 1 | 2 | 3;
+    imageAspectRatio?: ImageAspectRatio;
+    productNameStyle?: TextStyleSettings;
+    productPriceStyle?: TextStyleSettings;
   };
   settings?: CommonSectionSettings;
 };

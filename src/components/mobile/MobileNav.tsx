@@ -18,6 +18,9 @@ import { useBag } from "@/state/BagContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { cn } from "@/lib/utils";
+import { BrandLogo } from "@/components/Logo";
+import { AnnouncementBar } from "@/components/AnnouncementBar";
+import { useDbAnnouncements } from "@/hooks/useDbAnnouncements";
 import {
   Sheet,
   SheetContent,
@@ -82,9 +85,7 @@ export function MobileHeader({
           </Link>
         )}
 
-        <h1 className="flex-1 text-center text-sm font-medium truncate px-2">
-          {title}
-        </h1>
+        <h1 className="flex-1 text-center text-sm font-medium truncate px-2">{title}</h1>
 
         {rightSlot ?? (
           <div className="flex items-center gap-1">
@@ -115,6 +116,60 @@ export function MobileHeader({
   );
 }
 
+export function StorefrontMobileHeader({ className }: { className?: string }) {
+  const bag = useBag();
+  const { t, lang, toggle, isRTL } = useLanguage();
+  const announcementMessages = useDbAnnouncements(t.announcements, lang as "ar" | "en");
+  const bagCount = bag.items?.reduce?.((n, i) => n + (i.qty ?? 1), 0) ?? 0;
+
+  return (
+    <header
+      data-live-id="storefront-mobile-header"
+      className={cn(
+        "lg:hidden sticky top-0 z-40 bg-background/96 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]",
+        className,
+      )}
+    >
+      <div className="bg-cream-warm border-b border-gold-soft/60 px-3 h-8 flex items-center gap-3 text-[10px] text-foreground/75">
+        <button
+          type="button"
+          onClick={toggle}
+          className="shrink-0 rounded-full border border-gold-soft/70 px-2 py-0.5 tracking-luxury text-gold-deep"
+          aria-label={isRTL ? "تبديل اللغة" : "Toggle language"}
+        >
+          {lang === "ar" ? "EN" : "عربي"}
+        </button>
+        <AnnouncementBar messages={announcementMessages} className="min-w-0 flex-1" />
+        <CurrencySelector className="shrink-0 px-1" />
+      </div>
+      <div className="h-[60px] px-4 py-2 flex items-center justify-between gap-3">
+        <Link
+          to="/search"
+          aria-label={isRTL ? "بحث" : "Search"}
+          className="h-11 w-11 grid place-items-center rounded-xl text-primary active:bg-accent/70"
+        >
+          <Search className="h-5 w-5" strokeWidth={1.7} />
+        </Link>
+        <Link to="/" aria-label="Le Petit Paradis" className="min-w-0 flex-1 flex justify-center">
+          <BrandLogo height={38} className="max-w-[170px]" />
+        </Link>
+        <Link
+          to="/bag"
+          aria-label={isRTL ? "السلة" : "Bag"}
+          className="relative h-11 w-11 grid place-items-center rounded-xl text-primary active:bg-accent/70"
+        >
+          <ShoppingBag className="h-5 w-5" strokeWidth={1.7} />
+          {bagCount > 0 && (
+            <span className="absolute top-1 end-1 min-w-[18px] h-[18px] px-1 grid place-items-center rounded-full bg-primary text-primary-foreground text-[10px] font-medium">
+              {bagCount > 99 ? "99+" : bagCount}
+            </span>
+          )}
+        </Link>
+      </div>
+    </header>
+  );
+}
+
 /**
  * MobileBottomNav — تنقّل سفلي ثابت للجوال
  *  - 5 أزرار رئيسية، كلٌ بمنطقة لمس ≥48px
@@ -122,12 +177,7 @@ export function MobileHeader({
  *  - يختفي تلقائيًا على lg+
  *  - يختفي في صفحات Checkout لتقليل التشتيت
  */
-const HIDE_ON: string[] = [
-  "/checkout",
-  "/login",
-  "/admin",
-  "/order-confirmation",
-];
+const HIDE_ON: string[] = ["/checkout", "/login", "/admin", "/order-confirmation"];
 
 export function MobileBottomNav() {
   const location = useLocation();
@@ -168,9 +218,14 @@ export function MobileBottomNav() {
         aria-label="Primary"
       >
         <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-          <SheetContent side={ar ? "right" : "left"} className="w-[88vw] sm:w-[420px] overflow-y-auto p-0 z-[60]">
+          <SheetContent
+            side={ar ? "right" : "left"}
+            className="w-[88vw] sm:w-[420px] overflow-y-auto p-0 z-[60]"
+          >
             <SheetHeader className="px-5 pt-6 pb-3 border-b">
-              <SheetTitle className={cn("font-serif text-2xl text-primary", ar ? "text-right" : "text-left")}>
+              <SheetTitle
+                className={cn("font-serif text-2xl text-primary", ar ? "text-right" : "text-left")}
+              >
                 {menuLabel}
               </SheetTitle>
             </SheetHeader>
@@ -219,7 +274,10 @@ export function MobileBottomNav() {
                   </span>
                   <span className="text-[10px] leading-none">{label}</span>
                   {active && (
-                    <span aria-hidden className="absolute top-0 inset-x-6 h-[2px] rounded-full bg-primary" />
+                    <span
+                      aria-hidden
+                      className="absolute top-0 inset-x-6 h-[2px] rounded-full bg-primary"
+                    />
                   )}
                 </Link>
               </li>
@@ -235,70 +293,128 @@ export function MobileBottomNav() {
 function CategoryMenu({ onNavigate, ar }: { onNavigate: () => void; ar: boolean }) {
   const dbCats = useDbCategories();
 
-  const dbGroup = dbCats.length > 0
-    ? [{
-        title: ar ? "كل التصنيفات" : "All Categories",
-        icon: Crown,
-        items: dbCats.map((c) => ({
-          label: ar ? c.name_ar : c.name_en,
-          to: "/category/$slug",
-          params: { slug: c.slug },
-        })),
-      }]
-    : [];
+  const dbGroup =
+    dbCats.length > 0
+      ? [
+          {
+            title: ar ? "كل التصنيفات" : "All Categories",
+            icon: Crown,
+            items: dbCats.map((c) => ({
+              label: ar ? c.name_ar : c.name_en,
+              to: "/category/$slug",
+              params: { slug: c.slug },
+            })),
+          },
+        ]
+      : [];
 
   const fallback: {
     title: string;
     icon: typeof Baby;
     items: { label: string; to: string; params?: any }[];
-  }[] = dbCats.length > 0 ? [] : [
-    {
-      title: ar ? "التسوق حسب العمر" : "Shop by Age",
-      icon: Baby,
-      items: [
-        { label: ar ? "حديثي الولادة (0-12 شهر)" : "Newborn (0-12 months)", to: "/category/$slug", params: { slug: "babysuits" } },
-        { label: ar ? "أطفال (1-3 سنوات)" : "Toddlers (1-3 years)", to: "/category/$slug", params: { slug: "outfit-sets" } },
-        { label: ar ? "أطفال (4-7 سنوات)" : "Kids (4-7 years)", to: "/category/$slug", params: { slug: "dresses" } },
-        { label: ar ? "أطفال (8-12 سنة)" : "Kids (8-12 years)", to: "/category/$slug", params: { slug: "tops" } },
-      ],
-    },
-    {
-      title: ar ? "التسوق حسب الفئة" : "Shop by Category",
-      icon: ShoppingBasket,
-      items: [
-        { label: ar ? "بنات" : "Girls", to: "/category/$slug", params: { slug: "dresses" } },
-        { label: ar ? "أولاد" : "Boys", to: "/category/$slug", params: { slug: "outfit-sets" } },
-        { label: ar ? "رضّع" : "Babies", to: "/category/$slug", params: { slug: "babysuits" } },
-      ],
-    },
-    {
-      title: ar ? "التصنيفات" : "Collections",
-      icon: Crown,
-      items: [
-        { label: ar ? "الفساتين" : "Dresses", to: "/category/$slug", params: { slug: "dresses" } },
-        { label: ar ? "الأحذية" : "Shoes", to: "/category/$slug", params: { slug: "shoes" } },
-        { label: ar ? "الحقائب" : "Bags", to: "/category/$slug", params: { slug: "bags" } },
-        { label: ar ? "ملابس السباحة" : "Swimwear", to: "/category/$slug", params: { slug: "swimwear" } },
-        { label: ar ? "الأطقم" : "Outfit Sets", to: "/category/$slug", params: { slug: "outfit-sets" } },
-      ],
-    },
-    {
-      title: ar ? "مميّز" : "Featured",
-      icon: Sparkles,
-      items: [
-        { label: ar ? "الأكثر مبيعاً" : "Best Sellers", to: "/category/$slug", params: { slug: "best-sellers" } },
-        { label: ar ? "الجديد" : "New In", to: "/category/$slug", params: { slug: "new-in" } },
-      ],
-    },
-    {
-      title: ar ? "الهدايا" : "Gifts",
-      icon: Gift,
-      items: [
-        { label: ar ? "هدايا للرضّع" : "Baby Gifts", to: "/category/$slug", params: { slug: "gifts" } },
-        { label: ar ? "هدايا فاخرة" : "Luxury Gifts", to: "/category/$slug", params: { slug: "gifts" } },
-      ],
-    },
-  ];
+  }[] =
+    dbCats.length > 0
+      ? []
+      : [
+          {
+            title: ar ? "التسوق حسب العمر" : "Shop by Age",
+            icon: Baby,
+            items: [
+              {
+                label: ar ? "حديثي الولادة (0-12 شهر)" : "Newborn (0-12 months)",
+                to: "/category/$slug",
+                params: { slug: "babysuits" },
+              },
+              {
+                label: ar ? "أطفال (1-3 سنوات)" : "Toddlers (1-3 years)",
+                to: "/category/$slug",
+                params: { slug: "outfit-sets" },
+              },
+              {
+                label: ar ? "أطفال (4-7 سنوات)" : "Kids (4-7 years)",
+                to: "/category/$slug",
+                params: { slug: "dresses" },
+              },
+              {
+                label: ar ? "أطفال (8-12 سنة)" : "Kids (8-12 years)",
+                to: "/category/$slug",
+                params: { slug: "tops" },
+              },
+            ],
+          },
+          {
+            title: ar ? "التسوق حسب الفئة" : "Shop by Category",
+            icon: ShoppingBasket,
+            items: [
+              { label: ar ? "بنات" : "Girls", to: "/category/$slug", params: { slug: "dresses" } },
+              {
+                label: ar ? "أولاد" : "Boys",
+                to: "/category/$slug",
+                params: { slug: "outfit-sets" },
+              },
+              {
+                label: ar ? "رضّع" : "Babies",
+                to: "/category/$slug",
+                params: { slug: "babysuits" },
+              },
+            ],
+          },
+          {
+            title: ar ? "التصنيفات" : "Collections",
+            icon: Crown,
+            items: [
+              {
+                label: ar ? "الفساتين" : "Dresses",
+                to: "/category/$slug",
+                params: { slug: "dresses" },
+              },
+              { label: ar ? "الأحذية" : "Shoes", to: "/category/$slug", params: { slug: "shoes" } },
+              { label: ar ? "الحقائب" : "Bags", to: "/category/$slug", params: { slug: "bags" } },
+              {
+                label: ar ? "ملابس السباحة" : "Swimwear",
+                to: "/category/$slug",
+                params: { slug: "swimwear" },
+              },
+              {
+                label: ar ? "الأطقم" : "Outfit Sets",
+                to: "/category/$slug",
+                params: { slug: "outfit-sets" },
+              },
+            ],
+          },
+          {
+            title: ar ? "مميّز" : "Featured",
+            icon: Sparkles,
+            items: [
+              {
+                label: ar ? "الأكثر مبيعاً" : "Best Sellers",
+                to: "/category/$slug",
+                params: { slug: "best-sellers" },
+              },
+              {
+                label: ar ? "الجديد" : "New In",
+                to: "/category/$slug",
+                params: { slug: "new-in" },
+              },
+            ],
+          },
+          {
+            title: ar ? "الهدايا" : "Gifts",
+            icon: Gift,
+            items: [
+              {
+                label: ar ? "هدايا للرضّع" : "Baby Gifts",
+                to: "/category/$slug",
+                params: { slug: "gifts" },
+              },
+              {
+                label: ar ? "هدايا فاخرة" : "Luxury Gifts",
+                to: "/category/$slug",
+                params: { slug: "gifts" },
+              },
+            ],
+          },
+        ];
 
   const groups = [...dbGroup, ...fallback];
 
@@ -340,23 +456,19 @@ function CategoryMenu({ onNavigate, ar }: { onNavigate: () => void; ar: boolean 
  * MobileSearchBar — صف بحث بارز يُعرض أعلى الشاشات الرئيسية
  * (مختلف عن SearchBar في الهيدر الذي قد يكون مخفيًا).
  */
-export function MobileSearchBar({
-  placeholder,
-}: {
-  placeholder?: string;
-}) {
+export function MobileSearchBar({ placeholder }: { placeholder?: string }) {
   const [q, setQ] = useState("");
   const navigate = useNavigate();
   const { isRTL } = useLanguage();
   const ar = isRTL;
-  const ph = placeholder ?? (ar ? "ابحث عن منتج، قسم، علامة…" : "Search products, categories, brands…");
+  const ph =
+    placeholder ?? (ar ? "ابحث عن منتج، قسم، علامة…" : "Search products, categories, brands…");
   return (
     <form
       role="search"
       onSubmit={(e) => {
         e.preventDefault();
-        if (q.trim())
-          navigate({ to: "/search", search: { q: q.trim() } as any });
+        if (q.trim()) navigate({ to: "/search", search: { q: q.trim() } as any });
       }}
       className="lg:hidden px-3 py-2 bg-background"
     >
