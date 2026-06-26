@@ -152,7 +152,7 @@ async function completeStripeCheckout(object: Record<string, unknown>, event: St
 
   const { data: order, error: orderError } = await supabaseAdmin
     .from("orders")
-    .select("id,total,currency,user_id")
+    .select("id,total,currency,user_id,payment_method,payment_status")
     .eq("order_number", orderNumber)
     .maybeSingle();
   if (orderError || !order) throw new Error("Order not found for Stripe webhook");
@@ -173,11 +173,28 @@ async function completeStripeCheckout(object: Record<string, unknown>, event: St
     event,
   });
 
+  const { error: completeError } = await (
+    supabaseAdmin as unknown as {
+      rpc: (
+        name: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ data: unknown; error: { message: string } | null }>;
+    }
+  ).rpc("complete_async_payment", {
+    _order_id: order.id,
+    _gateway: order.payment_method,
+    _gateway_transaction_id: sessionId,
+    _transaction_id: transactionId,
+    _amount: amount,
+    _currency: currency,
+  });
+  if (completeError) {
+    throw new Error(`Could not finalize Stripe payment safely: ${completeError.message}`);
+  }
+
   const { error } = await supabaseAdmin
     .from("orders")
     .update({
-      payment_status: "paid",
-      status: "processing",
       payment_gateway: "stripe",
       last_transaction_id: transactionId,
       captured_amount: amount,
@@ -203,7 +220,7 @@ async function failStripeCheckout(object: Record<string, unknown>, event: Stripe
 
   const { data: order } = await supabaseAdmin
     .from("orders")
-    .select("id,total,currency")
+    .select("id,total,currency,payment_method")
     .eq("order_number", orderNumber)
     .maybeSingle();
   if (!order) return { transactionId: null };
@@ -218,10 +235,24 @@ async function failStripeCheckout(object: Record<string, unknown>, event: Stripe
     event,
   });
 
+  const { error: failError } = await (
+    supabaseAdmin as unknown as {
+      rpc: (
+        name: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ data: unknown; error: { message: string } | null }>;
+    }
+  ).rpc("fail_async_payment", {
+    _order_id: order.id,
+    _gateway: order.payment_method,
+    _transaction_id: transactionId,
+    _reason: event.type,
+  });
+  if (failError) throw new Error(`Could not fail Stripe payment safely: ${failError.message}`);
+
   await supabaseAdmin
     .from("orders")
     .update({
-      payment_status: "failed",
       payment_failure_reason: event.type,
       last_payment_attempt_at: new Date().toISOString(),
       payment_gateway: "stripe",

@@ -281,11 +281,13 @@ export const placeOrder = createServerFn({ method: "POST" })
     }
 
     // 3b. Stock handling:
-    //  - For payments that confirm immediately (cod, card, apple_pay): finalize now.
-    //  - For deferred-payment methods (bank_transfer, tabby, tamara): reserve only.
+    //  - COD is confirmed at placement, so finalize now.
+    //  - Hosted/deferred methods reserve only until their webhook confirms payment.
     //    The payment webhook later calls finalize_order_stock on confirmation,
     //    or release_order_inventory on cancel/expiry.
-    const asyncPayment = ["bank_transfer", "tabby", "tamara"].includes(data.payment_method);
+    const asyncPayment = ["card", "apple_pay", "bank_transfer", "tabby", "tamara"].includes(
+      data.payment_method,
+    );
     const rpcName = asyncPayment ? "reserve_order_inventory" : "finalize_order_stock";
     try {
       const { error: stockErr } = await (supabaseAdmin as any).rpc(rpcName, {
