@@ -2,7 +2,13 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getOtoAccessToken, otoFetch, createOtoShipmentForOrder } from "./oto.server";
+import {
+  getOtoAccessToken,
+  otoFetch,
+  createOtoShipmentForOrder,
+  getOtoDeliveryOptionsForOrder,
+  otoGetOrderStatus,
+} from "./oto.server";
 
 async function requireOtoAdmin(userId: string) {
   const { data, error } = await supabaseAdmin
@@ -30,11 +36,27 @@ export const otoTestConnection = createServerFn({ method: "POST" })
 
 export const otoCreateShipment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        orderId: z.string().uuid(),
+        deliveryOptionId: z.string().optional().nullable(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId } = context as { userId: string };
+    await requireOtoAdmin(userId);
+    return await createOtoShipmentForOrder(data.orderId, userId, data.deliveryOptionId);
+  });
+
+export const otoGetDeliveryOptions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ orderId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
     await requireOtoAdmin(userId);
-    return await createOtoShipmentForOrder(data.orderId, userId);
+    return await getOtoDeliveryOptionsForOrder(data.orderId);
   });
 
 export const otoSyncShipment = createServerFn({ method: "POST" })
@@ -48,7 +70,7 @@ export const otoSyncShipment = createServerFn({ method: "POST" })
     if (error || !ship) throw new Error("Shipment not found");
     if (!ship.tracking_number) return { ok: false, error: "No tracking number" };
     try {
-      const resp: any = await otoFetch(`/orderStatus?orderId=${encodeURIComponent(ship.tracking_number)}`, { method: "GET" });
+      const resp: any = await otoGetOrderStatus(ship.order_number || ship.tracking_number);
       const newStatus = (resp?.status || resp?.tracking?.status || "").toString().toLowerCase();
       const update: any = { last_polled_at: new Date().toISOString(), raw_response: resp };
       if (newStatus.includes("delivered")) { update.status = "delivered"; update.delivered_at = new Date().toISOString(); }
