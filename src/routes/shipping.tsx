@@ -59,10 +59,10 @@ function ShippingPage() {
   return (
     <main className="max-w-3xl mx-auto px-5 py-10" dir={isRTL ? "rtl" : "ltr"}>
       <header className="mb-8">
-        <h1 className="font-serif text-[32px] text-foreground">
+        <h1 data-live-id="shipping-title" className="font-serif text-[32px] text-foreground">
           {ar ? "الشحن والتوصيل" : "Shipping & Delivery"}
         </h1>
-        <p className="mt-2 text-[14px] text-muted-foreground">
+        <p data-live-id="shipping-subtitle" className="mt-2 text-[14px] text-muted-foreground">
           {ar
             ? "نوفّر خيارات شحن متعددة داخل المملكة العربية السعودية وإلى دول الخليج العربي."
             : "We offer multiple shipping options within Saudi Arabia and across the GCC."}
@@ -73,10 +73,16 @@ function ShippingPage() {
       <section className="mb-8 rounded-[18px] border border-gold-deep/30 bg-gold-deep/5 p-5 flex items-start gap-3">
         <Gift className="h-6 w-6 text-gold-deep shrink-0 mt-0.5" />
         <div>
-          <h2 className="font-serif text-[18px] text-foreground mb-1">
+          <h2
+            data-live-id="shipping-free-title"
+            className="font-serif text-[18px] text-foreground mb-1"
+          >
             {ar ? "شحن مجاني للطلبات فوق ٥٠٠ ر.س" : "Free shipping over 500 SAR"}
           </h2>
-          <p className="text-[13px] text-foreground/80 leading-relaxed">
+          <p
+            data-live-id="shipping-free-body"
+            className="text-[13px] text-foreground/80 leading-relaxed"
+          >
             {ar
               ? "احصل على شحن قياسي مجاني داخل المملكة العربية السعودية عند وصول قيمة طلبك إلى ٥٠٠ ر.س أو أكثر. لا حاجة لرمز ترويجي — يُطبّق الخصم تلقائياً عند الدفع."
               : "Enjoy free standard shipping within Saudi Arabia on orders of 500 SAR or more. No code needed — the discount is applied automatically at checkout."}
@@ -86,25 +92,40 @@ function ShippingPage() {
 
       {/* Methods grid */}
       <section className="space-y-3 mb-10">
-        <h2 className="font-serif text-[22px] text-foreground mb-3">
+        <h2
+          data-live-id="shipping-options-title"
+          className="font-serif text-[22px] text-foreground mb-3"
+        >
           {ar ? "خيارات الشحن" : "Shipping options"}
         </h2>
         {methods.map((m) => {
           const Icon = m.icon;
           return (
-            <div key={m.title_en} className="rounded-[14px] border border-border p-4 flex items-start gap-4">
+            <div
+              key={m.title_en}
+              className="rounded-[14px] border border-border p-4 flex items-start gap-4"
+            >
               <div className="h-11 w-11 rounded-xl bg-cream-warm grid place-items-center shrink-0">
                 <Icon className="h-5 w-5 text-gold-deep" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-[15px] text-foreground">
+                <h3
+                  data-live-id={`shipping-method-${m.title_en}-title`}
+                  className="font-medium text-[15px] text-foreground"
+                >
                   {ar ? m.title_ar : m.title_en}
                 </h3>
-                <p className="text-[12.5px] text-muted-foreground mt-1">
+                <p
+                  data-live-id={`shipping-method-${m.title_en}-eta`}
+                  className="text-[12.5px] text-muted-foreground mt-1"
+                >
                   {ar ? m.eta_ar : m.eta_en}
                 </p>
               </div>
-              <div className="text-end text-[13px] font-medium text-foreground whitespace-nowrap">
+              <div
+                data-live-id={`shipping-method-${m.title_en}-fee`}
+                className="text-end text-[13px] font-medium text-foreground whitespace-nowrap"
+              >
                 {ar ? m.fee_ar : m.fee_en}
               </div>
             </div>
@@ -114,12 +135,15 @@ function ShippingPage() {
 
       {/* International shipping */}
       <section className="mb-10">
-        <h2 className="font-serif text-[22px] text-foreground mb-3 flex items-center gap-2">
+        <h2
+          data-live-id="shipping-international-title"
+          className="font-serif text-[22px] text-foreground mb-3 flex items-center gap-2"
+        >
           <Globe className="h-5 w-5 text-gold-deep" />
           {ar ? "الشحن الدولي" : "International shipping"}
         </h2>
         <div className="rounded-[14px] border border-border p-5 space-y-3 text-[13.5px] text-foreground/85 leading-relaxed">
-          <p>
+          <p data-live-id="shipping-international-body">
             {ar
               ? "نشحن حالياً إلى دول مجلس التعاون الخليجي: الإمارات، الكويت، البحرين، عُمان، وقطر."
               : "We currently ship to all GCC countries: UAE, Kuwait, Bahrain, Oman, and Qatar."}
@@ -151,15 +175,26 @@ function ShippingPage() {
 
       {/* CTA */}
       <div className="flex items-center justify-center gap-3 pt-2">
-        <Link to="/" className="h-11 px-6 rounded-xl border border-border text-[13px] flex items-center">
+        <Link
+          data-live-id="shipping-continue-link"
+          to="/"
+          className="h-11 px-6 rounded-xl border border-border text-[13px] flex items-center"
+        >
           {ar ? "متابعة التسوّق" : "Continue shopping"}
         </Link>
-        <Link to="/help" className="h-11 px-6 rounded-xl bg-foreground text-background text-[13px] flex items-center">
+        <Link
+          data-live-id="shipping-help-link"
+          to="/help"
+          className="h-11 px-6 rounded-xl bg-foreground text-background text-[13px] flex items-center"
+        >
           {ar ? "الأسئلة الشائعة" : "FAQ"}
         </Link>
       </div>
 
-      <p className="mt-8 text-[12px] text-muted-foreground text-center">
+      <p
+        data-live-id="shipping-support-note"
+        className="mt-8 text-[12px] text-muted-foreground text-center"
+      >
         <Package className="inline h-3.5 w-3.5 me-1" />
         {ar
           ? "للاستفسارات حول الشحن، تواصل معنا عبر صفحة الدعم."

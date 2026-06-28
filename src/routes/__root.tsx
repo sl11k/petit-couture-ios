@@ -239,7 +239,10 @@ function StorefrontShell({
     !pathname.startsWith("/robots") &&
     !pathname.startsWith("/debug");
   const isCheckoutFlow = pathname.startsWith("/checkout");
-  const allowPublishedPageReplacement = allowPageEditing && !isCheckoutFlow;
+  const usesNativeEditableRoute = pathname.startsWith("/shipping");
+  const allowInlinePageEditing = allowPageEditing && !isCheckoutFlow;
+  const allowPublishedPageReplacement =
+    allowPageEditing && !isCheckoutFlow && !usesNativeEditableRoute;
   useCustomCss();
   const overridesReady = useApplyOverrides(pathname);
   useEffect(() => {
@@ -279,7 +282,7 @@ function StorefrontShell({
           />
         )}
       </div>
-      {allowPublishedPageReplacement && (
+      {allowInlinePageEditing && (
         <EditPageButton
           key={pageIdentity.slug}
           slug={pageIdentity.slug}
