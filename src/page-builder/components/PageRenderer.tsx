@@ -479,14 +479,14 @@ function RenderHero({ s }: { s: HeroSection }) {
   return (
     <section className="relative overflow-hidden" style={sectionWrapStyle(s)}>
       {bgImage && (
-        <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 z-0">
           <img src={bgImage} alt="" className="w-full h-full object-cover" />
           {overlay > 0 && (
             <div className="absolute inset-0 bg-black" style={{ opacity: overlay }} />
           )}
         </div>
       )}
-      <div className={cn("mx-auto max-w-5xl px-4 py-20", `text-${align}`)}>
+      <div className={cn("relative z-10 mx-auto max-w-5xl px-4 py-20", `text-${align}`)}>
         <EditT
           s={s}
           field="eyebrow"
