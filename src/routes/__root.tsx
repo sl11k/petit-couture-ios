@@ -271,12 +271,13 @@ function StorefrontShell({
 
     if (pathname !== "/" && allowPublishedPageReplacement) {
       setSectionsLoading(true);
-      supabase
-        .from("cms_pages")
-        .select("published_content")
-        .eq("slug", pageIdentity.slug)
-        .maybeSingle()
-        .then(({ data }) => {
+      void (async () => {
+        try {
+          const { data } = await supabase
+            .from("cms_pages")
+            .select("published_content")
+            .eq("slug", pageIdentity.slug)
+            .maybeSingle();
           if (!active) return;
           if (!isPageContent(data?.published_content)) {
             setReplaceRouteWithPublished(false);
@@ -289,13 +290,13 @@ function StorefrontShell({
           setPublishedSections(sections);
           setReplaceRouteWithPublished(sections.length > 0);
           setSectionsLoading(false);
-        })
-        .catch(() => {
+        } catch {
           if (active) {
             setReplaceRouteWithPublished(false);
             setSectionsLoading(false);
           }
-        });
+        }
+      })();
     } else {
       setSectionsLoading(false);
     }

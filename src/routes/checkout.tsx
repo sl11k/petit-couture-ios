@@ -199,15 +199,15 @@ function CheckoutPage() {
     let active = true;
     (async () => {
       try {
-        const { data: zones } = await supabase
+        const { data: zones } = await (supabase
           .from("shipping_zones")
           .select("tax_rate")
           .eq("country_code", countryCode)
-          .eq("is_active", true);
+          .eq("is_active", true) as any);
         if (!active) return;
         
         // Find the first zone with a tax_rate defined
-        const matchedRate = zones?.find((z: any) => z.tax_rate !== null && z.tax_rate !== undefined)?.tax_rate;
+        const matchedRate = (zones as any[])?.find((z: any) => z.tax_rate !== null && z.tax_rate !== undefined)?.tax_rate;
         if (matchedRate !== undefined && matchedRate !== null) {
           setTaxRate(Number(matchedRate));
         } else {
