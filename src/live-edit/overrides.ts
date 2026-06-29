@@ -139,8 +139,14 @@ export function applyOverrideToEl(el: Element, prop: OverrideProp, value: any) {
           (el as HTMLElement).removeAttribute("aria-hidden");
         }
         Object.entries(value as Record<string, string>).forEach(([k, v]) => {
-          if ((el as HTMLElement).style.getPropertyValue(k) !== String(v))
-            (el as HTMLElement).style.setProperty(k, String(v));
+          const currentVal = (el as HTMLElement).style.getPropertyValue(k);
+          const newVal = String(v);
+          // Special handling for background-image to ensure it's applied correctly
+          if (k === "background-image" && currentVal !== newVal) {
+            (el as HTMLElement).style.backgroundImage = newVal;
+          } else if (currentVal !== newVal) {
+            (el as HTMLElement).style.setProperty(k, newVal);
+          }
         });
       }
       break;
