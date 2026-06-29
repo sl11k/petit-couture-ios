@@ -34,9 +34,11 @@ import { SiteInlineEditor } from "@/live-edit/SiteInlineEditor";
 import { useCustomCss } from "@/hooks/useCustomCss";
 import { ThemeCustomizerProvider, useThemeCustomizer } from "@/theme-customizer/ThemeProvider";
 import { EditPageButton } from "@/components/EditPageButton";
-import { PublishedPageSections } from "@/live-edit/PublishedPageSections";
 import { getEditablePageIdentity } from "@/live-edit/pageIdentity";
 import { useApplyOverrides } from "@/live-edit/useApplyOverrides";
+import { supabase } from "@/integrations/supabase/client";
+import { isPageContent, type Section } from "@/page-builder/schemas/pageSchema";
+import { PageRenderer } from "@/page-builder/components/PageRenderer";
 
 import appCss from "../styles.css?url";
 
@@ -246,11 +248,13 @@ function StorefrontShell({
   const [prevPathname, setPrevPathname] = useState(pathname);
   const [replaceRouteWithPublished, setReplaceRouteWithPublished] = useState(false);
   const [sectionsLoading, setSectionsLoading] = useState(() => pathname !== "/" && allowPublishedPageReplacement);
+  const [publishedSections, setPublishedSections] = useState<Section[]>([]);
 
   // Synchronous state adjustment during render when pathname changes
   if (pathname !== prevPathname) {
     setPrevPathname(pathname);
     setReplaceRouteWithPublished(false);
+    setPublishedSections([]);
     if (pathname !== "/" && allowPublishedPageReplacement) {
       setSectionsLoading(true);
     } else {
@@ -261,18 +265,46 @@ function StorefrontShell({
   useCustomCss();
   const overridesReady = useApplyOverrides(pathname);
   useEffect(() => {
-    // Reset or verify states on mount/slug change
+    let active = true;
     setReplaceRouteWithPublished(false);
+    setPublishedSections([]);
+
     if (pathname !== "/" && allowPublishedPageReplacement) {
       setSectionsLoading(true);
+      supabase
+        .from("cms_pages")
+        .select("published_content")
+        .eq("slug", pageIdentity.slug)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (!active) return;
+          if (!isPageContent(data?.published_content)) {
+            setReplaceRouteWithPublished(false);
+            setSectionsLoading(false);
+            return;
+          }
+          const sections = data.published_content.sections.filter(
+            (section) => section.type !== "legacy_home",
+          );
+          setPublishedSections(sections);
+          setReplaceRouteWithPublished(sections.length > 0);
+          setSectionsLoading(false);
+        })
+        .catch(() => {
+          if (active) {
+            setReplaceRouteWithPublished(false);
+            setSectionsLoading(false);
+          }
+        });
     } else {
       setSectionsLoading(false);
     }
+
+    return () => {
+      active = false;
+    };
   }, [pageIdentity.slug, allowPublishedPageReplacement, pathname]);
-  const onPublishedSectionsLoaded = useCallback((hasSections: boolean) => {
-    setReplaceRouteWithPublished(hasSections);
-    setSectionsLoading(false);
-  }, []);
+
   if ((!themeReady || !overridesReady || sectionsLoading) && !isAdmin) {
     return <div className="min-h-screen bg-background" aria-label="Loading storefront" />;
   }
@@ -296,13 +328,12 @@ function StorefrontShell({
             <Outlet />
           </div>
         )}
-        {pathname !== "/" && allowPublishedPageReplacement && (
-          <PublishedPageSections
-            key={pageIdentity.slug}
-            slug={pageIdentity.slug}
-            onLoaded={onPublishedSectionsLoaded}
-          />
-        )}
+        {pathname !== "/" &&
+          allowPublishedPageReplacement &&
+          !live.enabled &&
+          replaceRouteWithPublished && (
+            <PageRenderer content={{ sections: publishedSections }} />
+          )}
       </div>
       {allowInlinePageEditing && (
         <EditPageButton
