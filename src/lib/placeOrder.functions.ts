@@ -160,24 +160,9 @@ export const placeOrder = createServerFn({ method: "POST" })
 
     const subtotal =
       Math.round(pricedItems.reduce((sum, item) => sum + item.price * item.qty, 0) * 100) / 100;
-<<<<<<< HEAD
-    const countryCode = String((data.address as any).countryCode || "SA").toUpperCase();
-    const shippingFees: Record<string, { fee: number; countries: string[] }> = {
-      standard: { fee: subtotal >= 500 ? 0 : 25, countries: ["SA"] },
-      express: { fee: 45, countries: ["SA"] },
-      uae: { fee: 65, countries: ["AE"] },
-      gcc: { fee: 85, countries: ["KW", "BH", "QA", "OM"] },
-      international: { fee: 140, countries: ["*"] },
-    };
-    const shipping = shippingFees[data.pricing.shipping_method];
-    if (!shipping) throw new Error("Invalid shipping method");
-    if (!shipping.countries.includes("*") && !shipping.countries.includes(countryCode)) {
-      throw new Error("Shipping method is not available for selected country");
-    }
-    const shipping_fee = shipping.fee;
-=======
     const shippingCountryCode =
       (data.address as any).country_code ||
+      (data.address as any).countryCode ||
       data.pricing.shipping_country_code ||
       "SA";
     const shippingCity = (data.address as any).city || data.pricing.shipping_city || "";
@@ -200,7 +185,6 @@ export const placeOrder = createServerFn({ method: "POST" })
         return ids.includes(data.pricing.shipping_method);
       }) ?? shippingCandidates[0] ?? null;
     const shipping_fee = Number((selectedShipping?.fee ?? 0).toFixed(2));
->>>>>>> 3a7577c (Fix header, footer phone, and checkout shipping logic)
     const tax = Math.round(subtotal * 0.15 * 100) / 100;
 
     const cartHash = await hashCart(data, verifiedUserId);
