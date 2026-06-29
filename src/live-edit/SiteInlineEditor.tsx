@@ -474,7 +474,15 @@ export function SiteInlineEditor({
       // Track the clicked element as "selected" so the Style popover can act on it
       // even when it isn't an editable text leaf (sections, footer rows, headers).
       if (target && root && root.contains(target)) {
-        setSelected({ el: target, kind: target.tagName === "IMG" ? "image" : "text" });
+        let el = target;
+        const closestSection = target.closest('[data-live-id^="section-"]');
+        if (closestSection) {
+          el = closestSection as HTMLElement;
+        } else if (target.classList.contains("lpe-added-section")) {
+          const innerSection = target.querySelector('[data-live-id^="section-"]');
+          if (innerSection) el = innerSection as HTMLElement;
+        }
+        setSelected({ el, kind: el.tagName === "IMG" ? "image" : "text" });
         setStyleOpen(true);
       }
     };

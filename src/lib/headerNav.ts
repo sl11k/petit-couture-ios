@@ -35,6 +35,15 @@ export async function fetchHeaderNavItems(client: any = supabase): Promise<Heade
       const label_en = String(row.label_en ?? "").trim();
       if (!href) return null;
       if (!label_ar && !label_en) return null;
+      
+      // Strict exclusion of Shop by Age / تسوق حسب العمر from the header
+      const lowerEn = label_en.toLowerCase();
+      const hasAgeEn = lowerEn.includes("shop by age") || lowerEn.includes("shopbyage");
+      const hasAgeAr = label_ar.includes("تسوق حسب العمر") || label_ar.includes("تسوقي حسب العمر") || label_ar.includes("التسوق حسب العمر");
+      if (hasAgeEn || hasAgeAr || href.toLowerCase().includes("shop-by-age")) {
+        return null;
+      }
+
       return {
         slug: buildSlug(href),
         label_ar,

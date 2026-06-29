@@ -143,7 +143,15 @@ export async function resolveShippingRates(
     if (ctx.cod_amount && ctx.cod_amount > 0 && !carrier.supports_cod) continue;
     if (country !== "SA" && carrier.supports_international === false) continue;
 
-    const matchedZones = (zones || []).filter((zone: any) => zone.carrier_id === carrier.id && zoneMatchesContext(zone, country, cityLower));
+    let matchedZones = (zones || []).filter((zone: any) => zone.carrier_id === carrier.id && zoneMatchesContext(zone, country, cityLower));
+    
+    // Strict priority: if we have a matched zone with a specific list of cities, 
+    // filter out the country-wide general zones (which have an empty or null cities list).
+    const hasSpecificCityZone = matchedZones.some((zone: any) => Array.isArray(zone.cities) && zone.cities.filter(Boolean).length > 0);
+    if (hasSpecificCityZone) {
+      matchedZones = matchedZones.filter((zone: any) => Array.isArray(zone.cities) && zone.cities.filter(Boolean).length > 0);
+    }
+
     if (!matchedZones.length) continue;
 
     let best: ResolvedRate | null = null;

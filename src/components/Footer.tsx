@@ -167,11 +167,11 @@ export function Footer() {
                 <Phone className="h-3.5 w-3.5 text-gold" />
                 <a
                   data-live-id="footer-phone"
-                  href={`tel:${CONTACT_PHONE_TEL}`}
+                  href="tel:+966557404827"
                   dir="ltr"
                   className="hover:text-gold"
                 >
-                  {CONTACT_PHONE_DISPLAY}
+                  +966 55 740 4827
                 </a>
               </li>
               {email && (

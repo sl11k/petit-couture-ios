@@ -230,6 +230,7 @@ function StorefrontShell({
   const { ready: themeReady } = useThemeCustomizer();
   const live = useLiveEdit();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [prevPathname, setPrevPathname] = useState(pathname);
   const [replaceRouteWithPublished, setReplaceRouteWithPublished] = useState(false);
   const [sectionsLoading, setSectionsLoading] = useState(true);
   const pageIdentity = getEditablePageIdentity(pathname);
@@ -244,9 +245,22 @@ function StorefrontShell({
   const allowInlinePageEditing = allowPageEditing && !isCheckoutFlow;
   const allowPublishedPageReplacement =
     allowPageEditing && !isCheckoutFlow && !usesNativeEditableRoute;
+
+  // Synchronous state adjustment during render when pathname changes
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setReplaceRouteWithPublished(false);
+    if (allowPublishedPageReplacement) {
+      setSectionsLoading(true);
+    } else {
+      setSectionsLoading(false);
+    }
+  }
+
   useCustomCss();
   const overridesReady = useApplyOverrides(pathname);
   useEffect(() => {
+    // Reset or verify states on mount/slug change
     setReplaceRouteWithPublished(false);
     if (allowPublishedPageReplacement) {
       setSectionsLoading(true);
@@ -271,16 +285,16 @@ function StorefrontShell({
       {showStoreChrome && <StorefrontMobileHeader />}
       <AnalyticsTracker />
       <div id="main-content" tabIndex={-1}>
-        <div
-          hidden={
-            pathname !== "/" &&
-            !live.enabled &&
-            allowPublishedPageReplacement &&
-            replaceRouteWithPublished
-          }
-        >
-          <Outlet />
-        </div>
+        {!(
+          pathname !== "/" &&
+          !live.enabled &&
+          allowPublishedPageReplacement &&
+          replaceRouteWithPublished
+        ) && (
+          <div>
+            <Outlet />
+          </div>
+        )}
         {pathname !== "/" && allowPublishedPageReplacement && (
           <PublishedPageSections
             key={pageIdentity.slug}

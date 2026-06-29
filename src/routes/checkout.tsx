@@ -100,9 +100,6 @@ function CheckoutPage() {
   const [buildingNumber, setBuildingNumber] = useState(address?.buildingNumber ?? "");
   const [notes, setNotes] = useState(address?.notes ?? "");
   const [shippingId, setShippingId] = useState<string>("");
-  const [shippingCountryCode, setShippingCountryCode] = useState<string>(
-    () => address?.countryCode ?? "",
-  );
   const [shippingOptions, setShippingOptions] = useState<ResolvedRate[]>([]);
   const [shippingOptionsReady, setShippingOptionsReady] = useState(false);
   const [availableCountries, setAvailableCountries] = useState<Array<{ code: string; label: string }>>(
@@ -185,10 +182,6 @@ function CheckoutPage() {
           if (current && countries.some((country) => country.code === current)) return current;
           return countries[0]?.code ?? current;
         });
-        setShippingCountryCode((current) => {
-          if (current && countries.some((country) => country.code === current)) return current;
-          return countries[0]?.code ?? current;
-        });
       } catch {
         if (active) setAvailableCountries([]);
       }
@@ -205,7 +198,7 @@ function CheckoutPage() {
       try {
         const rates = await resolveShippingRates({
           city: loc.city ?? "",
-          country_code: shippingCountryCode || undefined,
+          country_code: countryCode || undefined,
           weight_kg: orderWeightKg,
           order_value: bag.subtotal,
         });
@@ -232,7 +225,7 @@ function CheckoutPage() {
     return () => {
       active = false;
     };
-  }, [bag.subtotal, loc.city, shippingCountryCode, orderWeightKg]);
+  }, [bag.subtotal, loc.city, countryCode, orderWeightKg]);
 
   const selectedShippingOption = useMemo(() => {
     if (!shippingOptions.length) return null;
@@ -366,13 +359,14 @@ function CheckoutPage() {
           : "Enter an address or set it on the map";
     }
     if (step >= 3) {
-      if (!shippingId) e.shipping = isRTL ? "اختر طريقة الشحن" : "Select shipping";
+      if (!shippingId || !selectedShippingOption)
+        e.shipping = isRTL ? "الشحن غير متوفر لهذه المنطقة" : "Shipping not available for this region";
     }
     if (step === 4 && !agree) {
       e.agree = isRTL ? "يجب الموافقة على الشروط" : "Please accept the terms";
     }
     return e;
-  }, [step, contact, loc, countryCode, shippingId, agree, isRTL]);
+  }, [step, contact, loc, countryCode, shippingId, selectedShippingOption, agree, isRTL]);
 
   const canProceed = (s: Step) => {
     if (s === 1) return !errs.fullName && !errs.email && !errs.phone;
@@ -433,8 +427,8 @@ function CheckoutPage() {
       fullName: contact.fullName.trim(),
       email: contact.email.trim(),
       phone: contact.phone.replace(/[\s-]/g, ""),
-      countryCode: shippingCountryCode,
-      countryName: availableCountries.find((country) => country.code === shippingCountryCode)?.label ?? shippingCountryCode,
+      countryCode: countryCode,
+      countryName: availableCountries.find((country) => country.code === countryCode)?.label ?? countryCode,
       city: loc.city ?? "",
       district: loc.district,
       street: loc.street,
@@ -471,8 +465,8 @@ function CheckoutPage() {
         fullName: contact.fullName.trim(),
         email: contact.email.trim(),
         phone: contact.phone.replace(/[\s-]/g, ""),
-        countryCode: shippingCountryCode,
-        countryName: availableCountries.find((country) => country.code === shippingCountryCode)?.label ?? shippingCountryCode,
+        countryCode: countryCode,
+        countryName: availableCountries.find((country) => country.code === countryCode)?.label ?? countryCode,
         city: loc.city ?? "",
         district: loc.district,
         street: loc.street,
@@ -508,7 +502,7 @@ function CheckoutPage() {
           pricing: {
             shipping_method: shipping.id,
             shipping_fee: pricing.shipping_fee,
-            shipping_country_code: shippingCountryCode,
+            shipping_country_code: countryCode,
             shipping_city: loc.city ?? null,
           },
         },

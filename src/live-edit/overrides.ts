@@ -63,8 +63,13 @@ export function persistLangFor(prop: OverrideProp, lang: string, selector?: stri
 
 /** Compute a stable CSS-ish path from [data-live-root] to el using nth-of-type. */
 export function computeSelector(root: Element, el: Element): string {
+  let targetEl = el;
+  if (targetEl.classList.contains("lpe-added-section")) {
+    const section = targetEl.querySelector('[data-live-id^="section-"]');
+    if (section) targetEl = section;
+  }
   const parts: string[] = [];
-  let cur: Element | null = el;
+  let cur: Element | null = targetEl;
   while (cur && cur !== root) {
     const parent: Element | null = cur.parentElement;
     if (!parent) break;
