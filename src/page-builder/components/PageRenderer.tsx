@@ -30,6 +30,7 @@ import type {
   TextStyleSettings,
 } from "../schemas/pageSchema";
 import {
+  cloneElement,
   createContext,
   useContext,
   useEffect,
@@ -1961,52 +1962,56 @@ function sectionStyle(s: Section): React.CSSProperties {
 }
 
 function RenderSection({ s }: { s: Section }) {
-  switch (s.type) {
-    case "legacy_home":
-      return null;
-    case "hero":
-      return <RenderHero s={s} />;
-    case "text_block":
-      return <RenderTextBlock s={s} />;
-    case "image_text":
-      return <RenderImageText s={s} />;
-    case "feature_grid":
-      return <RenderFeatureGrid s={s} />;
-    case "faq":
-      return <RenderFaq s={s} />;
-    case "testimonials":
-      return <RenderTestimonials s={s} />;
-    case "cta":
-      return <RenderCta s={s} />;
-    case "gallery":
-      return <RenderGallery s={s} />;
-    case "before_after":
-      return <RenderBeforeAfter s={s} />;
-    case "video":
-      return <RenderVideo s={s} />;
-    case "countdown":
-      return <RenderCountdown s={s} />;
-    case "newsletter":
-      return <RenderNewsletter s={s} />;
-    case "stats":
-      return <RenderStats s={s} />;
-    case "reviews":
-      return <RenderReviews s={s} />;
-    case "button":
-      return <RenderButton s={s} />;
-    case "banner":
-      return <RenderBanner s={s} />;
-    case "product_grid":
-      return <RenderProductGrid s={s} />;
-    case "divider":
-      return <RenderDivider s={s} />;
-    case "spacer":
-      return <RenderSpacer s={s} />;
-    case "html":
-      return <RenderHtml s={s} />;
-    default:
-      return null;
-  }
+  const el = (() => {
+    switch (s.type) {
+      case "legacy_home":
+        return null;
+      case "hero":
+        return <RenderHero s={s} />;
+      case "text_block":
+        return <RenderTextBlock s={s} />;
+      case "image_text":
+        return <RenderImageText s={s} />;
+      case "feature_grid":
+        return <RenderFeatureGrid s={s} />;
+      case "faq":
+        return <RenderFaq s={s} />;
+      case "testimonials":
+        return <RenderTestimonials s={s} />;
+      case "cta":
+        return <RenderCta s={s} />;
+      case "gallery":
+        return <RenderGallery s={s} />;
+      case "before_after":
+        return <RenderBeforeAfter s={s} />;
+      case "video":
+        return <RenderVideo s={s} />;
+      case "countdown":
+        return <RenderCountdown s={s} />;
+      case "newsletter":
+        return <RenderNewsletter s={s} />;
+      case "stats":
+        return <RenderStats s={s} />;
+      case "reviews":
+        return <RenderReviews s={s} />;
+      case "button":
+        return <RenderButton s={s} />;
+      case "banner":
+        return <RenderBanner s={s} />;
+      case "product_grid":
+        return <RenderProductGrid s={s} />;
+      case "divider":
+        return <RenderDivider s={s} />;
+      case "spacer":
+        return <RenderSpacer s={s} />;
+      case "html":
+        return <RenderHtml s={s} />;
+      default:
+        return null;
+    }
+  })();
+  if (!el) return null;
+  return cloneElement(el, { "data-live-id": `section-${s.id}` });
 }
 
 function isVisible(s: Section, device: "desktop" | "tablet" | "mobile"): boolean {

@@ -231,6 +231,7 @@ function StorefrontShell({
   const live = useLiveEdit();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [replaceRouteWithPublished, setReplaceRouteWithPublished] = useState(false);
+  const [sectionsLoading, setSectionsLoading] = useState(true);
   const pageIdentity = getEditablePageIdentity(pathname);
   const allowPageEditing =
     !isAdmin &&
@@ -247,11 +248,17 @@ function StorefrontShell({
   const overridesReady = useApplyOverrides(pathname);
   useEffect(() => {
     setReplaceRouteWithPublished(false);
-  }, [pageIdentity.slug]);
+    if (allowPublishedPageReplacement) {
+      setSectionsLoading(true);
+    } else {
+      setSectionsLoading(false);
+    }
+  }, [pageIdentity.slug, allowPublishedPageReplacement]);
   const onPublishedSectionsLoaded = useCallback((hasSections: boolean) => {
     setReplaceRouteWithPublished(hasSections);
+    setSectionsLoading(false);
   }, []);
-  if ((!themeReady || !overridesReady) && !isAdmin) {
+  if ((!themeReady || !overridesReady || sectionsLoading) && !isAdmin) {
     return <div className="min-h-screen bg-background" aria-label="Loading storefront" />;
   }
   // Admin pages have their own AdminTranslateScope inside AdminShell.
