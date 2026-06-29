@@ -193,12 +193,15 @@ export async function resolveShippingRates(
     if (best) results.push(best);
   }
 
-  return results.sort((a, b) => {
+  // Enforce a single shipping method per order. Pick the lowest fee, then by
+  // carrier display_order. The checkout UI must never present multiple options.
+  const sorted = results.sort((a, b) => {
     if (a.fee !== b.fee) return a.fee - b.fee;
     const carrierA = carriers.find((carrier: any) => carrier.id === a.carrier_id);
     const carrierB = carriers.find((carrier: any) => carrier.id === b.carrier_id);
     return Number(carrierA?.display_order ?? 0) - Number(carrierB?.display_order ?? 0);
   });
+  return sorted.length ? [sorted[0]] : [];
 }
 
 /**
