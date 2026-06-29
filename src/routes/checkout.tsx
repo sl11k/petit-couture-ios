@@ -660,7 +660,8 @@ function CheckoutPage() {
       });
     } catch (e) {
       console.error(e);
-      toast.error(isRTL ? "تعذّر إنشاء الطلب" : "Could not place order");
+      const message = e instanceof Error ? e.message : "";
+      toast.error(message || (isRTL ? "تعذّر إنشاء الطلب" : "Could not place order"));
     } finally {
       setPlacing(false);
     }

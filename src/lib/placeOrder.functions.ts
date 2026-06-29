@@ -264,8 +264,6 @@ export const placeOrder = createServerFn({ method: "POST" })
         subtotal,
         shipping_fee,
         tax,
-        tax_rate: taxRate,
-        tax_total: tax,
         discount_amount,
         coupon_id,
         coupon_code,
