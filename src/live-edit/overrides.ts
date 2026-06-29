@@ -110,7 +110,8 @@ export async function loadOverrides(pagePath: string, includeDraft: boolean) {
       value: includeDraft ? (r.draft_value ?? r.published_value) : r.published_value,
     }))
     .filter((r) => r.value !== null && r.value !== undefined)
-    .filter((r) => !isLockedContactSelector(r.selector, r.prop));
+    .filter((r) => !isLockedContactSelector(r.selector, r.prop))
+    .filter((r) => !isLockedHeaderNavSelector(r.selector, r.prop));
   // Repair historical contact edits where the admin changed only the anchor
   // destination. The visible value and clickable value are one logical field.
   for (const contact of [{ selector: '[data-live-id="footer-email"]', prefix: /^mailto:/i }]) {
