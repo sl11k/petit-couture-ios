@@ -251,11 +251,8 @@ function StorefrontShell({
   const onPublishedSectionsLoaded = useCallback((hasSections: boolean) => {
     setReplaceRouteWithPublished(hasSections);
   }, []);
-  if (!themeReady && !isAdmin) {
+  if ((!themeReady || !overridesReady) && !isAdmin) {
     return <div className="min-h-screen bg-background" aria-label="Loading storefront" />;
-  }
-  if (!overridesReady && !isAdmin) {
-    return <div className="min-h-screen bg-background" aria-label="Loading design" />;
   }
   // Admin pages have their own AdminTranslateScope inside AdminShell.
   // Wrap storefront only — translates Arabic → English (or vice versa) at runtime
