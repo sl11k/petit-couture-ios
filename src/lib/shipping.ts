@@ -114,7 +114,6 @@ export async function getAvailableShippingCountries(
     if (!code) continue;
     const carrier = carriers.find((item: any) => item.id === zone.carrier_id);
     if (!carrier) continue;
-    if (code !== "SA" && carrier.supports_international === false) continue;
     const label = String(zone.name_ar || zone.name_en || code).trim() || code;
     if (!byCountry.has(code)) byCountry.set(code, label);
   }
@@ -141,7 +140,6 @@ export async function resolveShippingRates(
 
   for (const carrier of carriers) {
     if (ctx.cod_amount && ctx.cod_amount > 0 && !carrier.supports_cod) continue;
-    if (country !== "SA" && carrier.supports_international === false) continue;
 
     let matchedZones = (zones || []).filter((zone: any) => zone.carrier_id === carrier.id && zoneMatchesContext(zone, country, cityLower));
     

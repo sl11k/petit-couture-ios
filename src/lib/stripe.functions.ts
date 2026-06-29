@@ -86,7 +86,7 @@ export const createStripeCheckout = createServerFn({ method: "POST" })
     const currency = String(order.currency || "SAR").toLowerCase();
     const params = new URLSearchParams();
     params.set("mode", "payment");
-    params.set("locale", data.lang === "ar" ? "ar" : "en");
+    params.set("locale", data.lang === "ar" ? "auto" : "en");
     params.set("client_reference_id", order.order_number);
     params.set("customer_email", order.customer_email);
     params.set(
