@@ -230,9 +230,6 @@ function StorefrontShell({
   const { ready: themeReady } = useThemeCustomizer();
   const live = useLiveEdit();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [prevPathname, setPrevPathname] = useState(pathname);
-  const [replaceRouteWithPublished, setReplaceRouteWithPublished] = useState(false);
-  const [sectionsLoading, setSectionsLoading] = useState(() => pathname !== "/" && allowPublishedPageReplacement);
   const pageIdentity = getEditablePageIdentity(pathname);
   const allowPageEditing =
     !isAdmin &&
@@ -245,6 +242,10 @@ function StorefrontShell({
   const allowInlinePageEditing = allowPageEditing && !isCheckoutFlow;
   const allowPublishedPageReplacement =
     allowPageEditing && !isCheckoutFlow && !usesNativeEditableRoute;
+
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  const [replaceRouteWithPublished, setReplaceRouteWithPublished] = useState(false);
+  const [sectionsLoading, setSectionsLoading] = useState(() => pathname !== "/" && allowPublishedPageReplacement);
 
   // Synchronous state adjustment during render when pathname changes
   if (pathname !== prevPathname) {
