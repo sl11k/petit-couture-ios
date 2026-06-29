@@ -175,7 +175,9 @@ export async function persistDraft(pagePath: string, draft: DraftMap) {
     lang: d.lang,
     draft_value: d.value,
   }));
-  const filteredRows = rows.filter((row) => !isLockedContactSelector(row.selector, row.prop));
+  const filteredRows = rows
+    .filter((row) => !isLockedContactSelector(row.selector, row.prop))
+    .filter((row) => !isLockedHeaderNavSelector(row.selector, row.prop));
   if (!filteredRows.length) return { error: null };
   return await supabase
     .from("live_overrides")
