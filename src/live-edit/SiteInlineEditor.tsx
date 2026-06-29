@@ -239,14 +239,11 @@ export function SiteInlineEditor({
     const contactText =
       liveId === "footer-email" && /^mailto:/i.test(url)
         ? url.replace(/^mailto:/i, "").trim()
-        : liveId === "footer-phone" && /^tel:/i.test(url)
-          ? url.replace(/^tel:/i, "").trim()
-          : null;
+        : null;
     if (contactText) {
       anchor.textContent = contactText;
       setField(selector, "text", contactText);
       if (liveId === "footer-email") storefrontSettingsRef.current.footer_email = contactText;
-      if (liveId === "footer-phone") storefrontSettingsRef.current.footer_phone = contactText;
     }
   };
 
@@ -274,11 +271,6 @@ export function SiteInlineEditor({
         active.setAttribute("href", href);
         setField(selector, "href", href);
         storefrontSettingsRef.current.footer_email = value;
-      } else if (liveId === "footer-phone") {
-        const href = `tel:${value}`;
-        active.setAttribute("href", href);
-        setField(selector, "href", href);
-        storefrontSettingsRef.current.footer_phone = value;
       }
     }
   };
@@ -409,11 +401,6 @@ export function SiteInlineEditor({
           const href = `mailto:${value.trim()}`;
           el.setAttribute("href", href);
           setField(sel, "href", href);
-        } else if (liveId === "footer-phone") {
-          const href = `tel:${value.trim()}`;
-          el.setAttribute("href", href);
-          setField(sel, "href", href);
-          storefrontSettingsRef.current.footer_phone = value.trim();
         }
         if (liveId === "footer-email") storefrontSettingsRef.current.footer_email = value.trim();
       }

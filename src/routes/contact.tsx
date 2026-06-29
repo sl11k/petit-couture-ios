@@ -5,12 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/state/AuthContext";
 import { Mail, Phone, MessageCircle, Send, CheckCircle2, HelpCircle, Package } from "lucide-react";
 import { buildMeta } from "@/lib/seo";
-import {
-  CONTACT_PHONE_DISPLAY,
-  CONTACT_PHONE_TEL,
-  CONTACT_WHATSAPP_NUMBER,
-  CONTACT_WHATSAPP_URL,
-} from "@/lib/contactInfo";
+import { fetchStorefrontSettings, type StorefrontSettings } from "@/lib/storefront";
+import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_TEL } from "@/lib/contactInfo";
 
 export const Route = createFileRoute("/contact")({
   component: ContactPage,
@@ -37,18 +33,40 @@ function ContactPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
-  const [contactInfo, setContactInfo] = useState<any>({});
+  const [contactInfo, setContactInfo] = useState<{ whatsapp_number?: string | null; support_email?: string | null } | null>(null);
+  const [storefrontSettings, setStorefrontSettings] = useState<StorefrontSettings | null>(null);
 
   useEffect(() => {
-    (
-      supabase
-        .from("public_site_settings" as any)
-        .select("whatsapp_number,support_email")
-        .eq("id", 1)
-        .maybeSingle() as any
-    ).then(({ data }: { data: any }) => setContactInfo(data || {}));
+    let active = true;
+    (async () => {
+      try {
+        const [siteRes, storefront] = await Promise.all([
+          supabase
+            .from("public_site_settings" as any)
+            .select("whatsapp_number,support_email")
+            .eq("id", 1)
+            .maybeSingle(),
+          fetchStorefrontSettings(true),
+        ]);
+        if (!active) return;
+        setContactInfo((siteRes as any).data ?? {});
+        setStorefrontSettings(storefront);
+      } catch {
+        /* noop */
+      }
+    })();
     if (user?.email) setForm((f) => ({ ...f, email: user.email! }));
+    return () => {
+      active = false;
+    };
   }, [user]);
+
+  const whatsappUrl = contactInfo?.whatsapp_number
+    ? contactInfo.whatsapp_number.trim().startsWith("http")
+      ? contactInfo.whatsapp_number.trim()
+      : `https://wa.me/${contactInfo.whatsapp_number.replace(/\D/g, "")}`
+    : undefined;
+  const contactEmail = contactInfo?.support_email ?? storefrontSettings?.footer_email;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,27 +105,29 @@ function ContactPage() {
       </div>
 
       <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <a
-          href={CONTACT_WHATSAPP_URL}
-          target="_blank"
-          rel="noreferrer"
-          className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card p-4 text-center hover:border-green-500/50"
-        >
-          <MessageCircle className="h-6 w-6 text-green-500" />
-          <span className="text-sm font-medium">WhatsApp</span>
-          <span className="text-xs text-muted-foreground" dir="ltr">
-            {CONTACT_WHATSAPP_NUMBER}
-          </span>
-        </a>
-        {contactInfo.support_email && (
+        {whatsappUrl && (
           <a
-            href={`mailto:${contactInfo.support_email}`}
+            href={whatsappUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card p-4 text-center hover:border-green-500/50"
+          >
+            <MessageCircle className="h-6 w-6 text-green-500" />
+            <span className="text-sm font-medium">WhatsApp</span>
+            <span className="text-xs text-muted-foreground" dir="ltr">
+              {contactInfo?.whatsapp_number}
+            </span>
+          </a>
+        )}
+        {contactEmail && (
+          <a
+            href={`mailto:${contactEmail}`}
             className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card p-4 text-center hover:border-primary/50"
           >
             <Mail className="h-6 w-6 text-primary" />
             <span className="text-sm font-medium">البريد الإلكتروني</span>
             <span className="text-xs text-muted-foreground" dir="ltr">
-              {contactInfo.support_email}
+              {contactEmail}
             </span>
           </a>
         )}

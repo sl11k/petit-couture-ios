@@ -5,6 +5,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { resolveShippingRates } from "@/lib/shipping";
 
 const ItemSchema = z.object({
   slug: z.string().min(1).max(255),
@@ -45,6 +46,9 @@ const InputSchema = z.object({
   coupon_code: z.string().min(1).max(64).nullable().optional(),
   pricing: z.object({
     shipping_method: z.string().min(1).max(64),
+    shipping_fee: z.number().min(0).max(1_000_000).optional(),
+    shipping_country_code: z.string().min(2).max(4).optional(),
+    shipping_city: z.string().max(100).nullable().optional(),
   }),
 });
 
@@ -104,7 +108,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     const slugs = [...new Set(data.items.map((item) => item.slug))];
     const { data: products, error: productsError } = await supabaseAdmin
       .from("products")
-      .select("id, slug, name_ar, name_en, brand, image_url, price, currency, is_active")
+      .select("id, slug, name_ar, name_en, brand, image_url, price, currency, is_active, weight")
       .in("slug", slugs)
       .eq("is_active", true);
     if (productsError) throw new Error(`Catalog validation failed: ${productsError.message}`);
@@ -115,7 +119,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     const productBySlug = new Map(products.map((product) => [product.slug, product]));
     const { data: variants, error: variantsError } = await supabaseAdmin
       .from("product_variants")
-      .select("id, product_id, sku, price, price_override, is_active")
+      .select("id, product_id, sku, price, price_override, is_active, weight")
       .in(
         "product_id",
         products.map((product) => product.id),
@@ -146,6 +150,7 @@ export const placeOrder = createServerFn({ method: "POST" })
         ...item,
         product_id: product.id,
         variant_id: variant?.id ?? item.variant_id ?? null,
+        product_weight: Number(variant?.weight ?? product.weight ?? 0),
         name: item.name || product.name_en || product.name_ar,
         brand: product.brand ?? item.brand ?? null,
         image: product.image_url ?? item.image ?? null,
@@ -155,6 +160,7 @@ export const placeOrder = createServerFn({ method: "POST" })
 
     const subtotal =
       Math.round(pricedItems.reduce((sum, item) => sum + item.price * item.qty, 0) * 100) / 100;
+<<<<<<< HEAD
     const countryCode = String((data.address as any).countryCode || "SA").toUpperCase();
     const shippingFees: Record<string, { fee: number; countries: string[] }> = {
       standard: { fee: subtotal >= 500 ? 0 : 25, countries: ["SA"] },
@@ -169,6 +175,32 @@ export const placeOrder = createServerFn({ method: "POST" })
       throw new Error("Shipping method is not available for selected country");
     }
     const shipping_fee = shipping.fee;
+=======
+    const shippingCountryCode =
+      (data.address as any).country_code ||
+      data.pricing.shipping_country_code ||
+      "SA";
+    const shippingCity = (data.address as any).city || data.pricing.shipping_city || "";
+    const totalWeightKg = pricedItems.reduce((sum, item) => {
+      const weight = item.product_weight > 0 ? item.product_weight : 1;
+      return sum + weight * item.qty;
+    }, 0);
+    const shippingCandidates = await resolveShippingRates(
+      {
+        city: shippingCity,
+        country_code: shippingCountryCode,
+        weight_kg: totalWeightKg > 0 ? totalWeightKg : 1,
+        order_value: subtotal,
+      },
+      supabaseAdmin,
+    );
+    const selectedShipping =
+      shippingCandidates.find((rate) => {
+        const ids = [rate.rate_id, `${rate.carrier_id}:${rate.rate_id}`, rate.carrier_code];
+        return ids.includes(data.pricing.shipping_method);
+      }) ?? shippingCandidates[0] ?? null;
+    const shipping_fee = Number((selectedShipping?.fee ?? 0).toFixed(2));
+>>>>>>> 3a7577c (Fix header, footer phone, and checkout shipping logic)
     const tax = Math.round(subtotal * 0.15 * 100) / 100;
 
     const cartHash = await hashCart(data, verifiedUserId);

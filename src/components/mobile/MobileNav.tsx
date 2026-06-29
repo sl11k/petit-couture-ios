@@ -8,7 +8,6 @@ import {
   ArrowLeft,
   ArrowRight,
   Menu as MenuIcon,
-  ShoppingBasket,
   Crown,
 } from "lucide-react";
 import { useBag } from "@/state/BagContext";
@@ -19,8 +18,7 @@ import { BrandLogo } from "@/components/Logo";
 import { AnnouncementBar } from "@/components/AnnouncementBar";
 import { useDbAnnouncements } from "@/hooks/useDbAnnouncements";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
-import { supabase } from "@/integrations/supabase/client";
-import { useDbCategoryTree } from "@/hooks/useDbCategories";
+import { fetchHeaderNavItems, isExternalHeaderHref } from "@/lib/headerNav";
 
 /**
  * MobileHeader — هيدر مدمج للجوال:
@@ -282,80 +280,36 @@ export function MobileBottomNav() {
 
 /** Category menu groups shown inside the Menu sheet */
 function CategoryMenu({ onNavigate, ar }: { onNavigate: () => void; ar: boolean }) {
-  const tree = useDbCategoryTree();
   const [navItems, setNavItems] = useState<
     Array<{
-      label_ar: string | null;
-      label_en: string | null;
-      href: string | null;
-      category_id: string | null;
+      label_ar: string;
+      label_en: string;
+      href: string;
     }>
   >([]);
-  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let active = true;
     (async () => {
-      const { data } = await (supabase as any)
-        .from("header_nav_items")
-        .select("label_ar,label_en,href,category_id,is_active,display_order")
-        .eq("is_active", true)
-        .order("display_order", { ascending: true });
+      const data = await fetchHeaderNavItems();
       if (!active) return;
       setNavItems(Array.isArray(data) ? data : []);
-      setLoaded(true);
     })();
     return () => {
       active = false;
     };
   }, []);
 
-  const categoryById = new Map(tree.map((c) => [c.id, c]));
-  const categoryByHref = new Map(tree.map((c) => [`/category/${c.slug}`, c]));
-  const adminItems = navItems.flatMap((item) => {
-    const linkedCategory =
-      (item.category_id ? categoryById.get(item.category_id) : undefined) ??
-      (item.href ? categoryByHref.get(item.href) : undefined);
-    const href = item.href || (linkedCategory ? `/category/${linkedCategory.slug}` : "/");
-    const label =
-      (ar ? item.label_ar || item.label_en : item.label_en || item.label_ar) ||
-      linkedCategory?.[ar ? "name_ar" : "name_en"] ||
-      href;
-    return [
-      { label, to: href, params: undefined as any },
-      ...(linkedCategory?.children?.map((child) => ({
-        label: ar ? child.name_ar : child.name_en,
-        to: "/category/$slug",
-        params: { slug: child.slug },
-      })) ?? []),
-    ];
+  const adminItems = navItems.map((item) => {
+    const label = ar ? item.label_ar || item.label_en : item.label_en || item.label_ar;
+    return { label, to: item.href, external: isExternalHeaderHref(item.href) };
   });
-
-  const fallbackItems = tree.flatMap((category) => [
-    {
-      label: ar ? category.name_ar : category.name_en,
-      to: "/category/$slug",
-      params: { slug: category.slug },
-    },
-    ...category.children.map((child) => ({
-      label: ar ? child.name_ar : child.name_en,
-      to: "/category/$slug",
-      params: { slug: child.slug },
-    })),
-  ]);
 
   const groups = [
     {
-      title:
-        adminItems.length > 0
-          ? ar
-            ? "روابط الهيدر"
-            : "Header links"
-          : ar
-            ? "كل التصنيفات"
-            : "All categories",
-      icon: adminItems.length > 0 ? Crown : ShoppingBasket,
-      items: adminItems.length > 0 ? adminItems : loaded ? fallbackItems : [],
+      title: ar ? "روابط الهيدر" : "Header links",
+      icon: Crown,
+      items: adminItems,
     },
   ].filter((g) => g.items.length > 0);
 
@@ -373,15 +327,27 @@ function CategoryMenu({ onNavigate, ar }: { onNavigate: () => void; ar: boolean 
               {g.items.map((it) => (
                 <li key={`${it.to}-${it.label}`}>
                   <SheetClose asChild>
-                    <Link
-                      to={it.to as any}
-                      params={it.params}
-                      onClick={onNavigate}
-                      className="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-accent/60 active:bg-accent text-[14px] text-foreground"
-                    >
-                      <span>{it.label}</span>
-                      <ArrowLeft className="h-4 w-4 text-primary/60" />
-                    </Link>
+                    {it.external ? (
+                      <a
+                        href={it.to}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={onNavigate}
+                        className="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-accent/60 active:bg-accent text-[14px] text-foreground"
+                      >
+                        <span>{it.label}</span>
+                        <ArrowLeft className="h-4 w-4 text-primary/60" />
+                      </a>
+                    ) : (
+                      <Link
+                        to={it.to as any}
+                        onClick={onNavigate}
+                        className="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-accent/60 active:bg-accent text-[14px] text-foreground"
+                      >
+                        <span>{it.label}</span>
+                        <ArrowLeft className="h-4 w-4 text-primary/60" />
+                      </Link>
+                    )}
                   </SheetClose>
                 </li>
               ))}

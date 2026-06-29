@@ -11,26 +11,23 @@ export type ResolvedLocation = LatLng & {
   street?: string;
   postalCode?: string;
   country?: string;
+  countryCode?: string;
 };
 
 type Props = {
   value?: LatLng | null;
   onChange: (loc: ResolvedLocation) => void;
   isRTL?: boolean;
+  supportedCountries?: string[];
   // Default: Riyadh
   fallback?: LatLng;
 };
 
-// Saudi Arabia bounding box (approx) — used to flag out-of-coverage pins.
-const SA_BOUNDS = { minLat: 16.0, maxLat: 32.5, minLng: 34.5, maxLng: 55.7 };
-
-function inSaudi({ lat, lng }: LatLng) {
-  return (
-    lat >= SA_BOUNDS.minLat &&
-    lat <= SA_BOUNDS.maxLat &&
-    lng >= SA_BOUNDS.minLng &&
-    lng <= SA_BOUNDS.maxLng
-  );
+function countryMatchesSupported(countryCode?: string, supportedCountries?: string[]) {
+  if (!supportedCountries?.length) return true;
+  const normalized = (countryCode ?? "").trim().toLowerCase();
+  if (!normalized) return true;
+  return supportedCountries.some((c) => c.trim().toLowerCase() === normalized);
 }
 
 async function reverseGeocode(
@@ -54,6 +51,7 @@ async function reverseGeocode(
       street: a.road,
       postalCode: a.postcode,
       country: a.country,
+      countryCode: a.country_code,
     };
   } catch {
     return { lat, lng };
@@ -64,6 +62,7 @@ export default function LocationPicker({
   value,
   onChange,
   isRTL,
+  supportedCountries,
   fallback = { lat: 24.7136, lng: 46.6753 },
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -120,10 +119,9 @@ export default function LocationPicker({
 
       const handle = async (lat: number, lng: number) => {
         marker.setLatLng([lat, lng]);
-        const ok = inSaudi({ lat, lng });
-        setOutOfArea(!ok);
         setBusy(true);
         const loc = await reverseGeocode({ lat, lng }, isRTL ? "ar" : "en");
+        setOutOfArea(!countryMatchesSupported(loc.countryCode, supportedCountries));
         setBusy(false);
         setPretty(loc.address ?? null);
         onChange(loc);
@@ -166,9 +164,8 @@ export default function LocationPicker({
           mapRef.current.setView([lat, lng], 16);
           markerRef.current.setLatLng([lat, lng]);
         }
-        const ok = inSaudi({ lat, lng });
-        setOutOfArea(!ok);
         const loc = await reverseGeocode({ lat, lng }, isRTL ? "ar" : "en");
+        setOutOfArea(!countryMatchesSupported(loc.countryCode, supportedCountries));
         setBusy(false);
         setPretty(loc.address ?? null);
         onChange(loc);
@@ -213,8 +210,8 @@ export default function LocationPicker({
       {outOfArea && (
         <div className="text-[11.5px] text-destructive bg-destructive/5 border border-destructive/20 rounded-[12px] px-3 py-2">
           {isRTL
-            ? "هذا الموقع خارج نطاق التوصيل المدعوم حالياً (المملكة العربية السعودية)."
-            : "This location is outside our supported delivery area (Saudi Arabia)."}
+            ? "هذا الموقع خارج الدول المدعومة حالياً للشحن."
+            : "This location is outside the shipping countries currently available."}
         </div>
       )}
     </div>

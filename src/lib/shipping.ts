@@ -23,7 +23,8 @@ export interface RateContext {
 export interface ResolvedRate {
   carrier_id: string;
   carrier_code: string;
-  carrier_name: string;
+  carrier_name_ar: string;
+  carrier_name_en: string;
   zone_id: string;
   rate_id: string;
   fee: number;
@@ -33,70 +34,134 @@ export interface ResolvedRate {
   free_reason?: string;
 }
 
+export interface ShippingCountryOption {
+  code: string;
+  label: string;
+}
+
+const normalizeCountry = (value?: string) => String(value ?? "").trim().toUpperCase();
+const normalizeCity = (value?: string) => String(value ?? "").trim().toLowerCase();
+
+function zoneMatchesContext(zone: any, country: string, cityLower: string) {
+  if (!country) return false;
+  if (normalizeCountry(zone.country_code) !== country) return false;
+  const cities = Array.isArray(zone.cities)
+    ? zone.cities
+        .map((city: unknown) => String(city ?? "").trim())
+        .filter(Boolean)
+    : [];
+  if (!cities.length) return true;
+  if (!cityLower) return false;
+  return cities.some((city: string) => normalizeCity(city) === cityLower);
+}
+
+function computeRateFee(rate: any, ctx: RateContext) {
+  let fee = Number(rate.base_fee || 0);
+  if (rate.rate_type === "weight") {
+    fee += Number(rate.per_kg_fee || 0) * ctx.weight_kg;
+  }
+  if (ctx.cod_amount && ctx.cod_amount > 0) fee += Number(rate.cod_extra_fee || 0);
+
+  let isFree = false;
+  let freeReason: string | undefined;
+  if (rate.free_shipping_threshold != null && ctx.order_value >= Number(rate.free_shipping_threshold)) {
+    fee = 0;
+    isFree = true;
+    freeReason = `الطلب فوق ${rate.free_shipping_threshold} SAR`;
+  }
+
+  return { fee, isFree, freeReason };
+}
+
+async function loadShippingCatalog(client: any = supabase) {
+  const [{ data: carriers }, { data: zones }, { data: rates }] = await Promise.all([
+    client
+      .from("shipping_carriers")
+      .select(
+        "id, code, name_ar, name_en, carrier_type, logo_url, is_active, supports_cod, supports_international, supports_tracking, supports_webhook, default_delivery_days_min, default_delivery_days_max, display_order",
+      )
+      .eq("is_active", true)
+      .order("display_order", { ascending: true }),
+    client.from("shipping_zones").select("*").eq("is_active", true),
+    client.from("shipping_rates").select("*").eq("is_active", true),
+  ]);
+
+  return {
+    carriers: carriers ?? [],
+    zones: zones ?? [],
+    rates: rates ?? [],
+  };
+}
+
+export async function getAvailableShippingCountries(
+  client: any = supabase,
+): Promise<ShippingCountryOption[]> {
+  const { carriers, zones, rates } = await loadShippingCatalog(client);
+  if (!carriers.length || !zones.length || !rates.length) return [];
+
+  const activeCarrierIds = new Set(carriers.map((carrier: any) => carrier.id));
+  const zonesWithRates = new Set(
+    rates
+      .map((rate: any) => String(rate.zone_id || "").trim())
+      .filter(Boolean),
+  );
+
+  const byCountry = new Map<string, string>();
+  for (const zone of zones) {
+    if (!activeCarrierIds.has(zone.carrier_id)) continue;
+    if (!zonesWithRates.has(String(zone.id))) continue;
+    const code = normalizeCountry(zone.country_code);
+    if (!code) continue;
+    const carrier = carriers.find((item: any) => item.id === zone.carrier_id);
+    if (!carrier) continue;
+    if (code !== "SA" && carrier.supports_international === false) continue;
+    const label = String(zone.name_ar || zone.name_en || code).trim() || code;
+    if (!byCountry.has(code)) byCountry.set(code, label);
+  }
+
+  return Array.from(byCountry.entries())
+    .map(([code, label]) => ({ code, label }))
+    .sort((a, b) => a.label.localeCompare(b.label, "ar"));
+}
+
 /**
  * Resolve the best shipping rate for the given context.
  * Picks lowest fee among matching active carriers/zones/rates.
  */
-export async function resolveShippingRates(ctx: RateContext): Promise<ResolvedRate[]> {
-  const { data: carriers } = await supabase
-    .from("shipping_carriers")
-    .select("id, code, name_ar, name_en, carrier_type, logo_url, is_active, supports_cod, supports_international, supports_tracking, supports_webhook, default_delivery_days_min, default_delivery_days_max, display_order")
-    .eq("is_active", true);
+export async function resolveShippingRates(
+  ctx: RateContext,
+  client: any = supabase,
+): Promise<ResolvedRate[]> {
+  const { carriers, zones, rates } = await loadShippingCatalog(client);
   if (!carriers?.length) return [];
 
-  const { data: zones } = await supabase
-    .from("shipping_zones")
-    .select("*")
-    .eq("is_active", true);
-  const { data: rates } = await supabase
-    .from("shipping_rates")
-    .select("*")
-    .eq("is_active", true);
-
   const results: ResolvedRate[] = [];
-  const country = ctx.country_code || "SA";
-  const cityLower = (ctx.city || "").trim().toLowerCase();
+  const country = normalizeCountry(ctx.country_code);
+  const cityLower = normalizeCity(ctx.city);
 
   for (const carrier of carriers) {
     if (ctx.cod_amount && ctx.cod_amount > 0 && !carrier.supports_cod) continue;
-    if (country !== "SA" && !carrier.supports_international) continue;
+    if (country !== "SA" && carrier.supports_international === false) continue;
 
-    const carrierZones = (zones || []).filter((z: any) => z.carrier_id === carrier.id);
-    const matchedZone = carrierZones.find((z: any) => {
-      if (z.country_code !== country) return false;
-      const cities: string[] = Array.isArray(z.cities) ? z.cities : [];
-      if (cities.length === 0) return true; // empty = covers all
-      return cities.some((c) => c.toLowerCase() === cityLower);
-    });
-    if (!matchedZone) continue;
+    const matchedZones = (zones || []).filter((zone: any) => zone.carrier_id === carrier.id && zoneMatchesContext(zone, country, cityLower));
+    if (!matchedZones.length) continue;
 
-    const zoneRates = (rates || []).filter((r: any) => r.zone_id === matchedZone.id);
-    let best: any = null;
-    for (const rate of zoneRates) {
-      if (rate.min_weight_kg != null && ctx.weight_kg < Number(rate.min_weight_kg)) continue;
-      if (rate.max_weight_kg != null && ctx.weight_kg > Number(rate.max_weight_kg)) continue;
-      if (rate.min_order_value != null && ctx.order_value < Number(rate.min_order_value)) continue;
-      if (rate.max_order_value != null && ctx.order_value > Number(rate.max_order_value)) continue;
+    let best: ResolvedRate | null = null;
+    for (const matchedZone of matchedZones) {
+      const zoneRates = (rates || []).filter((rate: any) => rate.zone_id === matchedZone.id);
+      for (const rate of zoneRates) {
+        if (rate.carrier_id && rate.carrier_id !== carrier.id) continue;
+        if (rate.min_weight_kg != null && ctx.weight_kg < Number(rate.min_weight_kg)) continue;
+        if (rate.max_weight_kg != null && ctx.weight_kg > Number(rate.max_weight_kg)) continue;
+        if (rate.min_order_value != null && ctx.order_value < Number(rate.min_order_value)) continue;
+        if (rate.max_order_value != null && ctx.order_value > Number(rate.max_order_value)) continue;
 
-      let fee = Number(rate.base_fee || 0);
-      if (rate.rate_type === "weight") {
-        fee += Number(rate.per_kg_fee || 0) * ctx.weight_kg;
-      }
-      if (ctx.cod_amount && ctx.cod_amount > 0) fee += Number(rate.cod_extra_fee || 0);
-
-      let isFree = false;
-      let freeReason: string | undefined;
-      if (rate.free_shipping_threshold != null && ctx.order_value >= Number(rate.free_shipping_threshold)) {
-        fee = 0;
-        isFree = true;
-        freeReason = `الطلب فوق ${rate.free_shipping_threshold} SAR`;
-      }
-
-      if (!best || fee < best.fee) {
-        best = {
+        const { fee, isFree, freeReason } = computeRateFee(rate, ctx);
+        const candidate: ResolvedRate = {
           carrier_id: carrier.id,
           carrier_code: carrier.code,
-          carrier_name: carrier.name_ar,
+          carrier_name_ar: carrier.name_ar ?? carrier.name_en ?? carrier.code,
+          carrier_name_en: carrier.name_en ?? carrier.name_ar ?? carrier.code,
           zone_id: matchedZone.id,
           rate_id: rate.id,
           fee,
@@ -105,19 +170,45 @@ export async function resolveShippingRates(ctx: RateContext): Promise<ResolvedRa
           is_free: isFree,
           free_reason: freeReason,
         };
+
+        const matchedZoneCities = Array.isArray(matchedZone.cities) ? matchedZone.cities.length : 0;
+        const bestZoneId = best?.zone_id;
+        const bestRateId = best?.rate_id;
+        const bestZone = bestZoneId ? zones.find((zone: any) => zone.id === bestZoneId) : null;
+        const bestRate = bestRateId ? rates.find((item: any) => item.id === bestRateId) : null;
+        const bestZoneCities = bestZone && Array.isArray(bestZone.cities) ? bestZone.cities.length : 0;
+        const bestRatePriority = Number(bestRate?.priority ?? 0);
+
+        const shouldReplace =
+          !best ||
+          fee < best.fee ||
+          (fee === best.fee && matchedZoneCities > bestZoneCities) ||
+          (fee === best.fee &&
+            matchedZoneCities === bestZoneCities &&
+            Number(rate.priority ?? 0) < bestRatePriority);
+
+        if (shouldReplace) best = candidate;
       }
     }
     if (best) results.push(best);
   }
 
-  return results.sort((a, b) => a.fee - b.fee);
+  return results.sort((a, b) => {
+    if (a.fee !== b.fee) return a.fee - b.fee;
+    const carrierA = carriers.find((carrier: any) => carrier.id === a.carrier_id);
+    const carrierB = carriers.find((carrier: any) => carrier.id === b.carrier_id);
+    return Number(carrierA?.display_order ?? 0) - Number(carrierB?.display_order ?? 0);
+  });
 }
 
 /**
  * Auto-pick the cheapest carrier matching the context, or null if none cover.
  */
-export async function autoPickCarrier(ctx: RateContext): Promise<ResolvedRate | null> {
-  const list = await resolveShippingRates(ctx);
+export async function autoPickCarrier(
+  ctx: RateContext,
+  client: any = supabase,
+): Promise<ResolvedRate | null> {
+  const list = await resolveShippingRates(ctx, client);
   return list[0] || null;
 }
 

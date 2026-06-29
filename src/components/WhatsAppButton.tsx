@@ -1,12 +1,36 @@
-import { CONTACT_WHATSAPP_NUMBER } from "@/lib/contactInfo";
+import { useEffect, useState } from "react";
+import { fetchStorefrontSettings } from "@/lib/storefront";
 
 export function WhatsAppButton() {
-  const href = `https://wa.me/${CONTACT_WHATSAPP_NUMBER}?text=${encodeURIComponent("مرحباً، أحتاج مساعدة")}`;
+  const [href, setHref] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const settings = await fetchStorefrontSettings(true);
+        if (!active || !settings?.footer_whatsapp) return;
+        const value = settings.footer_whatsapp.trim();
+        setHref(
+          value.startsWith("http")
+            ? value
+            : `https://wa.me/${value.replace(/\D/g, "")}`
+        );
+      } catch {
+        /* noop */
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (!href) return null;
 
   return (
     <a
       data-live-id="whatsapp-support"
-      href={href}
+      href={`${href}?text=${encodeURIComponent("مرحباً، أحتاج مساعدة")}`}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="WhatsApp support"

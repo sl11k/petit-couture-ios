@@ -29,7 +29,11 @@ import { trackServerEvent, getCurrentSessionId } from "@/lib/serverAnalytics";
 import { supabase } from "@/integrations/supabase/client";
 import { placeOrder } from "@/lib/placeOrder.functions";
 import { validateCoupon } from "@/lib/coupons.functions";
-import { FreeShippingProgress } from "@/components/FreeShippingProgress";
+import {
+  getAvailableShippingCountries,
+  resolveShippingRates,
+  type ResolvedRate,
+} from "@/lib/shipping";
 import type { CurrencyCode } from "@/i18n/currencies";
 
 // Map only loads on the client when entering step 2.
@@ -51,93 +55,8 @@ const phoneRegex = /^\+?[0-9][0-9\s().-]{5,23}$/;
 type Step = 1 | 2 | 3 | 4;
 type PayMethod = "card" | "apple_pay" | "tabby" | "tamara";
 
-const SHIPPING_METHODS: Array<{
-  id: string;
-  countries: string[];
-  label_ar: string;
-  label_en: string;
-  eta_ar: string;
-  eta_en: string;
-  fee: number;
-}> = [
-  {
-    id: "standard",
-    countries: ["SA"],
-    label_ar: "توصيل قياسي داخل السعودية",
-    label_en: "Standard (KSA)",
-    eta_ar: "٣–٥ أيام عمل",
-    eta_en: "3–5 business days",
-    fee: 25,
-  },
-  {
-    id: "express",
-    countries: ["SA"],
-    label_ar: "توصيل سريع داخل السعودية",
-    label_en: "Express (KSA)",
-    eta_ar: "خلال ٢٤ ساعة",
-    eta_en: "Within 24 hours",
-    fee: 45,
-  },
-  {
-    id: "international",
-    countries: ["*"],
-    label_ar: "شحن دولي",
-    label_en: "International delivery",
-    eta_ar: "٧–١٤ يوم عمل",
-    eta_en: "7–14 business days",
-    fee: 140,
-  },
-  {
-    id: "uae",
-    countries: ["AE"],
-    label_ar: "شحن إلى الإمارات",
-    label_en: "Delivery to United Arab Emirates",
-    eta_ar: "٣–٧ أيام عمل",
-    eta_en: "3–7 business days",
-    fee: 65,
-  },
-  {
-    id: "gcc",
-    countries: ["KW", "BH", "QA", "OM"],
-    label_ar: "شحن إلى دول الخليج",
-    label_en: "GCC delivery",
-    eta_ar: "٤–٨ أيام عمل",
-    eta_en: "4–8 business days",
-    fee: 85,
-  },
-];
-
-const FREE_SHIPPING_THRESHOLD = 500;
 const TAX_RATE = 0.15;
-
-const CHECKOUT_COUNTRIES = [
-  { code: "SA", ar: "السعودية", en: "Saudi Arabia", currency: "SAR" },
-  { code: "AE", ar: "الإمارات", en: "United Arab Emirates", currency: "AED" },
-  { code: "KW", ar: "الكويت", en: "Kuwait", currency: "KWD" },
-  { code: "BH", ar: "البحرين", en: "Bahrain", currency: "BHD" },
-  { code: "QA", ar: "قطر", en: "Qatar", currency: "QAR" },
-  { code: "OM", ar: "عمان", en: "Oman", currency: "OMR" },
-  { code: "EG", ar: "مصر", en: "Egypt", currency: "EGP" },
-  { code: "JO", ar: "الأردن", en: "Jordan", currency: "JOD" },
-  { code: "US", ar: "الولايات المتحدة", en: "United States", currency: "USD" },
-  { code: "GB", ar: "المملكة المتحدة", en: "United Kingdom", currency: "GBP" },
-  { code: "EU", ar: "أوروبا", en: "Europe", currency: "EUR" },
-  { code: "OTHER", ar: "دولة أخرى", en: "Other country", currency: "SAR" },
-];
-
-const COUNTRY_BY_CURRENCY: Record<string, string> = {
-  SAR: "SA",
-  AED: "AE",
-  KWD: "KW",
-  BHD: "BH",
-  QAR: "QA",
-  OMR: "OM",
-  EGP: "EG",
-  JOD: "JO",
-  USD: "US",
-  GBP: "GB",
-  EUR: "EU",
-};
+const buildOptionId = (option: ResolvedRate) => `${option.carrier_id}:${option.rate_id}`;
 
 function CheckoutPage() {
   const router = useRouter();
@@ -160,9 +79,7 @@ function CheckoutPage() {
     phone: address?.phone ?? "",
     createAccount: false,
   });
-  const [countryCode, setCountryCode] = useState(
-    address?.countryCode ?? COUNTRY_BY_CURRENCY[displayCurrency] ?? "SA",
-  );
+  const [countryCode, setCountryCode] = useState(address?.countryCode ?? "");
   const [loc, setLoc] = useState<{
     lat?: number;
     lng?: number;
@@ -182,11 +99,68 @@ function CheckoutPage() {
   }));
   const [buildingNumber, setBuildingNumber] = useState(address?.buildingNumber ?? "");
   const [notes, setNotes] = useState(address?.notes ?? "");
-  const [shippingId, setShippingId] = useState<string>("standard");
+  const [shippingId, setShippingId] = useState<string>("");
+  const [shippingCountryCode, setShippingCountryCode] = useState<string>(
+    () => address?.countryCode ?? "",
+  );
+  const [shippingOptions, setShippingOptions] = useState<ResolvedRate[]>([]);
+  const [shippingOptionsReady, setShippingOptionsReady] = useState(false);
+  const [availableCountries, setAvailableCountries] = useState<Array<{ code: string; label: string }>>(
+    [],
+  );
   const [payment, setPayment] = useState<PayMethod>("card");
   const [agree, setAgree] = useState(false);
   const [placing, setPlacing] = useState(false);
+  const [orderWeightKg, setOrderWeightKg] = useState<number>(1);
   const placedRef = useRef(false);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      if (!bag.items.length) {
+        if (active) setOrderWeightKg(1);
+        return;
+      }
+      try {
+        const uniqueSlugs = Array.from(new Set(bag.items.map((item) => item.slug)));
+        const { data: products } = await supabase
+          .from("products")
+          .select("slug, weight")
+          .in("slug", uniqueSlugs)
+          .eq("is_active", true);
+        const productWeights = new Map<string, number>(
+          (products ?? []).map((product: any) => [String(product.slug), Number(product.weight) || 0]),
+        );
+
+        const variantIds = bag.items
+          .map((item) => item.variantId)
+          .filter((value): value is string => Boolean(value));
+        const { data: variants } = variantIds.length
+          ? await supabase
+              .from("product_variants")
+              .select("id, weight")
+              .in("id", variantIds)
+          : { data: [] as any[] };
+        const variantWeights = new Map<string, number>(
+          (variants ?? []).map((variant: any) => [String(variant.id), Number(variant.weight) || 0]),
+        );
+
+        const totalWeight = bag.items.reduce((sum, item) => {
+          const variantWeight = item.variantId ? variantWeights.get(item.variantId) || 0 : 0;
+          const productWeight = productWeights.get(item.slug) || 0;
+          const itemWeight = variantWeight > 0 ? variantWeight : productWeight > 0 ? productWeight : 1;
+          return sum + itemWeight * item.qty;
+        }, 0);
+
+        if (active) setOrderWeightKg(totalWeight > 0 ? totalWeight : 1);
+      } catch {
+        if (active) setOrderWeightKg(1);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [bag.items]);
 
   // Coupon state
   const [couponInput, setCouponInput] = useState("");
@@ -200,38 +174,103 @@ function CheckoutPage() {
     if (bagEmpty && arrivedEmptyRef.current) navigate({ to: "/bag" });
   }, [bagEmpty, navigate]);
 
-  // ───── Pricing ─────
-  const selectedCountry =
-    CHECKOUT_COUNTRIES.find((country) => country.code === countryCode) ?? CHECKOUT_COUNTRIES[0];
-
-  const availableShippingMethods = useMemo(() => {
-    const exact = SHIPPING_METHODS.filter((method) => method.countries.includes(countryCode));
-    if (exact.length > 0) return exact;
-    return SHIPPING_METHODS.filter((method) => method.countries.includes("*"));
-  }, [countryCode]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const countries = await getAvailableShippingCountries();
+        if (!active) return;
+        setAvailableCountries(countries);
+        setCountryCode((current) => {
+          if (current && countries.some((country) => country.code === current)) return current;
+          return countries[0]?.code ?? current;
+        });
+        setShippingCountryCode((current) => {
+          if (current && countries.some((country) => country.code === current)) return current;
+          return countries[0]?.code ?? current;
+        });
+      } catch {
+        if (active) setAvailableCountries([]);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
-    if (!availableShippingMethods.some((method) => method.id === shippingId)) {
-      setShippingId(availableShippingMethods[0]?.id ?? "international");
-    }
-  }, [availableShippingMethods, shippingId]);
+    let active = true;
+    (async () => {
+      setShippingOptionsReady(false);
+      try {
+        const rates = await resolveShippingRates({
+          city: loc.city ?? "",
+          country_code: shippingCountryCode || undefined,
+          weight_kg: orderWeightKg,
+          order_value: bag.subtotal,
+        });
+        if (!active) return;
+        setShippingOptions(rates.slice(0, 1));
+        if (!rates.length) {
+          setShippingId("");
+          return;
+        }
+        const firstOptionId = buildOptionId(rates[0]);
+        setShippingId((current) => {
+          if (current && rates.slice(0, 1).some((option) => buildOptionId(option) === current)) return current;
+          return firstOptionId;
+        });
+      } catch {
+        if (active) {
+          setShippingOptions([]);
+          setShippingId("");
+        }
+      } finally {
+        if (active) setShippingOptionsReady(true);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [bag.subtotal, loc.city, shippingCountryCode, orderWeightKg]);
+
+  const selectedShippingOption = useMemo(() => {
+    if (!shippingOptions.length) return null;
+    return shippingOptions.find((option) => buildOptionId(option) === shippingId) ?? shippingOptions[0];
+  }, [shippingId, shippingOptions]);
+
+  // ───── Pricing ─────
+  const selectedCountry = availableCountries.find((country) => country.code === countryCode) ?? availableCountries[0];
 
   const changeCountry = (nextCountryCode: string) => {
-    const nextCountry =
-      CHECKOUT_COUNTRIES.find((country) => country.code === nextCountryCode) ??
-      CHECKOUT_COUNTRIES[0];
+    const nextCountry = availableCountries.find((country) => country.code === nextCountryCode) ?? availableCountries[0];
     setCountryCode(nextCountry.code);
-    if (nextCountry.currency !== displayCurrency) setCurrency(nextCountry.currency as CurrencyCode);
   };
 
   const shipping = useMemo(() => {
-    const sel =
-      availableShippingMethods.find((m) => m.id === shippingId) ??
-      availableShippingMethods[0] ??
-      SHIPPING_METHODS[0];
-    const fee = bag.subtotal >= FREE_SHIPPING_THRESHOLD && sel.id === "standard" ? 0 : sel.fee;
-    return { ...sel, fee };
-  }, [availableShippingMethods, shippingId, bag.subtotal]);
+    if (selectedShippingOption) {
+      const fee = selectedShippingOption.is_free ? 0 : selectedShippingOption.fee;
+      const eta = selectedShippingOption.delivery_days_min && selectedShippingOption.delivery_days_max
+        ? `${selectedShippingOption.delivery_days_min}-${selectedShippingOption.delivery_days_max}`
+        : undefined;
+      return {
+        id: buildOptionId(selectedShippingOption),
+        label_ar: selectedShippingOption.carrier_name_ar,
+        label_en: selectedShippingOption.carrier_name_en,
+        eta_ar: eta ? `${eta} ${isRTL ? "أيام" : "days"}` : isRTL ? "حسب المنطقة" : "By region",
+        eta_en: eta ? `${eta} ${isRTL ? "أيام" : "days"}` : "By region",
+        fee,
+      };
+    }
+    return {
+      id: shippingId || "delivery",
+      label_ar: isRTL ? "توصيل" : "Delivery",
+      label_en: "Delivery",
+      eta_ar: isRTL ? "سيتم تحديده لاحقاً" : "To be confirmed",
+      eta_en: "To be confirmed",
+      fee: 0,
+    };
+  }, [selectedShippingOption, shippingId, isRTL]);
 
   const pricing = useMemo(() => {
     const subtotal = bag.subtotal;
@@ -395,8 +434,10 @@ function CheckoutPage() {
       email: contact.email.trim(),
       phone: contact.phone.replace(/[\s-]/g, ""),
       countryCode,
-      countryName: lang === "ar" ? selectedCountry.ar : selectedCountry.en,
+      countryName: selectedCountry?.label ?? countryCode,
       city: loc.city ?? "",
+      countryCode: shippingCountryCode,
+      countryName: availableCountries.find((country) => country.code === shippingCountryCode)?.label ?? shippingCountryCode,
       district: loc.district,
       street: loc.street,
       postalCode: loc.postalCode,
@@ -433,8 +474,10 @@ function CheckoutPage() {
         email: contact.email.trim(),
         phone: contact.phone.replace(/[\s-]/g, ""),
         countryCode,
-        countryName: lang === "ar" ? selectedCountry.ar : selectedCountry.en,
+        countryName: selectedCountry?.label ?? countryCode,
         city: loc.city ?? "",
+        countryCode: shippingCountryCode,
+        countryName: availableCountries.find((country) => country.code === shippingCountryCode)?.label ?? shippingCountryCode,
         district: loc.district,
         street: loc.street,
         postalCode: loc.postalCode,
@@ -468,6 +511,9 @@ function CheckoutPage() {
           coupon_code: coupon?.code ?? null,
           pricing: {
             shipping_method: shipping.id,
+            shipping_fee: pricing.shipping_fee,
+            shipping_country_code: shippingCountryCode,
+            shipping_city: loc.city ?? null,
           },
         },
       });
@@ -764,9 +810,9 @@ function CheckoutPage() {
                   value={countryCode}
                   onChange={(e) => changeCountry(e.target.value)}
                 >
-                  {CHECKOUT_COUNTRIES.map((country) => (
+                  {availableCountries.map((country) => (
                     <option key={country.code} value={country.code}>
-                      {lang === "ar" ? country.ar : country.en}
+                      {country.label}
                     </option>
                   ))}
                 </select>
@@ -781,6 +827,7 @@ function CheckoutPage() {
               >
                 <LocationPicker
                   isRTL={isRTL}
+                  supportedCountries={availableCountries.map((country) => country.code)}
                   value={loc.lat != null && loc.lng != null ? { lat: loc.lat, lng: loc.lng } : null}
                   onChange={(r) => setLoc((p) => ({ ...p, ...r }))}
                 />
@@ -804,6 +851,25 @@ function CheckoutPage() {
                   />
                 </Field>
               </div>
+              <Field label={isRTL ? "الدولة" : "Country"}>
+                <select
+                  className={fieldClass(false)}
+                  value={shippingCountryCode}
+                  onChange={(e) => setShippingCountryCode(e.target.value)}
+                >
+                  {availableCountries.length > 0 ? (
+                    availableCountries.map((country) => (
+                      <option key={country.code} value={country.code}>
+                        {country.label}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>
+                      {isRTL ? "لا توجد دول مفعلة للشحن حالياً" : "No shipping countries are enabled yet"}
+                    </option>
+                  )}
+                </select>
+              </Field>
               <Field label={isRTL ? "اسم الشارع" : "Street"}>
                 <input
                   className={fieldClass(false)}
@@ -859,13 +925,10 @@ function CheckoutPage() {
                 </h1>
                 <p className="mt-1 text-[12px] text-muted-foreground">
                   {isRTL
-                    ? `خيارات الشحن المعروضة مخصصة لـ ${selectedCountry.ar}`
-                    : `Shipping options shown for ${selectedCountry.en}`}
+                    ? `خيارات الشحن المعروضة مخصصة لـ ${selectedCountry?.label}`
+                    : `Shipping options shown for ${selectedCountry?.label}`}
                 </p>
               </div>
-
-              {/* Free shipping progress */}
-              <FreeShippingProgress subtotal={bag.subtotal} threshold={FREE_SHIPPING_THRESHOLD} />
 
               {/* Shipping options */}
               <div>
@@ -874,52 +937,68 @@ function CheckoutPage() {
                   {isRTL ? "طريقة التوصيل" : "DELIVERY METHOD"}
                 </h2>
                 <div className="space-y-2">
-                  {availableShippingMethods.map((m) => {
-                    const isFree = bag.subtotal >= FREE_SHIPPING_THRESHOLD && m.id === "standard";
-                    const fee = isFree ? 0 : m.fee;
-                    const active = shippingId === m.id;
-                    return (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => setShippingId(m.id)}
-                        className={[
-                          "w-full text-start p-4 rounded-[16px] border transition flex items-center gap-3",
-                          active
-                            ? "border-gold bg-gold/5 shadow-sm"
-                            : "border-border bg-cream-warm/30",
-                        ].join(" ")}
-                      >
-                        <div
+                  {!shippingOptionsReady ? (
+                    <div className="rounded-[16px] border border-border bg-cream-warm/30 p-4 text-[13px] text-muted-foreground">
+                      {isRTL ? "جاري تحميل أسعار الشحن…" : "Loading shipping rates…"}
+                    </div>
+                  ) : shippingOptions.length > 0 ? (
+                    shippingOptions.map((option) => {
+                      const optionId = buildOptionId(option);
+                      const active = shippingId === optionId;
+                      const fee = option.is_free ? 0 : option.fee;
+                      return (
+                        <button
+                          key={optionId}
+                          type="button"
+                          onClick={() => setShippingId(optionId)}
                           className={[
-                            "h-5 w-5 shrink-0 rounded-full border-2 grid place-items-center transition",
-                            active ? "border-gold" : "border-border",
+                            "w-full text-start p-4 rounded-[16px] border transition flex items-center gap-3",
+                            active
+                              ? "border-gold bg-gold/5 shadow-sm"
+                              : "border-border bg-cream-warm/30",
                           ].join(" ")}
                         >
-                          {active && <div className="h-2.5 w-2.5 rounded-full bg-gold" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[14px] text-foreground font-medium">
-                            {lang === "ar" ? m.label_ar : m.label_en}
+                          <div
+                            className={[
+                              "h-5 w-5 shrink-0 rounded-full border-2 grid place-items-center transition",
+                              active ? "border-gold" : "border-border",
+                            ].join(" ")}
+                          >
+                            {active && <div className="h-2.5 w-2.5 rounded-full bg-gold" />}
                           </div>
-                          <div className="text-[11.5px] text-muted-foreground mt-0.5">
-                            {lang === "ar" ? m.eta_ar : m.eta_en}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[14px] text-foreground font-medium">
+                              {lang === "ar" ? option.carrier_name_ar : option.carrier_name_en}
+                            </div>
+                            <div className="text-[11.5px] text-muted-foreground mt-0.5">
+                              {option.delivery_days_min && option.delivery_days_max
+                                ? `${option.delivery_days_min}-${option.delivery_days_max} ${isRTL ? "أيام" : "days"}`
+                                : isRTL
+                                  ? "حسب المنطقة"
+                                  : "By region"}
+                            </div>
                           </div>
-                        </div>
-                        <div className="text-[13px] tracking-soft">
-                          {fee === 0 ? (
-                            <span className="text-emerald-700 font-medium">
-                              {isRTL ? "مجاني" : "FREE"}
-                            </span>
-                          ) : (
-                            <span>
-                              {fmt(fee)} {isRTL ? "ر.س" : "SAR"}
-                            </span>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
+                          <div className="text-[13px] tracking-soft">
+                            {fee === 0 ? (
+                              <span className="text-emerald-700 font-medium">
+                                {isRTL ? "مجاني" : "FREE"}
+                              </span>
+                            ) : (
+                              <span>
+                                {fmt(fee)} {isRTL ? "ر.س" : "SAR"}
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <div className="rounded-[16px] border border-border bg-cream-warm/30 p-4 text-[13px] text-muted-foreground">
+                      {isRTL
+                        ? "لا توجد أسعار شحن متاحة لهذه المنطقة حالياً."
+                        : "No shipping rates are available for this area yet."}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1051,7 +1130,7 @@ function CheckoutPage() {
                   <MapPin className="h-4 w-4 text-gold mt-0.5 shrink-0" />
                   <div className="flex-1 text-[12.5px] text-foreground/90 leading-snug">
                     <span className="block font-medium text-foreground mb-0.5">
-                      {lang === "ar" ? selectedCountry.ar : selectedCountry.en}
+                      {selectedCountry?.label}
                     </span>
                     {loc.geoAddress ??
                       [loc.street, loc.district, loc.city].filter(Boolean).join("، ")}

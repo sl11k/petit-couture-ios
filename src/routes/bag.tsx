@@ -34,8 +34,6 @@ export const Route = createFileRoute("/bag")({
   component: BagPage,
 });
 
-const FREE_SHIPPING_THRESHOLD = 500;
-const SHIPPING_FEE = 25;
 const TAX_RATE = 0.15;
 
 function BagPage() {
@@ -75,13 +73,8 @@ function BagPage() {
   // We intentionally do NOT show fake/client-side discounts in the bag to
   // avoid mismatches between the bag preview and the real order total.
   const subtotal = bag.subtotal;
-  const qualifiesFreeShip = subtotal >= FREE_SHIPPING_THRESHOLD;
-  const shipping = bag.items.length === 0 ? 0 : qualifiesFreeShip ? 0 : SHIPPING_FEE;
   const tax = Math.round(subtotal * TAX_RATE);
-  const total = subtotal + shipping + tax;
-
-  const remainingForFreeShip = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
-  const freeShipProgress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
+  const total = subtotal + tax;
 
   const moveToWishlist = (itemId: string, slug: string) => {
     wishlist.toggle(`product:${slug}`, "wishlist_screen");
@@ -125,17 +118,13 @@ function BagPage() {
     discount: ar ? "الخصم" : "Discount",
     shipping: ar ? "الشحن" : "Shipping",
     tax: ar ? "ضريبة (15%)" : "Tax (15%)",
-    free: ar ? "مجاني" : "Free",
     total: ar ? "الإجمالي" : "Total",
     shippingNote: ar
-      ? "تكلفة الشحن قد تتغير حسب موقعك في الخطوة التالية"
-      : "Shipping may vary based on your delivery address",
+      ? "تكلفة الشحن تُحسب في صفحة الدفع التالية"
+      : "Shipping is calculated at checkout",
     promoCode: ar ? "كود الخصم" : "Promo code",
     apply: ar ? "تطبيق" : "Apply",
     promoApplied: (c: string) => (ar ? `تم تطبيق كود ${c}` : `Code ${c} applied`),
-    freeShipBar: (n: number) =>
-      ar ? `أضف ${fmt(n)} ر.س للحصول على شحن مجاني` : `Add ${fmt(n)} SAR more for free shipping`,
-    freeShipUnlocked: ar ? "🎉 حصلت على شحن مجاني!" : "🎉 You unlocked free shipping!",
     youMayNeed: ar ? "قد تحتاج هذه أيضًا" : "You may also need",
     checkout: ar ? "إكمال الشراء" : "Checkout securely",
     secure: ar ? "دفع آمن ومشفر 100%" : "100% secure & encrypted",
@@ -202,25 +191,6 @@ function BagPage() {
                 </p>
               </section>
 
-              {/* Free shipping bar */}
-              <section className="px-5 mt-5">
-                <div className="rounded-[16px] border border-gold-soft bg-gold-soft/30 p-3.5">
-                  <div className="flex items-center gap-2 text-[12.5px] text-foreground/85">
-                    <Truck className="h-[15px] w-[15px] text-gold-deep" />
-                    <span className="flex-1">
-                      {qualifiesFreeShip || freeShipProgress >= 100
-                        ? tt.freeShipUnlocked
-                        : tt.freeShipBar(remainingForFreeShip)}
-                    </span>
-                  </div>
-                  <div className="mt-2 h-1.5 rounded-full bg-background overflow-hidden">
-                    <div
-                      className="h-full bg-gold-deep transition-all duration-300"
-                      style={{ width: `${freeShipProgress}%` }}
-                    />
-                  </div>
-                </div>
-              </section>
 
               {/* Items */}
               <section className="px-5 mt-5 space-y-4">
@@ -357,13 +327,11 @@ function BagPage() {
                     <span className="tabular-nums">{fmtPrice(subtotal)}</span>
                   </div>
 
-                  <div className="flex items-center justify-between text-[13.5px] text-foreground/80">
+                      <div className="flex items-center justify-between text-[13.5px] text-foreground/80">
                     <span>{tt.shipping}</span>
-                    {shipping === 0 ? (
-                      <span className="text-gold-deep tracking-soft">{tt.free}</span>
-                    ) : (
-                      <span className="tabular-nums">{fmtPrice(shipping)}</span>
-                    )}
+                    <span className="text-gold-deep tracking-soft">
+                      {ar ? "يُحسب في صفحة الدفع" : "Calculated at checkout"}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between text-[13.5px] text-foreground/80">
                     <span>{tt.tax}</span>
@@ -441,7 +409,7 @@ function BagPage() {
                 className="w-full h-[56px] rounded-xl bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft"
               >
                 <Lock className="h-[15px] w-[15px]" strokeWidth={1.7} />
-                {tt.checkout} · {fmtPrice(total)}
+                {tt.checkout}
               </button>
               <p className="mt-2 text-center text-[10.5px] text-muted-foreground tracking-soft">
                 {tt.secure}

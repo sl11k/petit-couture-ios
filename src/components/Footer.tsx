@@ -6,7 +6,7 @@ import { fetchStorefrontSettings, type StorefrontSettings } from "@/lib/storefro
 import { BrandLogo, BRAND_NAME } from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
 import { useDbCategories } from "@/hooks/useDbCategories";
-import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_TEL, CONTACT_WHATSAPP_URL } from "@/lib/contactInfo";
+import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_TEL } from "@/lib/contactInfo";
 
 type ContentPageLink = { slug: string; title_ar: string; title_en: string };
 
@@ -45,11 +45,14 @@ export function Footer() {
   const address = ar
     ? (settings?.footer_address_ar ?? "الرياض، المملكة العربية السعودية")
     : (settings?.footer_address_en ?? "Riyadh, Kingdom of Saudi Arabia");
-  const phone = CONTACT_PHONE_DISPLAY;
-  const email = settings?.footer_email ?? "hello@lepetitparadis.com";
-  const ig = settings?.footer_instagram ?? "https://instagram.com";
-  const tiktok = settings?.footer_tiktok ?? "https://tiktok.com";
-  const wa = CONTACT_WHATSAPP_URL;
+  const email = settings?.footer_email;
+  const ig = settings?.footer_instagram;
+  const tiktok = settings?.footer_tiktok;
+  const whatsappUrl = settings?.footer_whatsapp
+    ? settings.footer_whatsapp.trim().startsWith("http")
+      ? settings.footer_whatsapp.trim()
+      : `https://wa.me/${settings.footer_whatsapp.replace(/\D/g, "")}`
+    : undefined;
 
   return (
     <footer
@@ -79,7 +82,7 @@ export function Footer() {
               {ar ? "تسوّق" : "Shop"}
             </h3>
             <ul className="space-y-2 text-[13px]">
-              {dbCats.length > 0 ? (
+              {dbCats.length > 0 &&
                 dbCats.slice(0, 8).map((c) => (
                   <li key={c.slug}>
                     <Link
@@ -91,47 +94,7 @@ export function Footer() {
                       {ar ? c.name_ar : c.name_en}
                     </Link>
                   </li>
-                ))
-              ) : (
-                <>
-                  <li>
-                    <Link
-                      to="/category/$slug"
-                      params={{ slug: "new-in" }}
-                      className="hover:text-gold transition"
-                    >
-                      {ar ? "وصل حديثًا" : "New In"}
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/category/$slug"
-                      params={{ slug: "best-sellers" }}
-                      className="hover:text-gold transition"
-                    >
-                      {ar ? "الأكثر مبيعاً" : "Best Sellers"}
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/category/$slug"
-                      params={{ slug: "dresses" }}
-                      className="hover:text-gold transition"
-                    >
-                      {ar ? "فساتين" : "Dresses"}
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/category/$slug"
-                      params={{ slug: "shoes" }}
-                      className="hover:text-gold transition"
-                    >
-                      {ar ? "أحذية" : "Shoes"}
-                    </Link>
-                  </li>
-                </>
-              )}
+                ))}
             </ul>
           </div>
 
@@ -208,49 +171,57 @@ export function Footer() {
                   dir="ltr"
                   className="hover:text-gold"
                 >
-                  {phone}
+                  {CONTACT_PHONE_DISPLAY}
                 </a>
               </li>
-              <li className="flex items-center gap-2">
-                <Mail className="h-3.5 w-3.5 text-gold" />
-                <a data-live-id="footer-email" href={`mailto:${email}`} className="hover:text-gold">
-                  {email}
-                </a>
-              </li>
+              {email && (
+                <li className="flex items-center gap-2">
+                  <Mail className="h-3.5 w-3.5 text-gold" />
+                  <a data-live-id="footer-email" href={`mailto:${email}`} className="hover:text-gold">
+                    {email}
+                  </a>
+                </li>
+              )}
             </ul>
             <div className="mt-4 flex items-center gap-3">
-              <a
-                data-live-id="footer-social-instagram"
-                href={ig}
-                target="_blank"
-                rel="noopener"
-                aria-label="Instagram"
-                className="grid h-9 w-9 place-items-center rounded-xl border border-background/20 hover:bg-background/10 transition"
-              >
-                <Instagram className="h-4 w-4" />
-              </a>
-              <a
-                data-live-id="footer-social-whatsapp"
-                href={wa}
-                target="_blank"
-                rel="noopener"
-                aria-label="WhatsApp"
-                className="grid h-9 w-9 place-items-center rounded-xl border border-background/20 hover:bg-background/10 transition"
-              >
-                <MessageCircle className="h-4 w-4" />
-              </a>
-              <a
-                data-live-id="footer-social-tiktok"
-                href={tiktok}
-                target="_blank"
-                rel="noopener"
-                aria-label="TikTok"
-                className="grid h-9 w-9 place-items-center rounded-xl border border-background/20 hover:bg-background/10 transition"
-              >
-                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
-                  <path d="M19.32 6.69a4.83 4.83 0 0 1-3.78-1.85V15.4a5.6 5.6 0 1 1-5.6-5.6c.31 0 .6.03.9.08v2.94a2.74 2.74 0 1 0 1.97 2.63V2h2.74a4.84 4.84 0 0 0 3.77 4.69z" />
-                </svg>
-              </a>
+              {ig && (
+                <a
+                  data-live-id="footer-social-instagram"
+                  href={ig}
+                  target="_blank"
+                  rel="noopener"
+                  aria-label="Instagram"
+                  className="grid h-9 w-9 place-items-center rounded-xl border border-background/20 hover:bg-background/10 transition"
+                >
+                  <Instagram className="h-4 w-4" />
+                </a>
+              )}
+              {whatsappUrl && (
+                <a
+                  data-live-id="footer-social-whatsapp"
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener"
+                  aria-label="WhatsApp"
+                  className="grid h-9 w-9 place-items-center rounded-xl border border-background/20 hover:bg-background/10 transition"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                </a>
+              )}
+              {tiktok && (
+                <a
+                  data-live-id="footer-social-tiktok"
+                  href={tiktok}
+                  target="_blank"
+                  rel="noopener"
+                  aria-label="TikTok"
+                  className="grid h-9 w-9 place-items-center rounded-xl border border-background/20 hover:bg-background/10 transition"
+                >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+                    <path d="M19.32 6.69a4.83 4.83 0 0 1-3.78-1.85V15.4a5.6 5.6 0 1 1-5.6-5.6c.31 0 .6.03.9.08v2.94a2.74 2.74 0 1 0 1.97 2.63V2h2.74a4.84 4.84 0 0 0 3.77 4.69z" />
+                  </svg>
+                </a>
+              )}
             </div>
           </div>
         </div>

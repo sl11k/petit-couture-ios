@@ -21,6 +21,10 @@ export const GLOBAL_HEADER_PATH = "__global_header__";
 export const GLOBAL_FOOTER_PATH = "__global_footer__";
 const keyOf = (selector: string, prop: OverrideProp, lang: string, pagePath = "") => `${pagePath}|${lang}|${prop}|${selector}`;
 
+function isLockedContactSelector(selector: string, prop: OverrideProp) {
+  return /data-live-id=["']footer-phone["']/.test(selector) && (prop === "text" || prop === "href" || prop === "html");
+}
+
 function effectiveLanguage(selector: string, prop: OverrideProp, lang: string) {
   // Styles, image sources, and link destinations are language-agnostic —
   // color/font/size/position/href/src do not differ between Arabic and English.
@@ -92,13 +96,11 @@ export async function loadOverrides(pagePath: string, includeDraft: boolean) {
       lang: effectiveLanguage(r.selector as string, r.prop as OverrideProp, r.lang as string),
       value: includeDraft ? (r.draft_value ?? r.published_value) : r.published_value,
     }))
-    .filter((r) => r.value !== null && r.value !== undefined);
+    .filter((r) => r.value !== null && r.value !== undefined)
+    .filter((r) => !isLockedContactSelector(r.selector, r.prop));
   // Repair historical contact edits where the admin changed only the anchor
   // destination. The visible value and clickable value are one logical field.
-  for (const contact of [
-    { selector: '[data-live-id="footer-email"]', prefix: /^mailto:/i },
-    { selector: '[data-live-id="footer-phone"]', prefix: /^tel:/i },
-  ]) {
+  for (const contact of [{ selector: '[data-live-id="footer-email"]', prefix: /^mailto:/i }]) {
     const href = [...rows].reverse().find((row) => row.selector === contact.selector && row.prop === "href");
     if (href) {
       const visible = String(href.value).replace(contact.prefix, "").trim();
@@ -153,10 +155,11 @@ export async function persistDraft(pagePath: string, draft: DraftMap) {
     lang: d.lang,
     draft_value: d.value,
   }));
-  if (!rows.length) return { error: null };
+  const filteredRows = rows.filter((row) => !isLockedContactSelector(row.selector, row.prop));
+  if (!filteredRows.length) return { error: null };
   return await supabase
     .from("live_overrides")
-    .upsert(rows, { onConflict: "page_path,selector,prop,lang" });
+    .upsert(filteredRows, { onConflict: "page_path,selector,prop,lang" });
 }
 
 export async function publishDraft(pagePath: string, draft: DraftMap) {
