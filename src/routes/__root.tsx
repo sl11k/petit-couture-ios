@@ -232,7 +232,7 @@ function StorefrontShell({
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [prevPathname, setPrevPathname] = useState(pathname);
   const [replaceRouteWithPublished, setReplaceRouteWithPublished] = useState(false);
-  const [sectionsLoading, setSectionsLoading] = useState(true);
+  const [sectionsLoading, setSectionsLoading] = useState(() => pathname !== "/" && allowPublishedPageReplacement);
   const pageIdentity = getEditablePageIdentity(pathname);
   const allowPageEditing =
     !isAdmin &&
@@ -250,7 +250,7 @@ function StorefrontShell({
   if (pathname !== prevPathname) {
     setPrevPathname(pathname);
     setReplaceRouteWithPublished(false);
-    if (allowPublishedPageReplacement) {
+    if (pathname !== "/" && allowPublishedPageReplacement) {
       setSectionsLoading(true);
     } else {
       setSectionsLoading(false);
@@ -262,12 +262,12 @@ function StorefrontShell({
   useEffect(() => {
     // Reset or verify states on mount/slug change
     setReplaceRouteWithPublished(false);
-    if (allowPublishedPageReplacement) {
+    if (pathname !== "/" && allowPublishedPageReplacement) {
       setSectionsLoading(true);
     } else {
       setSectionsLoading(false);
     }
-  }, [pageIdentity.slug, allowPublishedPageReplacement]);
+  }, [pageIdentity.slug, allowPublishedPageReplacement, pathname]);
   const onPublishedSectionsLoaded = useCallback((hasSections: boolean) => {
     setReplaceRouteWithPublished(hasSections);
     setSectionsLoading(false);
