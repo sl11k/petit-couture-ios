@@ -273,11 +273,19 @@ function BagPage() {
                     {(priceChanged || overStock || lowStock) && (
                       <div className="mt-3 space-y-1.5">
                         {priceChanged && (
-                          <div className="flex items-center gap-2 text-[11.5px] text-amber-700 bg-amber-50 rounded-lg px-2.5 py-1.5">
-                            <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                            <span>
-                              {tt.priceChanged}: {fmtPrice(currentPrice)}
-                            </span>
+                          <div className="flex items-center justify-between gap-2 text-[11.5px] text-amber-700 bg-amber-50 rounded-lg px-2.5 py-1.5">
+                            <div className="flex items-center gap-2">
+                              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                              <span>
+                                {tt.priceChanged}: {fmtPrice(currentPrice)}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => bag.updatePrice(it.id, currentPrice)}
+                              className="px-2 py-0.5 rounded bg-amber-600 hover:bg-amber-700 text-white font-medium text-[10.5px] active:scale-95 transition-all cursor-pointer"
+                            >
+                              {ar ? "تطبيق السعر الجديد" : "Apply new price"}
+                            </button>
                           </div>
                         )}
                         {overStock && (

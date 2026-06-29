@@ -55,7 +55,6 @@ const phoneRegex = /^\+?[0-9][0-9\s().-]{5,23}$/;
 type Step = 1 | 2 | 3 | 4;
 type PayMethod = "card" | "apple_pay" | "tabby" | "tamara";
 
-const TAX_RATE = 0.15;
 const buildOptionId = (option: ResolvedRate) => `${option.carrier_id}:${option.rate_id}`;
 
 function CheckoutPage() {
@@ -80,6 +79,7 @@ function CheckoutPage() {
     createAccount: false,
   });
   const [countryCode, setCountryCode] = useState(address?.countryCode ?? "");
+  const [taxRate, setTaxRate] = useState<number>(0.15);
   const [loc, setLoc] = useState<{
     lat?: number;
     lng?: number;
@@ -192,6 +192,45 @@ function CheckoutPage() {
   }, []);
 
   useEffect(() => {
+    if (!countryCode) {
+      setTaxRate(0.15);
+      return;
+    }
+    let active = true;
+    (async () => {
+      try {
+        const { data: zones } = await supabase
+          .from("shipping_zones")
+          .select("tax_rate")
+          .eq("country_code", countryCode)
+          .eq("is_active", true);
+        if (!active) return;
+        
+        // Find the first zone with a tax_rate defined
+        const matchedRate = zones?.find((z: any) => z.tax_rate !== null && z.tax_rate !== undefined)?.tax_rate;
+        if (matchedRate !== undefined && matchedRate !== null) {
+          setTaxRate(Number(matchedRate));
+        } else {
+          // Fall back to global site settings tax_rate
+          const { data: settings } = await supabase
+            .from("public_site_settings" as any)
+            .select("tax_rate")
+            .maybeSingle();
+          if (active) {
+            const globalRate = (settings as any)?.tax_rate;
+            setTaxRate(globalRate !== null && globalRate !== undefined ? Number(globalRate) : 0.15);
+          }
+        }
+      } catch {
+        if (active) setTaxRate(0.15);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [countryCode]);
+
+  useEffect(() => {
     let active = true;
     (async () => {
       setShippingOptionsReady(false);
@@ -268,11 +307,11 @@ function CheckoutPage() {
   const pricing = useMemo(() => {
     const subtotal = bag.subtotal;
     const shipping_fee = shipping.fee;
-    const tax = Math.round(subtotal * TAX_RATE * 100) / 100;
+    const tax = Math.round(subtotal * taxRate * 100) / 100;
     const discount = coupon ? Math.min(coupon.discount, subtotal) : 0;
     const total = Math.max(0, Math.round((subtotal + shipping_fee + tax - discount) * 100) / 100);
     return { subtotal, shipping_fee, tax, discount, total };
-  }, [bag.subtotal, shipping.fee, coupon]);
+  }, [bag.subtotal, shipping.fee, coupon, taxRate]);
 
   // Re-validate coupon when subtotal/email changes (silent; drops if no longer valid).
   useEffect(() => {
@@ -844,8 +883,8 @@ function CheckoutPage() {
               <Field label={isRTL ? "الدولة" : "Country"}>
                 <select
                   className={fieldClass(false)}
-                  value={shippingCountryCode}
-                  onChange={(e) => setShippingCountryCode(e.target.value)}
+                  value={countryCode}
+                  onChange={(e) => changeCountry(e.target.value)}
                 >
                   {availableCountries.length > 0 ? (
                     availableCountries.map((country) => (

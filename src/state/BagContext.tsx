@@ -34,6 +34,7 @@ type Ctx = {
   add: (input: AddInput) => void;
   remove: (id: string) => void;
   setQty: (id: string, qty: number) => void;
+  updatePrice: (id: string, price: number) => void;
   clear: () => void;
   count: number;
   subtotal: number;
@@ -125,14 +126,20 @@ export function BagProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const updatePrice = useCallback((id: string, price: number) => {
+    setItems((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, price } : p)),
+    );
+  }, []);
+
   const clear = useCallback(() => setItems([]), []);
 
   const value = useMemo<Ctx>(() => {
     const count = items.reduce((s, i) => s + i.qty, 0);
     const subtotal = items.reduce((s, i) => s + i.qty * i.price, 0);
     const currency = items[0]?.currency ?? "SAR";
-    return { items, add, remove, setQty, clear, count, subtotal, currency };
-  }, [items, add, remove, setQty, clear]);
+    return { items, add, remove, setQty, updatePrice, clear, count, subtotal, currency };
+  }, [items, add, remove, setQty, updatePrice, clear]);
 
   return <BagContext.Provider value={value}>{children}</BagContext.Provider>;
 }

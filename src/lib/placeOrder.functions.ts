@@ -185,7 +185,31 @@ export const placeOrder = createServerFn({ method: "POST" })
         return ids.includes(data.pricing.shipping_method);
       }) ?? shippingCandidates[0] ?? null;
     const shipping_fee = Number((selectedShipping?.fee ?? 0).toFixed(2));
-    const tax = Math.round(subtotal * 0.15 * 100) / 100;
+    // Resolve tax rate
+    let taxRate = 0.15;
+    try {
+      const { data: zones } = await supabaseAdmin
+        .from("shipping_zones")
+        .select("tax_rate")
+        .eq("country_code", shippingCountryCode)
+        .eq("is_active", true);
+      const matchedRate = zones?.find((z: any) => z.tax_rate !== null && z.tax_rate !== undefined)?.tax_rate;
+      if (matchedRate !== undefined && matchedRate !== null) {
+        taxRate = Number(matchedRate);
+      } else {
+        const { data: settings } = await supabaseAdmin
+          .from("site_settings")
+          .select("tax_rate")
+          .maybeSingle();
+        const globalRate = (settings as any)?.tax_rate;
+        if (globalRate !== null && globalRate !== undefined) {
+          taxRate = Number(globalRate);
+        }
+      }
+    } catch {
+      taxRate = 0.15;
+    }
+    const tax = Math.round(subtotal * taxRate * 100) / 100;
 
     const cartHash = await hashCart(data, verifiedUserId);
     const idempotencyKey = `${data.session_id}:${cartHash}`;
@@ -240,6 +264,8 @@ export const placeOrder = createServerFn({ method: "POST" })
         subtotal,
         shipping_fee,
         tax,
+        tax_rate: taxRate,
+        tax_total: tax,
         discount_amount,
         coupon_id,
         coupon_code,
