@@ -318,22 +318,41 @@ function StorefrontShell({
       {showStoreChrome && <StorefrontMobileHeader />}
       <AnalyticsTracker />
       <div id="main-content" tabIndex={-1}>
-        {!(
-          pathname !== "/" &&
-          !live.enabled &&
-          allowPublishedPageReplacement &&
-          replaceRouteWithPublished
-        ) && (
-          <div>
-            <Outlet />
-          </div>
+        {/* For native route types (product/category) always render the Outlet
+            so the actual product/category component is never hidden by CMS records.
+            CMS PageRenderer sections are appended *below* the route content. */}
+        {(pageIdentity.type === "product" || pageIdentity.type === "category") ? (
+          <>
+            <div>
+              <Outlet />
+            </div>
+            {pathname !== "/" &&
+              allowPublishedPageReplacement &&
+              !live.enabled &&
+              replaceRouteWithPublished && (
+                <PageRenderer content={{ sections: publishedSections }} />
+              )}
+          </>
+        ) : (
+          <>
+            {!(
+              pathname !== "/" &&
+              !live.enabled &&
+              allowPublishedPageReplacement &&
+              replaceRouteWithPublished
+            ) && (
+              <div>
+                <Outlet />
+              </div>
+            )}
+            {pathname !== "/" &&
+              allowPublishedPageReplacement &&
+              !live.enabled &&
+              replaceRouteWithPublished && (
+                <PageRenderer content={{ sections: publishedSections }} />
+              )}
+          </>
         )}
-        {pathname !== "/" &&
-          allowPublishedPageReplacement &&
-          !live.enabled &&
-          replaceRouteWithPublished && (
-            <PageRenderer content={{ sections: publishedSections }} />
-          )}
       </div>
       {allowInlinePageEditing && (
         <EditPageButton

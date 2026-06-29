@@ -186,7 +186,7 @@ export const placeOrder = createServerFn({ method: "POST" })
       }) ?? shippingCandidates[0] ?? null;
     const shipping_fee = Number((selectedShipping?.fee ?? 0).toFixed(2));
     // Resolve tax rate
-    let taxRate = 0.15;
+    let taxRate = 0;
     try {
       const { data: zones } = await supabaseAdmin
         .from("shipping_zones")
@@ -207,7 +207,7 @@ export const placeOrder = createServerFn({ method: "POST" })
         }
       }
     } catch {
-      taxRate = 0.15;
+      taxRate = 0;
     }
     const tax = Math.round(subtotal * taxRate * 100) / 100;
 

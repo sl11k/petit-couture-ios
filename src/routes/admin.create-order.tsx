@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { PageHeader } from "@/features/admin/components/PageHeader";
 import { ProductPickerModal } from "@/components/admin/ProductPicker";
@@ -12,7 +12,6 @@ export const Route = createFileRoute("/admin/create-order")({
   component: CreateOrderPage,
 });
 
-const TAX_RATE = 0.15;
 
 type SizeRow = { size: string; sku: string | null; price: number | null; stock: number };
 type Line = {
@@ -39,6 +38,27 @@ function CreateOrderPage() {
   const [lines, setLines] = useState<Line[]>([]);
   const [loadingAdd, setLoadingAdd] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [taxRate, setTaxRate] = useState<number>(0);
+
+  // Load tax rate from admin site_settings
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("site_settings" as any)
+          .select("tax_rate")
+          .maybeSingle();
+        if (active) {
+          const rate = (data as any)?.tax_rate;
+          setTaxRate(rate !== null && rate !== undefined ? Number(rate) : 0);
+        }
+      } catch {
+        if (active) setTaxRate(0);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -64,7 +84,7 @@ function CreateOrderPage() {
   };
 
   const subtotal = round2(lines.reduce((s, l) => s + unitPriceOf(l) * l.qty, 0));
-  const tax = round2(subtotal * TAX_RATE);
+  const tax = round2(subtotal * taxRate);
   const total = round2(subtotal + Number(shippingFee || 0) + tax);
 
   async function addProducts(ids: string[]) {

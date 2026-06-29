@@ -185,14 +185,14 @@ export function DesktopHeader() {
                 {label}
               </a>
             ) : (
-              <Link
+              <a
                 key={href}
                 data-live-id={`header-nav-${c.slug}`}
-                to={href as any}
+                href={href}
                 className={className}
               >
                 {label}
-              </Link>
+              </a>
             );
           })}
         </div>

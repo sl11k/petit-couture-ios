@@ -55,7 +55,6 @@ export const Route = createFileRoute("/product/$slug")({
       .select("*")
       .eq("slug", params.slug)
       .eq("is_active", true)
-      .eq("status", "active")
       .maybeSingle();
     return { dbProduct: data };
   },

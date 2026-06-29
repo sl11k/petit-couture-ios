@@ -79,7 +79,7 @@ function CheckoutPage() {
     createAccount: false,
   });
   const [countryCode, setCountryCode] = useState(address?.countryCode ?? "");
-  const [taxRate, setTaxRate] = useState<number>(0.15);
+  const [taxRate, setTaxRate] = useState<number>(0);
   const [loc, setLoc] = useState<{
     lat?: number;
     lng?: number;
@@ -193,7 +193,7 @@ function CheckoutPage() {
 
   useEffect(() => {
     if (!countryCode) {
-      setTaxRate(0.15);
+      setTaxRate(0);
       return;
     }
     let active = true;
@@ -218,11 +218,11 @@ function CheckoutPage() {
             .maybeSingle();
           if (active) {
             const globalRate = (settings as any)?.tax_rate;
-            setTaxRate(globalRate !== null && globalRate !== undefined ? Number(globalRate) : 0.15);
+            setTaxRate(globalRate !== null && globalRate !== undefined ? Number(globalRate) : 0);
           }
         }
       } catch {
-        if (active) setTaxRate(0.15);
+        if (active) setTaxRate(0);
       }
     })();
     return () => {

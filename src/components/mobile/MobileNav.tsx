@@ -339,14 +339,14 @@ function CategoryMenu({ onNavigate, ar }: { onNavigate: () => void; ar: boolean 
                         <ArrowLeft className="h-4 w-4 text-primary/60" />
                       </a>
                     ) : (
-                      <Link
-                        to={it.to as any}
+                      <a
+                        href={it.to}
                         onClick={onNavigate}
                         className="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-accent/60 active:bg-accent text-[14px] text-foreground"
                       >
                         <span>{it.label}</span>
                         <ArrowLeft className="h-4 w-4 text-primary/60" />
-                      </Link>
+                      </a>
                     )}
                   </SheetClose>
                 </li>

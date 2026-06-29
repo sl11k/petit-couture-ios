@@ -34,7 +34,6 @@ export const Route = createFileRoute("/bag")({
   component: BagPage,
 });
 
-const TAX_RATE = 0.15;
 
 function BagPage() {
   const router = useRouter();
@@ -50,6 +49,28 @@ function BagPage() {
 
   const [confirmClear, setConfirmClear] = useState(false);
   const [sharePayload, setSharePayload] = useState<ShareSheetPayload | null>(null);
+  const [taxRate, setTaxRate] = useState<number>(0);
+
+  // Load global tax rate from admin settings (public_site_settings view)
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { supabase: db } = await import("@/integrations/supabase/client");
+        const { data: settings } = await db
+          .from("public_site_settings" as any)
+          .select("tax_rate")
+          .maybeSingle();
+        if (active) {
+          const rate = (settings as any)?.tax_rate;
+          setTaxRate(rate !== null && rate !== undefined ? Number(rate) : 0);
+        }
+      } catch {
+        if (active) setTaxRate(0);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Resolve current product info from DB (fallback to static categories) for each bag item.
   const { bySlug: bagProductsBySlug } = useDbProductsBySlugs(
@@ -73,7 +94,7 @@ function BagPage() {
   // We intentionally do NOT show fake/client-side discounts in the bag to
   // avoid mismatches between the bag preview and the real order total.
   const subtotal = bag.subtotal;
-  const tax = Math.round(subtotal * TAX_RATE);
+  const tax = Math.round(subtotal * taxRate * 100) / 100;
   const total = subtotal + tax;
 
   const moveToWishlist = (itemId: string, slug: string) => {
@@ -117,7 +138,7 @@ function BagPage() {
     subtotal: ar ? "إجمالي المنتجات" : "Subtotal",
     discount: ar ? "الخصم" : "Discount",
     shipping: ar ? "الشحن" : "Shipping",
-    tax: ar ? "ضريبة (15%)" : "Tax (15%)",
+    tax: ar ? `ضريبة (${Math.round(taxRate * 100)}%)` : `Tax (${Math.round(taxRate * 100)}%)`,
     total: ar ? "الإجمالي" : "Total",
     shippingNote: ar
       ? "تكلفة الشحن تُحسب في صفحة الدفع التالية"
