@@ -22,8 +22,21 @@ export const GLOBAL_FOOTER_PATH = "__global_footer__";
 const keyOf = (selector: string, prop: OverrideProp, lang: string, pagePath = "") => `${pagePath}|${lang}|${prop}|${selector}`;
 
 function isLockedContactSelector(selector: string, prop: OverrideProp) {
-  return /data-live-id=["']footer-phone["']/.test(selector) && (prop === "text" || prop === "href" || prop === "html");
+  // Footer phone is hardcoded in the component. No override may ever change it.
+  if (/data-live-id=["']footer-phone["']/.test(selector)) return true;
+  return false;
 }
+
+function isLockedHeaderNavSelector(selector: string, prop: OverrideProp) {
+  // Header nav labels/links come exclusively from the admin Header Links table.
+  // No live-edit override may change a nav item's text, html, or destination.
+  if (!/data-live-id=["']header-nav-/.test(selector) &&
+      !/site-header.*nav.*a:nth-of-type/i.test(selector)) {
+    return false;
+  }
+  return prop === "text" || prop === "html" || prop === "href";
+}
+
 
 function effectiveLanguage(selector: string, prop: OverrideProp, lang: string) {
   // Styles, image sources, and link destinations are language-agnostic —
@@ -97,7 +110,8 @@ export async function loadOverrides(pagePath: string, includeDraft: boolean) {
       value: includeDraft ? (r.draft_value ?? r.published_value) : r.published_value,
     }))
     .filter((r) => r.value !== null && r.value !== undefined)
-    .filter((r) => !isLockedContactSelector(r.selector, r.prop));
+    .filter((r) => !isLockedContactSelector(r.selector, r.prop))
+    .filter((r) => !isLockedHeaderNavSelector(r.selector, r.prop));
   // Repair historical contact edits where the admin changed only the anchor
   // destination. The visible value and clickable value are one logical field.
   for (const contact of [{ selector: '[data-live-id="footer-email"]', prefix: /^mailto:/i }]) {
@@ -161,7 +175,9 @@ export async function persistDraft(pagePath: string, draft: DraftMap) {
     lang: d.lang,
     draft_value: d.value,
   }));
-  const filteredRows = rows.filter((row) => !isLockedContactSelector(row.selector, row.prop));
+  const filteredRows = rows
+    .filter((row) => !isLockedContactSelector(row.selector, row.prop))
+    .filter((row) => !isLockedHeaderNavSelector(row.selector, row.prop));
   if (!filteredRows.length) return { error: null };
   return await supabase
     .from("live_overrides")

@@ -416,10 +416,18 @@ function sectionWrapStyle(s: Section): React.CSSProperties {
             : typography.fontFamily === "tek-arabic"
               ? '"TEK Arabic", "Tajawal", "IBM Plex Sans Arabic", sans-serif'
               : undefined;
+  const bgUrl: string | undefined =
+    typeof settings.backgroundImage === "string"
+      ? settings.backgroundImage
+      : settings.backgroundImage?.url;
   return {
     paddingTop: settings.spacing?.paddingTop,
     paddingBottom: settings.spacing?.paddingBottom,
     backgroundColor: settings.backgroundColor,
+    backgroundImage: bgUrl ? `url(${bgUrl})` : undefined,
+    backgroundSize: bgUrl ? "cover" : undefined,
+    backgroundPosition: bgUrl ? "center" : undefined,
+    backgroundRepeat: bgUrl ? "no-repeat" : undefined,
     color: typography.color,
     fontSize: typography.fontSize,
     fontFamily,
