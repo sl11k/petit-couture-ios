@@ -22,8 +22,21 @@ export const GLOBAL_FOOTER_PATH = "__global_footer__";
 const keyOf = (selector: string, prop: OverrideProp, lang: string, pagePath = "") => `${pagePath}|${lang}|${prop}|${selector}`;
 
 function isLockedContactSelector(selector: string, prop: OverrideProp) {
-  return /data-live-id=["']footer-phone["']/.test(selector) && (prop === "text" || prop === "href" || prop === "html");
+  // Footer phone is hardcoded in the component. No override may ever change it.
+  if (/data-live-id=["']footer-phone["']/.test(selector)) return true;
+  return false;
 }
+
+function isLockedHeaderNavSelector(selector: string, prop: OverrideProp) {
+  // Header nav labels/links come exclusively from the admin Header Links table.
+  // No live-edit override may change a nav item's text, html, or destination.
+  if (!/data-live-id=["']header-nav-/.test(selector) &&
+      !/site-header.*nav.*a:nth-of-type/i.test(selector)) {
+    return false;
+  }
+  return prop === "text" || prop === "html" || prop === "href";
+}
+
 
 function effectiveLanguage(selector: string, prop: OverrideProp, lang: string) {
   // Styles, image sources, and link destinations are language-agnostic —
