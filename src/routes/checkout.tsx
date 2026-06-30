@@ -199,32 +199,36 @@ function CheckoutPage() {
     let active = true;
     (async () => {
       try {
+        // Single source of truth: Admin → site_settings.tax_rate. When that is
+        // set (including explicit 0), it always wins over any per-zone value.
+        // Per-zone rates are only used when the global admin field is null.
+        const { data: settings } = await supabase
+          .from("public_site_settings" as any)
+          .select("tax_rate")
+          .maybeSingle();
+        if (!active) return;
+        const globalRate = (settings as any)?.tax_rate;
+        if (globalRate !== null && globalRate !== undefined) {
+          setTaxRate(Number(globalRate));
+          return;
+        }
         const { data: zones } = await (supabase
           .from("shipping_zones")
           .select("tax_rate")
           .eq("country_code", countryCode)
           .eq("is_active", true) as any);
         if (!active) return;
-        
-        // Find the first zone with a tax_rate defined
-        const matchedRate = (zones as any[])?.find((z: any) => z.tax_rate !== null && z.tax_rate !== undefined)?.tax_rate;
-        if (matchedRate !== undefined && matchedRate !== null) {
-          setTaxRate(Number(matchedRate));
-        } else {
-          // Fall back to global site settings tax_rate
-          const { data: settings } = await supabase
-            .from("public_site_settings" as any)
-            .select("tax_rate")
-            .maybeSingle();
-          if (active) {
-            const globalRate = (settings as any)?.tax_rate;
-            setTaxRate(globalRate !== null && globalRate !== undefined ? Number(globalRate) : 0);
-          }
-        }
+        const matchedRate = (zones as any[])?.find(
+          (z: any) => z.tax_rate !== null && z.tax_rate !== undefined,
+        )?.tax_rate;
+        setTaxRate(
+          matchedRate !== undefined && matchedRate !== null ? Number(matchedRate) : 0,
+        );
       } catch {
         if (active) setTaxRate(0);
       }
     })();
+
     return () => {
       active = false;
     };
