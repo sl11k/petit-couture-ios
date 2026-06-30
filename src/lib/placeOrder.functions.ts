@@ -185,30 +185,35 @@ export const placeOrder = createServerFn({ method: "POST" })
         return ids.includes(data.pricing.shipping_method);
       }) ?? shippingCandidates[0] ?? null;
     const shipping_fee = Number((selectedShipping?.fee ?? 0).toFixed(2));
-    // Resolve tax rate
+    // Resolve tax rate. Admin → site_settings.tax_rate is the single source
+    // of truth; when set (including explicit 0) it always wins. Per-zone rates
+    // are only used when the global admin field is null.
     let taxRate = 0;
     try {
-      const { data: zones } = await (supabaseAdmin
-        .from("shipping_zones")
+      const { data: settings } = await supabaseAdmin
+        .from("site_settings")
         .select("tax_rate")
-        .eq("country_code", shippingCountryCode)
-        .eq("is_active", true) as any);
-      const matchedRate = (zones as any[])?.find((z: any) => z.tax_rate !== null && z.tax_rate !== undefined)?.tax_rate;
-      if (matchedRate !== undefined && matchedRate !== null) {
-        taxRate = Number(matchedRate);
+        .maybeSingle();
+      const globalRate = (settings as any)?.tax_rate;
+      if (globalRate !== null && globalRate !== undefined) {
+        taxRate = Number(globalRate);
       } else {
-        const { data: settings } = await supabaseAdmin
-          .from("site_settings")
+        const { data: zones } = await (supabaseAdmin
+          .from("shipping_zones")
           .select("tax_rate")
-          .maybeSingle();
-        const globalRate = (settings as any)?.tax_rate;
-        if (globalRate !== null && globalRate !== undefined) {
-          taxRate = Number(globalRate);
+          .eq("country_code", shippingCountryCode)
+          .eq("is_active", true) as any);
+        const matchedRate = (zones as any[])?.find(
+          (z: any) => z.tax_rate !== null && z.tax_rate !== undefined,
+        )?.tax_rate;
+        if (matchedRate !== undefined && matchedRate !== null) {
+          taxRate = Number(matchedRate);
         }
       }
     } catch {
       taxRate = 0;
     }
+
     const tax = Math.round(subtotal * taxRate * 100) / 100;
 
     const cartHash = await hashCart(data, verifiedUserId);
