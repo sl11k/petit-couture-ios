@@ -1295,9 +1295,16 @@ function CheckoutPage() {
                   }
                 />
                 <Row
-                  label={isRTL ? "ضريبة القيمة المضافة (15%)" : "VAT (15%)"}
+                  label={(() => {
+                    const ratePct = pricing.subtotal > 0 ? (pricing.tax / pricing.subtotal) * 100 : 0;
+                    const pretty = Number.isFinite(ratePct) ? Math.round(ratePct * 100) / 100 : 0;
+                    return isRTL
+                      ? `ضريبة القيمة المضافة (${pretty}%)`
+                      : `VAT (${pretty}%)`;
+                  })()}
                   value={`${fmt(pricing.tax)} ${isRTL ? "ر.س" : "SAR"}`}
                 />
+
                 {pricing.discount > 0 && (
                   <Row
                     label={
