@@ -7,11 +7,32 @@ export type HeaderNavItem = {
   href: string;
 };
 
+// Top-level segments that map to real native routes. Any other single-segment
+// internal href (e.g. /about, /faq) is assumed to point at a CMS page and is
+// rewritten to /page/<slug> so admin-defined header links never 404.
+const NATIVE_TOP_SEGMENTS = new Set([
+  "account", "bag", "cart", "category", "checkout", "collection", "contact",
+  "forgot-password", "help", "invoice", "landing", "login", "order-confirmation",
+  "our-story", "page", "privacy", "product", "register", "reset-password",
+  "search", "shipping", "sitemap.xml", "robots.txt", "support", "track-order",
+  "unsubscribe", "wishlist",
+]);
+
 const normalizeHref = (value: string | null | undefined) => {
-  const href = String(value ?? "").trim();
-  if (!href) return null;
-  if (/^https?:\/\//i.test(href)) return href;
-  return href.startsWith("/") ? href : `/${href}`;
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (raw.startsWith("#") || raw.startsWith("mailto:") || raw.startsWith("tel:")) return raw;
+  const withSlash = raw.startsWith("/") ? raw : `/${raw}`;
+  const [pathOnly, ...rest] = withSlash.split(/[?#]/);
+  const segments = pathOnly.split("/").filter(Boolean);
+  const suffix = rest.length ? withSlash.slice(pathOnly.length) : "";
+  if (segments.length === 0) return "/";
+  const first = segments[0].toLowerCase();
+  if (NATIVE_TOP_SEGMENTS.has(first)) return withSlash;
+  // Unknown single-segment → CMS page route
+  if (segments.length === 1) return `/page/${segments[0]}${suffix}`;
+  return withSlash;
 };
 
 const buildSlug = (href: string) =>
@@ -20,6 +41,7 @@ const buildSlug = (href: string) =>
     .replace(/^\//, "")
     .replace(/[?#].*$/, "")
     .replace(/\//g, "-") || "home";
+
 
 export async function fetchHeaderNavItems(client: any = supabase): Promise<HeaderNavItem[]> {
   const { data } = await client

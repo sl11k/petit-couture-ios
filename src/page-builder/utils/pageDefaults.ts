@@ -188,42 +188,19 @@ export function getDefaultSectionsForPage(pageType: string): Section[] {
           s.content.buttons = [{ label_ar: "اشتركي", label_en: "Subscribe", url: "/", variant: "primary" }];
         }),
       ];
+    // System / native-route page types must never seed placeholder sections,
+    // because they render *below* the live product/category/checkout content
+    // and end up looking like the actual page has gone missing. Admins can
+    // still add blocks explicitly from the editor.
     case "product":
     case "product_card":
-      return [
-        mk("text_block", (s) => {
-          s.content.title_ar = "تخطيط صفحة المنتج"; s.content.title_en = "Product page layout";
-          s.content.body_ar = "هذه الأقسام تظهر تحت تفاصيل المنتج. أضيفي بلوكات لتخصيص الصفحة.";
-          s.content.body_en = "These sections render below the product details.";
-        }),
-        mk("product_grid", (s) => {
-          s.content.title_ar = "قد يعجبك أيضاً"; s.content.title_en = "You may also like";
-          s.content.limit = 4; s.content.columns = 4;
-        }),
-        mk("reviews"),
-      ];
     case "category":
-      return [
-        mk("banner", (s) => {
-          s.content.title_ar = "تشكيلتنا"; s.content.title_en = "Our collection";
-          s.content.subtitle_ar = "اكتشفي أحدث القطع"; s.content.subtitle_en = "Discover the latest pieces";
-          s.content.height = "sm";
-        }),
-      ];
     case "checkout":
-      return [
-        mk("feature_grid", (s) => {
-          s.content.title_ar = "ضماناتنا"; s.content.title_en = "Our guarantees";
-          s.content.columns = 3;
-          const t = Date.now();
-          s.content.cards = [
-            { id: `c-${t}-1`, title_ar: "دفع آمن", title_en: "Secure payment", description_ar: "تشفير SSL.", description_en: "SSL encryption." },
-            { id: `c-${t}-2`, title_ar: "ضمان الجودة", title_en: "Quality guarantee", description_ar: "منتجات أصلية.", description_en: "Authentic products." },
-            { id: `c-${t}-3`, title_ar: "إرجاع مجاني", title_en: "Free returns", description_ar: "خلال 14 يوم.", description_en: "Within 14 days." },
-          ];
-        }),
-      ];
+    case "header":
+    case "footer":
+      return [];
     default:
       return [mk("hero"), mk("text_block"), mk("cta")];
   }
 }
+
