@@ -7,24 +7,33 @@ export type HeaderNavItem = {
   href: string;
 };
 
+// Top-level segments that map to real native routes. Any other single-segment
+// internal href (e.g. /about, /faq) is assumed to point at a CMS page and is
+// rewritten to /page/<slug> so admin-defined header links never 404.
+const NATIVE_TOP_SEGMENTS = new Set([
+  "account", "bag", "cart", "category", "checkout", "collection", "contact",
+  "forgot-password", "help", "invoice", "landing", "login", "order-confirmation",
+  "our-story", "page", "privacy", "product", "register", "reset-password",
+  "search", "shipping", "sitemap.xml", "robots.txt", "support", "track-order",
+  "unsubscribe", "wishlist",
+]);
+
 const normalizeHref = (value: string | null | undefined) => {
   const raw = String(value ?? "").trim();
   if (!raw) return null;
   if (/^https?:\/\//i.test(raw)) return raw;
+  if (raw.startsWith("#") || raw.startsWith("mailto:") || raw.startsWith("tel:")) return raw;
+
   const href = raw.startsWith("/") ? raw : `/${raw}`;
-  // Support CMS-created "route:" slugs (e.g. "route:%2Four-story"). If an
-  // admin accidentally stored a route:... slug as a header href, decode it to
-  // the actual route so navigation goes to the intended path instead of
-  // /page/route:%25.. which looks broken to users.
+
   try {
-    // Check for /page/route: prefix
     const pageMarker = "/page/route:";
     if (href.toLowerCase().startsWith(pageMarker)) {
       const encoded = href.slice(pageMarker.length);
       const decoded = decodeURIComponent(encoded);
       if (decoded) return decoded;
     }
-    // Also check for route: prefix directly (without /page/)
+
     const routeMarker = "route:";
     if (href.toLowerCase().startsWith(routeMarker)) {
       const encoded = href.slice(routeMarker.length);
@@ -34,6 +43,14 @@ const normalizeHref = (value: string | null | undefined) => {
   } catch {
     /* ignore decode errors */
   }
+
+  const [pathOnly, ...rest] = href.split(/[?#]/);
+  const segments = pathOnly.split("/").filter(Boolean);
+  const suffix = rest.length ? href.slice(pathOnly.length) : "";
+  if (segments.length === 0) return "/";
+  const first = segments[0].toLowerCase();
+  if (NATIVE_TOP_SEGMENTS.has(first)) return href;
+  if (segments.length === 1) return `/page/${segments[0]}${suffix}`;
   return href;
 };
 
@@ -43,6 +60,7 @@ const buildSlug = (href: string) =>
     .replace(/^\//, "")
     .replace(/[?#].*$/, "")
     .replace(/\//g, "-") || "home";
+
 
 export async function fetchHeaderNavItems(client: any = supabase): Promise<HeaderNavItem[]> {
   const { data } = await client

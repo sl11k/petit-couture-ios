@@ -5199,6 +5199,7 @@ export type Database = {
           is_active: boolean
           name_ar: string
           name_en: string
+          tax_rate: number | null
         }
         Insert: {
           carrier_id?: string | null
@@ -5211,6 +5212,7 @@ export type Database = {
           is_active?: boolean
           name_ar: string
           name_en: string
+          tax_rate?: number | null
         }
         Update: {
           carrier_id?: string | null
@@ -5223,6 +5225,7 @@ export type Database = {
           is_active?: boolean
           name_ar?: string
           name_en?: string
+          tax_rate?: number | null
         }
         Relationships: [
           {
