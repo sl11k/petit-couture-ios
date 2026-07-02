@@ -306,12 +306,13 @@ function CheckoutPage() {
 
   const pricing = useMemo(() => {
     const subtotal = bag.subtotal;
-    const shipping_fee = shipping.fee;
+    // Only add shipping fee in step 3 (shipping/payment page), not in steps 1-2
+    const shipping_fee = step >= 3 ? shipping.fee : 0;
     const tax = Math.round(subtotal * taxRate * 100) / 100;
     const discount = coupon ? Math.min(coupon.discount, subtotal) : 0;
     const total = Math.max(0, Math.round((subtotal + shipping_fee + tax - discount) * 100) / 100);
     return { subtotal, shipping_fee, tax, discount, total };
-  }, [bag.subtotal, shipping.fee, coupon, taxRate]);
+  }, [bag.subtotal, shipping.fee, coupon, taxRate, step]);
 
   // Re-validate coupon when subtotal/email changes (silent; drops if no longer valid).
   useEffect(() => {
@@ -1287,11 +1288,15 @@ function CheckoutPage() {
                 <Row
                   label={isRTL ? "الشحن" : "Shipping"}
                   value={
-                    pricing.shipping_fee === 0
+                    step < 3
                       ? isRTL
-                        ? "مجاني"
-                        : "FREE"
-                      : `${fmt(pricing.shipping_fee)} ${isRTL ? "ر.س" : "SAR"}`
+                        ? "سيُحسب لاحقًا"
+                        : "Calculated later"
+                      : pricing.shipping_fee === 0
+                        ? isRTL
+                          ? "مجاني"
+                          : "FREE"
+                        : `${fmt(pricing.shipping_fee)} ${isRTL ? "ر.س" : "SAR"}`
                   }
                 />
                 <Row

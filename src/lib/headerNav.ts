@@ -8,10 +8,33 @@ export type HeaderNavItem = {
 };
 
 const normalizeHref = (value: string | null | undefined) => {
-  const href = String(value ?? "").trim();
-  if (!href) return null;
-  if (/^https?:\/\//i.test(href)) return href;
-  return href.startsWith("/") ? href : `/${href}`;
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  const href = raw.startsWith("/") ? raw : `/${raw}`;
+  // Support CMS-created "route:" slugs (e.g. "route:%2Four-story"). If an
+  // admin accidentally stored a route:... slug as a header href, decode it to
+  // the actual route so navigation goes to the intended path instead of
+  // /page/route:%25.. which looks broken to users.
+  try {
+    // Check for /page/route: prefix
+    const pageMarker = "/page/route:";
+    if (href.toLowerCase().startsWith(pageMarker)) {
+      const encoded = href.slice(pageMarker.length);
+      const decoded = decodeURIComponent(encoded);
+      if (decoded) return decoded;
+    }
+    // Also check for route: prefix directly (without /page/)
+    const routeMarker = "route:";
+    if (href.toLowerCase().startsWith(routeMarker)) {
+      const encoded = href.slice(routeMarker.length);
+      const decoded = decodeURIComponent(encoded);
+      if (decoded) return decoded;
+    }
+  } catch {
+    /* ignore decode errors */
+  }
+  return href;
 };
 
 const buildSlug = (href: string) =>

@@ -24,8 +24,8 @@ function storefrontOrigin() {
 }
 
 async function getStripeSecret() {
-  if (process.env.STRIPE_SECRET_KEY) return process.env.STRIPE_SECRET_KEY;
-
+  // Prefer an explicitly configured Stripe secret in the DB so site owners
+  // can rotate keys without redeploying. Fall back to `process.env.STRIPE_SECRET_KEY`.
   const { data } = await supabaseAdmin
     .from("integrations")
     .select("api_key, api_secret, config")
@@ -43,9 +43,15 @@ async function getStripeSecret() {
     config.secret_key,
     config.stripe_secret_key,
     data?.api_key,
+    process.env.STRIPE_SECRET_KEY,
   ].map((value) => String(value || "").trim());
 
-  return candidates.find((value) => value.startsWith("sk_")) || null;
+  // Accept both sk_ (live) and sk_test_ (test) keys
+  const found = candidates.find((value) => value.startsWith("sk_")) || null;
+  if (found) return found;
+  // Helpful debug hint when no key found.
+  console.error("Stripe secret not found in integrations table or STRIPE_SECRET_KEY env var. Candidates checked:", candidates.map(c => c ? `${c.substring(0, 8)}...` : 'null'));
+  return null;
 }
 
 function appendLineItem(params: URLSearchParams, index: number, item: Record<string, unknown>) {

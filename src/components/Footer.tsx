@@ -54,6 +54,12 @@ export function Footer() {
       : `https://wa.me/${settings.footer_whatsapp.replace(/\D/g, "")}`
     : undefined;
 
+  // Use actual links from settings, only use fallbacks if completely missing
+  const fallbackEmail = email || "hello@example.com";
+  const fallbackIg = ig || "https://instagram.com/example";
+  const fallbackTiktok = tiktok || "https://tiktok.com/@example";
+  const fallbackWhatsapp = whatsappUrl || "https://wa.me/966557404827";
+
   return (
     <footer
       data-live-id="site-footer"
@@ -136,18 +142,38 @@ export function Footer() {
                   {ar ? "الخصوصية" : "Privacy"}
                 </Link>
               </li>
-              {pages.map((p) => (
-                <li key={p.slug} data-live-id={`footer-page-row-${p.slug}`}>
-                  <Link
-                    data-live-id={`footer-page-${p.slug}`}
-                    to="/page/$slug"
-                    params={{ slug: p.slug }}
-                    className="hover:text-gold transition"
-                  >
-                    {ar ? p.title_ar : p.title_en}
-                  </Link>
-                </li>
-              ))}
+              {pages.map((p) => {
+                // CMS pages may use special `route:` slugs (e.g. route:%2Four-story)
+                // to indicate a direct route. Decode those into real hrefs so the
+                // footer navigates to the expected path instead of /page/route:...
+                const isRoute = String(p.slug || "").startsWith("route:");
+                let targetHref: string | null = null;
+                if (isRoute) {
+                  try {
+                    targetHref = decodeURIComponent(String(p.slug).replace(/^route:/, ""));
+                  } catch {
+                    targetHref = null;
+                  }
+                }
+                return (
+                  <li key={p.slug} data-live-id={`footer-page-row-${p.slug}`}>
+                    {targetHref ? (
+                      <Link data-live-id={`footer-page-${p.slug}`} to={targetHref} className="hover:text-gold transition">
+                        {ar ? p.title_ar : p.title_en}
+                      </Link>
+                    ) : (
+                      <Link
+                        data-live-id={`footer-page-${p.slug}`}
+                        to="/page/$slug"
+                        params={{ slug: p.slug }}
+                        className="hover:text-gold transition"
+                      >
+                        {ar ? p.title_ar : p.title_en}
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
@@ -184,44 +210,38 @@ export function Footer() {
               )}
             </ul>
             <div className="mt-4 flex items-center gap-3">
-              {ig && (
-                <a
-                  data-live-id="footer-social-instagram"
-                  href={ig}
-                  target="_blank"
-                  rel="noopener"
-                  aria-label="Instagram"
-                  className="grid h-9 w-9 place-items-center rounded-xl border border-background/20 hover:bg-background/10 transition"
-                >
-                  <Instagram className="h-4 w-4" />
-                </a>
-              )}
-              {whatsappUrl && (
-                <a
-                  data-live-id="footer-social-whatsapp"
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noopener"
-                  aria-label="WhatsApp"
-                  className="grid h-9 w-9 place-items-center rounded-xl border border-background/20 hover:bg-background/10 transition"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                </a>
-              )}
-              {tiktok && (
-                <a
-                  data-live-id="footer-social-tiktok"
-                  href={tiktok}
-                  target="_blank"
-                  rel="noopener"
-                  aria-label="TikTok"
-                  className="grid h-9 w-9 place-items-center rounded-xl border border-background/20 hover:bg-background/10 transition"
-                >
-                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
-                    <path d="M19.32 6.69a4.83 4.83 0 0 1-3.78-1.85V15.4a5.6 5.6 0 1 1-5.6-5.6c.31 0 .6.03.9.08v2.94a2.74 2.74 0 1 0 1.97 2.63V2h2.74a4.84 4.84 0 0 0 3.77 4.69z" />
-                  </svg>
-                </a>
-              )}
+              <a
+                data-live-id="footer-social-instagram"
+                href={fallbackIg}
+                target="_blank"
+                rel="noopener"
+                aria-label="Instagram"
+                className="grid h-9 w-9 place-items-center rounded-xl border border-background/20 hover:bg-background/10 transition"
+              >
+                <Instagram className="h-4 w-4" />
+              </a>
+              <a
+                data-live-id="footer-social-whatsapp"
+                href={fallbackWhatsapp}
+                target="_blank"
+                rel="noopener"
+                aria-label="WhatsApp"
+                className="grid h-9 w-9 place-items-center rounded-xl border border-background/20 hover:bg-background/10 transition"
+              >
+                <MessageCircle className="h-4 w-4" />
+              </a>
+              <a
+                data-live-id="footer-social-tiktok"
+                href={fallbackTiktok}
+                target="_blank"
+                rel="noopener"
+                aria-label="TikTok"
+                className="grid h-9 w-9 place-items-center rounded-xl border border-background/20 hover:bg-background/10 transition"
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+                  <path d="M19.32 6.69a4.83 4.83 0 0 1-3.78-1.85V15.4a5.6 5.6 0 1 1-5.6-5.6c.31 0 .6.03.9.08v2.94a2.74 2.74 0 1 0 1.97 2.63V2h2.74a4.84 4.84 0 0 0 3.77 4.69z" />
+                </svg>
+              </a>
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { getProductVariantsPublic } from "@/lib/variants.functions";
 import { useBag } from "@/state/BagContext";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { getCanonicalProductPrice } from "@/lib/pricing";
 
 type Props = {
   productId: string;
@@ -57,7 +58,7 @@ export function VariantsPicker(props: Props) {
       slug: props.slug,
       name: props.productName,
       brand: props.brand,
-      price: Number(current.price_override ?? props.basePrice),
+      price: getCanonicalProductPrice(props.basePrice, current.price_override),
       currency: props.currency,
       image: current.image_url || props.image,
       size: "",

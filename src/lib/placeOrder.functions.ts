@@ -6,6 +6,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { resolveShippingRates } from "@/lib/shipping";
+import { getCanonicalProductPrice } from "@/lib/pricing";
 
 const ItemSchema = z.object({
   slug: z.string().min(1).max(255),
@@ -144,7 +145,7 @@ export const placeOrder = createServerFn({ method: "POST" })
       if (productVariants.length > 0 && !variant) {
         throw new Error(`Variant unavailable for ${item.slug}`);
       }
-      const unitPrice = Number(variant?.price_override ?? variant?.price ?? product.price);
+      const unitPrice = getCanonicalProductPrice(product.price, variant?.price_override ?? variant?.price);
       if (!Number.isFinite(unitPrice) || unitPrice < 0) throw new Error("Invalid catalog price");
       return {
         ...item,
