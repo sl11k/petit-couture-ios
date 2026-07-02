@@ -1,0 +1,1 @@
+UPDATE public.site_settings SET tax_rate = 0;
