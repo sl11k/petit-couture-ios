@@ -14,6 +14,7 @@ import { BrandLogo } from "@/components/Logo";
 import { usePriceFormatter } from "@/state/CurrencyContext";
 import { useDbCategories } from "@/hooks/useDbCategories";
 import { HomeReviews } from "@/components/HomeReviews";
+import { normalizeInternalHref } from "@/lib/links";
 
 import {
   fetchAnnouncements,
@@ -146,7 +147,7 @@ export function HomeScreen() {
     popular.length > 0
       ? popular.map((p) => ({
           key: p.id,
-          href: p.link_url,
+          href: normalizeInternalHref(p.link_url) || "#",
           img: p.image_url,
           label: ar ? p.label_ar : p.label_en,
           wishId: `popular:${p.id}`,
@@ -241,7 +242,7 @@ export function HomeScreen() {
                   {banners.map((bn) => (
                     <a
                       key={bn.id}
-                      href={bn.cta_url ?? "#"}
+                      href={normalizeInternalHref(bn.cta_url) || "#"}
                       className="relative shrink-0 w-full snap-center overflow-hidden rounded-[28px] bg-pastel-peach"
                     >
                       <img
@@ -294,7 +295,7 @@ export function HomeScreen() {
               /* ---- Auto-rotate (stacked) mode ---- */
               <div className="relative overflow-hidden rounded-[28px] bg-pastel-peach">
                 {currentBanner ? (
-                  <a href={currentBanner.cta_url ?? "#"} className="block">
+                  <a href={normalizeInternalHref(currentBanner.cta_url) || "#"} className="block">
                     <img
                       key={currentBanner.id}
                       src={currentBanner.image_url}
@@ -433,7 +434,7 @@ export function HomeScreen() {
                   {cats.map((fc) => (
                     <a
                       key={fc.id}
-                      href={fc.link_url}
+                      href={normalizeInternalHref(fc.link_url) || "#"}
                       className="h-[58px] rounded-xl bg-background border-2 border-primary/30 text-primary font-medium text-[16px] grid place-items-center active:scale-[0.97] hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 shadow-sm"
                     >
                       {ar ? fc.label_ar : fc.label_en}

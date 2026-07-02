@@ -1,57 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
+import { isExternalHref, normalizeInternalHref } from "@/lib/links";
 
 export type HeaderNavItem = {
   slug: string;
   label_ar: string;
   label_en: string;
   href: string;
-};
-
-// Top-level segments that map to real native routes. Any other single-segment
-// internal href (e.g. /about, /faq) is assumed to point at a CMS page and is
-// rewritten to /page/<slug> so admin-defined header links never 404.
-const NATIVE_TOP_SEGMENTS = new Set([
-  "account", "bag", "cart", "category", "checkout", "collection", "contact",
-  "forgot-password", "help", "invoice", "landing", "login", "order-confirmation",
-  "our-story", "page", "privacy", "product", "register", "reset-password",
-  "search", "shipping", "sitemap.xml", "robots.txt", "support", "track-order",
-  "unsubscribe", "wishlist",
-]);
-
-const normalizeHref = (value: string | null | undefined) => {
-  const raw = String(value ?? "").trim();
-  if (!raw) return null;
-  if (/^https?:\/\//i.test(raw)) return raw;
-  if (raw.startsWith("#") || raw.startsWith("mailto:") || raw.startsWith("tel:")) return raw;
-
-  const href = raw.startsWith("/") ? raw : `/${raw}`;
-
-  try {
-    const pageMarker = "/page/route:";
-    if (href.toLowerCase().startsWith(pageMarker)) {
-      const encoded = href.slice(pageMarker.length);
-      const decoded = decodeURIComponent(encoded);
-      if (decoded) return decoded;
-    }
-
-    const routeMarker = "route:";
-    if (href.toLowerCase().startsWith(routeMarker)) {
-      const encoded = href.slice(routeMarker.length);
-      const decoded = decodeURIComponent(encoded);
-      if (decoded) return decoded;
-    }
-  } catch {
-    /* ignore decode errors */
-  }
-
-  const [pathOnly, ...rest] = href.split(/[?#]/);
-  const segments = pathOnly.split("/").filter(Boolean);
-  const suffix = rest.length ? href.slice(pathOnly.length) : "";
-  if (segments.length === 0) return "/";
-  const first = segments[0].toLowerCase();
-  if (NATIVE_TOP_SEGMENTS.has(first)) return href;
-  if (segments.length === 1) return `/page/${segments[0]}${suffix}`;
-  return href;
 };
 
 const buildSlug = (href: string) =>
@@ -71,7 +25,7 @@ export async function fetchHeaderNavItems(client: any = supabase): Promise<Heade
 
   return (Array.isArray(data) ? data : [])
     .map((row: any) => {
-      const href = normalizeHref(row.href);
+      const href = normalizeInternalHref(row.href);
       const label_ar = String(row.label_ar ?? "").trim();
       const label_en = String(row.label_en ?? "").trim();
       if (!href) return null;
@@ -95,4 +49,4 @@ export async function fetchHeaderNavItems(client: any = supabase): Promise<Heade
     .filter(Boolean) as HeaderNavItem[];
 }
 
-export const isExternalHeaderHref = (href: string) => /^https?:\/\//i.test(href);
+export const isExternalHeaderHref = isExternalHref;

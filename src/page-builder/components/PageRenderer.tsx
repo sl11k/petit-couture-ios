@@ -42,6 +42,7 @@ import {
 import { ChevronDown, ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCategoryProductIds } from "@/lib/productCategories";
+import { normalizeInternalHref } from "@/lib/links";
 
 function pick(ar: boolean, valAr?: string, valEn?: string) {
   return (ar ? valAr : valEn) ?? valEn ?? valAr ?? "";
@@ -72,7 +73,7 @@ function textStyle(style?: TextStyleSettings): React.CSSProperties | undefined {
     textAlign: style.textAlign,
     lineHeight: style.lineHeight,
     letterSpacing: style.letterSpacing,
-    textTransform: style.textTransform,
+    textTransform: style.textTransform === "lowercase" ? "none" : style.textTransform,
     marginTop: style.marginTop,
   };
 }
@@ -455,7 +456,7 @@ function ButtonsRow({ buttons, ar }: { buttons?: ButtonContent[]; ar: boolean })
         return (
           <a
             key={i}
-            href={b.url || "#"}
+            href={normalizeInternalHref(b.url) || "#"}
             target={b.newTab ? "_blank" : undefined}
             rel={b.newTab ? "noreferrer" : undefined}
             className={cls}
@@ -623,7 +624,7 @@ function RenderImageText({ s }: { s: ImageTextSection }) {
           {s.content.image?.url &&
             (s.content.image.link ? (
               <a
-                href={s.content.image.link}
+                href={normalizeInternalHref(s.content.image.link) || "#"}
                 target={s.content.image.newTab ? "_blank" : undefined}
                 rel={s.content.image.newTab ? "noreferrer" : undefined}
               >
@@ -717,7 +718,7 @@ function RenderFeatureGrid({ s }: { s: FeatureGridSection }) {
                   >
                     {c.image.link ? (
                       <a
-                        href={c.image.link}
+                        href={normalizeInternalHref(c.image.link) || "#"}
                         target={c.image.newTab ? "_blank" : undefined}
                         rel={c.image.newTab ? "noreferrer" : undefined}
                         className="block h-full w-full"
@@ -788,7 +789,7 @@ function RenderFeatureGrid({ s }: { s: FeatureGridSection }) {
                   })}
                 />
                 {c.link && (
-                  <a href={c.link} className="inline-block mt-3 text-sm underline">
+                  <a href={normalizeInternalHref(c.link) || "#"} className="inline-block mt-3 text-sm underline">
                     {ar ? "اعرف أكثر" : "Learn more"}
                   </a>
                 )}
@@ -871,7 +872,7 @@ function RenderFaq({ s }: { s: FaqSection }) {
                       })}
                     />
                     {it.link && (
-                      <a href={it.link} className="mt-3 inline-block underline">
+                      <a href={normalizeInternalHref(it.link) || "#"} className="mt-3 inline-block underline">
                         {ar ? "اعرف أكثر" : "Learn more"}
                       </a>
                     )}
@@ -966,7 +967,7 @@ function RenderTestimonials({ s }: { s: TestimonialsSection }) {
                   </div>
                 </figcaption>
                 {it.link && (
-                  <a href={it.link} className="mt-4 inline-block text-sm underline">
+                  <a href={normalizeInternalHref(it.link) || "#"} className="mt-4 inline-block text-sm underline">
                     {ar ? "عرض القصة" : "View story"}
                   </a>
                 )}
@@ -1067,7 +1068,7 @@ function RenderGallery({ s }: { s: GallerySection }) {
             return im.link ? (
               <a
                 key={i}
-                href={im.link}
+                href={normalizeInternalHref(im.link) || "#"}
                 target={im.newTab ? "_blank" : undefined}
                 rel={im.newTab ? "noreferrer" : undefined}
               >
@@ -1190,7 +1191,7 @@ function RenderVideo({ s }: { s: VideoSection }) {
           <p className="mt-3 text-sm opacity-70">{pick(ar, c.caption_ar, c.caption_en)}</p>
         )}
         {c.link && (
-          <a href={c.link} className="mt-4 inline-block underline">
+          <a href={normalizeInternalHref(c.link) || "#"} className="mt-4 inline-block underline">
             {ar ? "فتح الرابط" : "Open link"}
           </a>
         )}
@@ -1341,7 +1342,7 @@ function RenderNewsletter({ s }: { s: NewsletterSection }) {
         )}
         {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
         {s.content.privacyUrl && (
-          <a href={s.content.privacyUrl} className="mt-3 inline-block text-xs underline opacity-70">
+          <a href={normalizeInternalHref(s.content.privacyUrl) || "#"} className="mt-3 inline-block text-xs underline opacity-70">
             {ar ? "سياسة الخصوصية" : "Privacy policy"}
           </a>
         )}
@@ -1380,7 +1381,7 @@ function RenderStats({ s }: { s: StatsSection }) {
               />
               {it.link && (
                 <a
-                  href={it.link}
+                  href={normalizeInternalHref(it.link) || "#"}
                   aria-label={String((it as any)[lf] ?? it.value ?? "")}
                   className="absolute inset-0"
                 />
@@ -1545,7 +1546,7 @@ function RenderButton({ s }: { s: ButtonSection }) {
   return (
     <section style={sectionStyle(s)} className={align + " px-4"}>
       <a
-        href={b.url || "#"}
+        href={normalizeInternalHref(b.url) || "#"}
         target={b.newTab ? "_blank" : undefined}
         rel={b.newTab ? "noopener noreferrer" : undefined}
         className={buttonClasses(b.variant, c.size, c.shape, c.fullWidth)}
@@ -1616,7 +1617,7 @@ function RenderBanner({ s }: { s: BannerSection }) {
           )}
           {b && btnLabel && (
             <a
-              href={b.url || "#"}
+              href={normalizeInternalHref(b.url) || "#"}
               target={b.newTab ? "_blank" : undefined}
               rel={b.newTab ? "noopener noreferrer" : undefined}
               className={buttonClasses(b.variant, "lg", "rounded")}

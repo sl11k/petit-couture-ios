@@ -6,6 +6,7 @@ import { loadCheckoutOrder, recordPaymentSession } from "@/lib/payment-gateway.s
 import { assertOrderTotals, money } from "@/lib/payment-validation";
 
 const STRIPE_CHECKOUT_SESSIONS_API = "https://api.stripe.com/v1/checkout/sessions";
+const STRIPE_COUPONS_API = "https://api.stripe.com/v1/coupons";
 
 const InputSchema = z.object({
   order_id: z.string().uuid(),
@@ -72,6 +73,51 @@ function appendLineItem(params: URLSearchParams, index: number, item: Record<str
   }
 }
 
+function appendAdjustmentLineItem(
+  params: URLSearchParams,
+  index: number,
+  input: { name: string; amount: unknown; currency: string },
+) {
+  const amount = Math.round(money(input.amount) * 100);
+  if (amount <= 0) return false;
+  params.set(`line_items[${index}][quantity]`, "1");
+  params.set(`line_items[${index}][price_data][currency]`, input.currency.toLowerCase());
+  params.set(`line_items[${index}][price_data][unit_amount]`, String(amount));
+  params.set(`line_items[${index}][price_data][product_data][name]`, input.name.slice(0, 120));
+  return true;
+}
+
+async function createStripeDiscountCoupon(input: {
+  secret: string;
+  orderId: string;
+  amount: unknown;
+  currency: string;
+}) {
+  const amountOff = Math.round(money(input.amount) * 100);
+  if (amountOff <= 0) return null;
+  const params = new URLSearchParams();
+  params.set("amount_off", String(amountOff));
+  params.set("currency", input.currency.toLowerCase());
+  params.set("duration", "once");
+  params.set("name", "Order discount");
+
+  const response = await fetch(STRIPE_COUPONS_API, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${input.secret}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Idempotency-Key": `coupon:${input.orderId}:${amountOff}`,
+    },
+    body: params,
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = result?.error?.message || `Stripe coupon error ${response.status}`;
+    throw new Error(message);
+  }
+  return result?.id ? String(result.id) : null;
+}
+
 export const createStripeCheckout = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }) => {
@@ -106,13 +152,44 @@ export const createStripeCheckout = createServerFn({ method: "POST" })
     params.set("payment_intent_data[metadata][order_id]", order.id);
     params.set("payment_intent_data[metadata][order_number]", order.order_number);
 
-    items.forEach((item, index) => appendLineItem(params, index, { ...item, currency }));
+    let lineIndex = 0;
+    items.forEach((item) => {
+      appendLineItem(params, lineIndex, { ...item, currency });
+      lineIndex += 1;
+    });
+    if (
+      appendAdjustmentLineItem(params, lineIndex, {
+        name: data.lang === "ar" ? "الشحن" : "Shipping",
+        amount: order.shipping_fee || 0,
+        currency,
+      })
+    ) {
+      lineIndex += 1;
+    }
+    if (
+      appendAdjustmentLineItem(params, lineIndex, {
+        name: data.lang === "ar" ? "ضريبة القيمة المضافة" : "VAT",
+        amount: order.tax || 0,
+        currency,
+      })
+    ) {
+      lineIndex += 1;
+    }
+
+    const couponId = await createStripeDiscountCoupon({
+      secret,
+      orderId: order.id,
+      amount: order.discount_amount || 0,
+      currency,
+    });
+    if (couponId) params.set("discounts[0][coupon]", couponId);
 
     const response = await fetch(STRIPE_CHECKOUT_SESSIONS_API, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${secret}`,
         "Content-Type": "application/x-www-form-urlencoded",
+        "Idempotency-Key": `checkout:${order.id}`,
       },
       body: params,
     });

@@ -7,6 +7,7 @@ import { BrandLogo, BRAND_NAME } from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
 import { useDbCategories } from "@/hooks/useDbCategories";
 import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_TEL } from "@/lib/contactInfo";
+import { normalizeInternalHref } from "@/lib/links";
 
 type ContentPageLink = { slug: string; title_ar: string; title_en: string };
 
@@ -143,18 +144,7 @@ export function Footer() {
                 </Link>
               </li>
               {pages.map((p) => {
-                // CMS pages may use special `route:` slugs (e.g. route:%2Four-story)
-                // to indicate a direct route. Decode those into real hrefs so the
-                // footer navigates to the expected path instead of /page/route:...
-                const isRoute = String(p.slug || "").startsWith("route:");
-                let targetHref: string | null = null;
-                if (isRoute) {
-                  try {
-                    targetHref = decodeURIComponent(String(p.slug).replace(/^route:/, ""));
-                  } catch {
-                    targetHref = null;
-                  }
-                }
+                const targetHref = normalizeInternalHref(p.slug);
                 return (
                   <li key={p.slug} data-live-id={`footer-page-row-${p.slug}`}>
                     {targetHref ? (

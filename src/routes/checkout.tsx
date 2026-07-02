@@ -3,7 +3,6 @@ import { buildMeta } from "@/lib/seo";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
-  Building2,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -34,6 +33,7 @@ import {
   resolveShippingRates,
   type ResolvedRate,
 } from "@/lib/shipping";
+import { getCanonicalProductPrice } from "@/lib/pricing";
 import type { CurrencyCode } from "@/i18n/currencies";
 
 // Map only loads on the client when entering step 2.
@@ -55,7 +55,7 @@ const phoneRegex = /^\+?[0-9][0-9\s().-]{5,23}$/;
 type Step = 1 | 2 | 3 | 4;
 type PayMethod = "card" | "apple_pay" | "tabby" | "tamara";
 
-const buildOptionId = (option: ResolvedRate) => `${option.carrier_id}:${option.rate_id}`;
+const buildOptionId = (option: ResolvedRate) => String(option.rate_id || option.carrier_code || "delivery");
 
 function CheckoutPage() {
   const router = useRouter();
@@ -122,11 +122,11 @@ function CheckoutPage() {
         const uniqueSlugs = Array.from(new Set(bag.items.map((item) => item.slug)));
         const { data: products } = await supabase
           .from("products")
-          .select("slug, weight")
+          .select("slug, price, weight")
           .in("slug", uniqueSlugs)
           .eq("is_active", true);
-        const productWeights = new Map<string, number>(
-          (products ?? []).map((product: any) => [String(product.slug), Number(product.weight) || 0]),
+        const productBySlug = new Map<string, any>(
+          (products ?? []).map((product: any) => [String(product.slug), product]),
         );
 
         const variantIds = bag.items
@@ -135,16 +135,25 @@ function CheckoutPage() {
         const { data: variants } = variantIds.length
           ? await supabase
               .from("product_variants")
-              .select("id, weight")
+              .select("id, price, price_override, weight")
               .in("id", variantIds)
           : { data: [] as any[] };
-        const variantWeights = new Map<string, number>(
-          (variants ?? []).map((variant: any) => [String(variant.id), Number(variant.weight) || 0]),
+        const variantById = new Map<string, any>(
+          (variants ?? []).map((variant: any) => [String(variant.id), variant]),
         );
 
         const totalWeight = bag.items.reduce((sum, item) => {
-          const variantWeight = item.variantId ? variantWeights.get(item.variantId) || 0 : 0;
-          const productWeight = productWeights.get(item.slug) || 0;
+          const variant = item.variantId ? variantById.get(item.variantId) : null;
+          const product = productBySlug.get(item.slug);
+          const catalogPrice = getCanonicalProductPrice(
+            product?.price,
+            variant?.price_override ?? variant?.price,
+          );
+          if (Number.isFinite(catalogPrice) && Math.abs(catalogPrice - item.price) > 0.01) {
+            bag.updatePrice(item.id, catalogPrice);
+          }
+          const variantWeight = Number(variant?.weight) || 0;
+          const productWeight = Number(product?.weight) || 0;
           const itemWeight = variantWeight > 0 ? variantWeight : productWeight > 0 ? productWeight : 1;
           return sum + itemWeight * item.qty;
         }, 0);
@@ -157,7 +166,7 @@ function CheckoutPage() {
     return () => {
       active = false;
     };
-  }, [bag.items]);
+  }, [bag]);
 
   // Coupon state
   const [couponInput, setCouponInput] = useState("");
@@ -1373,10 +1382,6 @@ function CheckoutPage() {
                 <span className="inline-flex items-center gap-1">
                   <Lock className="h-3.5 w-3.5" />
                   {isRTL ? "بيانات مشفّرة" : "ENCRYPTED"}
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <Building2 className="h-3.5 w-3.5" />
-                  {isRTL ? "ضمان رسمي" : "WARRANTY"}
                 </span>
               </div>
             </section>

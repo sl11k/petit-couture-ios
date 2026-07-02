@@ -144,11 +144,15 @@ function ProductDetails() {
   const { reviews: dbReviews, bundles: dbBundles, offers: dbOffers } = useProductExtras(slug);
   const { isRTL, lang } = useLanguage();
   const ar = isRTL;
+  const validSizes = useMemo(
+    () => (product.sizes || []).filter((s) => s && String(s).trim()),
+    [product.sizes],
+  );
 
   const [activeImg, setActiveImg] = useState(0);
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [activeOptions, setActiveOptions] = useState<Record<string, any>>({});
-  const initialSize = (product.sizes || []).find((s) => Boolean(s)) ?? "";
+  const initialSize = validSizes[0] ?? "";
   const [size, setSize] = useState<string>(initialSize);
   const [color, setColor] = useState<string>(product.colors[0]?.name ?? "");
 
@@ -164,29 +168,32 @@ function ProductDetails() {
 
   // Re-sync selection if the loaded product no longer contains the picks.
   useEffect(() => {
-    if (size && !product.sizes.includes(size)) {
-      setSize(product.sizes[2] ?? product.sizes[0] ?? "");
+    if (size && !validSizes.includes(size)) {
+      setSize(validSizes[0] ?? "");
     }
     if (color && !product.colors.some((c) => c.name === color)) {
       setColor(product.colors[0]?.name ?? "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product.sizes.join("|"), product.colors.map((c) => c.name).join("|")]);
+  }, [validSizes.join("|"), product.colors.map((c) => c.name).join("|")]);
 
   // Once per-size stock loads, avoid landing on a sold-out size: switch to the
   // first size that's actually available.
   useEffect(() => {
-    if (!product.sizes.length) return;
+    if (!validSizes.length) {
+      if (size) setSize("");
+      return;
+    }
     const isSold = (s: string) => {
       const v = sizeVariantBySize[s];
       return !!v && v.stock <= 0;
     };
     if (!size || isSold(size)) {
-      const firstAvailable = product.sizes.find((s) => !isSold(s));
+      const firstAvailable = validSizes.find((s) => !isSold(s));
       if (firstAvailable && firstAvailable !== size) setSize(firstAvailable);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [Object.keys(sizeVariantBySize).join("|"), product.sizes.join("|")]);
+  }, [Object.keys(sizeVariantBySize).join("|"), validSizes.join("|")]);
   const sizeLabel = (rawSize: string) => {
     const variant = sizeVariantBySize[rawSize];
     if (!variant) return rawSize;
@@ -306,7 +313,7 @@ function ProductDetails() {
   );
   const giftWrapFee = giftWrap ? 35 : 0;
   // Only require size selection if product has actual non-empty size values
-  const requiresSize = (product.sizes || []).filter((s) => s && String(s).trim()).length > 0;
+  const requiresSize = validSizes.length > 0;
   // Per-size SKU/stock (when the product uses the Sizes & SKUs editor).
   const selectedSizeVariant = sizeVariantBySize[size];
   const effectivePrice = getCanonicalProductPrice(product.price, selectedSizeVariant?.price);
@@ -850,6 +857,7 @@ function ProductDetails() {
           </section>
 
           {/* Size */}
+          {requiresSize && (
           <section className="px-5 mt-7">
             <div className="flex items-center justify-between">
               <span
@@ -870,7 +878,7 @@ function ProductDetails() {
               aria-labelledby="pdp-size-label"
               className="mt-3 grid grid-cols-3 min-[380px]:grid-cols-4 gap-2"
             >
-              {product.sizes.map((s) => {
+              {validSizes.map((s) => {
                 const active = s === size;
                 const sv = sizeVariantBySize[s];
                 const soldOut = !!sv && sv.stock <= 0;
@@ -890,6 +898,7 @@ function ProductDetails() {
               })}
             </div>
           </section>
+          )}
 
           {/* Variants (sizes + colors as full DB variants when configured) */}
           {productId && (
