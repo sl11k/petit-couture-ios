@@ -270,9 +270,17 @@ export async function buildOtoOrderPayload(input: OtoCreateOrderInput, deliveryO
   const senderInformation = senderInformationFromEnv();
   const pickupLocationCode = senderInformation ? undefined : await resolvePickupLocationCode();
   const packageWeight = Math.max(asNumber(input.weight, 1), 0.1);
+  const orderPrefix = clean(process.env.OTO_ORDER_PREFIX);
+  const otoOrderNumber = orderPrefix ? `${orderPrefix}${input.orderNumber}` : input.orderNumber;
+  const itemDescription =
+    input.items
+      ?.map((it) => `${it.name}${it.quantity > 1 ? ` x${it.quantity}` : ""}`)
+      .filter(Boolean)
+      .slice(0, 6)
+      .join(", ") || "Order items";
 
   const payload: JsonRecord = {
-    orderId: input.orderNumber,
+    orderId: otoOrderNumber,
     ref1: input.orderId,
     createShipment: false,
     payment_method: input.codAmount && input.codAmount > 0 ? "cod" : "paid",
@@ -288,6 +296,7 @@ export async function buildOtoOrderPayload(input: OtoCreateOrderInput, deliveryO
     boxLength: asNumber(process.env.OTO_DEFAULT_BOX_LENGTH_CM, 10) || 10,
     boxHeight: asNumber(process.env.OTO_DEFAULT_BOX_HEIGHT_CM, 10) || 10,
     orderDate: new Date().toISOString(),
+    item_description: itemDescription,
     customer: buildCustomer(input),
     items: (input.items ?? []).map((it) => ({
       productId: clean(it.productId),
