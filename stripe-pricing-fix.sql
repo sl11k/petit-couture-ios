@@ -20,7 +20,7 @@ INSERT INTO public.integrations (
   'Stripe Payment Gateway',
   true,
   'live',
-  'YOUR_STRIPE_SECRET_KEY',  -- REPLACE THIS WITH ACTUAL SECRET
+  'YOUR_STRIPE_SECRET_KEY',  -- REPLACE THIS WITH ACTUAL SECRET FROM SUPABASE SECRETS
   '{"webhook_endpoint": "/api/public/stripe-webhook"}'::jsonb,
   now()
 )
