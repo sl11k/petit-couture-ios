@@ -7,6 +7,7 @@ import { assertOrderTotals, money } from "@/lib/payment-validation";
 
 const STRIPE_CHECKOUT_SESSIONS_API = "https://api.stripe.com/v1/checkout/sessions";
 const STRIPE_COUPONS_API = "https://api.stripe.com/v1/coupons";
+const MIN_CARD_TOTAL_SAR = 3;
 
 const InputSchema = z.object({
   order_id: z.string().uuid(),
@@ -134,6 +135,16 @@ export const createStripeCheckout = createServerFn({ method: "POST" })
 
     assertOrderTotals(items, order);
 
+    if (money(order.total) < MIN_CARD_TOTAL_SAR) {
+      return {
+        ok: false as const,
+        message:
+          data.lang === "ar"
+            ? `الحد الأدنى للدفع بالبطاقة أو Apple Pay هو ${MIN_CARD_TOTAL_SAR.toFixed(2)} ر.س تقريبًا. اختر وسيلة دفع أخرى أو زد قيمة الطلب.`
+            : `The minimum total for card or Apple Pay is about ${MIN_CARD_TOTAL_SAR.toFixed(2)} SAR. Please choose another payment method or increase the order total.`,
+      };
+    }
+
     const origin = storefrontOrigin();
     const currency = String(order.currency || "SAR").toLowerCase();
     const params = new URLSearchParams();
@@ -196,7 +207,13 @@ export const createStripeCheckout = createServerFn({ method: "POST" })
     const result = await response.json().catch(() => ({}));
     if (!response.ok) {
       console.error("Stripe checkout failed", response.status, result);
-      const message = result?.error?.message || `Stripe error ${response.status}`;
+      const rawMessage = String(result?.error?.message || "");
+      const message =
+        /at least 200 fils/i.test(rawMessage) || /total amount must convert to at least/i.test(rawMessage)
+          ? data.lang === "ar"
+            ? `الحد الأدنى للدفع بالبطاقة أو Apple Pay هو ${MIN_CARD_TOTAL_SAR.toFixed(2)} ر.س تقريبًا. اختر وسيلة دفع أخرى أو زد قيمة الطلب.`
+            : `The minimum total for card or Apple Pay is about ${MIN_CARD_TOTAL_SAR.toFixed(2)} SAR. Please choose another payment method or increase the order total.`
+          : rawMessage || `Stripe error ${response.status}`;
       return {
         ok: false as const,
         message:

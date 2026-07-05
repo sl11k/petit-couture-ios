@@ -54,6 +54,7 @@ const phoneRegex = /^\+?[0-9][0-9\s().-]{5,23}$/;
 
 type Step = 1 | 2 | 3 | 4;
 type PayMethod = "card" | "apple_pay" | "tabby" | "tamara";
+const MIN_CARD_TOTAL_SAR = 3;
 
 const buildOptionId = (option: ResolvedRate) => String(option.rate_id || option.carrier_code || "delivery");
 
@@ -326,6 +327,8 @@ function CheckoutPage() {
     const total = Math.max(0, Math.round((subtotal + shipping_fee + tax - discount) * 100) / 100);
     return { subtotal, shipping_fee, tax, discount, total };
   }, [bag.subtotal, shipping.fee, coupon, taxRate, step]);
+
+  const cardPaymentDisabled = pricing.total < MIN_CARD_TOTAL_SAR;
 
   // Re-validate coupon when subtotal/email changes (silent; drops if no longer valid).
   useEffect(() => {
@@ -636,6 +639,15 @@ function CheckoutPage() {
       // Stripe: card and Apple Pay go through the hosted Stripe Checkout page.
       // Apple Pay is surfaced by Stripe automatically when the domain/device supports it.
       if (payment === "card" || payment === "apple_pay") {
+        if (cardPaymentDisabled) {
+          toast.error(
+            isRTL
+              ? `الحد الأدنى للدفع بالبطاقة أو Apple Pay هو ${fmt(MIN_CARD_TOTAL_SAR)} ر.س تقريبًا.`
+              : `The minimum total for card or Apple Pay is about ${MIN_CARD_TOTAL_SAR.toFixed(2)} SAR.`,
+          );
+          setPlacing(false);
+          return;
+        }
         try {
           const { createStripeCheckout } = await import("@/lib/stripe.functions");
           const result = await createStripeCheckout({
@@ -1055,6 +1067,7 @@ function CheckoutPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <PayOption
                     active={payment === "card"}
+                    disabled={cardPaymentDisabled}
                     onClick={() => setPayment("card")}
                     icon={<CreditCard className="h-4 w-4" />}
                     label={isRTL ? "بطاقة ائتمان" : "Credit card"}
@@ -1062,6 +1075,7 @@ function CheckoutPage() {
                   />
                   <PayOption
                     active={payment === "apple_pay"}
+                    disabled={cardPaymentDisabled}
                     onClick={() => setPayment("apple_pay")}
                     icon={<Apple className="h-4 w-4" />}
                     label="Apple Pay"
@@ -1082,6 +1096,14 @@ function CheckoutPage() {
                     sub={isRTL ? "بدون فوائد ولا رسوم" : "0% interest, no fees"}
                   />
                 </div>
+
+                {cardPaymentDisabled && (
+                  <div className="mt-3 rounded-[12px] border border-amber-200 bg-amber-50 p-3 text-[12px] leading-relaxed text-amber-900">
+                    {isRTL
+                      ? `الطلبات الأقل من ${fmt(MIN_CARD_TOTAL_SAR)} ر.س تقريبًا لا تقبلها بوابة البطاقة. يمكنك اختيار تابي أو تمارا أو زيادة قيمة الطلب.`
+                      : `Orders below about ${MIN_CARD_TOTAL_SAR.toFixed(2)} SAR are rejected by the card gateway. Please use Tabby, Tamara, or increase the order total.`}
+                  </div>
+                )}
 
                 {payment === "tabby" && (
                   <div className="mt-3 p-3 rounded-[12px] bg-cream-warm/40 border border-border text-[12px] text-foreground/80 leading-relaxed">
@@ -1464,12 +1486,14 @@ function Field({
 
 function PayOption({
   active,
+  disabled = false,
   onClick,
   icon,
   label,
   sub,
 }: {
   active: boolean;
+  disabled?: boolean;
   onClick: () => void;
   icon: React.ReactNode;
   label: string;
@@ -1478,10 +1502,15 @@ function PayOption({
   return (
     <button
       type="button"
+      disabled={disabled}
       onClick={onClick}
       className={[
         "p-3 rounded-[14px] border text-start transition relative",
-        active ? "border-gold bg-gold/5 shadow-sm" : "border-border bg-cream-warm/30",
+        disabled
+          ? "cursor-not-allowed border-border/70 bg-muted/40 opacity-60"
+          : active
+            ? "border-gold bg-gold/5 shadow-sm"
+            : "border-border bg-cream-warm/30",
       ].join(" ")}
     >
       {active && <Check className="absolute top-2 end-2 h-3.5 w-3.5 text-gold" />}

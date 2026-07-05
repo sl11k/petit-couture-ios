@@ -39,7 +39,19 @@ async function getTabbySecret() {
 }
 
 async function getTabbyMerchantCode(currency: string) {
-  if (process.env.TABBY_MERCHANT_CODE) return process.env.TABBY_MERCHANT_CODE;
+  const normalizedCurrency = currency.toUpperCase();
+  const merchantCodes: Record<string, string> = {
+    SAR: "sa",
+    AED: "ae",
+    KWD: "kw",
+    BHD: "bh",
+    QAR: "qa",
+  };
+  const envCode = String(process.env.TABBY_MERCHANT_CODE || "").trim().toLowerCase();
+  if (envCode) {
+    const expected = merchantCodes[normalizedCurrency];
+    if (expected && envCode === expected) return envCode;
+  }
 
   const { data } = await supabaseAdmin
     .from("integrations")
@@ -52,17 +64,15 @@ async function getTabbyMerchantCode(currency: string) {
     string,
     unknown
   >;
-  const configured = String(config.merchant_code || config.tabby_merchant_code || "").trim();
-  if (configured) return configured;
+  const configured = String(config.merchant_code || config.tabby_merchant_code || "")
+    .trim()
+    .toLowerCase();
+  if (configured) {
+    const expected = merchantCodes[normalizedCurrency];
+    if (expected && configured === expected) return configured;
+  }
 
-  const merchantCodes: Record<string, string> = {
-    SAR: "sa",
-    AED: "ae",
-    KWD: "kw",
-    BHD: "bh",
-    QAR: "qa",
-  };
-  return merchantCodes[currency] || null;
+  return merchantCodes[normalizedCurrency] || null;
 }
 
 function storefrontOrigin() {
