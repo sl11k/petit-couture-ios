@@ -8,6 +8,33 @@ import {
   refundGatewayPayment,
   updatePaymentWebhookLog,
 } from "@/lib/payment-gateway.server";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
+async function getTabbySecret() {
+  const envSecret = String(process.env.TABBY_SECRET_KEY || "").trim();
+  if (envSecret) return envSecret;
+
+  const { data } = await supabaseAdmin
+    .from("integrations")
+    .select("api_secret, config")
+    .eq("category", "payment")
+    .eq("provider", "tabby")
+    .eq("enabled", true)
+    .maybeSingle();
+
+  const config = (data?.config && typeof data.config === "object" ? data.config : {}) as Record<
+    string,
+    unknown
+  >;
+  const candidates = [
+    data?.api_secret,
+    config.secret_key,
+    config.tabby_secret_key,
+    config.api_secret,
+  ].map((value) => String(value || "").trim());
+
+  return candidates.find(Boolean) || null;
+}
 
 function validSignature(body: string, signature: string, secret: string) {
   try {
@@ -88,7 +115,7 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
           if (status === "authorized") {
             let capture: unknown = { skipped: "order_already_paid" };
             if (order.payment_status !== "paid") {
-              const apiKey = process.env.TABBY_SECRET_KEY;
+              const apiKey = await getTabbySecret();
               if (!apiKey) throw new Error("TABBY_SECRET_KEY is not configured");
               const captureResponse = await fetch(
                 `https://api.tabby.ai/api/v1/payments/${encodeURIComponent(paymentId)}/captures`,

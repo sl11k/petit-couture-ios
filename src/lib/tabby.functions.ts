@@ -13,7 +13,8 @@ const InputSchema = z.object({
 });
 
 async function getTabbySecret() {
-  if (process.env.TABBY_SECRET_KEY) return process.env.TABBY_SECRET_KEY;
+  const envSecret = String(process.env.TABBY_SECRET_KEY || "").trim();
+  if (envSecret) return envSecret;
 
   const { data } = await supabaseAdmin
     .from("integrations")
@@ -32,7 +33,6 @@ async function getTabbySecret() {
     config.secret_key,
     config.tabby_secret_key,
     config.api_secret,
-    data?.api_key,
   ].map((value) => String(value || "").trim());
 
   return candidates.find(Boolean) || null;
