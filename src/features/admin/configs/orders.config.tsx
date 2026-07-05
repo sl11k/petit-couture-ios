@@ -7,6 +7,7 @@ export const ordersConfig: AdminPageConfig = {
   orderBy: { column: "created_at", ascending: false },
   // Pull each order's item SKUs so admins can search orders by SKU.
   select: "*, order_items(sku)",
+  fallbackSelect: "*",
   enrichRows: (rows: any[]) =>
     rows.map((r) => ({
       ...r,

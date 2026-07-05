@@ -94,6 +94,7 @@ export type AdminPageConfig<T = any> = {
   actions?: { create?: boolean; edit?: boolean; delete?: boolean; export?: boolean };
   rowActions?: RowAction<T>[];
   select?: string;
+  fallbackSelect?: string;
   rowHref?: (row: T) => string;
   enrichRows?: (rows: T[]) => Promise<T[]> | T[];
 };

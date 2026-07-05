@@ -8,14 +8,30 @@ export function useAdminTable<T extends Record<string, any>>(config: AdminPageCo
   const [error, setError] = useState<string | null>(null);
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
 
-  const reload = async () => {
-    setLoading(true);
-    setError(null);
-    let q = supabase.from(config.table as any).select(config.select ?? "*").limit(500);
+  const loadRows = async (select: string) => {
+    let q = supabase.from(config.table as any).select(select).limit(500);
     if (config.orderBy) {
       q = q.order(config.orderBy.column, { ascending: config.orderBy.ascending ?? false });
     }
-    const { data, error: err } = await q;
+    return q;
+  };
+
+  const reload = async () => {
+    setLoading(true);
+    setError(null);
+    let { data, error: err } = await loadRows(config.select ?? "*");
+    if (err && config.fallbackSelect) {
+      const fallback = await loadRows(config.fallbackSelect);
+      data = fallback.data;
+      err = fallback.error;
+      if (!err) {
+        console.warn("Admin table fallback select used", {
+          table: config.table,
+          select: config.select,
+          fallbackSelect: config.fallbackSelect,
+        });
+      }
+    }
     if (err) setError(err.message);
     let next = (data ?? []) as unknown as T[];
     if (config.enrichRows && next.length > 0) {
