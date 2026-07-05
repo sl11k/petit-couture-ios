@@ -328,7 +328,8 @@ function CheckoutPage() {
     return { subtotal, shipping_fee, tax, discount, total };
   }, [bag.subtotal, shipping.fee, coupon, taxRate, step]);
 
-  const cardPaymentDisabled = pricing.total < MIN_CARD_TOTAL_SAR;
+  // Remove minimum card payment restriction - allow card payments for any amount
+  const cardPaymentDisabled = false;
 
   // Re-validate coupon when subtotal/email changes (silent; drops if no longer valid).
   useEffect(() => {
@@ -1096,14 +1097,6 @@ function CheckoutPage() {
                     sub={isRTL ? "بدون فوائد ولا رسوم" : "0% interest, no fees"}
                   />
                 </div>
-
-                {cardPaymentDisabled && (
-                  <div className="mt-3 rounded-[12px] border border-amber-200 bg-amber-50 p-3 text-[12px] leading-relaxed text-amber-900">
-                    {isRTL
-                      ? `الطلبات الأقل من ${fmt(MIN_CARD_TOTAL_SAR)} ر.س تقريبًا لا تقبلها بوابة البطاقة. يمكنك اختيار تابي أو تمارا أو زيادة قيمة الطلب.`
-                      : `Orders below about ${MIN_CARD_TOTAL_SAR.toFixed(2)} SAR are rejected by the card gateway. Please use Tabby, Tamara, or increase the order total.`}
-                  </div>
-                )}
 
                 {payment === "tabby" && (
                   <div className="mt-3 p-3 rounded-[12px] bg-cream-warm/40 border border-border text-[12px] text-foreground/80 leading-relaxed">
