@@ -532,8 +532,8 @@ export async function createOtoShipmentForOrder(
   if (loaded.error || !loaded.order || !loaded.input) return { ok: false, error: loaded.error || "Order not found" };
   const { order, input } = loaded;
 
-  const isCod = order.payment_method === "cod";
-  if (!isCod && order.payment_status !== "paid") {
+  // All payments are now async (card, apple_pay, tabby, tamara) - require payment confirmation
+  if (order.payment_status !== "paid") {
     return { ok: false, error: "Shipment blocked until payment is confirmed" };
   }
 
@@ -646,7 +646,7 @@ export async function createOtoShipmentForOrder(
       unit: "cm",
     },
     declared_value: Number(order.total),
-    cod_amount: isCod ? Number(order.total) : 0,
+    cod_amount: 0,
     shipping_fee: Number(option?.price ?? order.shipping_fee ?? 0),
     raw_response: mergedResp,
     metadata: {
