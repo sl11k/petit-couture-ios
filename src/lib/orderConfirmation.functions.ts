@@ -52,5 +52,5 @@ export const getOrderConfirmation = createServerFn({ method: "POST" })
 
     // Strip internal fields before returning.
     const { idempotency_key: _ik, user_id: _uid, ...safe } = order as Record<string, unknown>;
-    return { ok: true as const, order: safe };
+    return { ok: true as const, order: JSON.parse(JSON.stringify(safe)) as Record<string, any> };
   });
