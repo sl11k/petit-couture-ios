@@ -83,8 +83,18 @@ function OrderConfirmationPage() {
     let attempts = 0;
     const maxAttempts = 20; // ~40s
     const intervalMs = 2000;
-    const isPaymentReturn = typeof window !== "undefined" &&
-      /[?&](stripe|tabby|tamara)=/.test(window.location.search);
+    const url = typeof window !== "undefined" ? new URL(window.location.href) : null;
+    const stripeReturn = url?.searchParams.get("stripe") === "success";
+    const stripeSessionId = url?.searchParams.get("session_id") || null;
+    const isPaymentReturn = !!url && /[?&](stripe|tabby|tamara)=/.test(url.search);
+
+    // Best-effort: proactively finalize the Stripe order in case the
+    // webhook hasn't landed yet. Safe to call repeatedly; RPC is idempotent.
+    if (stripeReturn && stripeSessionId) {
+      void finalizeStripeOrder({
+        data: { order_number: orderNumber, stripe_session_id: stripeSessionId },
+      }).catch((err) => console.warn("[order-confirmation] finalize failed", err));
+    }
 
     async function poll() {
       while (!cancelled && attempts < maxAttempts) {
