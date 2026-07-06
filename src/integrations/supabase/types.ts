@@ -2732,6 +2732,7 @@ export type Database = {
           product_slug: string
           qty: number
           size: string | null
+          sku: string | null
           unit_price: number
           variant_id: string | null
           warehouse_id: string | null
@@ -2749,6 +2750,7 @@ export type Database = {
           product_slug: string
           qty: number
           size?: string | null
+          sku?: string | null
           unit_price: number
           variant_id?: string | null
           warehouse_id?: string | null
@@ -2766,6 +2768,7 @@ export type Database = {
           product_slug?: string
           qty?: number
           size?: string | null
+          sku?: string | null
           unit_price?: number
           variant_id?: string | null
           warehouse_id?: string | null
