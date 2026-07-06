@@ -5,8 +5,9 @@ import { PageHeader } from "@/features/admin/components/PageHeader";
 import { ProductPickerModal } from "@/components/admin/ProductPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { placeOrder } from "@/lib/placeOrder.functions";
+import { createOtoShipmentForOrder } from "@/lib/oto.server";
 import { toast } from "sonner";
-import { Plus, Trash2, Loader2, ShoppingBag } from "lucide-react";
+import { Plus, Trash2, Loader2, ShoppingBag, Truck } from "lucide-react";
 
 export const Route = createFileRoute("/admin/create-order")({
   component: CreateOrderPage,
@@ -67,8 +68,9 @@ function CreateOrderPage() {
   const [street, setStreet] = useState("");
   const [district, setDistrict] = useState("");
   const [notes, setNotes] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [paymentMethod, setPaymentMethod] = useState("bank_transfer");
   const [shippingFee, setShippingFee] = useState(0);
+  const [createOtoShipment, setCreateOtoShipment] = useState(false);
 
   const unitPriceOf = (l: Line) => {
     const sel = l.sizes.find((s) => s.size === l.selectedSize);
@@ -187,6 +189,21 @@ function CreateOrderPage() {
         },
       });
       const order = (res as any)?.order;
+      
+      // Create OTO shipment if requested
+      if (createOtoShipment && order?.id) {
+        try {
+          const otoResult = await createOtoShipmentForOrder(order.id, null);
+          if (otoResult.ok) {
+            toast.success(ar ? "تم إنشاء الشحنة في OTO" : "OTO shipment created");
+          } else {
+            toast.error(ar ? `فشل إنشاء الشحنة: ${otoResult.error}` : `Shipment creation failed: ${otoResult.error}`);
+          }
+        } catch (e: any) {
+          toast.error(ar ? `خطأ في OTO: ${e?.message}` : `OTO error: ${e?.message}`);
+        }
+      }
+      
       toast.success(ar ? `تم إنشاء الطلب ${order?.order_number ?? ""}` : `Order ${order?.order_number ?? ""} created`);
       if (order?.id) navigate({ to: "/admin/orders/$id", params: { id: order.id } });
       else navigate({ to: "/admin/orders" });
@@ -305,7 +322,6 @@ function CreateOrderPage() {
               <label className="block text-muted-foreground">
                 <span className="mb-1 block">{ar ? "طريقة الدفع" : "Payment method"}</span>
                 <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm">
-                  <option value="cod">{ar ? "الدفع عند الاستلام" : "Cash on delivery"}</option>
                   <option value="bank_transfer">{ar ? "تحويل بنكي" : "Bank transfer"}</option>
                   <option value="card">{ar ? "بطاقة" : "Card"}</option>
                   <option value="apple_pay">Apple Pay</option>
@@ -314,6 +330,18 @@ function CreateOrderPage() {
               <label className="block text-muted-foreground">
                 <span className="mb-1 block">{ar ? "رسوم الشحن" : "Shipping fee"}</span>
                 <input type="number" min={0} step={0.01} value={shippingFee} onChange={(e) => setShippingFee(Number(e.target.value) || 0)} className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm" dir="ltr" />
+              </label>
+              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={createOtoShipment}
+                  onChange={(e) => setCreateOtoShipment(e.target.checked)}
+                  className="h-4 w-4 rounded border-input"
+                />
+                <span className="flex items-center gap-1.5">
+                  <Truck className="h-3.5 w-3.5" />
+                  {ar ? "إنشاء بوليصة شحن OTO" : "Create OTO shipment"}
+                </span>
               </label>
               <div className="mt-2 space-y-1 border-t border-border pt-2">
                 <Row label={ar ? "المجموع الفرعي" : "Subtotal"} value={money(subtotal)} />
