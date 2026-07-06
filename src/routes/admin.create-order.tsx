@@ -5,7 +5,7 @@ import { PageHeader } from "@/features/admin/components/PageHeader";
 import { ProductPickerModal } from "@/components/admin/ProductPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { placeOrder } from "@/lib/placeOrder.functions";
-import { createOtoShipmentForOrder } from "@/lib/oto.server";
+import { otoCreateShipment } from "@/lib/oto.functions";
 import { toast } from "sonner";
 import { Plus, Trash2, Loader2, ShoppingBag, Truck } from "lucide-react";
 
@@ -193,7 +193,7 @@ function CreateOrderPage() {
       // Create OTO shipment if requested
       if (createOtoShipment && order?.id) {
         try {
-          const otoResult = await createOtoShipmentForOrder(order.id, null);
+          const otoResult = await otoCreateShipment({ data: { orderId: order.id } });
           if (otoResult.ok) {
             toast.success(ar ? "تم إنشاء الشحنة في OTO" : "OTO shipment created");
           } else {
