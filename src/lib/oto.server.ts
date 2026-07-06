@@ -523,6 +523,16 @@ export async function getOtoDeliveryOptionsForOrder(orderId: string) {
   }
 }
 
+export function canCreateOtoShipmentForOrder(order: {
+  payment_status?: string | null;
+  payment_method?: string | null;
+}) {
+  const status = String(order.payment_status ?? "").toLowerCase();
+  const method = String(order.payment_method ?? "").toLowerCase();
+  if (status === "paid") return true;
+  return method === "bank_transfer" || method === "cod";
+}
+
 export async function createOtoShipmentForOrder(
   orderId: string,
   createdBy?: string | null,
@@ -532,8 +542,7 @@ export async function createOtoShipmentForOrder(
   if (loaded.error || !loaded.order || !loaded.input) return { ok: false, error: loaded.error || "Order not found" };
   const { order, input } = loaded;
 
-  // All payments are now async (card, apple_pay, tabby, tamara) - require payment confirmation
-  if (order.payment_status !== "paid") {
+  if (!canCreateOtoShipmentForOrder(order)) {
     return { ok: false, error: "Shipment blocked until payment is confirmed" };
   }
 

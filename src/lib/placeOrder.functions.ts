@@ -37,13 +37,22 @@ const AddressSchema = z
   })
   .passthrough();
 
+export const paymentMethodSchema = z.enum([
+  "cod",
+  "card",
+  "apple_pay",
+  "tabby",
+  "tamara",
+  "bank_transfer",
+]);
+
 const InputSchema = z.object({
   session_id: z.string().min(1).max(128),
   auth_token: z.string().min(20).max(4096).nullable().optional(),
   items: z.array(ItemSchema).min(1).max(100),
   address: AddressSchema,
   currency: z.string().min(3).max(8),
-  payment_method: z.enum(["card", "apple_pay", "tabby", "tamara"]).default("card"),
+  payment_method: paymentMethodSchema.default("card"),
   coupon_code: z.string().min(1).max(64).nullable().optional(),
   pricing: z.object({
     shipping_method: z.string().min(1).max(64),

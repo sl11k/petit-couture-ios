@@ -70,7 +70,7 @@ function CreateOrderPage() {
   const [notes, setNotes] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("bank_transfer");
   const [shippingFee, setShippingFee] = useState(0);
-  const [createOtoShipment, setCreateOtoShipment] = useState(false);
+  const [createOtoShipment, setCreateOtoShipment] = useState(true);
 
   const unitPriceOf = (l: Line) => {
     const sel = l.sizes.find((s) => s.size === l.selectedSize);
