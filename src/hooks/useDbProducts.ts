@@ -149,7 +149,7 @@ function mergeRowOntoBase(slug: string, row: DbRow | null, lang: "ar" | "en"): M
     // Always use DB price when row exists - never fall back to base.price for DB products
     price: row.price != null ? Number(row.price) : 0,
     compareAtPrice:
-      row.compare_at_price != null ? Number(row.compare_at_price) : null,
+      row.compare_at_price != null ? Number(row.compare_at_price) : undefined,
     currency: row.currency ?? base.currency,
     shortDescription,
     description,
