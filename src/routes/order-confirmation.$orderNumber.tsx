@@ -3,6 +3,7 @@ import { CheckCircle2, Package, Truck, Home, MapPin, Copy, Loader2 } from "lucid
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { getOrderConfirmation } from "@/lib/orderConfirmation.functions";
+import { finalizeStripeOrder } from "@/lib/stripeFinalize.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
