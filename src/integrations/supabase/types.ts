@@ -3979,6 +3979,8 @@ export type Database = {
           attachments: Json | null
           barcode: string | null
           brand: string | null
+          care_ar: string | null
+          care_en: string | null
           category_id: string | null
           colors: Json
           compare_at_price: number | null
@@ -3998,6 +4000,8 @@ export type Database = {
           images: Json
           is_active: boolean
           low_stock_threshold: number | null
+          materials_ar: string | null
+          materials_en: string | null
           meta_description: string | null
           meta_title: string | null
           name_ar: string
@@ -4037,6 +4041,8 @@ export type Database = {
           attachments?: Json | null
           barcode?: string | null
           brand?: string | null
+          care_ar?: string | null
+          care_en?: string | null
           category_id?: string | null
           colors?: Json
           compare_at_price?: number | null
@@ -4056,6 +4062,8 @@ export type Database = {
           images?: Json
           is_active?: boolean
           low_stock_threshold?: number | null
+          materials_ar?: string | null
+          materials_en?: string | null
           meta_description?: string | null
           meta_title?: string | null
           name_ar: string
@@ -4095,6 +4103,8 @@ export type Database = {
           attachments?: Json | null
           barcode?: string | null
           brand?: string | null
+          care_ar?: string | null
+          care_en?: string | null
           category_id?: string | null
           colors?: Json
           compare_at_price?: number | null
@@ -4114,6 +4124,8 @@ export type Database = {
           images?: Json
           is_active?: boolean
           low_stock_threshold?: number | null
+          materials_ar?: string | null
+          materials_en?: string | null
           meta_description?: string | null
           meta_title?: string | null
           name_ar?: string
