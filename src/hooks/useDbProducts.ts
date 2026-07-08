@@ -183,6 +183,8 @@ function mergeRowOntoBase(slug: string, row: DbRow | null, lang: "ar" | "en"): M
     deliveryEstimate,
     shippingPolicy,
     returnPolicy,
+    materials: materialsList.length ? materialsList : base.materials,
+    care: careList.length ? careList : (base as any).care,
     __fromDb: true,
   };
 }
