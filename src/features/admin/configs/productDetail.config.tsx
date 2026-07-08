@@ -72,6 +72,39 @@ function renderApplyShippingReturnsToAllButton(row: any) {
   );
 }
 
+function renderApplyCareMaterialsToAllButton(row: any) {
+  const payload = {
+    materials_ar: row.materials_ar ?? null,
+    materials_en: row.materials_en ?? null,
+    care_ar: row.care_ar ?? null,
+    care_en: row.care_en ?? null,
+  };
+  const hasContent = Object.values(payload).some((v) => typeof v === "string" && v.trim() !== "");
+  const apply = async () => {
+    if (!hasContent) {
+      toast.error("أضف نص المواد أو تعليمات العناية أولاً");
+      return;
+    }
+    if (!window.confirm("تطبيق نصوص المواد والعناية الحالية على كل المنتجات؟")) return;
+    const { error } = await (supabase as any).from("products").update(payload).not("id", "is", null);
+    if (error) {
+      toast.error(error.message || "تعذر تطبيق المواد والعناية على كل المنتجات");
+      return;
+    }
+    toast.success("تم تطبيق المواد والعناية على كل المنتجات");
+  };
+  return (
+    <button
+      type="button"
+      onClick={apply}
+      disabled={!hasContent}
+      className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+    >
+      تطبيق المواد والعناية على كل المنتجات
+    </button>
+  );
+}
+
 export const productDetailConfig: AdminDetailConfig = {
   table: "products",
   backTo: "/admin/products",
