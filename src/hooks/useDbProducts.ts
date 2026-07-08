@@ -30,6 +30,10 @@ type DbRow = {
   shipping_policy_en?: string | null;
   return_policy_ar?: string | null;
   return_policy_en?: string | null;
+  materials_ar?: string | null;
+  materials_en?: string | null;
+  care_ar?: string | null;
+  care_en?: string | null;
   price: number | null;
   compare_at_price: number | null;
   currency: string | null;
