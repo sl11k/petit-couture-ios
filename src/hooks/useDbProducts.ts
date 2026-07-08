@@ -184,7 +184,7 @@ function mergeRowOntoBase(slug: string, row: DbRow | null, lang: "ar" | "en"): M
     shippingPolicy,
     returnPolicy,
     materials: materialsList.length ? materialsList : base.materials,
-    care: careList.length ? careList : (base as any).care,
+    careInstructions: careList.length ? careList : base.careInstructions,
     __fromDb: true,
   };
 }
