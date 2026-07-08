@@ -277,6 +277,35 @@ export const productDetailConfig: AdminDetailConfig = {
           render: (_v: any, row: any) => renderApplyShippingReturnsToAllButton(row),
         },
         {
+          key: "materials_ar",
+          label: { ar: "المواد (عربي)", en: "Materials (AR)" },
+          type: "longtext",
+          hideIfEmpty: true,
+        },
+        {
+          key: "materials_en",
+          label: { ar: "المواد (إنجليزي)", en: "Materials (EN)" },
+          type: "longtext",
+          hideIfEmpty: true,
+        },
+        {
+          key: "care_ar",
+          label: { ar: "تعليمات العناية (عربي)", en: "Care instructions (AR)" },
+          type: "longtext",
+          hideIfEmpty: true,
+        },
+        {
+          key: "care_en",
+          label: { ar: "تعليمات العناية (إنجليزي)", en: "Care instructions (EN)" },
+          type: "longtext",
+          hideIfEmpty: true,
+        },
+        {
+          key: "id",
+          label: { ar: "تطبيق المواد والعناية", en: "Apply care & materials" },
+          render: (_v: any, row: any) => renderApplyCareMaterialsToAllButton(row),
+        },
+        {
           key: "id",
           label: { ar: "إدارة المتغيرات والمخزون", en: "Manage variants & inventory" },
           render: (_v: any, row: any) => (
