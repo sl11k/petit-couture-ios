@@ -9,6 +9,7 @@ import { Search, Check } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LinkPicker } from "./LinkPicker";
+import { BannerImageEditor } from "./BannerImageEditor";
 import type {
   Section,
   ButtonContent,
