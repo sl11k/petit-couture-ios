@@ -246,6 +246,9 @@ export function HomeScreen() {
                     const pos = bn.object_position || "center center";
                     const fit = bn.object_fit || "cover";
                     const overlay = (bn.overlay_opacity ?? 45) / 100;
+                    const scale = bn.image_scale ?? 1;
+                    const offsetX = bn.image_offset_x ?? 0;
+                    const offsetY = bn.image_offset_y ?? 0;
                     return (
                     <a
                       key={bn.id}
@@ -264,7 +267,13 @@ export function HomeScreen() {
                           src={bn.image_url}
                           alt={ar ? (bn.title_ar ?? "") : (bn.title_en ?? "")}
                           className="w-full h-full"
-                          style={{ objectFit: fit as any, objectPosition: pos, height: "100%" }}
+                          style={{ 
+                            objectFit: fit as any, 
+                            objectPosition: pos, 
+                            height: "100%",
+                            transform: `scale(${scale}) translateX(${offsetX}%) translateY(${offsetY}%)`,
+                            transformOrigin: pos
+                          }}
                           loading="lazy"
                           decoding="async"
                         />
@@ -331,6 +340,8 @@ export function HomeScreen() {
                           objectFit: (currentBanner.object_fit || "cover") as any,
                           objectPosition: currentBanner.object_position || "center center",
                           height: "100%",
+                          transform: `scale(${currentBanner.image_scale ?? 1}) translateX(${currentBanner.image_offset_x ?? 0}%) translateY(${currentBanner.image_offset_y ?? 0}%)`,
+                          transformOrigin: currentBanner.object_position || "center center",
                         }}
                         loading="eager"
                         decoding="sync"
