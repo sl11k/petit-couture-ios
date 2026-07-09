@@ -73,9 +73,19 @@ import { Route as AdminPerformanceRouteImport } from './routes/admin.performance
 import { Route as AdminPaymentsRouteImport } from './routes/admin.payments'
 import { Route as AdminOtoRouteImport } from './routes/admin.oto'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
+import { Route as AdminNotificationsCenterRouteImport } from './routes/admin.notifications-center'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminNotificationTemplatesRouteImport } from './routes/admin.notification-templates'
 import { Route as AdminNotificationRulesRouteImport } from './routes/admin.notification-rules'
+import { Route as AdminNotifWasenderRouteImport } from './routes/admin.notif-wasender'
+import { Route as AdminNotifTemplatesRouteImport } from './routes/admin.notif-templates'
+import { Route as AdminNotifQueueRouteImport } from './routes/admin.notif-queue'
+import { Route as AdminNotifProvidersRouteImport } from './routes/admin.notif-providers'
+import { Route as AdminNotifLogsRouteImport } from './routes/admin.notif-logs'
+import { Route as AdminNotifEventsRouteImport } from './routes/admin.notif-events'
+import { Route as AdminNotifBroadcastRouteImport } from './routes/admin.notif-broadcast'
+import { Route as AdminNotifAnalyticsRouteImport } from './routes/admin.notif-analytics'
+import { Route as AdminNotifAdminsRouteImport } from './routes/admin.notif-admins'
 import { Route as AdminMetricsRouteImport } from './routes/admin.metrics'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminLoyaltyTransactionsRouteImport } from './routes/admin.loyalty-transactions'
@@ -144,6 +154,7 @@ import { Route as AdminAuditIdRouteImport } from './routes/admin.audit.$id'
 import { Route as AccountReturnsNewRouteImport } from './routes/account.returns.new'
 import { Route as ApiPublicOtoWebhookRouteImport } from './routes/api.public.oto.webhook'
 import { Route as ApiPublicCronNotifyDelaysRouteImport } from './routes/api/public/cron.notify-delays'
+import { Route as ApiPublicCronNotifProcessRouteImport } from './routes/api.public.cron.notif-process'
 import { Route as AdminProductsIdVariantsRouteImport } from './routes/admin.products.$id.variants'
 
 const WishlistRoute = WishlistRouteImport.update({
@@ -467,6 +478,12 @@ const AdminOrdersRoute = AdminOrdersRouteImport.update({
   path: '/orders',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminNotificationsCenterRoute =
+  AdminNotificationsCenterRouteImport.update({
+    id: '/notifications-center',
+    path: '/notifications-center',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
@@ -481,6 +498,51 @@ const AdminNotificationTemplatesRoute =
 const AdminNotificationRulesRoute = AdminNotificationRulesRouteImport.update({
   id: '/notification-rules',
   path: '/notification-rules',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotifWasenderRoute = AdminNotifWasenderRouteImport.update({
+  id: '/notif-wasender',
+  path: '/notif-wasender',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotifTemplatesRoute = AdminNotifTemplatesRouteImport.update({
+  id: '/notif-templates',
+  path: '/notif-templates',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotifQueueRoute = AdminNotifQueueRouteImport.update({
+  id: '/notif-queue',
+  path: '/notif-queue',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotifProvidersRoute = AdminNotifProvidersRouteImport.update({
+  id: '/notif-providers',
+  path: '/notif-providers',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotifLogsRoute = AdminNotifLogsRouteImport.update({
+  id: '/notif-logs',
+  path: '/notif-logs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotifEventsRoute = AdminNotifEventsRouteImport.update({
+  id: '/notif-events',
+  path: '/notif-events',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotifBroadcastRoute = AdminNotifBroadcastRouteImport.update({
+  id: '/notif-broadcast',
+  path: '/notif-broadcast',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotifAnalyticsRoute = AdminNotifAnalyticsRouteImport.update({
+  id: '/notif-analytics',
+  path: '/notif-analytics',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotifAdminsRoute = AdminNotifAdminsRouteImport.update({
+  id: '/notif-admins',
+  path: '/notif-admins',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminMetricsRoute = AdminMetricsRouteImport.update({
@@ -826,6 +888,12 @@ const ApiPublicCronNotifyDelaysRoute =
     path: '/api/public/cron/notify-delays',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicCronNotifProcessRoute =
+  ApiPublicCronNotifProcessRouteImport.update({
+    id: '/api/public/cron/notif-process',
+    path: '/api/public/cron/notif-process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminProductsIdVariantsRoute = AdminProductsIdVariantsRouteImport.update({
   id: '/variants',
   path: '/variants',
@@ -883,9 +951,19 @@ export interface FileRoutesByFullPath {
   '/admin/loyalty-transactions': typeof AdminLoyaltyTransactionsRoute
   '/admin/messages': typeof AdminMessagesRouteWithChildren
   '/admin/metrics': typeof AdminMetricsRoute
+  '/admin/notif-admins': typeof AdminNotifAdminsRoute
+  '/admin/notif-analytics': typeof AdminNotifAnalyticsRoute
+  '/admin/notif-broadcast': typeof AdminNotifBroadcastRoute
+  '/admin/notif-events': typeof AdminNotifEventsRoute
+  '/admin/notif-logs': typeof AdminNotifLogsRoute
+  '/admin/notif-providers': typeof AdminNotifProvidersRoute
+  '/admin/notif-queue': typeof AdminNotifQueueRoute
+  '/admin/notif-templates': typeof AdminNotifTemplatesRoute
+  '/admin/notif-wasender': typeof AdminNotifWasenderRoute
   '/admin/notification-rules': typeof AdminNotificationRulesRoute
   '/admin/notification-templates': typeof AdminNotificationTemplatesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/notifications-center': typeof AdminNotificationsCenterRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/oto': typeof AdminOtoRoute
   '/admin/payments': typeof AdminPaymentsRoute
@@ -967,6 +1045,7 @@ export interface FileRoutesByFullPath {
   '/admin/support/': typeof AdminSupportIndexRoute
   '/admin/webhooks/': typeof AdminWebhooksIndexRoute
   '/admin/products/$id/variants': typeof AdminProductsIdVariantsRoute
+  '/api/public/cron/notif-process': typeof ApiPublicCronNotifProcessRoute
   '/api/public/cron/notify-delays': typeof ApiPublicCronNotifyDelaysRoute
   '/api/public/oto/webhook': typeof ApiPublicOtoWebhookRoute
 }
@@ -1012,9 +1091,19 @@ export interface FileRoutesByTo {
   '/admin/loyalty': typeof AdminLoyaltyRoute
   '/admin/loyalty-transactions': typeof AdminLoyaltyTransactionsRoute
   '/admin/metrics': typeof AdminMetricsRoute
+  '/admin/notif-admins': typeof AdminNotifAdminsRoute
+  '/admin/notif-analytics': typeof AdminNotifAnalyticsRoute
+  '/admin/notif-broadcast': typeof AdminNotifBroadcastRoute
+  '/admin/notif-events': typeof AdminNotifEventsRoute
+  '/admin/notif-logs': typeof AdminNotifLogsRoute
+  '/admin/notif-providers': typeof AdminNotifProvidersRoute
+  '/admin/notif-queue': typeof AdminNotifQueueRoute
+  '/admin/notif-templates': typeof AdminNotifTemplatesRoute
+  '/admin/notif-wasender': typeof AdminNotifWasenderRoute
   '/admin/notification-rules': typeof AdminNotificationRulesRoute
   '/admin/notification-templates': typeof AdminNotificationTemplatesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/notifications-center': typeof AdminNotificationsCenterRoute
   '/admin/oto': typeof AdminOtoRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
@@ -1092,6 +1181,7 @@ export interface FileRoutesByTo {
   '/admin/support': typeof AdminSupportIndexRoute
   '/admin/webhooks': typeof AdminWebhooksIndexRoute
   '/admin/products/$id/variants': typeof AdminProductsIdVariantsRoute
+  '/api/public/cron/notif-process': typeof ApiPublicCronNotifProcessRoute
   '/api/public/cron/notify-delays': typeof ApiPublicCronNotifyDelaysRoute
   '/api/public/oto/webhook': typeof ApiPublicOtoWebhookRoute
 }
@@ -1147,9 +1237,19 @@ export interface FileRoutesById {
   '/admin/loyalty-transactions': typeof AdminLoyaltyTransactionsRoute
   '/admin/messages': typeof AdminMessagesRouteWithChildren
   '/admin/metrics': typeof AdminMetricsRoute
+  '/admin/notif-admins': typeof AdminNotifAdminsRoute
+  '/admin/notif-analytics': typeof AdminNotifAnalyticsRoute
+  '/admin/notif-broadcast': typeof AdminNotifBroadcastRoute
+  '/admin/notif-events': typeof AdminNotifEventsRoute
+  '/admin/notif-logs': typeof AdminNotifLogsRoute
+  '/admin/notif-providers': typeof AdminNotifProvidersRoute
+  '/admin/notif-queue': typeof AdminNotifQueueRoute
+  '/admin/notif-templates': typeof AdminNotifTemplatesRoute
+  '/admin/notif-wasender': typeof AdminNotifWasenderRoute
   '/admin/notification-rules': typeof AdminNotificationRulesRoute
   '/admin/notification-templates': typeof AdminNotificationTemplatesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/notifications-center': typeof AdminNotificationsCenterRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/oto': typeof AdminOtoRoute
   '/admin/payments': typeof AdminPaymentsRoute
@@ -1231,6 +1331,7 @@ export interface FileRoutesById {
   '/admin/support/': typeof AdminSupportIndexRoute
   '/admin/webhooks/': typeof AdminWebhooksIndexRoute
   '/admin/products/$id/variants': typeof AdminProductsIdVariantsRoute
+  '/api/public/cron/notif-process': typeof ApiPublicCronNotifProcessRoute
   '/api/public/cron/notify-delays': typeof ApiPublicCronNotifyDelaysRoute
   '/api/public/oto/webhook': typeof ApiPublicOtoWebhookRoute
 }
@@ -1287,9 +1388,19 @@ export interface FileRouteTypes {
     | '/admin/loyalty-transactions'
     | '/admin/messages'
     | '/admin/metrics'
+    | '/admin/notif-admins'
+    | '/admin/notif-analytics'
+    | '/admin/notif-broadcast'
+    | '/admin/notif-events'
+    | '/admin/notif-logs'
+    | '/admin/notif-providers'
+    | '/admin/notif-queue'
+    | '/admin/notif-templates'
+    | '/admin/notif-wasender'
     | '/admin/notification-rules'
     | '/admin/notification-templates'
     | '/admin/notifications'
+    | '/admin/notifications-center'
     | '/admin/orders'
     | '/admin/oto'
     | '/admin/payments'
@@ -1371,6 +1482,7 @@ export interface FileRouteTypes {
     | '/admin/support/'
     | '/admin/webhooks/'
     | '/admin/products/$id/variants'
+    | '/api/public/cron/notif-process'
     | '/api/public/cron/notify-delays'
     | '/api/public/oto/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -1416,9 +1528,19 @@ export interface FileRouteTypes {
     | '/admin/loyalty'
     | '/admin/loyalty-transactions'
     | '/admin/metrics'
+    | '/admin/notif-admins'
+    | '/admin/notif-analytics'
+    | '/admin/notif-broadcast'
+    | '/admin/notif-events'
+    | '/admin/notif-logs'
+    | '/admin/notif-providers'
+    | '/admin/notif-queue'
+    | '/admin/notif-templates'
+    | '/admin/notif-wasender'
     | '/admin/notification-rules'
     | '/admin/notification-templates'
     | '/admin/notifications'
+    | '/admin/notifications-center'
     | '/admin/oto'
     | '/admin/payments'
     | '/admin/performance'
@@ -1496,6 +1618,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/webhooks'
     | '/admin/products/$id/variants'
+    | '/api/public/cron/notif-process'
     | '/api/public/cron/notify-delays'
     | '/api/public/oto/webhook'
   id:
@@ -1550,9 +1673,19 @@ export interface FileRouteTypes {
     | '/admin/loyalty-transactions'
     | '/admin/messages'
     | '/admin/metrics'
+    | '/admin/notif-admins'
+    | '/admin/notif-analytics'
+    | '/admin/notif-broadcast'
+    | '/admin/notif-events'
+    | '/admin/notif-logs'
+    | '/admin/notif-providers'
+    | '/admin/notif-queue'
+    | '/admin/notif-templates'
+    | '/admin/notif-wasender'
     | '/admin/notification-rules'
     | '/admin/notification-templates'
     | '/admin/notifications'
+    | '/admin/notifications-center'
     | '/admin/orders'
     | '/admin/oto'
     | '/admin/payments'
@@ -1634,6 +1767,7 @@ export interface FileRouteTypes {
     | '/admin/support/'
     | '/admin/webhooks/'
     | '/admin/products/$id/variants'
+    | '/api/public/cron/notif-process'
     | '/api/public/cron/notify-delays'
     | '/api/public/oto/webhook'
   fileRoutesById: FileRoutesById
@@ -1676,6 +1810,7 @@ export interface RootRouteChildren {
   ApiV1InventoryRoute: typeof ApiV1InventoryRoute
   ApiV1OrdersRoute: typeof ApiV1OrdersRoute
   ApiV1ProductsRoute: typeof ApiV1ProductsRoute
+  ApiPublicCronNotifProcessRoute: typeof ApiPublicCronNotifProcessRoute
   ApiPublicCronNotifyDelaysRoute: typeof ApiPublicCronNotifyDelaysRoute
   ApiPublicOtoWebhookRoute: typeof ApiPublicOtoWebhookRoute
 }
@@ -2130,6 +2265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOrdersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/notifications-center': {
+      id: '/admin/notifications-center'
+      path: '/notifications-center'
+      fullPath: '/admin/notifications-center'
+      preLoaderRoute: typeof AdminNotificationsCenterRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/notifications': {
       id: '/admin/notifications'
       path: '/notifications'
@@ -2149,6 +2291,69 @@ declare module '@tanstack/react-router' {
       path: '/notification-rules'
       fullPath: '/admin/notification-rules'
       preLoaderRoute: typeof AdminNotificationRulesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notif-wasender': {
+      id: '/admin/notif-wasender'
+      path: '/notif-wasender'
+      fullPath: '/admin/notif-wasender'
+      preLoaderRoute: typeof AdminNotifWasenderRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notif-templates': {
+      id: '/admin/notif-templates'
+      path: '/notif-templates'
+      fullPath: '/admin/notif-templates'
+      preLoaderRoute: typeof AdminNotifTemplatesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notif-queue': {
+      id: '/admin/notif-queue'
+      path: '/notif-queue'
+      fullPath: '/admin/notif-queue'
+      preLoaderRoute: typeof AdminNotifQueueRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notif-providers': {
+      id: '/admin/notif-providers'
+      path: '/notif-providers'
+      fullPath: '/admin/notif-providers'
+      preLoaderRoute: typeof AdminNotifProvidersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notif-logs': {
+      id: '/admin/notif-logs'
+      path: '/notif-logs'
+      fullPath: '/admin/notif-logs'
+      preLoaderRoute: typeof AdminNotifLogsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notif-events': {
+      id: '/admin/notif-events'
+      path: '/notif-events'
+      fullPath: '/admin/notif-events'
+      preLoaderRoute: typeof AdminNotifEventsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notif-broadcast': {
+      id: '/admin/notif-broadcast'
+      path: '/notif-broadcast'
+      fullPath: '/admin/notif-broadcast'
+      preLoaderRoute: typeof AdminNotifBroadcastRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notif-analytics': {
+      id: '/admin/notif-analytics'
+      path: '/notif-analytics'
+      fullPath: '/admin/notif-analytics'
+      preLoaderRoute: typeof AdminNotifAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notif-admins': {
+      id: '/admin/notif-admins'
+      path: '/notif-admins'
+      fullPath: '/admin/notif-admins'
+      preLoaderRoute: typeof AdminNotifAdminsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/metrics': {
@@ -2627,6 +2832,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronNotifyDelaysRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/notif-process': {
+      id: '/api/public/cron/notif-process'
+      path: '/api/public/cron/notif-process'
+      fullPath: '/api/public/cron/notif-process'
+      preLoaderRoute: typeof ApiPublicCronNotifProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/products/$id/variants': {
       id: '/admin/products/$id/variants'
       path: '/variants'
@@ -2871,9 +3083,19 @@ interface AdminRouteChildren {
   AdminLoyaltyTransactionsRoute: typeof AdminLoyaltyTransactionsRoute
   AdminMessagesRoute: typeof AdminMessagesRouteWithChildren
   AdminMetricsRoute: typeof AdminMetricsRoute
+  AdminNotifAdminsRoute: typeof AdminNotifAdminsRoute
+  AdminNotifAnalyticsRoute: typeof AdminNotifAnalyticsRoute
+  AdminNotifBroadcastRoute: typeof AdminNotifBroadcastRoute
+  AdminNotifEventsRoute: typeof AdminNotifEventsRoute
+  AdminNotifLogsRoute: typeof AdminNotifLogsRoute
+  AdminNotifProvidersRoute: typeof AdminNotifProvidersRoute
+  AdminNotifQueueRoute: typeof AdminNotifQueueRoute
+  AdminNotifTemplatesRoute: typeof AdminNotifTemplatesRoute
+  AdminNotifWasenderRoute: typeof AdminNotifWasenderRoute
   AdminNotificationRulesRoute: typeof AdminNotificationRulesRoute
   AdminNotificationTemplatesRoute: typeof AdminNotificationTemplatesRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
+  AdminNotificationsCenterRoute: typeof AdminNotificationsCenterRoute
   AdminOrdersRoute: typeof AdminOrdersRouteWithChildren
   AdminOtoRoute: typeof AdminOtoRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
@@ -2942,9 +3164,19 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminLoyaltyTransactionsRoute: AdminLoyaltyTransactionsRoute,
   AdminMessagesRoute: AdminMessagesRouteWithChildren,
   AdminMetricsRoute: AdminMetricsRoute,
+  AdminNotifAdminsRoute: AdminNotifAdminsRoute,
+  AdminNotifAnalyticsRoute: AdminNotifAnalyticsRoute,
+  AdminNotifBroadcastRoute: AdminNotifBroadcastRoute,
+  AdminNotifEventsRoute: AdminNotifEventsRoute,
+  AdminNotifLogsRoute: AdminNotifLogsRoute,
+  AdminNotifProvidersRoute: AdminNotifProvidersRoute,
+  AdminNotifQueueRoute: AdminNotifQueueRoute,
+  AdminNotifTemplatesRoute: AdminNotifTemplatesRoute,
+  AdminNotifWasenderRoute: AdminNotifWasenderRoute,
   AdminNotificationRulesRoute: AdminNotificationRulesRoute,
   AdminNotificationTemplatesRoute: AdminNotificationTemplatesRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
+  AdminNotificationsCenterRoute: AdminNotificationsCenterRoute,
   AdminOrdersRoute: AdminOrdersRouteWithChildren,
   AdminOtoRoute: AdminOtoRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
@@ -3034,6 +3266,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiV1InventoryRoute: ApiV1InventoryRoute,
   ApiV1OrdersRoute: ApiV1OrdersRoute,
   ApiV1ProductsRoute: ApiV1ProductsRoute,
+  ApiPublicCronNotifProcessRoute: ApiPublicCronNotifProcessRoute,
   ApiPublicCronNotifyDelaysRoute: ApiPublicCronNotifyDelaysRoute,
   ApiPublicOtoWebhookRoute: ApiPublicOtoWebhookRoute,
 }

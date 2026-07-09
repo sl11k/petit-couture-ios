@@ -409,5 +409,34 @@ export const placeOrder = createServerFn({ method: "POST" })
     // 5. Auto-create OTO shipment ONLY after payment is confirmed.
     //    Hosted/deferred methods wait until the payment webhook marks
     //    payment_status='paid', then the webhook triggers OTO idempotently.
+
+    // 6. Enqueue order.created notification (best-effort, non-blocking).
+    try {
+      const { enqueueNotification } = await import("@/lib/notif/engine.server");
+      const vars = {
+        order_number: order.order_number,
+        order_total: finalTotal,
+        currency: data.currency,
+        customer_name: data.address.fullName,
+        customer_phone: data.address.phone,
+        customer_email: data.address.email,
+        payment_method: data.payment_method,
+        items_count: pricedItems.length,
+      };
+      await enqueueNotification({
+        event_code: "order.created",
+        audience: "both",
+        recipient_phone: data.address.phone,
+        recipient_email: data.address.email,
+        recipient_user_id: verifiedUserId,
+        variables: vars,
+        related_entity: "order",
+        related_entity_id: order.id,
+        dedupe_key: `order.created:${order.id}`,
+      });
+    } catch (e: any) {
+      console.warn("[placeOrder] notif enqueue failed:", e?.message || e);
+    }
+
     return { order, duplicate: false as const };
   });
