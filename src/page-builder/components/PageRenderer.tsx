@@ -1620,6 +1620,9 @@ function RenderBanner({ s }: { s: BannerSection }) {
             draggable={false}
           />
         )}
+        {img && overlay > 0 && (
+          <div className="absolute inset-0 pointer-events-none" style={{ background: `rgba(0,0,0,${overlay})` }} />
+        )}
         <div className="relative p-8 max-w-3xl">
           {title && (
             <h2 className="text-3xl md:text-4xl font-bold mb-2" style={textStyle(c.titleStyle)}>
