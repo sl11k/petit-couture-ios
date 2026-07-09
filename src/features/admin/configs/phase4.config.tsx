@@ -291,7 +291,7 @@ landingPagesConfig.form = [
 storefrontConfig.actions = { ...storefrontConfig.actions, create: true, edit: true, delete: true };
 storefrontConfig.form = [
   { key: "image_url", label: { ar: "صورة الجوال (Mobile)", en: "Mobile image" }, type: "image", required: true, bucket: "banner-media", folder: "storefront",
-    help: { ar: "الصورة الأساسية — تُستخدم في الجوال والأجهزة الأخرى إذا لم يتم رفع صورة مخصصة.", en: "Primary image — used on mobile and as fallback for other devices." } },
+},
   { key: "image_url_tablet", label: { ar: "صورة التابلت (اختياري)", en: "Tablet image (optional)" }, type: "image", bucket: "banner-media", folder: "storefront" },
   { key: "image_url_desktop", label: { ar: "صورة الديسكتوب (اختياري)", en: "Desktop image (optional)" }, type: "image", bucket: "banner-media", folder: "storefront" },
   { key: "object_fit", label: { ar: "طريقة العرض", en: "Image fit" }, type: "select", defaultValue: "cover",
@@ -300,7 +300,7 @@ storefrontConfig.form = [
       { value: "contain", label: { ar: "احتواء الصورة كاملة (بدون قص)", en: "Contain (show whole image)" } },
     ] },
   { key: "object_position", label: { ar: "موضع الصورة (Focal)", en: "Image position (Focal point)" }, type: "select", defaultValue: "center center",
-    help: { ar: "يحدد الجزء الظاهر من الصورة عند القص.", en: "Controls which part of the image is visible when cropped." },
+
     options: [
       { value: "center center", label: { ar: "الوسط", en: "Center" } },
       { value: "center top", label: { ar: "الأعلى", en: "Top" } },
