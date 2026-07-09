@@ -9,6 +9,7 @@ import { Search, Check } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LinkPicker } from "./LinkPicker";
+import { BannerImageEditor } from "./BannerImageEditor";
 import type {
   Section,
   ButtonContent,
@@ -2151,6 +2152,22 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
             onChange={(v) => updateContent({ image: v })}
             allowLink={false}
           />
+          {s.content.image?.url && (
+            <BannerImageEditor
+              url={s.content.image.url}
+              fit={s.content.imageFit ?? "cover"}
+              focalX={s.content.focalX ?? 50}
+              focalY={s.content.focalY ?? 50}
+              scale={s.content.imageScale ?? 1}
+              onChange={(patch) => {
+                const next: Record<string, unknown> = {};
+                if (patch.focalX !== undefined) next.focalX = patch.focalX;
+                if (patch.focalY !== undefined) next.focalY = patch.focalY;
+                if (patch.scale !== undefined) next.imageScale = patch.scale;
+                updateContent(next);
+              }}
+            />
+          )}
           <TextField
             label="العنوان (ع)"
             value={s.content.title_ar}
