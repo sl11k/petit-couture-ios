@@ -1025,7 +1025,39 @@ function ProductDetails() {
             </section>
           )}
 
+          {(product.deliveryEstimate || product.shippingPolicy || product.returnPolicy) && (
+            <section className="px-5 mt-6">
+              <div className="rounded-[14px] border border-border bg-card/40 divide-y divide-border">
+                {product.deliveryEstimate && (
+                  <div className="flex items-start gap-3 p-3">
+                    <Truck className="h-4 w-4 text-gold-deep mt-0.5 shrink-0" />
+                    <p className="text-[13px] text-foreground/85 whitespace-pre-line leading-[1.6]">
+                      {product.deliveryEstimate}
+                    </p>
+                  </div>
+                )}
+                {product.shippingPolicy && (
+                  <div className="flex items-start gap-3 p-3">
+                    <Package className="h-4 w-4 text-gold-deep mt-0.5 shrink-0" />
+                    <p className="text-[13px] text-foreground/85 whitespace-pre-line leading-[1.6]">
+                      {product.shippingPolicy}
+                    </p>
+                  </div>
+                )}
+                {product.returnPolicy && (
+                  <div className="flex items-start gap-3 p-3">
+                    <RotateCcw className="h-4 w-4 text-gold-deep mt-0.5 shrink-0" />
+                    <p className="text-[13px] text-foreground/85 whitespace-pre-line leading-[1.6]">
+                      {product.returnPolicy}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+
           {/* Tabs: Description / Specs / Care */}
+
           <section className="px-5 mt-8">
             <div
               role="tablist"
