@@ -2194,6 +2194,106 @@ export function SectionEditor({ section, onChange, onConvertLegacy, notify }: Pr
             </select>
           </div>
           <div>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">ارتفاع مخصص (بكسل) — اتركه 0 للاعتماد على المقاس أعلاه</Label>
+              <span className="text-xs text-muted-foreground">{s.content.customHeight ?? 0}px</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={900}
+              step={10}
+              value={s.content.customHeight ?? 0}
+              onChange={(e) => updateContent({ customHeight: Number(e.target.value) })}
+              className="w-full accent-primary"
+            />
+          </div>
+          <div className="rounded-md border border-border p-3 space-y-3">
+            <Label className="text-xs font-semibold">تحكم كامل بالصورة</Label>
+            <div>
+              <Label className="text-xs">طريقة العرض</Label>
+              <select
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                value={s.content.imageFit ?? "cover"}
+                onChange={(e) => updateContent({ imageFit: e.target.value as any })}
+              >
+                <option value="cover">ملء الإطار مع القص (Cover)</option>
+                <option value="contain">إظهار الصورة كاملة (Contain)</option>
+                <option value="fill">تمدد الصورة (Fill)</option>
+              </select>
+            </div>
+            <div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">نقطة التركيز أفقياً (يمين ↔ يسار)</Label>
+                <span className="text-xs text-muted-foreground">{s.content.focalX ?? 50}%</span>
+              </div>
+              <input
+                type="range" min={0} max={100} step={1}
+                value={s.content.focalX ?? 50}
+                onChange={(e) => updateContent({ focalX: Number(e.target.value) })}
+                className="w-full accent-primary"
+              />
+            </div>
+            <div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">نقطة التركيز عمودياً (أعلى ↕ أسفل)</Label>
+                <span className="text-xs text-muted-foreground">{s.content.focalY ?? 50}%</span>
+              </div>
+              <input
+                type="range" min={0} max={100} step={1}
+                value={s.content.focalY ?? 50}
+                onChange={(e) => updateContent({ focalY: Number(e.target.value) })}
+                className="w-full accent-primary"
+              />
+            </div>
+            <div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">تكبير/تصغير الصورة</Label>
+                <span className="text-xs text-muted-foreground">{(s.content.imageScale ?? 1).toFixed(2)}x</span>
+              </div>
+              <input
+                type="range" min={0.5} max={3} step={0.05}
+                value={s.content.imageScale ?? 1}
+                onChange={(e) => updateContent({ imageScale: Number(e.target.value) })}
+                className="w-full accent-primary"
+              />
+            </div>
+            <div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">إزاحة أفقية</Label>
+                <span className="text-xs text-muted-foreground">{s.content.imageOffsetX ?? 0}%</span>
+              </div>
+              <input
+                type="range" min={-100} max={100} step={1}
+                value={s.content.imageOffsetX ?? 0}
+                onChange={(e) => updateContent({ imageOffsetX: Number(e.target.value) })}
+                className="w-full accent-primary"
+              />
+            </div>
+            <div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">إزاحة عمودية</Label>
+                <span className="text-xs text-muted-foreground">{s.content.imageOffsetY ?? 0}%</span>
+              </div>
+              <input
+                type="range" min={-100} max={100} step={1}
+                value={s.content.imageOffsetY ?? 0}
+                onChange={(e) => updateContent({ imageOffsetY: Number(e.target.value) })}
+                className="w-full accent-primary"
+              />
+            </div>
+            <button
+              type="button"
+              className="text-xs text-primary hover:underline"
+              onClick={() => updateContent({
+                imageFit: "cover", focalX: 50, focalY: 50,
+                imageScale: 1, imageOffsetX: 0, imageOffsetY: 0,
+              })}
+            >
+              إعادة ضبط تحكم الصورة
+            </button>
+          </div>
+          <div>
             <Label className="text-xs">الشكل</Label>
             <select
               className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
