@@ -5,6 +5,14 @@ import { getCategoryProductIds } from "@/lib/productCategories";
 export type Banner = {
   id: string;
   image_url: string;
+  image_url_tablet: string | null;
+  image_url_desktop: string | null;
+  object_position: string | null;
+  object_fit: string | null;
+  height_mobile: number | null;
+  height_tablet: number | null;
+  height_desktop: number | null;
+  overlay_opacity: number | null;
   title_ar: string | null;
   title_en: string | null;
   subtitle_ar: string | null;

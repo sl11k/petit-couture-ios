@@ -290,7 +290,32 @@ landingPagesConfig.form = [
 
 storefrontConfig.actions = { ...storefrontConfig.actions, create: true, edit: true, delete: true };
 storefrontConfig.form = [
-  { key: "image_url", label: { ar: "صورة البانر/الشريحة", en: "Banner / slide image" }, type: "image", required: true, bucket: "banner-media", folder: "storefront" },
+  { key: "image_url", label: { ar: "صورة الجوال (Mobile)", en: "Mobile image" }, type: "image", required: true, bucket: "banner-media", folder: "storefront",
+},
+  { key: "image_url_tablet", label: { ar: "صورة التابلت (اختياري)", en: "Tablet image (optional)" }, type: "image", bucket: "banner-media", folder: "storefront" },
+  { key: "image_url_desktop", label: { ar: "صورة الديسكتوب (اختياري)", en: "Desktop image (optional)" }, type: "image", bucket: "banner-media", folder: "storefront" },
+  { key: "object_fit", label: { ar: "طريقة العرض", en: "Image fit" }, type: "select", defaultValue: "cover",
+    options: [
+      { value: "cover", label: { ar: "ملء الإطار (قد يتم قص أطراف الصورة)", en: "Cover (crop to fill)" } },
+      { value: "contain", label: { ar: "احتواء الصورة كاملة (بدون قص)", en: "Contain (show whole image)" } },
+    ] },
+  { key: "object_position", label: { ar: "موضع الصورة (Focal)", en: "Image position (Focal point)" }, type: "select", defaultValue: "center center",
+
+    options: [
+      { value: "center center", label: { ar: "الوسط", en: "Center" } },
+      { value: "center top", label: { ar: "الأعلى", en: "Top" } },
+      { value: "center bottom", label: { ar: "الأسفل", en: "Bottom" } },
+      { value: "left center", label: { ar: "اليسار", en: "Left" } },
+      { value: "right center", label: { ar: "اليمين", en: "Right" } },
+      { value: "left top", label: { ar: "أعلى اليسار", en: "Top-left" } },
+      { value: "right top", label: { ar: "أعلى اليمين", en: "Top-right" } },
+      { value: "left bottom", label: { ar: "أسفل اليسار", en: "Bottom-left" } },
+      { value: "right bottom", label: { ar: "أسفل اليمين", en: "Bottom-right" } },
+    ] },
+  { key: "height_mobile", label: { ar: "ارتفاع الجوال (px)", en: "Mobile height (px)" }, type: "number", min: 120, max: 1200, defaultValue: 440 },
+  { key: "height_tablet", label: { ar: "ارتفاع التابلت (px)", en: "Tablet height (px)" }, type: "number", min: 120, max: 1400, defaultValue: 520 },
+  { key: "height_desktop", label: { ar: "ارتفاع الديسكتوب (px)", en: "Desktop height (px)" }, type: "number", min: 120, max: 1600, defaultValue: 640 },
+  { key: "overlay_opacity", label: { ar: "شفافية التعتيم (0-100)", en: "Overlay opacity (0-100)" }, type: "number", min: 0, max: 100, defaultValue: 45 },
   { key: "title_ar", label: { ar: "العنوان (AR)", en: "Title (AR)" }, type: "text" },
   { key: "title_en", label: { ar: "العنوان (EN)", en: "Title (EN)" }, type: "text" },
   { key: "subtitle_ar", label: { ar: "العنوان الفرعي (AR)", en: "Subtitle (AR)" }, type: "text" },
