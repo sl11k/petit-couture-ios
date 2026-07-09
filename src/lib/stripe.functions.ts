@@ -261,3 +261,119 @@ export const createStripeCheckout = createServerFn({ method: "POST" })
       checkout_url: checkoutUrl,
     };
   });
+
+
+const STRIPE_REFUNDS_API = "https://api.stripe.com/v1/refunds";
+
+const RefundSchema = z.object({
+  transaction_id: z.string().uuid(),
+  amount: z.number().min(0.01).optional(),
+  reason: z.enum(["duplicate", "fraudulent", "requested_by_customer", "expired_uncaptured_charge"]).optional(),
+});
+
+export const createStripeRefund = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => RefundSchema.parse(input))
+  .handler(async ({ data }) => {
+    const secret = await getStripeSecret();
+    if (!secret) throw new Error("STRIPE_SECRET_KEY is not configured");
+
+    // Get the transaction to find the charge/payment intent
+    const { data: transaction, error: transactionError } = await supabaseAdmin
+      .from("payment_transactions")
+      .select("*")
+      .eq("id", data.transaction_id)
+      .maybeSingle();
+
+    if (transactionError || !transaction) {
+      throw new Error("Transaction not found");
+    }
+
+    if (transaction.gateway !== "stripe") {
+      throw new Error("This transaction is not from Stripe");
+    }
+
+    if (transaction.status !== "captured") {
+      throw new Error("Can only refund captured transactions");
+    }
+
+    const chargeId = transaction.gateway_transaction_id;
+    const refundAmount = data.amount ? Math.round(data.amount * 100) : Math.round(transaction.amount * 100);
+
+    const params = new URLSearchParams();
+    params.set("charge", chargeId);
+    params.set("amount", String(refundAmount));
+    if (data.reason) {
+      params.set("reason", data.reason);
+    }
+    params.set("metadata[order_id]", transaction.order_id || "");
+    params.set("metadata[order_number]", transaction.order_number || "");
+    params.set("metadata[transaction_id]", transaction.id);
+
+    const response = await fetch(STRIPE_REFUNDS_API, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${secret}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Idempotency-Key": `refund:${transaction.id}:${refundAmount}`,
+      },
+      body: params,
+    });
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const message = result?.error?.message || `Stripe refund error ${response.status}`;
+      throw new Error(message);
+    }
+
+    const refundId = result?.id as string | undefined;
+    if (!refundId) {
+      throw new Error("Stripe did not return a refund ID");
+    }
+
+    // Create refund transaction record
+    const { data: refundTransaction, error: refundError } = await supabaseAdmin
+      .from("payment_transactions")
+      .insert({
+        order_id: transaction.order_id,
+        order_number: transaction.order_number,
+        amount: refundAmount / 100,
+        currency: transaction.currency,
+        gateway: "stripe",
+        gateway_transaction_id: refundId,
+        status: "refunded",
+        raw_response: result as never,
+        webhook_verified: true,
+        metadata: { parent_transaction_id: transaction.id, refund_reason: data.reason || "admin_refund" } as never,
+      })
+      .select("id")
+      .single();
+
+    if (refundError || !refundTransaction) {
+      throw new Error(`Could not create refund transaction: ${refundError?.message}`);
+    }
+
+    // Update order with refund info
+    const { error: orderError } = await supabaseAdmin
+      .from("orders")
+      .update({
+        refunded_amount: (await supabaseAdmin
+          .from("payment_transactions")
+          .select("amount")
+          .eq("order_id", transaction.order_id || "")
+          .eq("status", "refunded")
+          .then(({ data }) => data?.reduce((sum, t) => sum + Number(t.amount), 0) || 0)) + (refundAmount / 100),
+        last_transaction_id: refundTransaction.id,
+      })
+      .eq("id", transaction.order_id || "");
+
+    if (orderError) {
+      console.error(`[stripe-refund] Could not update order refund amount: ${orderError.message}`);
+    }
+
+    return {
+      ok: true as const,
+      refund_id: refundId,
+      amount: refundAmount / 100,
+      transaction_id: refundTransaction.id,
+    };
+  });

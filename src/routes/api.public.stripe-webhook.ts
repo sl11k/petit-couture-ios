@@ -76,6 +76,19 @@ export const Route = createFileRoute("/api/public/stripe-webhook")({
             return json({ ok: true });
           }
 
+          if (
+            event.type === "charge.refunded" ||
+            event.type === "refund.created" ||
+            event.type === "refund.updated"
+          ) {
+            const result = await handleStripeRefund(object, event);
+            await markWebhookLog(logId, {
+              processed: true,
+              related_transaction_id: result.transactionId,
+            });
+            return json({ ok: true });
+          }
+
           await markWebhookLog(logId, { processed: true });
           return json({ ok: true, ignored: true });
         } catch (err) {
@@ -261,6 +274,81 @@ async function failStripeCheckout(object: Record<string, unknown>, event: Stripe
     .eq("id", order.id);
 
   return { transactionId };
+}
+
+async function handleStripeRefund(object: Record<string, unknown>, event: StripeEvent) {
+  const chargeId = String(object.id || object.charge || event.id);
+  const refundId = String(object.id || "");
+  const amountRefunded = Number(object.amount_refunded ?? object.amount ?? 0) / 100;
+  const currency = String(object.currency || "SAR").toUpperCase();
+  
+  // Find the transaction by charge ID
+  const { data: transaction } = await supabaseAdmin
+    .from("payment_transactions")
+    .select("*")
+    .eq("gateway", "stripe")
+    .eq("gateway_transaction_id", chargeId)
+    .maybeSingle();
+  
+  if (!transaction) {
+    console.log(`[stripe-webhook] No transaction found for charge ${chargeId}`);
+    return { transactionId: null };
+  }
+  
+  // Check if refund already exists
+  const { data: existingRefund } = await supabaseAdmin
+    .from("payment_transactions")
+    .select("id")
+    .eq("gateway", "stripe")
+    .eq("gateway_transaction_id", refundId)
+    .maybeSingle();
+  
+  if (existingRefund) {
+    console.log(`[stripe-webhook] Refund ${refundId} already processed`);
+    return { transactionId: existingRefund.id };
+  }
+  
+  // Create refund transaction record
+  const { data: refundTransaction, error: refundError } = await supabaseAdmin
+    .from("payment_transactions")
+    .insert({
+      order_id: transaction.order_id,
+      order_number: transaction.order_number,
+      amount: amountRefunded,
+      currency: currency,
+      gateway: "stripe",
+      gateway_transaction_id: refundId,
+      status: "refunded",
+      raw_response: event as never,
+      webhook_verified: true,
+      metadata: { parent_transaction_id: transaction.id, refund_reason: "stripe_webhook" } as never,
+    })
+    .select("id")
+    .single();
+  
+  if (refundError || !refundTransaction) {
+    throw new Error(`Could not create refund transaction: ${refundError?.message}`);
+  }
+  
+  // Update order with refund info
+  const { error: orderError } = await supabaseAdmin
+    .from("orders")
+    .update({
+      refunded_amount: (await supabaseAdmin
+        .from("payment_transactions")
+        .select("amount")
+        .eq("order_id", transaction.order_id || "")
+        .eq("status", "refunded")
+        .then(({ data }) => data?.reduce((sum, t) => sum + Number(t.amount), 0) || 0)) + amountRefunded,
+      last_transaction_id: refundTransaction.id,
+    })
+    .eq("id", transaction.order_id || "");
+  
+  if (orderError) {
+    console.error(`[stripe-webhook] Could not update order refund amount: ${orderError.message}`);
+  }
+  
+  return { transactionId: refundTransaction.id };
 }
 
 async function findOrCreateStripeTransaction(input: {
