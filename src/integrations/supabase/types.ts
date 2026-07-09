@@ -3979,6 +3979,8 @@ export type Database = {
           attachments: Json | null
           barcode: string | null
           brand: string | null
+          care_ar: string | null
+          care_en: string | null
           category_id: string | null
           colors: Json
           compare_at_price: number | null
@@ -3998,6 +4000,8 @@ export type Database = {
           images: Json
           is_active: boolean
           low_stock_threshold: number | null
+          materials_ar: string | null
+          materials_en: string | null
           meta_description: string | null
           meta_title: string | null
           name_ar: string
@@ -4037,6 +4041,8 @@ export type Database = {
           attachments?: Json | null
           barcode?: string | null
           brand?: string | null
+          care_ar?: string | null
+          care_en?: string | null
           category_id?: string | null
           colors?: Json
           compare_at_price?: number | null
@@ -4056,6 +4062,8 @@ export type Database = {
           images?: Json
           is_active?: boolean
           low_stock_threshold?: number | null
+          materials_ar?: string | null
+          materials_en?: string | null
           meta_description?: string | null
           meta_title?: string | null
           name_ar: string
@@ -4095,6 +4103,8 @@ export type Database = {
           attachments?: Json | null
           barcode?: string | null
           brand?: string | null
+          care_ar?: string | null
+          care_en?: string | null
           category_id?: string | null
           colors?: Json
           compare_at_price?: number | null
@@ -4114,6 +4124,8 @@ export type Database = {
           images?: Json
           is_active?: boolean
           low_stock_threshold?: number | null
+          materials_ar?: string | null
+          materials_en?: string | null
           meta_description?: string | null
           meta_title?: string | null
           name_ar?: string
@@ -5771,9 +5783,17 @@ export type Database = {
           cta_url: string | null
           eyebrow_ar: string | null
           eyebrow_en: string | null
+          height_desktop: number | null
+          height_mobile: number | null
+          height_tablet: number | null
           id: string
           image_url: string
+          image_url_desktop: string | null
+          image_url_tablet: string | null
           is_active: boolean
+          object_fit: string
+          object_position: string
+          overlay_opacity: number | null
           sort_order: number
           subtitle_ar: string | null
           subtitle_en: string | null
@@ -5788,9 +5808,17 @@ export type Database = {
           cta_url?: string | null
           eyebrow_ar?: string | null
           eyebrow_en?: string | null
+          height_desktop?: number | null
+          height_mobile?: number | null
+          height_tablet?: number | null
           id?: string
           image_url: string
+          image_url_desktop?: string | null
+          image_url_tablet?: string | null
           is_active?: boolean
+          object_fit?: string
+          object_position?: string
+          overlay_opacity?: number | null
           sort_order?: number
           subtitle_ar?: string | null
           subtitle_en?: string | null
@@ -5805,9 +5833,17 @@ export type Database = {
           cta_url?: string | null
           eyebrow_ar?: string | null
           eyebrow_en?: string | null
+          height_desktop?: number | null
+          height_mobile?: number | null
+          height_tablet?: number | null
           id?: string
           image_url?: string
+          image_url_desktop?: string | null
+          image_url_tablet?: string | null
           is_active?: boolean
+          object_fit?: string
+          object_position?: string
+          overlay_opacity?: number | null
           sort_order?: number
           subtitle_ar?: string | null
           subtitle_en?: string | null

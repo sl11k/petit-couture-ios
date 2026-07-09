@@ -270,6 +270,43 @@ productsConfig.form = [
   },
 
   {
+    key: "materials_ar",
+    label: { ar: "المواد (عربي)", en: "Materials (AR)" },
+    type: "textarea",
+    rows: 3,
+    fullWidth: true,
+    helpText: {
+      ar: "اكتب كل مادة في سطر مستقل (مثلاً: قطن 100%). تظهر في تبويب \"العناية والمواد\".",
+      en: "One material per line (e.g. 100% cotton). Shown in the Care & Materials tab.",
+    },
+  },
+  {
+    key: "materials_en",
+    label: { ar: "المواد (إنجليزي)", en: "Materials (EN)" },
+    type: "textarea",
+    rows: 3,
+    fullWidth: true,
+  },
+  {
+    key: "care_ar",
+    label: { ar: "تعليمات العناية (عربي)", en: "Care instructions (AR)" },
+    type: "textarea",
+    rows: 4,
+    fullWidth: true,
+    helpText: {
+      ar: "اكتب كل تعليمة في سطر مستقل. تظهر تحت \"تعليمات العناية\" في صفحة المنتج.",
+      en: "One instruction per line. Shown under Care instructions on the product page.",
+    },
+  },
+  {
+    key: "care_en",
+    label: { ar: "تعليمات العناية (إنجليزي)", en: "Care instructions (EN)" },
+    type: "textarea",
+    rows: 4,
+    fullWidth: true,
+  },
+
+  {
     key: "sizeSkus",
     label: { ar: "المقاسات والأكواد (SKU لكل مقاس)", en: "Sizes & SKUs (one SKU per size)" },
     type: "productSizes",
