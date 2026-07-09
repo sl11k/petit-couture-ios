@@ -144,4 +144,5 @@ export type AdminDetailConfig<T = any> = {
   sections: DetailSectionDef<T>[];
   related?: RelatedTableDef<T>[];
   editForm?: FormFieldDef[];
+  actions?: RowAction<T>[];
 };

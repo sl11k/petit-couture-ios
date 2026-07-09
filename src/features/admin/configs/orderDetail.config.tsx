@@ -1,5 +1,9 @@
 import type { AdminDetailConfig } from "@/features/admin/types";
 import { ordersConfig } from "./orders.config";
+import { DollarSign } from "lucide-react";
+import { createStripeRefund } from "@/lib/stripe.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const ORDER_STATUS_OPTIONS = [
   { value: "pending", label: { ar: "قيد الانتظار", en: "Pending" } },
@@ -20,6 +24,58 @@ export const orderDetailConfig: AdminDetailConfig = {
     en: `${row.customer_name ?? ""} • ${new Date(row.created_at).toLocaleString("en")}`,
   }),
   editForm: ordersConfig.form,
+  actions: [
+    {
+      key: "refund",
+      label: { ar: "استرداد", en: "Refund" },
+      icon: <DollarSign className="h-3 w-3" />,
+      variant: "danger",
+      onClick: async (row) => {
+        if (row.payment_gateway !== "stripe") {
+          toast.error("Refunds are only available for Stripe payments");
+          return;
+        }
+        
+        // Get the captured transaction for this order
+        const { data: transaction } = await supabase
+          .from("payment_transactions")
+          .select("*")
+          .eq("order_id", row.id)
+          .eq("gateway", "stripe")
+          .eq("status", "captured")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        if (!transaction) {
+          toast.error("No captured Stripe transaction found for this order");
+          return;
+        }
+        
+        const amount = parseFloat(prompt("Enter refund amount:", String(row.total)) || "0");
+        if (isNaN(amount) || amount <= 0) {
+          toast.error("Invalid refund amount");
+          return;
+        }
+        
+        if (amount > row.total) {
+          toast.error("Refund amount cannot exceed order total");
+          return;
+        }
+        
+        try {
+          const result = await createStripeRefund({ data: { transaction_id: transaction.id, amount } });
+          if (result.ok) {
+            toast.success(`Refund of ${amount} ${row.currency} processed successfully`);
+          } else {
+            toast.error("Refund failed");
+          }
+        } catch (e: any) {
+          toast.error(e?.message || "Refund failed");
+        }
+      },
+    },
+  ],
   sections: [
     {
       title: { ar: "ملخص الطلب", en: "Order summary" },

@@ -9,6 +9,7 @@ import type {
   DetailSectionDef,
   RelatedTableDef,
   ColumnDef,
+  RowAction,
 } from "../types";
 import { PageHeader } from "./PageHeader";
 import { StatusBadge } from "./StatusBadge";
@@ -219,14 +220,29 @@ export function DetailPage<T extends Record<string, any>>({
         title={title as any}
         description={description as any}
         actions={
-          config.editForm && (
-            <button
-              onClick={() => setEditing(true)}
-              className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              <Pencil className="h-3 w-3" /> {ar ? "تعديل" : "Edit"}
-            </button>
-          )
+          <div className="flex items-center gap-2">
+            {config.actions?.map((action) => (
+              <button
+                key={action.key}
+                onClick={() => action.onClick?.(row)}
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium ${
+                  action.variant === "danger"
+                    ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    : "bg-primary text-primary-foreground hover:bg-primary/90"
+                }`}
+              >
+                {action.icon} {ar ? action.label.ar : action.label.en}
+              </button>
+            ))}
+            {config.editForm && (
+              <button
+                onClick={() => setEditing(true)}
+                className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+              >
+                <Pencil className="h-3 w-3" /> {ar ? "تعديل" : "Edit"}
+              </button>
+            )}
+          </div>
         }
       />
 
