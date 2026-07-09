@@ -309,20 +309,37 @@ export function HomeScreen() {
               </div>
             ) : (
               /* ---- Auto-rotate (stacked) mode ---- */
-              <div className="relative overflow-hidden rounded-[28px] bg-pastel-peach">
+              <div
+                className="relative overflow-hidden rounded-[28px] bg-pastel-peach"
+                style={currentBanner ? { height: `clamp(${currentBanner.height_mobile ?? 440}px, 60vw, ${currentBanner.height_desktop ?? 640}px)` } : undefined}
+              >
                 {currentBanner ? (
-                  <a href={normalizeInternalHref(currentBanner.cta_url) || "#"} className="block">
-                    <img
-                      key={currentBanner.id}
-                      src={currentBanner.image_url}
-                      alt={ar ? (currentBanner.title_ar ?? "") : (currentBanner.title_en ?? "")}
-                      className="w-full h-[440px] object-cover animate-in fade-in duration-500"
-                      width={1280}
-                      height={1280}
-                      loading="eager"
-                      decoding="sync"
+                  <a href={normalizeInternalHref(currentBanner.cta_url) || "#"} className="block h-full">
+                    <picture>
+                      {currentBanner.image_url_desktop && (
+                        <source media="(min-width: 1024px)" srcSet={currentBanner.image_url_desktop} />
+                      )}
+                      {currentBanner.image_url_tablet && (
+                        <source media="(min-width: 640px)" srcSet={currentBanner.image_url_tablet} />
+                      )}
+                      <img
+                        key={currentBanner.id}
+                        src={currentBanner.image_url}
+                        alt={ar ? (currentBanner.title_ar ?? "") : (currentBanner.title_en ?? "")}
+                        className="w-full h-full animate-in fade-in duration-500"
+                        style={{
+                          objectFit: (currentBanner.object_fit || "cover") as any,
+                          objectPosition: currentBanner.object_position || "center center",
+                          height: "100%",
+                        }}
+                        loading="eager"
+                        decoding="sync"
+                      />
+                    </picture>
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{ background: `linear-gradient(to top, hsl(var(--background) / ${(currentBanner.overlay_opacity ?? 45) / 100}), transparent)` }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/45 via-transparent to-transparent pointer-events-none" />
                     <div className="absolute inset-0 flex flex-col items-center justify-end pb-7 px-6 text-center">
                       {(ar ? currentBanner.eyebrow_ar : currentBanner.eyebrow_en) && (
                         <span className="text-[10.5px] tracking-luxury text-foreground/75">
