@@ -239,22 +239,37 @@ export function HomeScreen() {
                     setBannerIdx(Math.round(el.scrollLeft / w));
                   }}
                 >
-                  {banners.map((bn) => (
+                  {banners.map((bn) => {
+                    const hM = bn.height_mobile ?? 440;
+                    const hT = bn.height_tablet ?? 520;
+                    const hD = bn.height_desktop ?? 640;
+                    const pos = bn.object_position || "center center";
+                    const fit = bn.object_fit || "cover";
+                    const overlay = (bn.overlay_opacity ?? 45) / 100;
+                    return (
                     <a
                       key={bn.id}
                       href={normalizeInternalHref(bn.cta_url) || "#"}
                       className="relative shrink-0 w-full snap-center overflow-hidden rounded-[28px] bg-pastel-peach"
+                      style={{ height: `clamp(${hM}px, 60vw, ${hD}px)` }}
                     >
-                      <img
-                        src={bn.image_url}
-                        alt={ar ? (bn.title_ar ?? "") : (bn.title_en ?? "")}
-                        className="w-full h-[440px] object-cover"
-                        width={1280}
-                        height={1280}
-                        loading="lazy"
-                        decoding="async"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-background/45 via-transparent to-transparent pointer-events-none" />
+                      <picture>
+                        {bn.image_url_desktop && (
+                          <source media="(min-width: 1024px)" srcSet={bn.image_url_desktop} />
+                        )}
+                        {bn.image_url_tablet && (
+                          <source media="(min-width: 640px)" srcSet={bn.image_url_tablet} />
+                        )}
+                        <img
+                          src={bn.image_url}
+                          alt={ar ? (bn.title_ar ?? "") : (bn.title_en ?? "")}
+                          className="w-full h-full"
+                          style={{ objectFit: fit as any, objectPosition: pos, height: "100%" }}
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </picture>
+                      <div className="absolute inset-0 pointer-events-none" style={{ background: `linear-gradient(to top, hsl(var(--background) / ${overlay}), transparent)` }} />
                       <div className="absolute inset-0 flex flex-col items-center justify-end pb-7 px-6 text-center">
                         {(ar ? bn.eyebrow_ar : bn.eyebrow_en) && (
                           <span className="text-[10.5px] tracking-luxury text-foreground/75">
@@ -278,7 +293,8 @@ export function HomeScreen() {
                         )}
                       </div>
                     </a>
-                  ))}
+                    );
+                  })}
                 </div>
                 {banners.length > 1 && (
                   <div className="mt-3 flex justify-center gap-1.5">
