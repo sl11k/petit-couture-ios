@@ -297,6 +297,9 @@ export const createStripeRefund = createServerFn({ method: "POST" })
     }
 
     const chargeId = transaction.gateway_transaction_id;
+    if (!chargeId) {
+      throw new Error("Transaction is missing gateway charge id");
+    }
     const refundAmount = data.amount ? Math.round(data.amount * 100) : Math.round(transaction.amount * 100);
 
     const params = new URLSearchParams();
