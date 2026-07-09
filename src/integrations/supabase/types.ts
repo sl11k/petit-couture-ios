@@ -2508,6 +2508,621 @@ export type Database = {
         }
         Relationships: []
       }
+      notif_admin_recipients: {
+        Row: {
+          created_at: string
+          email: string | null
+          events: string[]
+          id: string
+          is_enabled: boolean
+          label: string | null
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          events?: string[]
+          id?: string
+          is_enabled?: boolean
+          label?: string | null
+          phone: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          events?: string[]
+          id?: string
+          is_enabled?: boolean
+          label?: string | null
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notif_analytics_daily: {
+        Row: {
+          avg_duration_ms: number
+          created_at: string
+          day: string
+          event_code: string
+          failed_count: number
+          id: string
+          provider_id: string | null
+          sent_count: number
+          updated_at: string
+        }
+        Insert: {
+          avg_duration_ms?: number
+          created_at?: string
+          day: string
+          event_code: string
+          failed_count?: number
+          id?: string
+          provider_id?: string | null
+          sent_count?: number
+          updated_at?: string
+        }
+        Update: {
+          avg_duration_ms?: number
+          created_at?: string
+          day?: string
+          event_code?: string
+          failed_count?: number
+          id?: string
+          provider_id?: string | null
+          sent_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notif_analytics_daily_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "notif_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notif_broadcast_jobs: {
+        Row: {
+          audience_filter: Json
+          channel: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          failed_count: number
+          id: string
+          name: string
+          scheduled_at: string | null
+          sent_count: number
+          started_at: string | null
+          status: string
+          template_body: string
+          total_recipients: number
+          updated_at: string
+        }
+        Insert: {
+          audience_filter?: Json
+          channel?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          failed_count?: number
+          id?: string
+          name: string
+          scheduled_at?: string | null
+          sent_count?: number
+          started_at?: string | null
+          status?: string
+          template_body: string
+          total_recipients?: number
+          updated_at?: string
+        }
+        Update: {
+          audience_filter?: Json
+          channel?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          failed_count?: number
+          id?: string
+          name?: string
+          scheduled_at?: string | null
+          sent_count?: number
+          started_at?: string | null
+          status?: string
+          template_body?: string
+          total_recipients?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notif_delivery_logs: {
+        Row: {
+          attempt: number
+          audience: string | null
+          channel: string | null
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          event_code: string | null
+          http_status: number | null
+          id: string
+          ip_address: string | null
+          provider_id: string | null
+          queue_id: string | null
+          recipient_phone: string | null
+          request_snapshot: Json | null
+          response_snapshot: Json | null
+          status: string
+          triggered_by: string | null
+          triggered_by_email: string | null
+        }
+        Insert: {
+          attempt?: number
+          audience?: string | null
+          channel?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          event_code?: string | null
+          http_status?: number | null
+          id?: string
+          ip_address?: string | null
+          provider_id?: string | null
+          queue_id?: string | null
+          recipient_phone?: string | null
+          request_snapshot?: Json | null
+          response_snapshot?: Json | null
+          status: string
+          triggered_by?: string | null
+          triggered_by_email?: string | null
+        }
+        Update: {
+          attempt?: number
+          audience?: string | null
+          channel?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          event_code?: string | null
+          http_status?: number | null
+          id?: string
+          ip_address?: string | null
+          provider_id?: string | null
+          queue_id?: string | null
+          recipient_phone?: string | null
+          request_snapshot?: Json | null
+          response_snapshot?: Json | null
+          status?: string
+          triggered_by?: string | null
+          triggered_by_email?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notif_delivery_logs_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "notif_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notif_delivery_logs_queue_id_fkey"
+            columns: ["queue_id"]
+            isOneToOne: false
+            referencedRelation: "notif_queue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notif_event_types: {
+        Row: {
+          audience: string
+          category: string
+          code: string
+          conditions: Json
+          created_at: string
+          delay_seconds: number
+          description: string | null
+          duplicate_window_seconds: number
+          id: string
+          is_enabled: boolean
+          name_ar: string
+          name_en: string
+          priority: number
+          respect_working_hours: boolean
+          supported_variables: string[]
+          updated_at: string
+        }
+        Insert: {
+          audience?: string
+          category?: string
+          code: string
+          conditions?: Json
+          created_at?: string
+          delay_seconds?: number
+          description?: string | null
+          duplicate_window_seconds?: number
+          id?: string
+          is_enabled?: boolean
+          name_ar: string
+          name_en: string
+          priority?: number
+          respect_working_hours?: boolean
+          supported_variables?: string[]
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          category?: string
+          code?: string
+          conditions?: Json
+          created_at?: string
+          delay_seconds?: number
+          description?: string | null
+          duplicate_window_seconds?: number
+          id?: string
+          is_enabled?: boolean
+          name_ar?: string
+          name_en?: string
+          priority?: number
+          respect_working_hours?: boolean
+          supported_variables?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notif_provider_credentials: {
+        Row: {
+          api_key_encrypted: string | null
+          api_url: string | null
+          created_at: string
+          extra: Json
+          id: string
+          instance_id: string | null
+          phone_number_id: string | null
+          provider_id: string
+          retry_attempts: number
+          retry_delay_ms: number
+          session_name: string | null
+          ssl_verify: boolean
+          timeout_ms: number
+          updated_at: string
+          webhook_secret_encrypted: string | null
+        }
+        Insert: {
+          api_key_encrypted?: string | null
+          api_url?: string | null
+          created_at?: string
+          extra?: Json
+          id?: string
+          instance_id?: string | null
+          phone_number_id?: string | null
+          provider_id: string
+          retry_attempts?: number
+          retry_delay_ms?: number
+          session_name?: string | null
+          ssl_verify?: boolean
+          timeout_ms?: number
+          updated_at?: string
+          webhook_secret_encrypted?: string | null
+        }
+        Update: {
+          api_key_encrypted?: string | null
+          api_url?: string | null
+          created_at?: string
+          extra?: Json
+          id?: string
+          instance_id?: string | null
+          phone_number_id?: string | null
+          provider_id?: string
+          retry_attempts?: number
+          retry_delay_ms?: number
+          session_name?: string | null
+          ssl_verify?: boolean
+          timeout_ms?: number
+          updated_at?: string
+          webhook_secret_encrypted?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notif_provider_credentials_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: true
+            referencedRelation: "notif_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notif_provider_health: {
+        Row: {
+          avg_response_ms: number | null
+          checked_at: string
+          id: string
+          instance_status: string | null
+          last_error: string | null
+          last_failure_at: string | null
+          last_success_at: string | null
+          provider_id: string
+          session_status: string | null
+          status: string
+        }
+        Insert: {
+          avg_response_ms?: number | null
+          checked_at?: string
+          id?: string
+          instance_status?: string | null
+          last_error?: string | null
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          provider_id: string
+          session_status?: string | null
+          status?: string
+        }
+        Update: {
+          avg_response_ms?: number | null
+          checked_at?: string
+          id?: string
+          instance_status?: string | null
+          last_error?: string | null
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          provider_id?: string
+          session_status?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notif_provider_health_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: true
+            referencedRelation: "notif_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notif_providers: {
+        Row: {
+          capabilities: Json
+          channel: string
+          code: string
+          config_schema: Json
+          created_at: string
+          id: string
+          is_default: boolean
+          is_enabled: boolean
+          name: string
+          notes: string | null
+          priority: number
+          updated_at: string
+          version: string | null
+        }
+        Insert: {
+          capabilities?: Json
+          channel?: string
+          code: string
+          config_schema?: Json
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          is_enabled?: boolean
+          name: string
+          notes?: string | null
+          priority?: number
+          updated_at?: string
+          version?: string | null
+        }
+        Update: {
+          capabilities?: Json
+          channel?: string
+          code?: string
+          config_schema?: Json
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          is_enabled?: boolean
+          name?: string
+          notes?: string | null
+          priority?: number
+          updated_at?: string
+          version?: string | null
+        }
+        Relationships: []
+      }
+      notif_queue: {
+        Row: {
+          attempts: number
+          audience: string
+          channel: string
+          created_at: string
+          dedupe_key: string | null
+          event_code: string
+          id: string
+          language: string
+          last_error: string | null
+          locked_at: string | null
+          locked_by: string | null
+          max_attempts: number
+          payload: Json
+          priority: number
+          provider_id: string | null
+          recipient_email: string | null
+          recipient_phone: string | null
+          recipient_user_id: string | null
+          related_entity: string | null
+          related_entity_id: string | null
+          rendered_body: string | null
+          scheduled_at: string
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          audience?: string
+          channel?: string
+          created_at?: string
+          dedupe_key?: string | null
+          event_code: string
+          id?: string
+          language?: string
+          last_error?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          max_attempts?: number
+          payload?: Json
+          priority?: number
+          provider_id?: string | null
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          recipient_user_id?: string | null
+          related_entity?: string | null
+          related_entity_id?: string | null
+          rendered_body?: string | null
+          scheduled_at?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          audience?: string
+          channel?: string
+          created_at?: string
+          dedupe_key?: string | null
+          event_code?: string
+          id?: string
+          language?: string
+          last_error?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          max_attempts?: number
+          payload?: Json
+          priority?: number
+          provider_id?: string | null
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          recipient_user_id?: string | null
+          related_entity?: string | null
+          related_entity_id?: string | null
+          rendered_body?: string | null
+          scheduled_at?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notif_queue_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "notif_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notif_template_versions: {
+        Row: {
+          body: string
+          changed_by: string | null
+          changed_by_email: string | null
+          created_at: string
+          id: string
+          subject: string | null
+          template_id: string
+          variables_used: string[]
+          version: number
+        }
+        Insert: {
+          body: string
+          changed_by?: string | null
+          changed_by_email?: string | null
+          created_at?: string
+          id?: string
+          subject?: string | null
+          template_id: string
+          variables_used?: string[]
+          version: number
+        }
+        Update: {
+          body?: string
+          changed_by?: string | null
+          changed_by_email?: string | null
+          created_at?: string
+          id?: string
+          subject?: string | null
+          template_id?: string
+          variables_used?: string[]
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notif_template_versions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "notif_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notif_templates: {
+        Row: {
+          audience: string
+          body: string
+          channel: string
+          created_at: string
+          event_code: string
+          id: string
+          is_default: boolean
+          is_enabled: boolean
+          language: string
+          subject: string | null
+          updated_at: string
+          variables_used: string[]
+          version: number
+        }
+        Insert: {
+          audience?: string
+          body: string
+          channel?: string
+          created_at?: string
+          event_code: string
+          id?: string
+          is_default?: boolean
+          is_enabled?: boolean
+          language?: string
+          subject?: string | null
+          updated_at?: string
+          variables_used?: string[]
+          version?: number
+        }
+        Update: {
+          audience?: string
+          body?: string
+          channel?: string
+          created_at?: string
+          event_code?: string
+          id?: string
+          is_default?: boolean
+          is_enabled?: boolean
+          language?: string
+          subject?: string | null
+          updated_at?: string
+          variables_used?: string[]
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notif_templates_event_code_fkey"
+            columns: ["event_code"]
+            isOneToOne: false
+            referencedRelation: "notif_event_types"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       notification_log: {
         Row: {
           attempts: number
