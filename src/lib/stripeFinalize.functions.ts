@@ -133,5 +133,37 @@ export const finalizeStripeOrder = createServerFn({ method: "POST" })
       console.error("[finalizeStripeOrder] OTO create threw:", err);
     }
 
+    // Enqueue order.paid notification (best-effort).
+    try {
+      const { enqueueNotification } = await import("@/lib/notif/engine.server");
+      const { data: full } = await supabaseAdmin
+        .from("orders")
+        .select("customer_name, customer_phone, customer_email, user_id, total, currency")
+        .eq("id", order.id)
+        .maybeSingle();
+      if (full?.customer_phone) {
+        await enqueueNotification({
+          event_code: "order.paid",
+          audience: "both",
+          recipient_phone: full.customer_phone,
+          recipient_email: full.customer_email,
+          recipient_user_id: full.user_id,
+          variables: {
+            order_number: order.order_number,
+            order_total: full.total,
+            currency: full.currency,
+            customer_name: full.customer_name,
+            payment_method: "stripe",
+            amount,
+          },
+          related_entity: "order",
+          related_entity_id: order.id,
+          dedupe_key: `order.paid:${order.id}`,
+        });
+      }
+    } catch (err) {
+      console.warn("[finalizeStripeOrder] notif enqueue failed:", err);
+    }
+
     return { ok: true as const, already: false };
   });
