@@ -424,7 +424,7 @@ async function recomputeOrderRefundedAmount(orderId: string | null, lastTxId: st
   if (isFull) update.status = "refunded";
   if (lastTxId) update.last_transaction_id = lastTxId;
 
-  const { error } = await supabaseAdmin.from("orders").update(update).eq("id", orderId);
+  const { error } = await supabaseAdmin.from("orders").update(update as never).eq("id", orderId);
   if (error) console.error(`[stripe-webhook] recomputeOrderRefundedAmount: ${error.message}`);
 }
 
