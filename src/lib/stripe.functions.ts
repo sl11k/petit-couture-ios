@@ -419,6 +419,6 @@ export const createStripeRefund = createServerFn({ method: "POST" })
       ok: true as const,
       refund_id: refundId,
       amount: refundAmount / 100,
-      transaction_id: refundTransaction.id,
+      transaction_id: refundTxId,
     };
   });
