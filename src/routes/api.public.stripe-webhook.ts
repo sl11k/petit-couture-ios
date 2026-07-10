@@ -176,53 +176,19 @@ async function completeStripeCheckout(object: Record<string, unknown>, event: St
   if (String(order.currency).toUpperCase() !== currency)
     throw new Error("Stripe currency mismatch");
 
+  const paymentIntent = typeof object.payment_intent === "string" ? object.payment_intent : null;
+
   const transactionId = await findOrCreateStripeTransaction({
     orderId: order.id,
     orderNumber,
     sessionId,
+    paymentIntent,
     amount,
     currency,
     status: "captured",
     event,
   });
-
-  const { error: completeError } = await (
-    supabaseAdmin as unknown as {
-      rpc: (
-        name: string,
-        args: Record<string, unknown>,
-      ) => Promise<{ data: unknown; error: { message: string } | null }>;
-    }
-  ).rpc("complete_async_payment", {
-    _order_id: order.id,
-    _gateway: order.payment_method,
-    _gateway_transaction_id: sessionId,
-    _transaction_id: transactionId,
-    _amount: amount,
-    _currency: currency,
-  });
-  if (completeError) {
-    throw new Error(`Could not finalize Stripe payment safely: ${completeError.message}`);
-  }
-
-  const { error } = await supabaseAdmin
-    .from("orders")
-    .update({
-      payment_gateway: "stripe",
-      last_transaction_id: transactionId,
-      captured_amount: amount,
-    })
-    .eq("id", order.id);
-  if (error) throw new Error(`Could not mark Stripe order as paid: ${error.message}`);
-
-  try {
-    const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
-    const res = await createOtoShipmentForOrder(order.id, order.user_id ?? null);
-    if (!res.ok) console.error("[stripe-webhook] OTO auto-create failed:", res.error);
-  } catch (err) {
-    console.error("[stripe-webhook] OTO auto-create threw:", err);
-  }
-
+...
   return { transactionId };
 }
 
