@@ -296,17 +296,35 @@ export const createStripeRefund = createServerFn({ method: "POST" })
       throw new Error("Can only refund captured transactions");
     }
 
-    const paymentIntent = transaction.gateway_reference as string | null;
+    let paymentIntent = transaction.gateway_reference as string | null;
     const sessionOrChargeId = transaction.gateway_transaction_id as string | null;
     if (!paymentIntent && !sessionOrChargeId) {
       throw new Error("Transaction is missing Stripe payment reference");
     }
+
+    // Legacy fallback: some transactions only stored the Checkout Session id.
+    // Retrieve the session to resolve its payment_intent.
+    if (!paymentIntent && sessionOrChargeId && sessionOrChargeId.startsWith("cs_")) {
+      const sessionRes = await fetch(
+        `https://api.stripe.com/v1/checkout/sessions/${sessionOrChargeId}`,
+        { headers: { Authorization: `Bearer ${secret}` } },
+      );
+      const sessionJson = await sessionRes.json().catch(() => ({}));
+      if (sessionRes.ok && typeof sessionJson?.payment_intent === "string") {
+        paymentIntent = sessionJson.payment_intent as string;
+        // Persist for future refunds.
+        await supabaseAdmin
+          .from("payment_transactions")
+          .update({ gateway_reference: paymentIntent })
+          .eq("id", transaction.id);
+      }
+    }
+
     const refundAmount = data.amount
       ? Math.round(data.amount * 100)
       : Math.round(Number(transaction.amount) * 100);
 
     const params = new URLSearchParams();
-    // Prefer payment_intent (accepts pi_xxx directly). Fallback to charge id if it looks like ch_xxx.
     if (paymentIntent && paymentIntent.startsWith("pi_")) {
       params.set("payment_intent", paymentIntent);
     } else if (sessionOrChargeId && sessionOrChargeId.startsWith("ch_")) {
@@ -318,6 +336,7 @@ export const createStripeRefund = createServerFn({ method: "POST" })
         "Stripe refund needs a payment_intent (pi_...) or charge id (ch_...); transaction has neither",
       );
     }
+
     params.set("amount", String(refundAmount));
     if (data.reason) params.set("reason", data.reason);
     params.set("metadata[order_id]", transaction.order_id || "");
