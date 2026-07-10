@@ -296,18 +296,49 @@ export const createStripeRefund = createServerFn({ method: "POST" })
       throw new Error("Can only refund captured transactions");
     }
 
-    const chargeId = transaction.gateway_transaction_id;
-    if (!chargeId) {
-      throw new Error("Transaction is missing gateway charge id");
+    let paymentIntent = transaction.gateway_reference as string | null;
+    const sessionOrChargeId = transaction.gateway_transaction_id as string | null;
+    if (!paymentIntent && !sessionOrChargeId) {
+      throw new Error("Transaction is missing Stripe payment reference");
     }
-    const refundAmount = data.amount ? Math.round(data.amount * 100) : Math.round(transaction.amount * 100);
+
+    // Legacy fallback: some transactions only stored the Checkout Session id.
+    // Retrieve the session to resolve its payment_intent.
+    if (!paymentIntent && sessionOrChargeId && sessionOrChargeId.startsWith("cs_")) {
+      const sessionRes = await fetch(
+        `https://api.stripe.com/v1/checkout/sessions/${sessionOrChargeId}`,
+        { headers: { Authorization: `Bearer ${secret}` } },
+      );
+      const sessionJson = await sessionRes.json().catch(() => ({}));
+      if (sessionRes.ok && typeof sessionJson?.payment_intent === "string") {
+        paymentIntent = sessionJson.payment_intent as string;
+        // Persist for future refunds.
+        await supabaseAdmin
+          .from("payment_transactions")
+          .update({ gateway_reference: paymentIntent })
+          .eq("id", transaction.id);
+      }
+    }
+
+    const refundAmount = data.amount
+      ? Math.round(data.amount * 100)
+      : Math.round(Number(transaction.amount) * 100);
 
     const params = new URLSearchParams();
-    params.set("charge", chargeId);
-    params.set("amount", String(refundAmount));
-    if (data.reason) {
-      params.set("reason", data.reason);
+    if (paymentIntent && paymentIntent.startsWith("pi_")) {
+      params.set("payment_intent", paymentIntent);
+    } else if (sessionOrChargeId && sessionOrChargeId.startsWith("ch_")) {
+      params.set("charge", sessionOrChargeId);
+    } else if (paymentIntent) {
+      params.set("payment_intent", paymentIntent);
+    } else {
+      throw new Error(
+        "Stripe refund needs a payment_intent (pi_...) or charge id (ch_...); transaction has neither",
+      );
     }
+
+    params.set("amount", String(refundAmount));
+    if (data.reason) params.set("reason", data.reason);
     params.set("metadata[order_id]", transaction.order_id || "");
     params.set("metadata[order_number]", transaction.order_number || "");
     params.set("metadata[transaction_id]", transaction.id);
@@ -329,54 +360,84 @@ export const createStripeRefund = createServerFn({ method: "POST" })
     }
 
     const refundId = result?.id as string | undefined;
-    if (!refundId) {
-      throw new Error("Stripe did not return a refund ID");
-    }
+    if (!refundId) throw new Error("Stripe did not return a refund ID");
 
-    // Create refund transaction record
-    const { data: refundTransaction, error: refundError } = await supabaseAdmin
+    // Idempotent: webhook may race us. Upsert-style: skip if it already exists.
+    const { data: existingRefund } = await supabaseAdmin
       .from("payment_transactions")
-      .insert({
-        order_id: transaction.order_id,
-        order_number: transaction.order_number,
-        amount: refundAmount / 100,
-        currency: transaction.currency,
-        gateway: "stripe",
-        gateway_transaction_id: refundId,
-        status: "refunded",
-        raw_response: result as never,
-        webhook_verified: true,
-        metadata: { parent_transaction_id: transaction.id, refund_reason: data.reason || "admin_refund" } as never,
-      })
       .select("id")
-      .single();
+      .eq("gateway", "stripe")
+      .eq("gateway_transaction_id", refundId)
+      .maybeSingle();
 
-    if (refundError || !refundTransaction) {
-      throw new Error(`Could not create refund transaction: ${refundError?.message}`);
+    let refundTxId: string;
+    if (existingRefund?.id) {
+      refundTxId = existingRefund.id;
+    } else {
+      const { data: refundTransaction, error: refundError } = await supabaseAdmin
+        .from("payment_transactions")
+        .insert({
+          order_id: transaction.order_id,
+          order_number: transaction.order_number,
+          amount: refundAmount / 100,
+          currency: transaction.currency,
+          gateway: "stripe",
+          gateway_reference: paymentIntent,
+          gateway_transaction_id: refundId,
+          idempotency_key: `stripe:refund:${refundId}`,
+          status: "refunded",
+          raw_response: result as never,
+          webhook_verified: false,
+          metadata: {
+            parent_transaction_id: transaction.id,
+            refund_reason: data.reason || "admin_refund",
+          } as never,
+        })
+        .select("id")
+        .single();
+
+      if (refundError || !refundTransaction) {
+        throw new Error(`Could not create refund transaction: ${refundError?.message}`);
+      }
+      refundTxId = refundTransaction.id;
     }
 
-    // Update order with refund info
+    // Recompute total refunded from DB (avoids double-counting).
+    const { data: refunds } = await supabaseAdmin
+      .from("payment_transactions")
+      .select("amount")
+      .eq("order_id", transaction.order_id || "")
+      .eq("status", "refunded");
+    const totalRefunded = (refunds ?? []).reduce((s, t) => s + Number(t.amount || 0), 0);
+
+    const { data: orderRow } = await supabaseAdmin
+      .from("orders")
+      .select("total, captured_amount")
+      .eq("id", transaction.order_id || "")
+      .maybeSingle();
+    const baseAmount = Number(orderRow?.captured_amount ?? orderRow?.total ?? 0);
+    const isFull = baseAmount > 0 && totalRefunded + 0.01 >= baseAmount;
+
+    const orderUpdate: Record<string, unknown> = {
+      refunded_amount: totalRefunded,
+      payment_status: isFull ? "refunded" : "partially_refunded",
+      last_transaction_id: refundTxId,
+    };
+    if (isFull) orderUpdate.status = "refunded";
+
     const { error: orderError } = await supabaseAdmin
       .from("orders")
-      .update({
-        refunded_amount: (await supabaseAdmin
-          .from("payment_transactions")
-          .select("amount")
-          .eq("order_id", transaction.order_id || "")
-          .eq("status", "refunded")
-          .then(({ data }) => data?.reduce((sum, t) => sum + Number(t.amount), 0) || 0)) + (refundAmount / 100),
-        last_transaction_id: refundTransaction.id,
-      })
+      .update(orderUpdate as never)
       .eq("id", transaction.order_id || "");
-
     if (orderError) {
       console.error(`[stripe-refund] Could not update order refund amount: ${orderError.message}`);
     }
+
 
     return {
       ok: true as const,
       refund_id: refundId,
       amount: refundAmount / 100,
-      transaction_id: refundTransaction.id,
+      transaction_id: refundTxId,
     };
   });
