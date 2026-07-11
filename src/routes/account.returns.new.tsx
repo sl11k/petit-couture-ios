@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { isOrderEligibleForReturn } from "@/lib/returns";
+import { notify } from "@/lib/notifications";
 import { Upload, X, ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/account/returns/new")({
@@ -132,6 +133,41 @@ function NewReturnRequest() {
       const itemsToInsert = items.map((it) => ({ ...it, return_request_id: req.id }));
       const { error: itErr } = await supabase.from("return_items").insert(itemsToInsert);
       if (itErr) throw itErr;
+
+      // Fire notifications (WhatsApp + in-app) — non-blocking
+      const vars = {
+        order_number: order?.order_number ?? "",
+        customer_name: user.email?.split("@")[0] ?? "",
+        customer_email: user.email ?? "",
+        customer_phone: (user as any).phone ?? "",
+        reason,
+        items_count: items.length,
+        request_id: req.id,
+      };
+      try {
+        await notify({
+          event_code: "return_requested",
+          audience: "customer",
+          recipient_user_id: user.id,
+          recipient_email: user.email!,
+          recipient_phone: (user as any).phone ?? null,
+          variables: vars,
+          related_entity: "return",
+          related_entity_id: req.id,
+        });
+        // Admin fanout — pulls admin phone from storefront_settings.footer_whatsapp
+        const { data: sf } = await supabase.from("storefront_settings").select("footer_whatsapp").maybeSingle();
+        const adminPhone = (sf?.footer_whatsapp || "").replace(/\D/g, "") || null;
+        await notify({
+          event_code: "admin_new_return",
+          audience: "admin",
+          recipient_phone: adminPhone,
+          variables: vars,
+          related_entity: "return",
+          related_entity_id: req.id,
+        });
+      } catch { /* noop */ }
+
       void navigate({ to: "/account" });
     } catch (e: any) {
       setError(e.message ?? "فشل الإرسال");
