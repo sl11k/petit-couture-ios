@@ -3,6 +3,7 @@ import { ordersConfig } from "./orders.config";
 import { DollarSign } from "lucide-react";
 import { createStripeRefund } from "@/lib/stripe.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { notify } from "@/lib/notifications";
 import { toast } from "sonner";
 
 const ORDER_STATUS_OPTIONS = [
@@ -67,6 +68,24 @@ export const orderDetailConfig: AdminDetailConfig = {
           const result = await createStripeRefund({ data: { transaction_id: transaction.id, amount } });
           if (result.ok) {
             toast.success(`Refund of ${amount} ${row.currency} processed successfully`);
+            // Notify customer via WhatsApp
+            try {
+              await notify({
+                event_code: "payment_refunded",
+                audience: "customer",
+                recipient_user_id: row.user_id ?? null,
+                recipient_email: row.customer_email ?? null,
+                recipient_phone: row.customer_phone ?? null,
+                variables: {
+                  order_number: row.order_number,
+                  amount,
+                  currency: row.currency,
+                  customer_name: row.customer_name ?? "",
+                },
+                related_entity: "order",
+                related_entity_id: row.id,
+              });
+            } catch { /* noop */ }
           } else {
             toast.error("Refund failed");
           }
