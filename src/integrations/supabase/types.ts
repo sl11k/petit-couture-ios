@@ -7432,6 +7432,20 @@ export type Database = {
         Args: { _event_type: string; _payload: Json }
         Returns: string
       }
+      enqueue_notification: {
+        Args: {
+          _audience: string
+          _email?: string
+          _event_code: string
+          _language?: string
+          _payload?: Json
+          _phone?: string
+          _related_entity?: string
+          _related_entity_id?: string
+          _user_id?: string
+        }
+        Returns: undefined
+      }
       fail_async_payment: {
         Args: {
           _gateway: string
