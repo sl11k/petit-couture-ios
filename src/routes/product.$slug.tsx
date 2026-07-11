@@ -134,7 +134,7 @@ export const Route = createFileRoute("/product/$slug")({
   component: ProductDetails,
 });
 
-type TabKey = "description" | "specs" | "care" | "shipping";
+type TabKey = "description" | "care" | "shipping";
 
 function ProductDetails() {
   const { slug } = Route.useParams();
@@ -1067,7 +1067,6 @@ function ProductDetails() {
               {(
                 [
                   ["description", t.description],
-                  ["specs", t.specs],
                   ["care", t.care],
                 ] as const
               ).map(([key, label]) => (
@@ -1110,21 +1109,6 @@ function ProductDetails() {
                     ))}
                   </ul>
                 </div>
-              )}
-              {tab === "specs" && (
-                <dl className="divide-y divide-border">
-                  {product.specs.map((sp) => (
-                    <div
-                      key={sp.label}
-                      className="flex flex-wrap justify-between gap-x-3 gap-y-1 py-2.5 text-[13.5px]"
-                    >
-                      <dt className="text-muted-foreground break-words">{sp.label}</dt>
-                      <dd className="text-foreground/85 font-medium break-words text-end">
-                        {sp.value}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
               )}
               {tab === "care" && (
                 <div className="space-y-4">
