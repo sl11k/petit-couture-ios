@@ -235,22 +235,6 @@ export const Route = createFileRoute("/api/public/tamara-webhook")({
             throw new Error(`Unsupported Tamara event: ${eventType || "empty"}`);
           }
 
-          if (
-            [
-              "order_authorised",
-              "authorised",
-              "order_authorized",
-              "authorized",
-              "order_captured",
-              "fully_captured",
-              "captured",
-            ].includes(eventType)
-          ) {
-            const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
-            const shipment = await createOtoShipmentForOrder(order.id, null);
-            if (!shipment.ok) throw new Error(`OTO creation failed: ${shipment.error}`);
-          }
-
           await updatePaymentWebhookLog(logId, {
             processed: true,
             related_transaction_id: transactionId,

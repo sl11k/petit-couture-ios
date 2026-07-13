@@ -43,7 +43,16 @@ export const finalizeStripeOrder = createServerFn({ method: "POST" })
       .eq("order_number", data.order_number)
       .maybeSingle();
     if (orderErr || !order) return { ok: false as const, reason: "no_order" };
-    if (order.payment_status === "paid") return { ok: true as const, already: true };
+    if (order.payment_status === "paid") {
+      try {
+        const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
+        const res = await createOtoShipmentForOrder(order.id, order.user_id ?? null);
+        if (!res.ok) console.error("[finalizeStripeOrder] OTO retry failed:", res.error);
+      } catch (err) {
+        console.error("[finalizeStripeOrder] OTO retry threw:", err);
+      }
+      return { ok: true as const, already: true };
+    }
 
     const resp = await fetch(
       `https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(data.stripe_session_id)}`,
