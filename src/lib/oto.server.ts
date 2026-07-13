@@ -21,6 +21,10 @@ const numericId = (value: unknown) => {
   const text = clean(value);
   return text && /^\d+$/.test(text) ? text : undefined;
 };
+const otoDateTime = (date = new Date()) => {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
 
 function normalizeCountry(value: unknown) {
   const raw = clean(value)?.toUpperCase();
@@ -347,7 +351,7 @@ export async function buildOtoOrderPayload(
     boxWidth: asNumber(process.env.OTO_DEFAULT_BOX_WIDTH_CM, 10) || 10,
     boxLength: asNumber(process.env.OTO_DEFAULT_BOX_LENGTH_CM, 10) || 10,
     boxHeight: asNumber(process.env.OTO_DEFAULT_BOX_HEIGHT_CM, 10) || 10,
-    orderDate: new Date().toISOString(),
+    orderDate: otoDateTime(),
     item_description: itemDescription,
     customer: buildCustomer(input),
     items: (input.items ?? []).map((it) => ({
