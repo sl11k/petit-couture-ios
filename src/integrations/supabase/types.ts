@@ -7414,7 +7414,7 @@ export type Database = {
         }[]
       }
       claim_oto_shipment_creation: {
-        Args: { _order_id: string }
+        Args: { _force?: boolean; _order_id: string }
         Returns: boolean
       }
       complete_async_payment: {
