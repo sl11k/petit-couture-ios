@@ -184,6 +184,15 @@ export type OtoDeliveryOption = {
   raw: JsonRecord;
 };
 
+type OtoCreateOrderOptions = {
+  createShipment?: boolean;
+};
+
+type OtoShipmentCreationOptions = {
+  force?: boolean;
+  waitOnThrottle?: boolean;
+};
+
 function senderInformationFromEnv() {
   const sender = {
     senderAddressName: clean(process.env.OTO_SENDER_ADDRESS_NAME),
