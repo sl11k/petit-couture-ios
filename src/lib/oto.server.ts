@@ -55,7 +55,9 @@ export async function getOtoAccessToken(): Promise<string> {
     res = await fetch(`${OTO_BASE}/refreshToken`, {
       method: "POST",
       headers: { Accept: "application/json", "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token: refresh }),
+      // OTO API v2 expects camelCase `refreshToken` — snake_case is silently ignored
+      // and results in "Refresh Token is required" / INVALID_REFRESH_TOKEN.
+      body: JSON.stringify({ refreshToken: refresh, refresh_token: refresh }),
     });
   } else if (clientId && clientSecret) {
     res = await fetch(`${OTO_BASE}/auth`, {
