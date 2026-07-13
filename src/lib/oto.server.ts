@@ -118,6 +118,9 @@ export async function otoFetch(path: string, init: RequestInit = {}, opts: { ide
   if (!res.ok) {
     throw new Error(`OTO ${path} failed: ${res.status} ${JSON.stringify(redactOtoBody(json || text)).slice(0, 300)}`);
   }
+  if (json && typeof json === "object" && json.success === false) {
+    throw new Error(`OTO ${path} failed: ${JSON.stringify(redactOtoBody(json)).slice(0, 300)}`);
+  }
   return json;
 }
 
