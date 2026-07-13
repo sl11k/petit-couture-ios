@@ -141,6 +141,7 @@ export type AdminDetailConfig<T = any> = {
   title: (row: T) => Bilingual | string;
   description?: (row: T) => Bilingual | string;
   select?: string;
+  enrichRow?: (row: T) => Promise<T> | T;
   sections: DetailSectionDef<T>[];
   related?: RelatedTableDef<T>[];
   editForm?: FormFieldDef[];

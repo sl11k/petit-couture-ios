@@ -296,6 +296,58 @@ function isOtoInvalidOrderError(error: any) {
   return /invalid or missing order id|orderid cannot be found|order id.*not found|oto1001/.test(message);
 }
 
+function firstStringDeep(value: any, keys: RegExp[]): string | undefined {
+  const seen = new Set<any>();
+  const visit = (node: any): string | undefined => {
+    if (!node || typeof node !== "object" || seen.has(node)) return undefined;
+    seen.add(node);
+    if (Array.isArray(node)) {
+      for (const item of node) {
+        const found = visit(item);
+        if (found) return found;
+      }
+      return undefined;
+    }
+    for (const [key, raw] of Object.entries(node)) {
+      if (keys.some((pattern) => pattern.test(key))) {
+        const text = clean(raw);
+        if (text) return text;
+      }
+    }
+    for (const raw of Object.values(node)) {
+      const found = visit(raw);
+      if (found) return found;
+    }
+    return undefined;
+  };
+  return visit(value);
+}
+
+export function extractOtoShipmentDetails(...responses: any[]) {
+  const trackingNumber = firstStringDeep(responses, [
+    /^tracking_?number$/i,
+    /^dc_?tracking_?number$/i,
+    /^shipment_?number$/i,
+    /^awb$/i,
+    /^awb_?number$/i,
+    /^waybill_?number$/i,
+    /^air_?waybill_?number$/i,
+  ]);
+  const trackingUrl = firstStringDeep(responses, [
+    /^tracking_?url$/i,
+    /^tracking_?link$/i,
+    /^track_?url$/i,
+    /^track_?link$/i,
+  ]);
+  const awbUrl = firstStringDeep(responses, [
+    /^print_?awb_?url$/i,
+    /^awb_?url$/i,
+    /^label_?url$/i,
+    /^label_?link$/i,
+  ]);
+  return { trackingNumber, trackingUrl, awbUrl };
+}
+
 function getOtoRetryDelayMs(error: any) {
   const message = String(error?.message || error || "");
   const minuteMatch = message.match(/wait\s+for\s+(\d+)\s+minute/i);
@@ -516,14 +568,40 @@ async function otoCreateShipmentWithRetry(orderNumber: string, deliveryOptionId?
 export async function otoGetOrderStatus(orderNumberOrOtoId: string) {
   return otoFetchFirst(
     [
+      "/orderStatus",
       `/orderStatus?orderId=${encodeURIComponent(orderNumberOrOtoId)}`,
       `/orders/${encodeURIComponent(orderNumberOrOtoId)}/status`,
     ],
     {
-      method: "GET",
+      method: "POST",
+      body: JSON.stringify({ orderId: orderNumberOrOtoId }),
     },
     `oto-order-status-${orderNumberOrOtoId}`,
   );
+}
+
+export async function otoPrintAwb(orderNumber: string) {
+  return otoFetchFirst(
+    [`/print/${encodeURIComponent(orderNumber)}`, `/orders/${encodeURIComponent(orderNumber)}/print`],
+    { method: "GET" },
+    `oto-print-awb-${orderNumber}`,
+  );
+}
+
+async function readOtoShipmentSnapshot(orderNumber: string) {
+  const status = await otoGetOrderStatus(orderNumber).catch((e: any) => ({ statusError: e?.message || "OTO status failed" }));
+  const print = await otoPrintAwb(orderNumber).catch((e: any) => ({ printError: e?.message || "OTO AWB is not ready" }));
+  return { status, print, ...extractOtoShipmentDetails(status, print) };
+}
+
+async function pollOtoShipmentSnapshot(orderNumber: string) {
+  let latest: any = null;
+  for (const waitMs of [0, 2_000, 5_000, 10_000]) {
+    if (waitMs) await sleep(waitMs);
+    latest = await readOtoShipmentSnapshot(orderNumber);
+    if (latest.trackingNumber || latest.trackingUrl || latest.awbUrl) return latest;
+  }
+  return latest;
 }
 
 async function loadOtoOrderInput(orderId: string): Promise<{ order: any; input?: OtoCreateOrderInput; error?: string }> {
@@ -645,23 +723,62 @@ export async function createOtoShipmentForOrder(
     .limit(1)
     .maybeSingle();
   const existingRawResponse = existing.data?.raw_response as any;
+  const existingDetails = extractOtoShipmentDetails(existingRawResponse);
   const existingHasProviderShipment = Boolean(
     existing.data?.tracking_number ||
       existing.data?.awb_url ||
-      existingRawResponse?.createShipment?.otoId ||
-      existingRawResponse?.createShipment?.success,
+      existingDetails.trackingNumber ||
+      existingDetails.trackingUrl ||
+      existingDetails.awbUrl,
   );
+  if (existing.data && force && existing.data.status !== "failed" && !existingHasProviderShipment) {
+    const snapshot = await pollOtoShipmentSnapshot(input.orderNumber);
+    const snapshotDetails = extractOtoShipmentDetails(snapshot?.status, snapshot?.print);
+    if (snapshotDetails.trackingNumber || snapshotDetails.trackingUrl || snapshotDetails.awbUrl) {
+      const updateValues = {
+        status: "label_created",
+        tracking_number: snapshotDetails.trackingNumber || null,
+        tracking_url: snapshotDetails.trackingUrl || null,
+        awb_url: snapshotDetails.awbUrl || null,
+        raw_response: { ...(existingRawResponse || {}), status: snapshot?.status, printAwb: snapshot?.print },
+      };
+      const { data: syncedShipment } = await supabaseAdmin
+        .from("shipments")
+        .update(updateValues)
+        .eq("id", existing.data.id)
+        .select()
+        .single();
+      await (supabaseAdmin.from("orders") as any)
+        .update({
+          shipping_carrier: "oto",
+          tracking_number: snapshotDetails.trackingNumber || null,
+          tracking_url: snapshotDetails.trackingUrl || null,
+          shipping_status: "label_created",
+          oto_creation_error: null,
+        })
+        .eq("id", order.id);
+      return { ok: true, shipment: syncedShipment || { ...existing.data, ...updateValues }, otoResp: snapshot, reused: true };
+    }
+  }
   if (existing.data && existing.data.status !== "failed" && (!force || existingHasProviderShipment)) {
+    const existingTracking = existing.data.tracking_number || existingDetails.trackingNumber || null;
+    const existingTrackingUrl = existing.data.tracking_url || existingDetails.trackingUrl || null;
     await (supabaseAdmin.from("orders") as any)
       .update({
         shipping_carrier: "oto",
-        tracking_number: existing.data.tracking_number || null,
-        tracking_url: existing.data.tracking_url || null,
+        tracking_number: existingTracking,
+        tracking_url: existingTrackingUrl,
         shipping_status: existing.data.status,
         oto_creation_error: null,
       })
       .eq("id", order.id);
-    return { ok: true, shipment: existing.data, reused: true };
+    if (existingTracking !== existing.data.tracking_number || existingTrackingUrl !== existing.data.tracking_url) {
+      await supabaseAdmin
+        .from("shipments")
+        .update({ tracking_number: existingTracking, tracking_url: existingTrackingUrl, awb_url: existing.data.awb_url || existingDetails.awbUrl || null })
+        .eq("id", existing.data.id);
+    }
+    return { ok: true, shipment: { ...existing.data, tracking_number: existingTracking, tracking_url: existingTrackingUrl }, reused: true };
   }
 
   let { data: claimed, error: claimError } = await (supabaseAdmin as any).rpc(
@@ -743,32 +860,31 @@ export async function createOtoShipmentForOrder(
     return { ok: false, options: option ? [option] : undefined, error: message };
   }
 
-  const statusResp = await otoGetOrderStatus(String(shipmentResp?.otoId || input.orderNumber)).catch(() => null);
-  const mergedResp = { createOrder: createOrderResp, deliveryFee: feeResp, createShipment: shipmentResp, status: statusResp };
-  const trackingNumber: string | undefined =
-    statusResp?.trackingNumber ||
-    statusResp?.dcTrackingNumber ||
-    shipmentResp?.tracking_number ||
-    shipmentResp?.awb ||
-    shipmentResp?.otoId ||
-    createOrderResp?.otoId;
-  const trackingUrl: string | undefined =
-    statusResp?.trackingUrl ||
-    shipmentResp?.tracking_url ||
-    shipmentResp?.trackingLink ||
-    shipmentResp?.label_url;
-  const awbUrl: string | undefined =
-    statusResp?.printAWBURL || shipmentResp?.label_url || shipmentResp?.awb_url;
+  const snapshot = await pollOtoShipmentSnapshot(input.orderNumber);
+  const mergedResp = {
+    createOrder: createOrderResp,
+    deliveryFee: feeResp,
+    createShipment: shipmentResp,
+    status: snapshot?.status ?? null,
+    printAwb: snapshot?.print ?? null,
+  };
+  const extracted = extractOtoShipmentDetails(shipmentResp, createOrderResp, snapshot?.status, snapshot?.print);
+  const trackingNumber = extracted.trackingNumber;
+  const trackingUrl = extracted.trackingUrl;
+  const awbUrl = extracted.awbUrl;
 
   const addr: any = order.shipping_address || {};
+  const finalTrackingNumber = trackingNumber || existing.data?.tracking_number || order.tracking_number || null;
+  const finalTrackingUrl = trackingUrl || existing.data?.tracking_url || order.tracking_url || null;
+  const finalAwbUrl = awbUrl || existing.data?.awb_url || null;
   const shipmentValues = {
     order_id: order.id,
     order_number: order.order_number,
     carrier_code: "oto",
-    status: trackingNumber || awbUrl ? "label_created" : "processing",
-    tracking_number: trackingNumber ? String(trackingNumber) : null,
-    tracking_url: trackingUrl || null,
-    awb_url: awbUrl || null,
+    status: finalTrackingNumber || finalAwbUrl ? "label_created" : "processing",
+    tracking_number: finalTrackingNumber ? String(finalTrackingNumber) : null,
+    tracking_url: finalTrackingUrl || null,
+    awb_url: finalAwbUrl || null,
     customer_name: order.customer_name,
     customer_phone: order.customer_phone,
     customer_email: order.customer_email,
@@ -811,8 +927,8 @@ export async function createOtoShipmentForOrder(
   const { error: orderUpdateError } = await (supabaseAdmin.from("orders") as any)
     .update({
       shipping_carrier: "oto",
-      tracking_number: trackingNumber ? String(trackingNumber) : null,
-      tracking_url: trackingUrl || null,
+      tracking_number: finalTrackingNumber ? String(finalTrackingNumber) : null,
+      tracking_url: finalTrackingUrl || null,
       shipping_status: shipmentValues.status,
       oto_creation_error: null,
     })

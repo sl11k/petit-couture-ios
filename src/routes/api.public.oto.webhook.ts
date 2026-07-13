@@ -167,6 +167,7 @@ export const Route = createFileRoute("/api/public/oto/webhook")({
               if (internal === "picked_up") update.shipped_at = new Date().toISOString();
               if (internal === "delivered") update.delivered_at = new Date().toISOString();
               if (internal === "returned") update.is_returned = true;
+              if (tracking) update.tracking_number = tracking;
               if (normalized.trackingUrl) update.tracking_url = normalized.trackingUrl;
               if (normalized.printAWBURL) update.awb_url = normalized.printAWBURL;
               const { error: shipmentError } = await supabaseAdmin
@@ -200,9 +201,15 @@ export const Route = createFileRoute("/api/public/oto/webhook")({
                 };
                 const mapped = orderMap[internal];
                 if (mapped) {
+                  const orderUpdate: Database["public"]["Tables"]["orders"]["Update"] = {
+                    shipping_status: mapped,
+                    shipping_carrier: "oto",
+                  };
+                  if (tracking) orderUpdate.tracking_number = tracking;
+                  if (normalized.trackingUrl) orderUpdate.tracking_url = normalized.trackingUrl;
                   const { error: orderError } = await supabaseAdmin
                     .from("orders")
-                    .update({ shipping_status: mapped })
+                    .update(orderUpdate)
                     .eq("id", dbOrderId);
                   if (orderError)
                     throw new Error(`Order shipping update failed: ${orderError.message}`);
