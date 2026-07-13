@@ -332,7 +332,7 @@ export async function buildOtoOrderPayload(input: OtoCreateOrderInput, deliveryO
 export async function otoCreateOrder(input: OtoCreateOrderInput, deliveryOptionId?: string | null) {
   const payload = await buildOtoOrderPayload(input, deliveryOptionId);
   return otoFetchFirst(
-    ["/orders", "/createOrder"],
+    ["/createOrder", "/orders"],
     {
       method: "POST",
       body: JSON.stringify(payload),
