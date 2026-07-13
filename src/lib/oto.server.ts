@@ -26,6 +26,12 @@ const otoDateTime = (date = new Date()) => {
   return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 };
 
+export function getOtoOrderNumber(orderNumber: string) {
+  const prefix = clean(process.env.OTO_ORDER_PREFIX);
+  if (!prefix || orderNumber.startsWith(prefix)) return orderNumber;
+  return `${prefix}${orderNumber}`;
+}
+
 function normalizeCountry(value: unknown) {
   const raw = clean(value)?.toUpperCase();
   if (!raw) return "SA";
@@ -378,8 +384,7 @@ export async function buildOtoOrderPayload(
   const senderInformation = senderInformationFromEnv();
   const pickupLocationCode = senderInformation ? undefined : await resolvePickupLocationCode();
   const packageWeight = Math.max(asNumber(input.weight, 1), 0.1);
-  const orderPrefix = clean(process.env.OTO_ORDER_PREFIX);
-  const otoOrderNumber = orderPrefix ? `${orderPrefix}${input.orderNumber}` : input.orderNumber;
+  const otoOrderNumber = getOtoOrderNumber(input.orderNumber);
   const itemDescription =
     input.items
       ?.map((it) => `${it.name}${it.quantity > 1 ? ` x${it.quantity}` : ""}`)
@@ -494,11 +499,12 @@ function normalizeDeliveryOptions(resp: any): OtoDeliveryOption[] {
 }
 
 export async function otoGetDeliveryFeeOptions(orderNumber: string) {
+  const otoOrderNumber = getOtoOrderNumber(orderNumber);
   const resp = await otoFetchFirst(
     ["/getDeliveryFee", `/orders/${encodeURIComponent(orderNumber)}/delivery-fee`],
     {
       method: "POST",
-      body: JSON.stringify({ orderId: orderNumber }),
+      body: JSON.stringify({ orderId: otoOrderNumber }),
     },
     `oto-delivery-fee-${orderNumber}`,
   );
@@ -537,12 +543,13 @@ function chooseDeliveryOption(options: OtoDeliveryOption[]) {
 }
 
 export async function otoCreateShipment(orderNumber: string, deliveryOptionId?: string | null) {
-  const body: JsonRecord = { orderId: orderNumber };
+  const otoOrderNumber = getOtoOrderNumber(orderNumber);
+  const body: JsonRecord = { orderId: otoOrderNumber };
   const optionId = clean(deliveryOptionId);
   if (optionId) body.deliveryOptionId = optionId;
 
   return otoFetchFirst(
-    ["/createShipment", `/orders/${encodeURIComponent(orderNumber)}/create-shipment`],
+    ["/createShipment", `/orders/${encodeURIComponent(otoOrderNumber)}/create-shipment`],
     {
       method: "POST",
       body: JSON.stringify(body),
@@ -589,8 +596,9 @@ export async function otoPrintAwb(orderNumber: string) {
 }
 
 async function readOtoShipmentSnapshot(orderNumber: string) {
-  const status = await otoGetOrderStatus(orderNumber).catch((e: any) => ({ statusError: e?.message || "OTO status failed" }));
-  const print = await otoPrintAwb(orderNumber).catch((e: any) => ({ printError: e?.message || "OTO AWB is not ready" }));
+  const otoOrderNumber = getOtoOrderNumber(orderNumber);
+  const status = await otoGetOrderStatus(otoOrderNumber).catch((e: any) => ({ statusError: e?.message || "OTO status failed" }));
+  const print = await otoPrintAwb(otoOrderNumber).catch((e: any) => ({ printError: e?.message || "OTO AWB is not ready" }));
   return { status, print, ...extractOtoShipmentDetails(status, print) };
 }
 
