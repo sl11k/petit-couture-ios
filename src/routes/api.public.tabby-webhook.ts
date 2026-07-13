@@ -169,12 +169,6 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
             throw new Error(`Unsupported Tabby status: ${status || "empty"}`);
           }
 
-          if (["authorized", "closed"].includes(status)) {
-            const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
-            const shipment = await createOtoShipmentForOrder(order.id, null);
-            if (!shipment.ok) throw new Error(`OTO creation failed: ${shipment.error}`);
-          }
-
           await updatePaymentWebhookLog(logId, {
             processed: true,
             related_transaction_id: transactionId,

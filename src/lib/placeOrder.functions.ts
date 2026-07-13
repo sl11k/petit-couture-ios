@@ -413,10 +413,10 @@ export const placeOrder = createServerFn({ method: "POST" })
     if (data.payment_method === "cod" || data.payment_method === "bank_transfer") {
       try {
         const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
-        // fire-and-forget; errors are persisted to orders.oto_creation_error
-        createOtoShipmentForOrder(order.id, verifiedUserId ?? null).catch((e: any) => {
-          console.warn("[placeOrder] OTO auto-create failed:", e?.message || e);
-        });
+        // Await the best-effort call so the worker cannot finish before OTO receives it.
+        // The helper persists provider errors on orders.oto_creation_error and never blocks checkout.
+        const otoResult = await createOtoShipmentForOrder(order.id, verifiedUserId ?? null);
+        if (!otoResult.ok) console.warn("[placeOrder] OTO auto-create failed:", otoResult.error);
       } catch (e: any) {
         console.warn("[placeOrder] OTO module load failed:", e?.message || e);
       }

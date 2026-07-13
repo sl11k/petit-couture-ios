@@ -18,6 +18,7 @@ type PaymentOrder = {
   customer_email: string;
   customer_name: string;
   customer_phone: string;
+  user_id: string | null;
   subtotal: number;
   shipping_fee: number;
   tax: number;
@@ -162,7 +163,7 @@ export async function loadGatewayOrder(input: {
   const { data: order, error } = await supabaseAdmin
     .from("orders")
     .select(
-      "id, order_number, payment_method, payment_status, idempotency_key, total, currency, customer_email, customer_name",
+      "id, order_number, user_id, payment_method, payment_status, idempotency_key, total, currency, customer_email, customer_name",
     )
     .eq("order_number", input.orderNumber)
     .single();
@@ -219,6 +220,14 @@ export async function completeGatewayPayment(input: {
     .eq("id", transactionId);
   if (transactionError) {
     throw new Error(`Could not update captured transaction: ${transactionError.message}`);
+  }
+
+  try {
+    const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
+    const shipment = await createOtoShipmentForOrder(input.order.id, input.order.user_id ?? null);
+    if (!shipment.ok) console.error(`[${input.gateway}-webhook] OTO auto-create failed:`, shipment.error);
+  } catch (error) {
+    console.error(`[${input.gateway}-webhook] OTO auto-create threw:`, error);
   }
 
   return { transactionId, newlyFinalized: data === true };

@@ -420,14 +420,18 @@ function chooseDeliveryOption(options: OtoDeliveryOption[]) {
   return [...options].sort((a, b) => (a.price ?? Number.MAX_SAFE_INTEGER) - (b.price ?? Number.MAX_SAFE_INTEGER))[0];
 }
 
-export async function otoCreateShipment(orderNumber: string, deliveryOptionId: string) {
+export async function otoCreateShipment(orderNumber: string, deliveryOptionId?: string | null) {
+  const body: JsonRecord = { orderId: orderNumber };
+  const optionId = clean(deliveryOptionId);
+  if (optionId) body.deliveryOptionId = optionId;
+
   return otoFetchFirst(
     [`/orders/${encodeURIComponent(orderNumber)}/create-shipment`, "/createShipment"],
     {
       method: "POST",
-      body: JSON.stringify({ orderId: orderNumber, deliveryOptionId }),
+      body: JSON.stringify(body),
     },
-    `oto-create-shipment-${orderNumber}-${deliveryOptionId}`,
+    `oto-create-shipment-${orderNumber}-${optionId || "auto"}`,
   );
 }
 
@@ -453,6 +457,12 @@ async function loadOtoOrderInput(orderId: string): Promise<{ order: any; input?:
   if (error || !order) return { order: null, error: "Order not found" };
 
   const addr: any = order.shipping_address || {};
+  const shortAddressCode = clean(addr.shortAddressCode || addr.shortCode || addr.short_address_code);
+  const addressLine =
+    clean(addr.line1 || addr.street || addr.address || addr.address1) ||
+    [clean(addr.buildingNumber), clean(addr.street)].filter(Boolean).join(" ") ||
+    shortAddressCode ||
+    "";
   const itemsRes = await supabaseAdmin
     .from("order_items")
     .select("product_id,product_name,product_slug,sku,qty,unit_price,image_url")
@@ -482,11 +492,11 @@ async function loadOtoOrderInput(orderId: string): Promise<{ order: any; input?:
       customerEmail: order.customer_email,
       city: clean(addr.city || (order as any).shipping_city) || "Riyadh",
       country: normalizeCountry(addr.country_code || addr.country),
-      address1: clean(addr.line1 || addr.street || addr.address) || clean(addr.shortAddressCode) || "",
+      address1: addressLine,
       address2: clean(addr.line2 || addr.district),
       district: clean(addr.district),
       postcode: clean(addr.postcode || addr.postalCode || addr.zip),
-      shortAddressCode: clean(addr.shortAddressCode),
+      shortAddressCode,
       lat: addr.lat || order.shipping_lat || null,
       lon: addr.lon || addr.lng || order.shipping_lng || null,
       weight: Number((order as any).total_weight_kg || 1),
@@ -580,33 +590,55 @@ export async function createOtoShipmentForOrder(
   let shipmentResp: any;
 
   try {
-    createOrderResp = await otoCreateOrder(input, deliveryOptionId);
-    const orderFees = await otoGetDeliveryFeeOptions(input.orderNumber);
-    feeResp = orderFees.raw;
-    option = deliveryOptionId
-      ? orderFees.options.find((o) => o.deliveryOptionId === deliveryOptionId) ||
-        ({ deliveryOptionId, name: "Selected OTO option", price: null, raw: {} } as OtoDeliveryOption)
-      : chooseDeliveryOption(orderFees.options);
+    const configuredOptionId = clean(deliveryOptionId) || clean(process.env.OTO_DEFAULT_DELIVERY_OPTION_ID);
+    try {
+      createOrderResp = await otoCreateOrder(input, configuredOptionId);
+    } catch (createError: any) {
+      const message = String(createError?.message || "").toLowerCase();
+      if (!/already|exist|duplicate|oto1009|oto1008/.test(message)) throw createError;
+      // Previous attempts may have reached OTO but failed before saving our shipment row.
+      // Reuse the existing OTO order and continue to shipment creation idempotently.
+      createOrderResp = { reusedExistingOtoOrder: true, warning: createError?.message || "OTO order already exists" };
+    }
+    if (configuredOptionId) {
+      option = {
+        deliveryOptionId: configuredOptionId,
+        name: "Configured OTO option",
+        price: null,
+        raw: {},
+      };
+    }
 
     if (!option) {
-      const addressFees = await otoCheckDeliveryFee({
-        destinationCity: input.city,
-        weight: input.weight,
-        codAmount: input.codAmount,
-        currency: input.currency,
-      });
-      feeResp = addressFees.raw;
-      option = deliveryOptionId
-        ? addressFees.options.find((o) => o.deliveryOptionId === deliveryOptionId) ||
-          ({ deliveryOptionId, name: "Selected OTO option", price: null, raw: {} } as OtoDeliveryOption)
-        : chooseDeliveryOption(addressFees.options);
+      try {
+        const orderFees = await otoGetDeliveryFeeOptions(input.orderNumber);
+        feeResp = orderFees.raw;
+        option = chooseDeliveryOption(orderFees.options);
+      } catch (feeError: any) {
+        feeResp = { deliveryFeeError: feeError?.message || "OTO delivery fee lookup failed" };
+      }
     }
 
-    if (!option?.deliveryOptionId) {
-      throw new Error("OTO did not return any usable delivery option");
+    if (!option) {
+      try {
+        const addressFees = await otoCheckDeliveryFee({
+          destinationCity: input.city,
+          weight: input.weight,
+          codAmount: input.codAmount,
+          currency: input.currency,
+        });
+        feeResp = addressFees.raw;
+        option = chooseDeliveryOption(addressFees.options);
+      } catch (feeError: any) {
+        feeResp = {
+          ...(feeResp && typeof feeResp === "object" ? feeResp : {}),
+          checkFeeError: feeError?.message || "OTO address fee lookup failed",
+        };
+      }
     }
 
-    shipmentResp = await otoCreateShipment(input.orderNumber, option.deliveryOptionId);
+    // OTO can auto-assign a feasible delivery company when deliveryOptionId is omitted.
+    shipmentResp = await otoCreateShipment(input.orderNumber, option?.deliveryOptionId);
   } catch (e: any) {
     const message = e?.message || "OTO request failed";
     await (supabaseAdmin.from("orders") as any)
@@ -655,7 +687,7 @@ export async function createOtoShipmentForOrder(
       unit: "cm",
     },
     declared_value: Number(order.total),
-    cod_amount: 0,
+    cod_amount: Number(input.codAmount || 0),
     shipping_fee: Number(option?.price ?? order.shipping_fee ?? 0),
     raw_response: mergedResp,
     metadata: {
