@@ -501,7 +501,7 @@ function normalizeDeliveryOptions(resp: any): OtoDeliveryOption[] {
 export async function otoGetDeliveryFeeOptions(orderNumber: string) {
   const otoOrderNumber = getOtoOrderNumber(orderNumber);
   const resp = await otoFetchFirst(
-    ["/getDeliveryFee", `/orders/${encodeURIComponent(orderNumber)}/delivery-fee`],
+    ["/getDeliveryFee", `/orders/${encodeURIComponent(otoOrderNumber)}/delivery-fee`],
     {
       method: "POST",
       body: JSON.stringify({ orderId: otoOrderNumber }),
