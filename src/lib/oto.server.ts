@@ -129,7 +129,10 @@ async function otoFetchFirst(paths: string[], init: RequestInit, idempotencyKey:
     } catch (e: any) {
       lastError = e;
       const message = String(e?.message || "");
-      if (!message.includes("404") && !message.includes("405") && !message.includes("Cannot POST")) {
+      // Fall through on "endpoint not available for this tenant" responses:
+      // 404/405 (missing), 403 (tenant lacks entitlement — e.g. salesChannel accounts
+      // don't get /orders, they must use /createOrder).
+      if (!/\b(404|403|405)\b/.test(message) && !message.includes("Cannot POST")) {
         throw e;
       }
     }
