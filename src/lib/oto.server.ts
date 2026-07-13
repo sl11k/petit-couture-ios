@@ -330,15 +330,10 @@ function firstStringDeep(value: any, keys: RegExp[]): string | undefined {
 }
 
 export function extractOtoShipmentDetails(...responses: any[]) {
-  const trackingNumber = firstStringDeep(responses, [
-    /^tracking_?number$/i,
-    /^dc_?tracking_?number$/i,
-    /^shipment_?number$/i,
-    /^awb$/i,
-    /^awb_?number$/i,
-    /^waybill_?number$/i,
-    /^air_?waybill_?number$/i,
-  ]);
+  const trackingNumber =
+    firstStringDeep(responses, [/^tracking_?number$/i, /^dc_?tracking_?number$/i]) ||
+    firstStringDeep(responses, [/^awb$/i, /^awb_?number$/i, /^waybill_?number$/i, /^air_?waybill_?number$/i]) ||
+    firstStringDeep(responses, [/^shipment_?number$/i, /^shipment_?id$/i]);
   const trackingUrl = firstStringDeep(responses, [
     /^tracking_?url$/i,
     /^tracking_?link$/i,
