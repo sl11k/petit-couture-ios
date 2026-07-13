@@ -583,11 +583,12 @@ export async function createOtoShipmentForOrder(
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+  const existingRawResponse = existing.data?.raw_response as any;
   const existingHasProviderShipment = Boolean(
     existing.data?.tracking_number ||
       existing.data?.awb_url ||
-      existing.data?.raw_response?.createShipment?.otoId ||
-      existing.data?.raw_response?.createShipment?.success,
+      existingRawResponse?.createShipment?.otoId ||
+      existingRawResponse?.createShipment?.success,
   );
   if (existing.data && existing.data.status !== "failed" && (!force || existingHasProviderShipment)) {
     await (supabaseAdmin.from("orders") as any)
