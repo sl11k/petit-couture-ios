@@ -17,6 +17,10 @@ const asNumber = (value: unknown, fallback = 0) => {
   return Number.isFinite(n) ? n : fallback;
 };
 const roundMoney = (value: unknown) => Number(asNumber(value, 0).toFixed(2));
+const numericId = (value: unknown) => {
+  const text = clean(value);
+  return text && /^\d+$/.test(text) ? text : undefined;
+};
 
 function normalizeCountry(value: unknown) {
   const raw = clean(value)?.toUpperCase();
@@ -347,7 +351,7 @@ export async function buildOtoOrderPayload(
     item_description: itemDescription,
     customer: buildCustomer(input),
     items: (input.items ?? []).map((it) => ({
-      productId: clean(it.productId),
+      productId: numericId(it.productId),
       name: it.name,
       sku: clean(it.sku) || it.name.slice(0, 40),
       price: roundMoney(it.price),
