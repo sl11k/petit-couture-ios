@@ -564,10 +564,12 @@ export async function createOtoShipmentForOrder(
   orderId: string,
   createdBy?: string | null,
   deliveryOptionId?: string | null,
-): Promise<{ ok: boolean; shipment?: any; otoResp?: any; options?: OtoDeliveryOption[]; error?: string }> {
+  options: OtoShipmentCreationOptions = {},
+): Promise<{ ok: boolean; shipment?: any; otoResp?: any; options?: OtoDeliveryOption[]; error?: string; pending?: boolean; reused?: boolean }> {
   const loaded = await loadOtoOrderInput(orderId);
   if (loaded.error || !loaded.order || !loaded.input) return { ok: false, error: loaded.error || "Order not found" };
   const { order, input } = loaded;
+  const force = Boolean(options.force);
 
   if (!canCreateOtoShipmentForOrder(order)) {
     return { ok: false, error: "Shipment blocked until payment is confirmed" };
