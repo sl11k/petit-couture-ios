@@ -406,9 +406,21 @@ export const placeOrder = createServerFn({ method: "POST" })
       .update({ converted: true, updated_at: new Date().toISOString() })
       .eq("session_id", data.session_id);
 
-    // 5. Auto-create OTO shipment ONLY after payment is confirmed.
-    //    Hosted/deferred methods wait until the payment webhook marks
-    //    payment_status='paid', then the webhook triggers OTO idempotently.
+    // 5. Auto-create OTO shipment.
+    //    For COD / bank_transfer we trigger immediately (no upstream webhook will fire).
+    //    Hosted/card methods wait until the payment webhook marks payment_status='paid'
+    //    and then that webhook triggers OTO idempotently.
+    if (data.payment_method === "cod" || data.payment_method === "bank_transfer") {
+      try {
+        const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
+        // fire-and-forget; errors are persisted to orders.oto_creation_error
+        createOtoShipmentForOrder(order.id, verifiedUserId ?? null).catch((e: any) => {
+          console.warn("[placeOrder] OTO auto-create failed:", e?.message || e);
+        });
+      } catch (e: any) {
+        console.warn("[placeOrder] OTO module load failed:", e?.message || e);
+      }
+    }
 
     // 6. Enqueue order.created notification (best-effort, non-blocking).
     try {
