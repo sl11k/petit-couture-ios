@@ -1,7 +1,8 @@
 import type { AdminDetailConfig } from "@/features/admin/types";
 import { ordersConfig } from "./orders.config";
-import { DollarSign } from "lucide-react";
+import { DollarSign, Truck } from "lucide-react";
 import { createStripeRefund } from "@/lib/stripe.functions";
+import { otoCreateShipment, otoSyncShipment } from "@/lib/oto.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { notify } from "@/lib/notifications";
 import { toast } from "sonner";
