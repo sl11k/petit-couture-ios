@@ -28,6 +28,49 @@ export const orderDetailConfig: AdminDetailConfig = {
   editForm: ordersConfig.form,
   actions: [
     {
+      key: "create_shipment",
+      label: { ar: "إنشاء شحنة OTO", en: "Create OTO shipment" },
+      icon: <Truck className="h-3 w-3" />,
+      onClick: async (row) => {
+        // Check for existing active shipment
+        const { data: existing } = await supabase
+          .from("shipments")
+          .select("id, tracking_number, status")
+          .eq("order_id", row.id)
+          .not("status", "in", "(cancelled,failed)")
+          .limit(1)
+          .maybeSingle();
+        if (existing?.tracking_number) {
+          const proceed = confirm(
+            `شحنة موجودة بالفعل (${existing.tracking_number}). هل تريد إعادة المزامنة بدلاً من الإنشاء؟`,
+          );
+          if (proceed) {
+            try {
+              await otoSyncShipment({ data: { shipmentId: existing.id } });
+              toast.success("تمت مزامنة الشحنة");
+            } catch (e: any) {
+              toast.error(e?.message || "فشل في مزامنة الشحنة");
+            }
+          }
+          return;
+        }
+        try {
+          const res: any = await otoCreateShipment({ data: { orderId: row.id } });
+          if (res?.tracking_number || res?.trackingNumber || res?.ok) {
+            toast.success(
+              `تم إنشاء الشحنة${res?.tracking_number ? ` — ${res.tracking_number}` : ""}`,
+            );
+          } else if (res?.reused) {
+            toast.info("الشحنة موجودة بالفعل في OTO");
+          } else {
+            toast.success("تم إرسال طلب الشحنة إلى OTO");
+          }
+        } catch (e: any) {
+          toast.error(e?.message || "فشل في إنشاء الشحنة");
+        }
+      },
+    },
+    {
       key: "refund",
       label: { ar: "استرداد", en: "Refund" },
       icon: <DollarSign className="h-3 w-3" />,
