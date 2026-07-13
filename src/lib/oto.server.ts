@@ -487,6 +487,20 @@ export async function otoCreateShipment(orderNumber: string, deliveryOptionId?: 
   );
 }
 
+async function otoCreateShipmentWithRetry(orderNumber: string, deliveryOptionId?: string | null) {
+  let lastError: any;
+  for (const waitMs of [0, 2_000, 5_000, 10_000]) {
+    if (waitMs) await sleep(waitMs);
+    try {
+      return await otoCreateShipment(orderNumber, deliveryOptionId);
+    } catch (e: any) {
+      lastError = e;
+      if (!isOtoInvalidOrderError(e)) throw e;
+    }
+  }
+  throw lastError;
+}
+
 export async function otoGetOrderStatus(orderNumberOrOtoId: string) {
   return otoFetchFirst(
     [
