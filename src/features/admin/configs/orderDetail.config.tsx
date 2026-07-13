@@ -16,6 +16,33 @@ const ORDER_STATUS_OPTIONS = [
   { value: "refunded", label: { ar: "مسترد", en: "Refunded" } },
 ];
 
+const findInOtoRaw = (value: any, keys: RegExp[]): string | null => {
+  const seen = new Set<any>();
+  const visit = (node: any): string | null => {
+    if (!node || typeof node !== "object" || seen.has(node)) return null;
+    seen.add(node);
+    if (Array.isArray(node)) {
+      for (const item of node) {
+        const found = visit(item);
+        if (found) return found;
+      }
+      return null;
+    }
+    for (const [key, raw] of Object.entries(node)) {
+      if (keys.some((pattern) => pattern.test(key))) {
+        const text = raw == null ? "" : String(raw).trim();
+        if (text) return text;
+      }
+    }
+    for (const raw of Object.values(node)) {
+      const found = visit(raw);
+      if (found) return found;
+    }
+    return null;
+  };
+  return visit(value);
+};
+
 export const orderDetailConfig: AdminDetailConfig = {
   table: "orders",
   backTo: "/admin/orders",
@@ -25,6 +52,41 @@ export const orderDetailConfig: AdminDetailConfig = {
     ar: `${row.customer_name ?? ""} • ${new Date(row.created_at).toLocaleString("ar")}`,
     en: `${row.customer_name ?? ""} • ${new Date(row.created_at).toLocaleString("en")}`,
   }),
+  enrichRow: async (row) => {
+    if (row.tracking_number && row.tracking_url) return row;
+    const { data: shipment } = await supabase
+      .from("shipments")
+      .select("tracking_number, tracking_url, awb_url, status, raw_response")
+      .eq("order_id", row.id)
+      .eq("carrier_code", "oto")
+      .not("status", "in", "(cancelled,failed)")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!shipment) return row;
+    const rawTracking = findInOtoRaw(shipment.raw_response, [
+      /^tracking_?number$/i,
+      /^dc_?tracking_?number$/i,
+      /^shipment_?number$/i,
+      /^awb$/i,
+      /^awb_?number$/i,
+      /^waybill_?number$/i,
+    ]);
+    const rawUrl = findInOtoRaw(shipment.raw_response, [
+      /^tracking_?url$/i,
+      /^tracking_?link$/i,
+      /^print_?awb_?url$/i,
+      /^awb_?url$/i,
+      /^label_?url$/i,
+    ]);
+    return {
+      ...row,
+      shipping_carrier: row.shipping_carrier || "oto",
+      shipping_status: row.shipping_status || shipment.status,
+      tracking_number: row.tracking_number || shipment.tracking_number || rawTracking || null,
+      tracking_url: row.tracking_url || shipment.tracking_url || shipment.awb_url || rawUrl || null,
+    };
+  },
   editForm: ordersConfig.form,
   actions: [
     {

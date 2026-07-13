@@ -70,22 +70,36 @@ export const otoSyncShipment = createServerFn({ method: "POST" })
     const { data: ship, error } = await supabaseAdmin
       .from("shipments").select("*").eq("id", data.shipmentId).single();
     if (error || !ship) throw new Error("Shipment not found");
-    if (!ship.tracking_number) return { ok: false, error: "No tracking number" };
     try {
-      const resp: any = await otoGetOrderStatus(ship.order_number || ship.tracking_number);
+      const { extractOtoShipmentDetails, otoPrintAwb } = await import("./oto.server");
+      const otoLookupId = ship.order_number || ship.tracking_number;
+      if (!otoLookupId) return { ok: false, error: "No OTO order number" };
+      const resp: any = await otoGetOrderStatus(otoLookupId);
+      const printResp: any = await otoPrintAwb(otoLookupId).catch(() => null);
+      const details = extractOtoShipmentDetails(resp, printResp);
       const newStatus = (resp?.status || resp?.tracking?.status || "").toString().toLowerCase();
-      const update: any = { last_polled_at: new Date().toISOString(), raw_response: resp };
+      const update: any = { last_polled_at: new Date().toISOString(), raw_response: { status: resp, printAwb: printResp } };
+      if (details.trackingNumber) update.tracking_number = details.trackingNumber;
+      if (details.trackingUrl) update.tracking_url = details.trackingUrl;
+      if (details.awbUrl) update.awb_url = details.awbUrl;
       if (newStatus.includes("delivered")) { update.status = "delivered"; update.delivered_at = new Date().toISOString(); }
       else if (newStatus.includes("transit")) update.status = "in_transit";
       else if (newStatus.includes("out")) update.status = "out_for_delivery";
       else if (newStatus.includes("pick")) { update.status = "picked_up"; update.shipped_at = new Date().toISOString(); }
       else if (newStatus.includes("return")) { update.status = "returned"; update.is_returned = true; }
       await supabaseAdmin.from("shipments").update(update).eq("id", ship.id);
-      if (update.status && ship.order_id) {
+      if (ship.order_id) {
         const map: Record<string, string> = { picked_up: "shipped", in_transit: "in_transit", out_for_delivery: "out_for_delivery", delivered: "delivered", returned: "returned" };
-        if (map[update.status]) await supabaseAdmin.from("orders").update({ shipping_status: map[update.status] }).eq("id", ship.order_id);
+        if (map[update.status] || details.trackingNumber || details.trackingUrl || details.awbUrl) {
+          await supabaseAdmin.from("orders").update({
+            shipping_status: map[update.status] || ship.status || "processing",
+            shipping_carrier: "oto",
+            tracking_number: details.trackingNumber || ship.tracking_number || null,
+            tracking_url: details.trackingUrl || details.awbUrl || ship.tracking_url || null,
+          }).eq("id", ship.order_id);
+        }
       }
-      return { ok: true, status: update.status || "unchanged", raw: resp };
+      return { ok: true, status: update.status || "unchanged", tracking_number: details.trackingNumber || ship.tracking_number || null, raw: resp };
     } catch (e: any) {
       return { ok: false, error: e?.message || "Sync failed" };
     }

@@ -182,8 +182,18 @@ export function DetailPage<T extends Record<string, any>>({
   useEffect(() => {
     setLoading(true);
     supabase.from(config.table as any).select(config.select ?? "*").eq("id", id).maybeSingle()
-      .then(({ data }) => { setRow(data as T | null); setLoading(false); });
-  }, [config.table, id, reloadKey]);
+      .then(async ({ data }) => {
+        const baseRow = data as T | null;
+        let enriched = baseRow;
+        try {
+          enriched = baseRow && config.enrichRow ? await config.enrichRow(baseRow) : baseRow;
+        } catch {
+          enriched = baseRow;
+        }
+        setRow(enriched as T | null);
+        setLoading(false);
+      });
+  }, [config.table, id, reloadKey, config.enrichRow]);
 
   const Arrow = ar ? ArrowRight : ArrowLeft;
   const sidebarSections = useMemo(() => config.sections.filter((s) => s.sidebar), [config.sections]);
@@ -224,7 +234,10 @@ export function DetailPage<T extends Record<string, any>>({
             {config.actions?.map((action) => (
               <button
                 key={action.key}
-                onClick={() => action.onClick?.(row)}
+                onClick={async () => {
+                  await action.onClick?.(row);
+                  setReloadKey((k) => k + 1);
+                }}
                 className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium ${
                   action.variant === "danger"
                     ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
