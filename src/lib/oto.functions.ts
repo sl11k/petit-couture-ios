@@ -88,11 +88,11 @@ export const otoSyncShipment = createServerFn({ method: "POST" })
       else if (newStatus.includes("pick")) { update.status = "picked_up"; update.shipped_at = new Date().toISOString(); }
       else if (newStatus.includes("return")) { update.status = "returned"; update.is_returned = true; }
       await supabaseAdmin.from("shipments").update(update).eq("id", ship.id);
-      if (update.status && ship.order_id) {
+      if (ship.order_id) {
         const map: Record<string, string> = { picked_up: "shipped", in_transit: "in_transit", out_for_delivery: "out_for_delivery", delivered: "delivered", returned: "returned" };
-        if (map[update.status]) {
+        if (map[update.status] || details.trackingNumber || details.trackingUrl || details.awbUrl) {
           await supabaseAdmin.from("orders").update({
-            shipping_status: map[update.status],
+            shipping_status: map[update.status] || ship.status || "processing",
             shipping_carrier: "oto",
             tracking_number: details.trackingNumber || ship.tracking_number || null,
             tracking_url: details.trackingUrl || details.awbUrl || ship.tracking_url || null,
