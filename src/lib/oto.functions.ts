@@ -35,6 +35,7 @@ export const otoCreateShipment = createServerFn({ method: "POST" })
       .object({
         orderId: z.string().uuid(),
         deliveryOptionId: z.string().optional().nullable(),
+        force: z.boolean().optional(),
       })
       .parse(d),
   )
@@ -42,7 +43,10 @@ export const otoCreateShipment = createServerFn({ method: "POST" })
     const { userId } = context as { userId: string };
     await requireOtoAdmin(userId);
     const { createOtoShipmentForOrder } = await import("./oto.server");
-    return await createOtoShipmentForOrder(data.orderId, userId, data.deliveryOptionId);
+    return await createOtoShipmentForOrder(data.orderId, userId, data.deliveryOptionId, {
+      force: Boolean(data.force),
+      waitOnThrottle: Boolean(data.force),
+    });
   });
 
 export const otoGetDeliveryOptions = createServerFn({ method: "POST" })

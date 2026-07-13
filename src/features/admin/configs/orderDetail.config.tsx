@@ -35,14 +35,14 @@ export const orderDetailConfig: AdminDetailConfig = {
         // Check for existing active shipment
         const { data: existing } = await supabase
           .from("shipments")
-          .select("id, tracking_number, status")
+          .select("id, tracking_number, awb_url, status")
           .eq("order_id", row.id)
           .not("status", "in", "(cancelled,failed)")
           .limit(1)
           .maybeSingle();
-        if (existing?.tracking_number) {
+        if (existing?.tracking_number || existing?.awb_url) {
           const proceed = confirm(
-            `شحنة موجودة بالفعل (${existing.tracking_number}). هل تريد إعادة المزامنة بدلاً من الإنشاء؟`,
+            `شحنة موجودة بالفعل (${existing.tracking_number || "تم إصدار البوليصة"}). هل تريد إعادة المزامنة بدلاً من الإنشاء؟`,
           );
           if (proceed) {
             try {
@@ -55,15 +55,20 @@ export const orderDetailConfig: AdminDetailConfig = {
           return;
         }
         try {
-          const res: any = await otoCreateShipment({ data: { orderId: row.id } });
-          if (res?.tracking_number || res?.trackingNumber || res?.ok) {
+          const res: any = await otoCreateShipment({ data: { orderId: row.id, force: true } });
+          if (res?.ok === false) {
+            toast.error(res?.error || "فشل في إنشاء الشحنة داخل OTO");
+          } else if (res?.shipment?.tracking_number || res?.tracking_number || res?.trackingNumber) {
+            const tracking = res?.shipment?.tracking_number || res?.tracking_number || res?.trackingNumber;
             toast.success(
-              `تم إنشاء الشحنة${res?.tracking_number ? ` — ${res.tracking_number}` : ""}`,
+              `تم إنشاء الشحنة${tracking ? ` — ${tracking}` : ""}`,
             );
+          } else if (res?.shipment?.awb_url || res?.shipment?.raw_response) {
+            toast.success("تم إنشاء الشحنة/البوليصة في OTO وتم حفظها على الطلب");
           } else if (res?.reused) {
             toast.info("الشحنة موجودة بالفعل في OTO");
           } else {
-            toast.success("تم إرسال طلب الشحنة إلى OTO");
+            toast.info("تم إرسال طلب الشحنة إلى OTO، تحقق من حالة الطلب بعد لحظات");
           }
         } catch (e: any) {
           toast.error(e?.message || "فشل في إنشاء الشحنة");
