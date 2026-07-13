@@ -184,7 +184,12 @@ export function DetailPage<T extends Record<string, any>>({
     supabase.from(config.table as any).select(config.select ?? "*").eq("id", id).maybeSingle()
       .then(async ({ data }) => {
         const baseRow = data as T | null;
-        const enriched = baseRow && config.enrichRow ? await config.enrichRow(baseRow) : baseRow;
+        let enriched = baseRow;
+        try {
+          enriched = baseRow && config.enrichRow ? await config.enrichRow(baseRow) : baseRow;
+        } catch {
+          enriched = baseRow;
+        }
         setRow(enriched as T | null);
         setLoading(false);
       });
