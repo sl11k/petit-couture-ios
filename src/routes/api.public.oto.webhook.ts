@@ -10,7 +10,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { Database, Json } from "@/integrations/supabase/types";
 import { normalizeOtoPayload, verifyOtoWebhookSignature, mapOtoStatus } from "@/lib/oto-webhook";
-import { getOtoOrderNumber } from "@/lib/oto.server";
+import { getOtoOrderNumber, stripOtoOrderPrefix } from "@/lib/oto.server";
 
 type ShipmentUpdate = Database["public"]["Tables"]["shipments"]["Update"];
 
@@ -143,6 +143,7 @@ export const Route = createFileRoute("/api/public/oto/webhook")({
               new Set([
                 orderId,
                 getOtoOrderNumber(orderId),
+                stripOtoOrderPrefix(orderId),
                 orderId.replace(/^OTO[-_]?/i, ""),
               ].filter(Boolean)),
             );
