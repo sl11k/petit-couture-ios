@@ -782,7 +782,7 @@ export async function createOtoShipmentForOrder(
       height: asNumber(process.env.OTO_DEFAULT_BOX_HEIGHT_CM, 10) || 10,
       unit: "cm",
     },
-    declared_value: Number(order.total),
+    declared_value: Number(order.subtotal ?? order.total),
     cod_amount: Number(input.codAmount || 0),
     shipping_fee: Number(option?.price ?? order.shipping_fee ?? 0),
     raw_response: mergedResp,
