@@ -278,7 +278,38 @@ function buildCustomer(input: OtoCreateOrderInput) {
   return Object.fromEntries(Object.entries(customer).filter(([, v]) => v != null));
 }
 
-export async function buildOtoOrderPayload(input: OtoCreateOrderInput, deliveryOptionId?: string | null) {
+function isOtoDuplicateOrderError(error: any) {
+  const message = String(error?.message || error || "").toLowerCase();
+  return /already|exist|duplicate|oto1009|oto1008/.test(message);
+}
+
+function isOtoInvalidOrderError(error: any) {
+  const message = String(error?.message || error || "").toLowerCase();
+  return /invalid or missing order id|orderid cannot be found|order id.*not found|oto1001/.test(message);
+}
+
+function getOtoRetryDelayMs(error: any) {
+  const message = String(error?.message || error || "");
+  const minuteMatch = message.match(/wait\s+for\s+(\d+)\s+minute/i);
+  if (minuteMatch) return Number(minuteMatch[1]) * 60_000 + 1_500;
+  const secondMatch = message.match(/wait\s+for\s+(\d+)\s+second/i);
+  if (secondMatch) return Number(secondMatch[1]) * 1_000 + 1_500;
+  if (/OTO1105|request again/i.test(message)) return 61_500;
+  return null;
+}
+
+async function retryOnceAfterOtoThrottle<T>(error: any, action: () => Promise<T>, enabled: boolean) {
+  const retryDelayMs = getOtoRetryDelayMs(error);
+  if (!enabled || !retryDelayMs) throw error;
+  await sleep(Math.min(retryDelayMs, 65_000));
+  return action();
+}
+
+export async function buildOtoOrderPayload(
+  input: OtoCreateOrderInput,
+  deliveryOptionId?: string | null,
+  options: OtoCreateOrderOptions = {},
+) {
   if (!clean(input.customerName) || !clean(input.customerPhone)) {
     throw new Error("OTO requires customer name and mobile");
   }
@@ -299,7 +330,7 @@ export async function buildOtoOrderPayload(input: OtoCreateOrderInput, deliveryO
   const payload: JsonRecord = {
     orderId: otoOrderNumber,
     ref1: input.orderId,
-    createShipment: false,
+    createShipment: Boolean(options.createShipment),
     payment_method: input.codAmount && input.codAmount > 0 ? "cod" : "paid",
     amount: roundMoney(input.totalValue),
     amount_due: input.codAmount && input.codAmount > 0 ? roundMoney(input.codAmount) : 0,
@@ -341,15 +372,19 @@ export async function buildOtoOrderPayload(input: OtoCreateOrderInput, deliveryO
   return Object.fromEntries(Object.entries(payload).filter(([, v]) => v != null));
 }
 
-export async function otoCreateOrder(input: OtoCreateOrderInput, deliveryOptionId?: string | null) {
-  const payload = await buildOtoOrderPayload(input, deliveryOptionId);
+export async function otoCreateOrder(
+  input: OtoCreateOrderInput,
+  deliveryOptionId?: string | null,
+  options: OtoCreateOrderOptions = {},
+) {
+  const payload = await buildOtoOrderPayload(input, deliveryOptionId, options);
   return otoFetchFirst(
     ["/createOrder", "/orders"],
     {
       method: "POST",
       body: JSON.stringify(payload),
     },
-    `oto-create-order-${input.orderNumber}`,
+    `oto-create-order-${input.orderNumber}-${options.createShipment ? "shipment" : "order"}`,
   );
 }
 
