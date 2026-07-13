@@ -591,7 +591,15 @@ export async function createOtoShipmentForOrder(
 
   try {
     const configuredOptionId = clean(deliveryOptionId) || clean(process.env.OTO_DEFAULT_DELIVERY_OPTION_ID);
-    createOrderResp = await otoCreateOrder(input, configuredOptionId);
+    try {
+      createOrderResp = await otoCreateOrder(input, configuredOptionId);
+    } catch (createError: any) {
+      const message = String(createError?.message || "").toLowerCase();
+      if (!/already|exist|duplicate|oto1009|oto1008/.test(message)) throw createError;
+      // Previous attempts may have reached OTO but failed before saving our shipment row.
+      // Reuse the existing OTO order and continue to shipment creation idempotently.
+      createOrderResp = { reusedExistingOtoOrder: true, warning: createError?.message || "OTO order already exists" };
+    }
     if (configuredOptionId) {
       option = {
         deliveryOptionId: configuredOptionId,
