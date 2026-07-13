@@ -340,10 +340,14 @@ export async function buildOtoOrderPayload(
     ref1: input.orderId,
     createShipment: Boolean(options.createShipment),
     payment_method: input.codAmount && input.codAmount > 0 ? "cod" : "paid",
-    amount: roundMoney(input.totalValue),
+    // OTO's "amount" is the goods value (used for declared/insured value & display),
+    // shipping is separately billed by the carrier. Never include shipping here or
+    // OTO will show inflated order value (e.g. 4 SAR item shown as 24 with 20 shipping).
+    amount: roundMoney(input.subtotal ?? input.totalValue),
     amount_due: input.codAmount && input.codAmount > 0 ? roundMoney(input.codAmount) : 0,
     shippingAmount: roundMoney(input.shippingFee),
     subtotal: roundMoney(input.subtotal ?? input.totalValue),
+    totalAmount: roundMoney(input.totalValue),
     currency: (input.currency || "SAR").toUpperCase(),
     shippingNotes: clean(input.notes),
     packageCount: 1,
