@@ -686,15 +686,6 @@ export async function createOtoShipmentForOrder(
 
   try {
     const configuredOptionId = clean(deliveryOptionId) || clean(process.env.OTO_DEFAULT_DELIVERY_OPTION_ID);
-    try {
-      createOrderResp = await otoCreateOrder(input, configuredOptionId);
-    } catch (createError: any) {
-      const message = String(createError?.message || "").toLowerCase();
-      if (!/already|exist|duplicate|oto1009|oto1008/.test(message)) throw createError;
-      // Previous attempts may have reached OTO but failed before saving our shipment row.
-      // Reuse the existing OTO order and continue to shipment creation idempotently.
-      createOrderResp = { reusedExistingOtoOrder: true, warning: createError?.message || "OTO order already exists" };
-    }
     if (configuredOptionId) {
       option = {
         deliveryOptionId: configuredOptionId,
@@ -702,16 +693,6 @@ export async function createOtoShipmentForOrder(
         price: null,
         raw: {},
       };
-    }
-
-    if (!option) {
-      try {
-        const orderFees = await otoGetDeliveryFeeOptions(input.orderNumber);
-        feeResp = orderFees.raw;
-        option = chooseDeliveryOption(orderFees.options);
-      } catch (feeError: any) {
-        feeResp = { deliveryFeeError: feeError?.message || "OTO delivery fee lookup failed" };
-      }
     }
 
     if (!option) {
@@ -725,15 +706,23 @@ export async function createOtoShipmentForOrder(
         feeResp = addressFees.raw;
         option = chooseDeliveryOption(addressFees.options);
       } catch (feeError: any) {
-        feeResp = {
-          ...(feeResp && typeof feeResp === "object" ? feeResp : {}),
-          checkFeeError: feeError?.message || "OTO address fee lookup failed",
-        };
+        feeResp = { checkFeeError: feeError?.message || "OTO address fee lookup failed" };
       }
     }
 
-    // OTO can auto-assign a feasible delivery company when deliveryOptionId is omitted.
-    shipmentResp = await otoCreateShipment(input.orderNumber, option?.deliveryOptionId);
+    const createOrderWithShipment = () => otoCreateOrder(input, option?.deliveryOptionId, { createShipment: true });
+    try {
+      createOrderResp = await createOrderWithShipment();
+      shipmentResp = createOrderResp;
+    } catch (createError: any) {
+      if (isOtoDuplicateOrderError(createError)) {
+        createOrderResp = { reusedExistingOtoOrder: true, warning: createError?.message || "OTO order already exists" };
+        shipmentResp = await otoCreateShipmentWithRetry(input.orderNumber, option?.deliveryOptionId);
+      } else {
+        createOrderResp = await retryOnceAfterOtoThrottle(createError, createOrderWithShipment, Boolean(options.waitOnThrottle));
+        shipmentResp = createOrderResp;
+      }
+    }
   } catch (e: any) {
     const message = e?.message || "OTO request failed";
     await (supabaseAdmin.from("orders") as any)
