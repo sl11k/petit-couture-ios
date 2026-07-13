@@ -72,8 +72,10 @@ export const otoSyncShipment = createServerFn({ method: "POST" })
     if (error || !ship) throw new Error("Shipment not found");
     try {
       const { extractOtoShipmentDetails, otoPrintAwb } = await import("./oto.server");
-      const resp: any = await otoGetOrderStatus(ship.order_number || ship.tracking_number);
-      const printResp: any = await otoPrintAwb(ship.order_number || ship.tracking_number).catch(() => null);
+      const otoLookupId = ship.order_number || ship.tracking_number;
+      if (!otoLookupId) return { ok: false, error: "No OTO order number" };
+      const resp: any = await otoGetOrderStatus(otoLookupId);
+      const printResp: any = await otoPrintAwb(otoLookupId).catch(() => null);
       const details = extractOtoShipmentDetails(resp, printResp);
       const newStatus = (resp?.status || resp?.tracking?.status || "").toString().toLowerCase();
       const update: any = { last_polled_at: new Date().toISOString(), raw_response: { status: resp, printAwb: printResp } };
