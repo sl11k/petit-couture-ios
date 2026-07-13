@@ -55,7 +55,9 @@ export async function getOtoAccessToken(): Promise<string> {
     res = await fetch(`${OTO_BASE}/refreshToken`, {
       method: "POST",
       headers: { Accept: "application/json", "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token: refresh }),
+      // OTO API v2 uses snake_case `refresh_token` (confirmed by probe).
+      // camelCase is included for forward-compat and is ignored if unused.
+      body: JSON.stringify({ refresh_token: refresh, refreshToken: refresh }),
     });
   } else if (clientId && clientSecret) {
     res = await fetch(`${OTO_BASE}/auth`, {
@@ -127,7 +129,10 @@ async function otoFetchFirst(paths: string[], init: RequestInit, idempotencyKey:
     } catch (e: any) {
       lastError = e;
       const message = String(e?.message || "");
-      if (!message.includes("404") && !message.includes("405") && !message.includes("Cannot POST")) {
+      // Fall through on "endpoint not available for this tenant" responses:
+      // 404/405 (missing), 403 (tenant lacks entitlement — e.g. salesChannel accounts
+      // don't get /orders, they must use /createOrder).
+      if (!/\b(404|403|405)\b/.test(message) && !message.includes("Cannot POST")) {
         throw e;
       }
     }
@@ -327,7 +332,7 @@ export async function buildOtoOrderPayload(input: OtoCreateOrderInput, deliveryO
 export async function otoCreateOrder(input: OtoCreateOrderInput, deliveryOptionId?: string | null) {
   const payload = await buildOtoOrderPayload(input, deliveryOptionId);
   return otoFetchFirst(
-    ["/orders", "/createOrder"],
+    ["/createOrder", "/orders"],
     {
       method: "POST",
       body: JSON.stringify(payload),
@@ -379,7 +384,7 @@ function normalizeDeliveryOptions(resp: any): OtoDeliveryOption[] {
 
 export async function otoGetDeliveryFeeOptions(orderNumber: string) {
   const resp = await otoFetchFirst(
-    [`/orders/${encodeURIComponent(orderNumber)}/delivery-fee`, "/getDeliveryFee"],
+    ["/getDeliveryFee", `/orders/${encodeURIComponent(orderNumber)}/delivery-fee`],
     {
       method: "POST",
       body: JSON.stringify({ orderId: orderNumber }),
@@ -426,7 +431,7 @@ export async function otoCreateShipment(orderNumber: string, deliveryOptionId?: 
   if (optionId) body.deliveryOptionId = optionId;
 
   return otoFetchFirst(
-    [`/orders/${encodeURIComponent(orderNumber)}/create-shipment`, "/createShipment"],
+    ["/createShipment", `/orders/${encodeURIComponent(orderNumber)}/create-shipment`],
     {
       method: "POST",
       body: JSON.stringify(body),
@@ -438,8 +443,8 @@ export async function otoCreateShipment(orderNumber: string, deliveryOptionId?: 
 export async function otoGetOrderStatus(orderNumberOrOtoId: string) {
   return otoFetchFirst(
     [
-      `/orders/${encodeURIComponent(orderNumberOrOtoId)}/status`,
       `/orderStatus?orderId=${encodeURIComponent(orderNumberOrOtoId)}`,
+      `/orders/${encodeURIComponent(orderNumberOrOtoId)}/status`,
     ],
     {
       method: "GET",
