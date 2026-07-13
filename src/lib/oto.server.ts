@@ -583,7 +583,13 @@ export async function createOtoShipmentForOrder(
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (existing.data && existing.data.status !== "failed") {
+  const existingHasProviderShipment = Boolean(
+    existing.data?.tracking_number ||
+      existing.data?.awb_url ||
+      existing.data?.raw_response?.createShipment?.otoId ||
+      existing.data?.raw_response?.createShipment?.success,
+  );
+  if (existing.data && existing.data.status !== "failed" && (!force || existingHasProviderShipment)) {
     await (supabaseAdmin.from("orders") as any)
       .update({
         shipping_carrier: "oto",
@@ -593,15 +599,35 @@ export async function createOtoShipmentForOrder(
         oto_creation_error: null,
       })
       .eq("id", order.id);
-    return { ok: true, shipment: existing.data };
+    return { ok: true, shipment: existing.data, reused: true };
   }
 
-  const { data: claimed, error: claimError } = await (supabaseAdmin as any).rpc(
+  let { data: claimed, error: claimError } = await (supabaseAdmin as any).rpc(
     "claim_oto_shipment_creation",
-    { _order_id: order.id },
+    { _order_id: order.id, _force: force },
   );
+  if (claimError && /function .*claim_oto_shipment_creation|schema cache|parameter|_force/i.test(claimError.message || "")) {
+    if (force) {
+      await (supabaseAdmin.from("orders") as any)
+        .update({ oto_creation_started_at: null, oto_creation_error: null })
+        .eq("id", order.id);
+    }
+    const fallback = await (supabaseAdmin as any).rpc(
+      "claim_oto_shipment_creation",
+      { _order_id: order.id },
+    );
+    claimed = fallback.data;
+    claimError = fallback.error;
+  }
   if (claimError) return { ok: false, error: `OTO claim failed: ${claimError.message}` };
-  if (!claimed) return { ok: true, shipment: existing.data ?? undefined };
+  if (!claimed) {
+    return {
+      ok: false,
+      pending: true,
+      shipment: existing.data ?? undefined,
+      error: "OTO shipment creation is already in progress. Try again in a minute if no shipment appears.",
+    };
+  }
 
   let createOrderResp: any;
   let feeResp: any = null;
