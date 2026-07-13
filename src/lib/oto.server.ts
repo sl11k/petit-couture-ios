@@ -431,7 +431,7 @@ export async function otoCreateShipment(orderNumber: string, deliveryOptionId?: 
   if (optionId) body.deliveryOptionId = optionId;
 
   return otoFetchFirst(
-    [`/orders/${encodeURIComponent(orderNumber)}/create-shipment`, "/createShipment"],
+    ["/createShipment", `/orders/${encodeURIComponent(orderNumber)}/create-shipment`],
     {
       method: "POST",
       body: JSON.stringify(body),
