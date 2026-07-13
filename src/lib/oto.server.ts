@@ -443,8 +443,8 @@ export async function otoCreateShipment(orderNumber: string, deliveryOptionId?: 
 export async function otoGetOrderStatus(orderNumberOrOtoId: string) {
   return otoFetchFirst(
     [
-      `/orders/${encodeURIComponent(orderNumberOrOtoId)}/status`,
       `/orderStatus?orderId=${encodeURIComponent(orderNumberOrOtoId)}`,
+      `/orders/${encodeURIComponent(orderNumberOrOtoId)}/status`,
     ],
     {
       method: "GET",
