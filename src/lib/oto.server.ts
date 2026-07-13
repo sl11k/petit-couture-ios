@@ -32,6 +32,11 @@ export function getOtoOrderNumber(orderNumber: string) {
   return `${prefix}${orderNumber}`;
 }
 
+export function stripOtoOrderPrefix(orderNumber: string) {
+  const prefix = clean(process.env.OTO_ORDER_PREFIX);
+  return prefix && orderNumber.startsWith(prefix) ? orderNumber.slice(prefix.length) : orderNumber;
+}
+
 function normalizeCountry(value: unknown) {
   const raw = clean(value)?.toUpperCase();
   if (!raw) return "SA";
