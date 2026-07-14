@@ -340,7 +340,12 @@ function CheckoutPage() {
         const res = await validateCoupon({
           data: {
             code: coupon.code,
-            subtotal: bag.subtotal,
+            cart_items: bag.items.map((it) => ({
+              slug: it.slug,
+              price: it.price,
+              qty: it.qty,
+              is_discounted: false,
+            })),
             user_id: null,
             customer_email: contact.email || null,
           },
@@ -371,7 +376,12 @@ function CheckoutPage() {
       const res = await validateCoupon({
         data: {
           code,
-          subtotal: bag.subtotal,
+          cart_items: bag.items.map((it) => ({
+            slug: it.slug,
+            price: it.price,
+            qty: it.qty,
+            is_discounted: false,
+          })),
           user_id: auth.user?.id ?? null,
           customer_email: contact.email || auth.user?.email || null,
         },

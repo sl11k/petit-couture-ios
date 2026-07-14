@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { PageHeader } from "@/features/admin/components/PageHeader";
-import { Loader2, Eye, Search as SearchIcon, MousePointerClick } from "lucide-react";
+import { Loader2, Eye, Search as SearchIcon, MousePointerClick, Link as LinkIcon, Users } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 export const Route = createFileRoute("/admin/site-analytics")({
   component: SiteAnalyticsPage,
@@ -15,14 +16,17 @@ function SiteAnalyticsPage() {
   const [stats, setStats] = useState<any>(null);
   const [topQueries, setTopQueries] = useState<any[]>([]);
   const [topProducts, setTopProducts] = useState<any[]>([]);
+  const [dailyVisits, setDailyVisits] = useState<{ date: string; visits: number }[]>([]);
+  const [topReferrers, setTopReferrers] = useState<{ source: string; count: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       const since = new Date(Date.now() - 7 * 86400000).toISOString();
-      const [searches, products] = await Promise.all([
+      const [searches, products, events] = await Promise.all([
         supabase.from("search_logs").select("query, results_count").gte("created_at", since).limit(1000),
         supabase.from("products").select("id, name_ar, name_en, views_count").order("views_count", { ascending: false }).limit(10),
+        supabase.from("analytics_events").select("session_id, created_at, referrer, event_name, path").gte("created_at", since),
       ]);
 
       const queryMap = new Map<string, number>();
@@ -32,13 +36,48 @@ function SiteAnalyticsPage() {
       });
       const top = [...queryMap.entries()].map(([q, c]) => ({ q, c })).sort((a, b) => b.c - a.c).slice(0, 10);
 
+      const visitsMap = new Map<string, Set<string>>();
+      const refMap = new Map<string, number>();
+
+      (events.data ?? []).forEach((ev: any) => {
+        const day = ev.created_at.slice(0, 10);
+        if (!visitsMap.has(day)) visitsMap.set(day, new Set());
+        visitsMap.get(day)!.add(ev.session_id);
+
+        if (ev.referrer && ev.referrer.trim() !== "") {
+          let r = ev.referrer;
+          try {
+            const url = new URL(r);
+            r = url.hostname.replace("www.", "");
+            if (r === window.location.hostname) return; // skip internal
+          } catch(e) {}
+          refMap.set(r, (refMap.get(r) ?? 0) + 1);
+        }
+      });
+
+      const daily = Array.from(visitsMap.entries())
+        .map(([date, set]) => ({ date, visits: set.size }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+      const referrersList = Array.from(refMap.entries())
+        .map(([source, count]) => ({ source, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+
+      const uniqueSessions = new Set((events.data ?? []).map((e: any) => e.session_id)).size;
+      const referralClicks = Array.from(refMap.values()).reduce((a, b) => a + b, 0);
+
       setStats({
         totalSearches: searches.data?.length ?? 0,
         zeroResults: (searches.data ?? []).filter((r: any) => r.results_count === 0).length,
         totalViews: (products.data ?? []).reduce((s: number, p: any) => s + (p.views_count ?? 0), 0),
+        uniqueSessions,
+        referralClicks,
       });
       setTopQueries(top);
       setTopProducts(products.data ?? []);
+      setDailyVisits(daily);
+      setTopReferrers(referrersList);
       setLoading(false);
     })();
   }, []);
@@ -60,13 +99,48 @@ function SiteAnalyticsPage() {
         title={{ ar: "تحليلات الموقع", en: "Site Analytics" }}
         description={{ ar: "آخر 7 أيام", en: "Last 7 days" }}
       />
-      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <Card icon={Users} label={ar ? "إجمالي الزيارات" : "Total Visits"} value={stats.uniqueSessions} />
+        <Card icon={LinkIcon} label={ar ? "زيارات من روابط" : "Referral Clicks"} value={stats.referralClicks} />
         <Card icon={SearchIcon} label={ar ? "عمليات البحث" : "Searches"} value={stats.totalSearches} />
         <Card icon={MousePointerClick} label={ar ? "بحث بدون نتائج" : "Zero results"} value={stats.zeroResults} />
         <Card icon={Eye} label={ar ? "مشاهدات المنتجات" : "Product views"} value={stats.totalViews} />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="mb-4 rounded-lg border border-border bg-card p-4">
+        <div className="mb-4 text-sm font-medium">{ar ? "الزيارات اليومية" : "Daily Visits"}</div>
+        <div className="h-64 w-full text-xs">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={dailyVisits}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333" />
+              <XAxis dataKey="date" stroke="#888" tickFormatter={(v) => v.slice(5)} />
+              <YAxis stroke="#888" allowDecimals={false} />
+              <Tooltip
+                contentStyle={{ backgroundColor: "#111", border: "1px solid #333", borderRadius: "8px", color: "#fff" }}
+                itemStyle={{ color: "#fff" }}
+              />
+              <Bar dataKey="visits" fill="currentColor" className="fill-primary" radius={[4, 4, 0, 0]} name={ar ? "الزيارات" : "Visits"} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="rounded-lg border border-border bg-card p-4">
+          <div className="mb-3 text-sm font-medium">{ar ? "أهم مصادر الزيارات" : "Top Referral Sources"}</div>
+          {topReferrers.length === 0 ? (
+            <div className="text-xs text-muted-foreground">{ar ? "لا توجد بيانات" : "No data"}</div>
+          ) : (
+            <ul className="space-y-1.5">
+              {topReferrers.map((r) => (
+                <li key={r.source} className="flex items-center justify-between text-xs">
+                  <span className="truncate" dir="ltr">{r.source}</span>
+                  <span className="font-medium text-muted-foreground">{r.count}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
         <div className="rounded-lg border border-border bg-card p-4">
           <div className="mb-3 text-sm font-medium">{ar ? "أعلى الكلمات بحثاً" : "Top search queries"}</div>
           {topQueries.length === 0 ? (

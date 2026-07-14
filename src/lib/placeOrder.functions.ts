@@ -227,16 +227,26 @@ export const placeOrder = createServerFn({ method: "POST" })
     const tax = Math.round(subtotal * taxRate * 100) / 100;
 
     const cartHash = await hashCart(data, verifiedUserId);
-    const idempotencyKey = `${data.session_id}:${cartHash}`;
+    let idempotencyKey = `${data.session_id}:${cartHash}`;
 
     // ── Re-validate coupon server-side and recompute total. Never trust client.
     let discount_amount = 0;
     let coupon_id: string | null = null;
     let coupon_code: string | null = null;
     if (data.coupon_code) {
+      const dbCartItems = pricedItems.map((it) => {
+        const product = productBySlug.get(it.slug);
+        return {
+          product_id: it.product_id,
+          price: it.price,
+          qty: it.qty,
+          is_discounted: it.price < (product?.price ?? it.price),
+        };
+      });
+
       const { data: rows, error: cErr } = await (supabaseAdmin as any).rpc("validate_coupon", {
         _code: data.coupon_code,
-        _subtotal: subtotal,
+        _cart_items: dbCartItems,
         _user_id: verifiedUserId,
         _customer_email: data.address.email,
       });
@@ -255,14 +265,20 @@ export const placeOrder = createServerFn({ method: "POST" })
     );
 
     // 1. If an order with this key already exists, return it (idempotent replay).
-    const existing = await supabaseAdmin
+    let existing = await supabaseAdmin
       .from("orders")
       .select("id, order_number, status, total, currency")
       .eq("idempotency_key", idempotencyKey)
       .maybeSingle();
 
     if (existing.data) {
-      return { order: existing.data, duplicate: true as const };
+      if (existing.data.status === "cancelled" || existing.data.status === "failed") {
+        // Bypass idempotency to allow re-trying a failed/cancelled cart.
+        idempotencyKey = `${idempotencyKey}_retry_${Date.now()}`;
+        existing = { data: null, error: null, count: null, status: 200, statusText: "OK" };
+      } else {
+        return { order: existing.data, duplicate: true as const };
+      }
     }
 
     // 2. Insert the order. Unique index on idempotency_key guarantees that

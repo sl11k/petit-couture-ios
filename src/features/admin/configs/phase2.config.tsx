@@ -234,6 +234,10 @@ couponsConfig.form = [
   { key: "expires_at", label: { ar: "ينتهي في", en: "Expires at" }, type: "datetime" },
   { key: "first_order_only", label: { ar: "أول طلب فقط", en: "First order only" }, type: "boolean" },
   { key: "is_active", label: { ar: "نشط", en: "Active" }, type: "boolean", defaultValue: true },
+  { key: "exclude_discounted_products", label: { ar: "استثناء المخفض", en: "Exclude discounted" }, type: "boolean" },
+  { key: "excluded_product_ids", label: { ar: "استثناء منتجات", en: "Exclude products" }, type: "lookup", lookup: { table: "products", multiple: true, labelColumns: ["name_ar", "name_en"] } },
+  { key: "included_product_ids", label: { ar: "منتجات معينة فقط", en: "Specific products only" }, type: "lookup", lookup: { table: "products", multiple: true, labelColumns: ["name_ar", "name_en"] } },
+  { key: "allowed_user_ids", label: { ar: "مستخدمين محددين", en: "Specific users" }, type: "lookup", lookup: { table: "profiles", multiple: true, labelColumns: ["full_name", "email"] } },
 ];
 
 returnsConfig.actions = { ...returnsConfig.actions, edit: true };
