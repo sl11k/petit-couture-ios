@@ -10,19 +10,26 @@ export const Route = createFileRoute("/admin/site-analytics")({
   component: SiteAnalyticsPage,
 });
 
+type Range = "7d" | "30d" | "90d";
+const RANGE_DAYS: Record<Range, number> = { "7d": 7, "30d": 30, "90d": 90 };
+
 function SiteAnalyticsPage() {
   const { lang } = useLanguage();
   const ar = lang === "ar";
+  const [range, setRange] = useState<Range>("7d");
   const [stats, setStats] = useState<any>(null);
   const [topQueries, setTopQueries] = useState<any[]>([]);
   const [topProducts, setTopProducts] = useState<any[]>([]);
+  const [topPages, setTopPages] = useState<{ path: string; count: number }[]>([]);
+  const [topEvents, setTopEvents] = useState<{ name: string; count: number }[]>([]);
   const [dailyVisits, setDailyVisits] = useState<{ date: string; visits: number }[]>([]);
   const [topReferrers, setTopReferrers] = useState<{ source: string; count: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
-      const since = new Date(Date.now() - 7 * 86400000).toISOString();
+      setLoading(true);
+      const since = new Date(Date.now() - RANGE_DAYS[range] * 86400000).toISOString();
       const [searches, products, events] = await Promise.all([
         supabase.from("search_logs").select("query, results_count").gte("created_at", since).limit(1000),
         supabase.from("products").select("id, name_ar, name_en, views_count").order("views_count", { ascending: false }).limit(10),
@@ -38,19 +45,35 @@ function SiteAnalyticsPage() {
 
       const visitsMap = new Map<string, Set<string>>();
       const refMap = new Map<string, number>();
+      const pathMap = new Map<string, number>();
+      const eventMap = new Map<string, number>();
+
+      const EXCLUDED_DOMAINS = ["lovable.dev", "lovableproject.com", "lovable.app"];
 
       (events.data ?? []).forEach((ev: any) => {
+        // Collect detailed event stats
+        if (ev.event_name) {
+          eventMap.set(ev.event_name, (eventMap.get(ev.event_name) ?? 0) + 1);
+        }
+        
+        // Exclude specific lovable referrers completely from counts if they are the source
+        // Wait, if we want to exclude visits ENTIRELY from these referrers:
+        let r = ev.referrer ?? "";
+        try { r = new URL(r).hostname.replace("www.", ""); } catch(e) {}
+        
+        if (EXCLUDED_DOMAINS.some((d) => r.endsWith(d))) {
+          return; // Skip this event completely from the dashboard
+        }
+
         const day = ev.created_at.slice(0, 10);
         if (!visitsMap.has(day)) visitsMap.set(day, new Set());
         visitsMap.get(day)!.add(ev.session_id);
 
-        if (ev.referrer && ev.referrer.trim() !== "") {
-          let r = ev.referrer;
-          try {
-            const url = new URL(r);
-            r = url.hostname.replace("www.", "");
-            if (r === window.location.hostname) return; // skip internal
-          } catch(e) {}
+        if (ev.path) {
+          pathMap.set(ev.path, (pathMap.get(ev.path) ?? 0) + 1);
+        }
+
+        if (r && r !== window.location.hostname) {
           refMap.set(r, (refMap.get(r) ?? 0) + 1);
         }
       });
@@ -62,25 +85,47 @@ function SiteAnalyticsPage() {
       const referrersList = Array.from(refMap.entries())
         .map(([source, count]) => ({ source, count }))
         .sort((a, b) => b.count - a.count)
-        .slice(0, 10);
+        .slice(0, 15);
 
-      const uniqueSessions = new Set((events.data ?? []).map((e: any) => e.session_id)).size;
+      const topPagesList = Array.from(pathMap.entries())
+        .map(([path, count]) => ({ path, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 15);
+
+      const topEventsList = Array.from(eventMap.entries())
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count);
+
+      const uniqueSessions = Array.from(visitsMap.values()).reduce((sum, s) => sum + s.size, 0); // Or track globally
+      // Actually global unique over the range is:
+      const allSessions = new Set();
+      (events.data ?? []).forEach((ev: any) => {
+        let r = ev.referrer ?? "";
+        try { r = new URL(r).hostname.replace("www.", ""); } catch(e) {}
+        if (!EXCLUDED_DOMAINS.some((d) => r.endsWith(d))) {
+          allSessions.add(ev.session_id);
+        }
+      });
+      const globalUniqueSessions = allSessions.size;
+
       const referralClicks = Array.from(refMap.values()).reduce((a, b) => a + b, 0);
 
       setStats({
         totalSearches: searches.data?.length ?? 0,
         zeroResults: (searches.data ?? []).filter((r: any) => r.results_count === 0).length,
         totalViews: (products.data ?? []).reduce((s: number, p: any) => s + (p.views_count ?? 0), 0),
-        uniqueSessions,
+        uniqueSessions: globalUniqueSessions,
         referralClicks,
       });
       setTopQueries(top);
       setTopProducts(products.data ?? []);
+      setTopPages(topPagesList);
+      setTopEvents(topEventsList);
       setDailyVisits(daily);
       setTopReferrers(referrersList);
       setLoading(false);
     })();
-  }, []);
+  }, [range]);
 
   if (loading || !stats) {
     return <div className="flex items-center justify-center py-12 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /></div>;
@@ -97,7 +142,20 @@ function SiteAnalyticsPage() {
     <div>
       <PageHeader
         title={{ ar: "تحليلات الموقع", en: "Site Analytics" }}
-        description={{ ar: "آخر 7 أيام", en: "Last 7 days" }}
+        description={{ ar: `آخر ${RANGE_DAYS[range]} يوم`, en: `Last ${RANGE_DAYS[range]} days` }}
+        actions={
+          <div className="flex gap-1 rounded-md border border-border bg-card p-0.5 text-xs">
+            {(["7d", "30d", "90d"] as Range[]).map((r) => (
+              <button
+                key={r}
+                onClick={() => setRange(r)}
+                className={`rounded px-2.5 py-1 ${range === r ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+        }
       />
       <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Card icon={Users} label={ar ? "إجمالي الزيارات" : "Total Visits"} value={stats.uniqueSessions} />
@@ -126,12 +184,13 @@ function SiteAnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* Row 1 */}
         <div className="rounded-lg border border-border bg-card p-4">
           <div className="mb-3 text-sm font-medium">{ar ? "أهم مصادر الزيارات" : "Top Referral Sources"}</div>
           {topReferrers.length === 0 ? (
             <div className="text-xs text-muted-foreground">{ar ? "لا توجد بيانات" : "No data"}</div>
           ) : (
-            <ul className="space-y-1.5">
+            <ul className="space-y-1.5 h-[240px] overflow-y-auto pr-1">
               {topReferrers.map((r) => (
                 <li key={r.source} className="flex items-center justify-between text-xs">
                   <span className="truncate" dir="ltr">{r.source}</span>
@@ -142,11 +201,43 @@ function SiteAnalyticsPage() {
           )}
         </div>
         <div className="rounded-lg border border-border bg-card p-4">
+          <div className="mb-3 text-sm font-medium">{ar ? "أكثر الصفحات زيارة" : "Top Pages"}</div>
+          {topPages.length === 0 ? (
+            <div className="text-xs text-muted-foreground">{ar ? "لا توجد بيانات" : "No data"}</div>
+          ) : (
+            <ul className="space-y-1.5 h-[240px] overflow-y-auto pr-1">
+              {topPages.map((p) => (
+                <li key={p.path} className="flex items-center justify-between text-xs">
+                  <span className="truncate" dir="ltr" title={p.path}>{p.path}</span>
+                  <span className="font-medium text-muted-foreground">{p.count}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <div className="mb-3 text-sm font-medium">{ar ? "توزيع الأحداث (Events)" : "Events Breakdown"}</div>
+          {topEvents.length === 0 ? (
+            <div className="text-xs text-muted-foreground">{ar ? "لا توجد بيانات" : "No data"}</div>
+          ) : (
+            <ul className="space-y-1.5 h-[240px] overflow-y-auto pr-1">
+              {topEvents.map((ev) => (
+                <li key={ev.name} className="flex items-center justify-between text-xs">
+                  <span className="truncate" dir="ltr">{ev.name}</span>
+                  <span className="font-medium text-muted-foreground">{ev.count}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Row 2 */}
+        <div className="rounded-lg border border-border bg-card p-4">
           <div className="mb-3 text-sm font-medium">{ar ? "أعلى الكلمات بحثاً" : "Top search queries"}</div>
           {topQueries.length === 0 ? (
             <div className="text-xs text-muted-foreground">{ar ? "لا توجد بيانات" : "No data"}</div>
           ) : (
-            <ul className="space-y-1.5">
+            <ul className="space-y-1.5 h-[240px] overflow-y-auto pr-1">
               {topQueries.map((r) => (
                 <li key={r.q} className="flex items-center justify-between text-xs">
                   <span className="truncate">{r.q}</span>
@@ -156,8 +247,7 @@ function SiteAnalyticsPage() {
             </ul>
           )}
         </div>
-
-        <div className="rounded-lg border border-border bg-card p-4">
+        <div className="rounded-lg border border-border bg-card p-4 lg:col-span-2">
           <div className="mb-3 text-sm font-medium">{ar ? "أكثر المنتجات مشاهدة" : "Most viewed products"}</div>
           {topProducts.length === 0 ? (
             <div className="text-xs text-muted-foreground">{ar ? "لا توجد بيانات" : "No data"}</div>
