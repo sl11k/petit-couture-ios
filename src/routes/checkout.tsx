@@ -803,15 +803,20 @@ function CheckoutPage() {
                 label={isRTL ? "رقم الجوال" : "Mobile number"}
                 error={errs.phone}
               >
-                <input
-                  className={fieldClass(!!errs.phone)}
-                  value={contact.phone}
-                  onChange={(e) => setContact({ ...contact, phone: e.target.value })}
-                  placeholder="05XXXXXXXX"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  dir="ltr"
-                />
+                <div className={`flex items-stretch gap-2 ${isRTL ? "flex-row-reverse" : ""}`} dir="ltr">
+                  <span className="inline-flex items-center rounded-md border border-input bg-muted px-3 text-sm font-medium text-foreground/80 min-w-[64px] justify-center">
+                    +{dialCodeFor(countryCode) || "—"}
+                  </span>
+                  <input
+                    className={fieldClass(!!errs.phone) + " flex-1"}
+                    value={contact.phone}
+                    onChange={(e) => setContact({ ...contact, phone: e.target.value })}
+                    placeholder={phonePlaceholderFor(countryCode)}
+                    inputMode="tel"
+                    autoComplete="tel"
+                    dir="ltr"
+                  />
+                </div>
               </Field>
               <Field
                 icon={<Mail className="h-4 w-4" />}
