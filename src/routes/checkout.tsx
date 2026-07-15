@@ -901,23 +901,6 @@ function CheckoutPage() {
                 </p>
               </div>
 
-              <Field
-                icon={<Globe2 className="h-4 w-4" />}
-                label={isRTL ? "دولة التوصيل" : "Delivery country"}
-                error={errs.country}
-              >
-                <select
-                  className={fieldClass(!!errs.country)}
-                  value={countryCode}
-                  onChange={(e) => changeCountry(e.target.value)}
-                >
-                  {availableCountries.map((country) => (
-                    <option key={country.code} value={country.code}>
-                      {country.label}
-                    </option>
-                  ))}
-                </select>
-              </Field>
 
               <Suspense
                 fallback={
