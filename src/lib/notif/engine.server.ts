@@ -356,6 +356,7 @@ export async function processQueueBatch(limit = 20): Promise<{
       body: rendered,
       language: row.language,
     });
+    sentInThisBatch++;
 
     // Log delivery
     await supabaseAdmin.from("notif_delivery_logs").insert({
