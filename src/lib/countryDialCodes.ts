@@ -35,3 +35,15 @@ export function toInternationalPhone(rawPhone: string, iso2: string | undefined 
   const local = cleaned.replace(/^0+/, "");
   return `${dial}${local}`;
 }
+
+const PHONE_EXAMPLES: Record<string, string> = {
+  SA: "5X XXX XXXX", AE: "5X XXX XXXX", KW: "5XXX XXXX", QA: "3XXX XXXX",
+  BH: "3XXX XXXX", OM: "9XXX XXXX", EG: "1X XXXX XXXX", JO: "7X XXX XXXX",
+  LB: "7X XXX XXX", TR: "5XX XXX XX XX", MA: "6XX XXX XXX", DZ: "5XX XX XX XX",
+  TN: "2X XXX XXX", US: "555 123 4567", GB: "7XXX XXXXXX",
+};
+
+export function phonePlaceholderFor(iso2: string | undefined | null): string {
+  if (!iso2) return "5X XXX XXXX";
+  return PHONE_EXAMPLES[String(iso2).toUpperCase()] || "5X XXX XXXX";
+}
