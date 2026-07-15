@@ -36,7 +36,7 @@ export const wasenderProvider: NotificationProvider = {
     const url = `${base}/api/send-message`;
     const to = normalizePhone(input.to);
     if (!to) {
-      return { ok: false, error_message: "Invalid recipient phone" };
+      return { ok: false, error_message: `Invalid WhatsApp recipient "${input.to}" — must be full international number with country code (e.g. 9665XXXXXXXX), no leading 0.` };
     }
     if (!creds.api_key) {
       return { ok: false, error_message: "Missing Wasender API key" };
