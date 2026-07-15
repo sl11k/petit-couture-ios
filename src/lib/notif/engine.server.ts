@@ -282,7 +282,13 @@ export async function processQueueBatch(limit = 20): Promise<{
   let sent = 0,
     failed = 0;
 
+  // Throttle between provider calls so WhatsApp "account protection" (1 msg / few seconds) does not reject us.
+  const THROTTLE_MS = 10_000;
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  let sentInThisBatch = 0;
+
   for (const row of rows) {
+    if (sentInThisBatch > 0) await sleep(THROTTLE_MS);
     // Lock
     const { data: locked } = await supabaseAdmin
       .from("notif_queue")
