@@ -34,7 +34,7 @@ import {
   type ResolvedRate,
 } from "@/lib/shipping";
 import { getCanonicalProductPrice } from "@/lib/pricing";
-import { dialCodeFor, toInternationalPhone } from "@/lib/countryDialCodes";
+import { dialCodeFor, toInternationalPhone, phonePlaceholderFor } from "@/lib/countryDialCodes";
 import type { CurrencyCode } from "@/i18n/currencies";
 
 // Map only loads on the client when entering step 2.
