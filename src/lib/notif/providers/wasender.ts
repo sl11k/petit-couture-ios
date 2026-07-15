@@ -12,7 +12,12 @@ const DEFAULT_BASE = "https://wasenderapi.com";
 
 function normalizePhone(p: string): string {
   const digits = (p || "").replace(/[^\d]/g, "");
-  return digits.length ? digits : "";
+  // WhatsApp JID requires the full international number (country code + local, digits only).
+  // Reject anything under 10 digits or with a leading zero (a local number without country code).
+  if (!digits) return "";
+  if (digits.length < 10) return "";
+  if (digits.startsWith("0")) return "";
+  return digits;
 }
 
 async function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
