@@ -437,8 +437,8 @@ function CheckoutPage() {
   }, [step, contact, loc, countryCode, shippingId, selectedShippingOption, agree, isRTL]);
 
   const canProceed = (s: Step) => {
-    if (s === 1) return !errs.fullName && !errs.email && !errs.phone;
-    if (s === 2) return !errs.country && !errs.location && !errs.city;
+    if (s === 1) return !errs.fullName && !errs.email && !errs.phone && !errs.country;
+    if (s === 2) return !errs.location && !errs.city;
     if (s === 3) return !errs.shipping;
     return !errs.agree;
   };
