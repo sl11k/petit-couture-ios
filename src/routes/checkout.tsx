@@ -34,6 +34,7 @@ import {
   type ResolvedRate,
 } from "@/lib/shipping";
 import { getCanonicalProductPrice } from "@/lib/pricing";
+import { dialCodeFor, toInternationalPhone, phonePlaceholderFor } from "@/lib/countryDialCodes";
 import type { CurrencyCode } from "@/i18n/currencies";
 
 // Map only loads on the client when entering step 2.
@@ -493,7 +494,7 @@ function CheckoutPage() {
     save({
       fullName: contact.fullName.trim(),
       email: contact.email.trim(),
-      phone: contact.phone.replace(/[\s-]/g, ""),
+      phone: toInternationalPhone(contact.phone, countryCode),
       countryCode: countryCode,
       countryName: availableCountries.find((country) => country.code === countryCode)?.label ?? countryCode,
       city: loc.city ?? "",
@@ -531,7 +532,7 @@ function CheckoutPage() {
       const fullAddress: Address = {
         fullName: contact.fullName.trim(),
         email: contact.email.trim(),
-        phone: contact.phone.replace(/[\s-]/g, ""),
+        phone: toInternationalPhone(contact.phone, countryCode),
         countryCode: countryCode,
         countryName: availableCountries.find((country) => country.code === countryCode)?.label ?? countryCode,
         city: loc.city ?? "",
@@ -802,15 +803,20 @@ function CheckoutPage() {
                 label={isRTL ? "رقم الجوال" : "Mobile number"}
                 error={errs.phone}
               >
-                <input
-                  className={fieldClass(!!errs.phone)}
-                  value={contact.phone}
-                  onChange={(e) => setContact({ ...contact, phone: e.target.value })}
-                  placeholder="05XXXXXXXX"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  dir="ltr"
-                />
+                <div className={`flex items-stretch gap-2 ${isRTL ? "flex-row-reverse" : ""}`} dir="ltr">
+                  <span className="inline-flex items-center rounded-md border border-input bg-muted px-3 text-sm font-medium text-foreground/80 min-w-[64px] justify-center">
+                    +{dialCodeFor(countryCode) || "—"}
+                  </span>
+                  <input
+                    className={fieldClass(!!errs.phone) + " flex-1"}
+                    value={contact.phone}
+                    onChange={(e) => setContact({ ...contact, phone: e.target.value })}
+                    placeholder={phonePlaceholderFor(countryCode)}
+                    inputMode="tel"
+                    autoComplete="tel"
+                    dir="ltr"
+                  />
+                </div>
               </Field>
               <Field
                 icon={<Mail className="h-4 w-4" />}

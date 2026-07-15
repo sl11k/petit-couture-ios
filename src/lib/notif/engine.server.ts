@@ -77,7 +77,9 @@ export async function enqueueNotification(params: EnqueueParams): Promise<void> 
       });
     }
 
-    // Admin row(s)
+    // Admin row(s) — schedule at least 10s AFTER the customer message so the
+    // WhatsApp provider's "account protection" rate limit (1 msg / few seconds)
+    // does not reject the admin notification.
     if (audience === "admin" || audience === "both") {
       const { data: admins } = await supabaseAdmin
         .from("notif_admin_recipients")
@@ -87,8 +89,12 @@ export async function enqueueNotification(params: EnqueueParams): Promise<void> 
         (a: any) =>
           !a.events || a.events.length === 0 || a.events.includes(params.event_code),
       );
-      for (const a of matching) {
-        if (!a.phone) continue;
+      const baseTime = new Date(scheduledAt).getTime();
+      matching.forEach((a: any, idx: number) => {
+        if (!a.phone) return;
+        // Customer (if any) is at baseTime; first admin at +10s, next +20s, ...
+        const offsetSec = (audience === "both" ? 10 : 0) + idx * 10;
+        const adminScheduled = new Date(baseTime + offsetSec * 1000).toISOString();
         rows.push({
           event_code: params.event_code,
           audience: "admin",
@@ -100,12 +106,12 @@ export async function enqueueNotification(params: EnqueueParams): Promise<void> 
           payload: params.variables ?? {},
           priority,
           max_attempts: 3,
-          scheduled_at: scheduledAt,
+          scheduled_at: adminScheduled,
           dedupe_key: params.dedupe_key ? `${params.dedupe_key}:admin:${a.id}` : null,
           related_entity: params.related_entity ?? null,
           related_entity_id: params.related_entity_id ?? null,
         });
-      }
+      });
     }
 
     if (rows.length === 0) return;
@@ -276,7 +282,13 @@ export async function processQueueBatch(limit = 20): Promise<{
   let sent = 0,
     failed = 0;
 
+  // Throttle between provider calls so WhatsApp "account protection" (1 msg / few seconds) does not reject us.
+  const THROTTLE_MS = 10_000;
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  let sentInThisBatch = 0;
+
   for (const row of rows) {
+    if (sentInThisBatch > 0) await sleep(THROTTLE_MS);
     // Lock
     const { data: locked } = await supabaseAdmin
       .from("notif_queue")
@@ -344,6 +356,7 @@ export async function processQueueBatch(limit = 20): Promise<{
       body: rendered,
       language: row.language,
     });
+    sentInThisBatch++;
 
     // Log delivery
     await supabaseAdmin.from("notif_delivery_logs").insert({

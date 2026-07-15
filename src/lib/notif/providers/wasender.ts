@@ -12,7 +12,12 @@ const DEFAULT_BASE = "https://wasenderapi.com";
 
 function normalizePhone(p: string): string {
   const digits = (p || "").replace(/[^\d]/g, "");
-  return digits.length ? digits : "";
+  // WhatsApp JID requires the full international number (country code + local, digits only).
+  // Reject anything under 10 digits or with a leading zero (a local number without country code).
+  if (!digits) return "";
+  if (digits.length < 10) return "";
+  if (digits.startsWith("0")) return "";
+  return digits;
 }
 
 async function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
@@ -31,7 +36,7 @@ export const wasenderProvider: NotificationProvider = {
     const url = `${base}/api/send-message`;
     const to = normalizePhone(input.to);
     if (!to) {
-      return { ok: false, error_message: "Invalid recipient phone" };
+      return { ok: false, error_message: `Invalid WhatsApp recipient "${input.to}" — must be full international number with country code (e.g. 9665XXXXXXXX), no leading 0.` };
     }
     if (!creds.api_key) {
       return { ok: false, error_message: "Missing Wasender API key" };
