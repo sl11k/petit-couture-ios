@@ -80,6 +80,7 @@ export const couponDetailConfig: AdminDetailConfig = {
   ],
   actions: [
     {
+      key: "notify_assigned_wa",
       label: { ar: "إشعار بالمخصّصين (واتساب)", en: "Notify assigned via WhatsApp" },
       icon: <MessageCircle className="h-4 w-4" />,
       onClick: async (row) => {
