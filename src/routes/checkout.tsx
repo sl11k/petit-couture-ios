@@ -799,11 +799,34 @@ function CheckoutPage() {
                 />
               </Field>
               <Field
+                icon={<Globe2 className="h-4 w-4" />}
+                label={isRTL ? "الدولة" : "Country"}
+                error={errs.country}
+              >
+                <select
+                  className={fieldClass(!!errs.country)}
+                  value={countryCode}
+                  onChange={(e) => changeCountry(e.target.value)}
+                >
+                  {availableCountries.length > 0 ? (
+                    availableCountries.map((country) => (
+                      <option key={country.code} value={country.code}>
+                        {country.label} (+{dialCodeFor(country.code)})
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>
+                      {isRTL ? "لا توجد دول مفعلة للشحن حالياً" : "No shipping countries are enabled yet"}
+                    </option>
+                  )}
+                </select>
+              </Field>
+              <Field
                 icon={<Phone className="h-4 w-4" />}
                 label={isRTL ? "رقم الجوال" : "Mobile number"}
                 error={errs.phone}
               >
-                <div className={`flex items-stretch gap-2 ${isRTL ? "flex-row-reverse" : ""}`} dir="ltr">
+                <div className="flex items-stretch gap-2" dir="ltr">
                   <span className="inline-flex items-center rounded-md border border-input bg-muted px-3 text-sm font-medium text-foreground/80 min-w-[64px] justify-center">
                     +{dialCodeFor(countryCode) || "—"}
                   </span>
@@ -817,6 +840,11 @@ function CheckoutPage() {
                     dir="ltr"
                   />
                 </div>
+                <p className="mt-1 text-[11px] text-muted-foreground" dir={isRTL ? "rtl" : "ltr"}>
+                  {isRTL
+                    ? `سنضيف كود الدولة تلقائياً (+${dialCodeFor(countryCode) || "—"})`
+                    : `Country code will be added automatically (+${dialCodeFor(countryCode) || "—"})`}
+                </p>
               </Field>
               <Field
                 icon={<Mail className="h-4 w-4" />}
