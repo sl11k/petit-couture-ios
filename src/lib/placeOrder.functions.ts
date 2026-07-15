@@ -265,20 +265,24 @@ export const placeOrder = createServerFn({ method: "POST" })
     );
 
     // 1. If an order with this key already exists, return it (idempotent replay).
-    let existing = await supabaseAdmin
+    const existing = await supabaseAdmin
       .from("orders")
-      .select("id, order_number, status, total, currency")
+      .select("id, order_number, status, payment_status, total, currency")
       .eq("idempotency_key", idempotencyKey)
       .maybeSingle();
 
     if (existing.data) {
-      if (existing.data.status === "cancelled" || existing.data.status === "failed") {
-        // Bypass idempotency to allow re-trying a failed/cancelled cart.
-        idempotencyKey = `${idempotencyKey}_retry_${Date.now()}`;
-        existing = { data: null, error: null, count: null, status: 200, statusText: "OK" };
-      } else {
+      const exStatus = String(existing.data.status || "");
+      const exPay = String(existing.data.payment_status || "");
+      const isReplayable =
+        exStatus === "pending" &&
+        (exPay === "unpaid" || exPay === "pending" || exPay === "pending_review" || exPay === "");
+      if (isReplayable) {
         return { order: existing.data, duplicate: true as const };
       }
+      // Any terminal / paid / refunded / cancelled / expired order must not
+      // block a fresh purchase — mint a new idempotency key.
+      idempotencyKey = `${idempotencyKey}_retry_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     }
 
     // 2. Insert the order. Unique index on idempotency_key guarantees that

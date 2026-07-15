@@ -1096,6 +1096,7 @@ export type Database = {
           discount_total: number
           discount_type: string
           discount_value: number
+          exclude_discounted_products: boolean | null
           excluded_product_ids: Json
           expires_at: string | null
           first_order_only: boolean
@@ -1129,6 +1130,7 @@ export type Database = {
           discount_total?: number
           discount_type?: string
           discount_value?: number
+          exclude_discounted_products?: boolean | null
           excluded_product_ids?: Json
           expires_at?: string | null
           first_order_only?: boolean
@@ -1162,6 +1164,7 @@ export type Database = {
           discount_total?: number
           discount_type?: string
           discount_value?: number
+          exclude_discounted_products?: boolean | null
           excluded_product_ids?: Json
           expires_at?: string | null
           first_order_only?: boolean
@@ -7633,9 +7636,9 @@ export type Database = {
       unaccent: { Args: { "": string }; Returns: string }
       validate_coupon: {
         Args: {
+          _cart_items: Json
           _code: string
           _customer_email?: string
-          _subtotal: number
           _user_id?: string
         }
         Returns: {

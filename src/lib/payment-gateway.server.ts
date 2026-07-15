@@ -46,9 +46,12 @@ export async function loadCheckoutOrder(
 
   if (error || !order) throw new Error("Order not found");
   if (order.payment_method !== gateway) throw new Error("Payment method mismatch");
-  if (order.payment_status === "paid") throw new Error("Order is already paid");
-  if (["cancelled", "refunded"].includes(String(order.status))) {
-    throw new Error("Order can no longer be paid");
+  if (order.payment_status === "paid") throw new Error("ORDER_ALREADY_PAID");
+  if (["cancelled", "refunded", "failed"].includes(String(order.status))) {
+    throw new Error("ORDER_NOT_PAYABLE");
+  }
+  if (["refunded", "expired", "failed"].includes(String(order.payment_status))) {
+    throw new Error("ORDER_NOT_PAYABLE");
   }
 
   // Guest checkout ownership is bound to the high-entropy browser session that

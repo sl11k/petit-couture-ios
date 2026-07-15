@@ -80,8 +80,9 @@ export const couponDetailConfig: AdminDetailConfig = {
   ],
   actions: [
     {
+      key: "notify_assigned_wa",
       label: { ar: "إشعار بالمخصّصين (واتساب)", en: "Notify assigned via WhatsApp" },
-      icon: MessageCircle,
+      icon: <MessageCircle className="h-4 w-4" />,
       onClick: async (row) => {
         if (!row.allowed_user_ids || row.allowed_user_ids.length === 0) {
           toast.error(
