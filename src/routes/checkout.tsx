@@ -494,7 +494,7 @@ function CheckoutPage() {
     save({
       fullName: contact.fullName.trim(),
       email: contact.email.trim(),
-      phone: contact.phone.replace(/[\s-]/g, ""),
+      phone: toInternationalPhone(contact.phone, countryCode),
       countryCode: countryCode,
       countryName: availableCountries.find((country) => country.code === countryCode)?.label ?? countryCode,
       city: loc.city ?? "",
