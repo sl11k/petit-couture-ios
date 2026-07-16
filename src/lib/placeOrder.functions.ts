@@ -443,6 +443,9 @@ export const placeOrder = createServerFn({ method: "POST" })
     }
 
     // 6. Enqueue order.created notification (best-effort, non-blocking).
+    //    For async gateways (card/apple_pay/tabby/tamara) the customer should NOT
+    //    receive a WhatsApp until payment is confirmed — only the admin gets an
+    //    "order attempted" alert. The paid confirmation goes out from the webhook.
     try {
       const { enqueueNotification } = await import("@/lib/notif/engine.server");
       const vars = {
@@ -455,9 +458,13 @@ export const placeOrder = createServerFn({ method: "POST" })
         payment_method: data.payment_method,
         items_count: pricedItems.length,
       };
+      const isAsyncGateway = ["card", "apple_pay", "tabby", "tamara"].includes(
+        data.payment_method,
+      );
+      const createdAudience: "admin" | "both" = isAsyncGateway ? "admin" : "both";
       await enqueueNotification({
         event_code: "order.created",
-        audience: "both",
+        audience: createdAudience,
         recipient_phone: data.address.phone,
         recipient_email: data.address.email,
         recipient_user_id: verifiedUserId,
@@ -469,6 +476,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     } catch (e: any) {
       console.warn("[placeOrder] notif enqueue failed:", e?.message || e);
     }
+
 
     return { order, duplicate: false as const };
   });

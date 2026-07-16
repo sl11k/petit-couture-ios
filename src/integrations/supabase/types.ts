@@ -3478,6 +3478,7 @@ export type Database = {
           status: Database["public"]["Enums"]["order_status"]
           stock_released_at: string | null
           stock_reserved: boolean
+          stock_reserved_at: string | null
           subtotal: number
           tax: number
           total: number
@@ -3534,6 +3535,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["order_status"]
           stock_released_at?: string | null
           stock_reserved?: boolean
+          stock_reserved_at?: string | null
           subtotal?: number
           tax?: number
           total?: number
@@ -3590,6 +3592,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["order_status"]
           stock_released_at?: string | null
           stock_reserved?: boolean
+          stock_reserved_at?: string | null
           subtotal?: number
           tax?: number
           total?: number

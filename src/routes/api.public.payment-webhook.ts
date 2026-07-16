@@ -227,7 +227,7 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
                 captured_amount: payload.amount,
               })
               .eq("id", orderId)
-              .select("id, user_id")
+              .select("id, order_number, user_id, customer_name, customer_phone, customer_email, total, currency, payment_method")
               .maybeSingle();
 
             // Trigger OTO shipment now that payment is confirmed (idempotent).
@@ -239,8 +239,43 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
               } catch (e: any) {
                 console.error("[payment-webhook] OTO auto-create threw:", e?.message || e);
               }
+
+              // Finalize stock (idempotent — safe if placeOrder already reserved).
+              try {
+                await (supabaseAdmin as any).rpc("finalize_order_stock", { _order_id: updated.id });
+              } catch (e: any) {
+                console.warn("[payment-webhook] finalize_order_stock threw:", e?.message || e);
+              }
+
+              // Enqueue order.paid for both customer + admin.
+              try {
+                const { enqueueNotification } = await import("@/lib/notif/engine.server");
+                if (updated.customer_phone) {
+                  await enqueueNotification({
+                    event_code: "order.paid",
+                    audience: "both",
+                    recipient_phone: updated.customer_phone,
+                    recipient_email: updated.customer_email,
+                    recipient_user_id: updated.user_id,
+                    variables: {
+                      order_number: updated.order_number,
+                      order_total: updated.total,
+                      currency: updated.currency,
+                      customer_name: updated.customer_name,
+                      payment_method: updated.payment_method,
+                      amount: payload.amount,
+                    },
+                    related_entity: "order",
+                    related_entity_id: updated.id,
+                    dedupe_key: `order.paid:${updated.id}`,
+                  });
+                }
+              } catch (e: any) {
+                console.warn("[payment-webhook] order.paid enqueue failed:", e?.message || e);
+              }
             }
           } else if (orderId && status === "failed") {
+
             await supabaseAdmin
               .from("orders")
               .update({
