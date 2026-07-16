@@ -19,7 +19,8 @@ export type ValidateCouponResult =
   | { ok: true; code: string; discount_amount: number; discount_type: string; discount_value: number; coupon_id: string }
   | { ok: false; reason: string; message_ar: string; message_en: string };
 
-function messageFor(reason: string): { ar: string; en: string } {
+function messageFor(reason: string, extra?: { min_subtotal?: number; currency?: string }): { ar: string; en: string } {
+  const cur = extra?.currency || "SAR";
   switch (reason) {
     case "not_found": return { ar: "كود الكوبون غير موجود", en: "Coupon code not found" };
     case "inactive": return { ar: "هذا الكوبون غير مفعّل", en: "This coupon is inactive" };
@@ -27,11 +28,15 @@ function messageFor(reason: string): { ar: string; en: string } {
     case "expired": return { ar: "انتهت صلاحية الكوبون", en: "Coupon has expired" };
     case "usage_limit_reached": return { ar: "تم استنفاد عدد مرات استخدام الكوبون", en: "Coupon usage limit reached" };
     case "per_customer_limit": return { ar: "استخدمت هذا الكوبون من قبل", en: "You've already used this coupon" };
-    case "min_subtotal": return { ar: "الحد الأدنى للطلب غير مستوفى", en: "Minimum order amount not met" };
+    case "min_subtotal":
+      return extra?.min_subtotal
+        ? { ar: `الحد الأدنى للطلب ${extra.min_subtotal} ${cur}`, en: `Minimum order amount is ${extra.min_subtotal} ${cur}` }
+        : { ar: "الحد الأدنى للطلب غير مستوفى", en: "Minimum order amount not met" };
     case "empty_code": return { ar: "أدخل كود الكوبون", en: "Enter a coupon code" };
     default: return { ar: "كوبون غير صالح", en: "Invalid coupon" };
   }
 }
+
 
 export const validateCoupon = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Input.parse(input))
