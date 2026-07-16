@@ -64,9 +64,20 @@ export const validateCoupon = createServerFn({ method: "POST" })
     }
     const row = Array.isArray(rows) ? rows[0] : rows;
     if (!row || !row.valid) {
-      const m = messageFor(row?.reason ?? "unknown");
-      return { ok: false, reason: row?.reason ?? "unknown", message_ar: m.ar, message_en: m.en };
+      const reason = row?.reason ?? "unknown";
+      let extra: { min_subtotal?: number; currency?: string } | undefined;
+      if (reason === "min_subtotal") {
+        const { data: c } = await (supabaseAdmin as any)
+          .from("coupons")
+          .select("min_subtotal")
+          .ilike("code", data.code)
+          .maybeSingle();
+        if (c?.min_subtotal) extra = { min_subtotal: Number(c.min_subtotal), currency: "SAR" };
+      }
+      const m = messageFor(reason, extra);
+      return { ok: false, reason, message_ar: m.ar, message_en: m.en };
     }
+
     return {
       ok: true,
       code: row.code,
