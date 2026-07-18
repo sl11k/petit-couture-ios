@@ -461,21 +461,26 @@ export const placeOrder = createServerFn({ method: "POST" })
       const isAsyncGateway = ["card", "apple_pay", "tabby", "tamara"].includes(
         data.payment_method,
       );
-      const createdAudience: "admin" | "both" = isAsyncGateway ? "admin" : "both";
-      await enqueueNotification({
-        event_code: "order.created",
-        audience: createdAudience,
-        recipient_phone: data.address.phone,
-        recipient_email: data.address.email,
-        recipient_user_id: verifiedUserId,
-        variables: vars,
-        related_entity: "order",
-        related_entity_id: order.id,
-        dedupe_key: `order.created:${order.id}`,
-      });
+      // For async gateways skip the "order.created" event entirely — the paid
+      // webhook fires order.paid to both audiences. This prevents admins from
+      // getting a "new order" alert for abandoned/cancelled checkout attempts.
+      if (!isAsyncGateway) {
+        await enqueueNotification({
+          event_code: "order.created",
+          audience: "both",
+          recipient_phone: data.address.phone,
+          recipient_email: data.address.email,
+          recipient_user_id: verifiedUserId,
+          variables: vars,
+          related_entity: "order",
+          related_entity_id: order.id,
+          dedupe_key: `order.created:${order.id}`,
+        });
+      }
     } catch (e: any) {
       console.warn("[placeOrder] notif enqueue failed:", e?.message || e);
     }
+
 
 
     return { order, duplicate: false as const };
