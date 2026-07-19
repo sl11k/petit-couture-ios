@@ -13,6 +13,9 @@ export function useAdminTable<T extends Record<string, any>>(config: AdminPageCo
     if (config.orderBy) {
       q = q.order(config.orderBy.column, { ascending: config.orderBy.ascending ?? false });
     }
+    if (config.applyQuery) {
+      try { q = config.applyQuery(q); } catch (e) { console.warn("applyQuery failed", e); }
+    }
     return q;
   };
 
