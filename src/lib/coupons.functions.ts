@@ -1,12 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { sendMessage } from "@/lib/messaging";
+import { getCanonicalProductPrice } from "@/lib/pricing";
 
 const Input = z.object({
   code: z.string().min(1).max(64),
   cart_items: z.array(z.object({
     slug: z.string(),
+    variant_id: z.string().uuid().nullable().optional(),
     price: z.number(),
     qty: z.number(),
     is_discounted: z.boolean().default(false),
@@ -41,16 +42,42 @@ function messageFor(reason: string, extra?: { min_subtotal?: number; currency?: 
 export const validateCoupon = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Input.parse(input))
   .handler(async ({ data }): Promise<ValidateCouponResult> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const slugs = data.cart_items.map(it => it.slug);
-    const { data: products } = await (supabaseAdmin as any).from("products").select("id, slug").in("slug", slugs);
-    const slugToId = new Map(products?.map((p: any) => [p.slug, p.id]) || []);
+    const variantIds = data.cart_items
+      .map((it) => it.variant_id)
+      .filter((id): id is string => Boolean(id));
+
+    const [{ data: products }, { data: variants }] = await Promise.all([
+      (supabaseAdmin as any)
+        .from("products")
+        .select("id, slug, price, compare_at_price")
+        .in("slug", slugs),
+      variantIds.length
+        ? (supabaseAdmin as any)
+            .from("product_variants")
+            .select("id, product_id, price, price_override, compare_at_price")
+            .in("id", variantIds)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+    const productBySlug = new Map<string, any>(products?.map((p: any) => [p.slug, p]) || []);
+    const variantById = new Map<string, any>(variants?.map((v: any) => [v.id, v]) || []);
     
-    const dbCartItems = data.cart_items.map(it => ({
-      product_id: slugToId.get(it.slug) || "",
-      price: it.price,
-      qty: it.qty,
-      is_discounted: it.is_discounted,
-    }));
+    const dbCartItems = data.cart_items.map((it) => {
+      const product = productBySlug.get(it.slug);
+      const variant = it.variant_id ? variantById.get(it.variant_id) : null;
+      const catalogPrice = getCanonicalProductPrice(
+        product?.price ?? null,
+        variant?.price_override ?? variant?.price ?? null,
+      );
+      const compareAt = Number(variant?.compare_at_price ?? product?.compare_at_price ?? 0);
+      return {
+        product_id: product?.id || "",
+        price: Number.isFinite(catalogPrice) && catalogPrice >= 0 ? catalogPrice : it.price,
+        qty: it.qty,
+        is_discounted: it.is_discounted || (compareAt > 0 && catalogPrice < compareAt),
+      };
+    });
 
     const { data: rows, error } = await (supabaseAdmin as any).rpc("validate_coupon", {
       _code: data.code,
@@ -96,6 +123,7 @@ export const notifyCouponUsers = createServerFn({ method: "POST" })
     }).parse(input),
   )
   .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: coupon } = await (supabaseAdmin as any)
       .from("coupons")
       .select("allowed_user_ids")

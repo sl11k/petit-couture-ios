@@ -118,7 +118,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     const slugs = [...new Set(data.items.map((item) => item.slug))];
     const { data: products, error: productsError } = await supabaseAdmin
       .from("products")
-      .select("id, slug, name_ar, name_en, brand, image_url, price, currency, is_active, weight")
+      .select("id, slug, name_ar, name_en, brand, image_url, price, compare_at_price, currency, is_active, weight")
       .in("slug", slugs)
       .eq("is_active", true);
     if (productsError) throw new Error(`Catalog validation failed: ${productsError.message}`);
@@ -129,7 +129,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     const productBySlug = new Map(products.map((product) => [product.slug, product]));
     const { data: variants, error: variantsError } = await supabaseAdmin
       .from("product_variants")
-      .select("id, product_id, sku, price, price_override, is_active, weight")
+      .select("id, product_id, sku, price, price_override, compare_at_price, is_active, weight")
       .in(
         "product_id",
         products.map((product) => product.id),
@@ -236,11 +236,15 @@ export const placeOrder = createServerFn({ method: "POST" })
     if (data.coupon_code) {
       const dbCartItems = pricedItems.map((it) => {
         const product = productBySlug.get(it.slug);
+        const variant = it.variant_id
+          ? (variants || []).find((candidate) => candidate.id === it.variant_id)
+          : null;
+        const compareAt = Number(variant?.compare_at_price ?? product?.compare_at_price ?? 0);
         return {
           product_id: it.product_id,
           price: it.price,
           qty: it.qty,
-          is_discounted: it.price < (product?.price ?? it.price),
+          is_discounted: compareAt > 0 && it.price < compareAt,
         };
       });
 
@@ -255,7 +259,10 @@ export const placeOrder = createServerFn({ method: "POST" })
       if (!row || !row.valid) {
         throw new Error(`Coupon invalid: ${row?.reason ?? "unknown"}`);
       }
-      discount_amount = Math.min(Number(row.discount_amount) || 0, subtotal);
+      const rawDiscount = row.discount_type === "free_shipping"
+        ? shipping_fee
+        : Number(row.discount_amount) || 0;
+      discount_amount = Math.min(rawDiscount, subtotal + shipping_fee);
       coupon_id = row.coupon_id;
       coupon_code = row.code;
     }
@@ -391,7 +398,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     }
 
     // 3c. Record coupon redemption + bump used_count (best-effort).
-    if (coupon_id) {
+    if (coupon_id && !asyncPayment) {
       try {
         await supabaseAdmin.from("coupon_redemptions").insert({
           coupon_id,
