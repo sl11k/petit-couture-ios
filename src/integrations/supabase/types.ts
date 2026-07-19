@@ -7574,6 +7574,10 @@ export type Database = {
         Args: { _item_id: string; _new_warehouse: string }
         Returns: undefined
       }
+      record_order_coupon_redemption: {
+        Args: { _order_id: string }
+        Returns: undefined
+      }
       redeem_unsubscribe_token: {
         Args: { _token: string }
         Returns: {
