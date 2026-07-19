@@ -8,6 +8,9 @@ export const ordersConfig: AdminPageConfig = {
   // Pull each order's item SKUs so admins can search orders by SKU.
   select: "*, order_items(sku)",
   fallbackSelect: "*",
+  // Only show confirmed orders: exclude pending+unpaid (never-completed checkout attempts).
+  // Those live in /admin/abandoned and /admin/incomplete for behavioural analysis.
+  applyQuery: (q) => q.or("payment_status.neq.unpaid,status.neq.pending"),
   enrichRows: (rows: any[]) =>
     rows.map((r) => ({
       ...r,
