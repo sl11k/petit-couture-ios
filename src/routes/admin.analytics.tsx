@@ -266,6 +266,134 @@ function AnalyticsPage() {
           )}
         </section>
       </div>
+
+      {/* ========== Customer behaviour / drop-off ========== */}
+      <div className="mt-6">
+        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+          <Target className="h-4 w-4 text-muted-foreground" />
+          {ar ? "سلوك العملاء وتحليل التخلي" : "Customer behaviour & drop-off"}
+        </h2>
+
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard label={ar ? "بدأوا الدفع" : "Checkouts started"} value={loading ? "…" : fmt(stats.checkoutsStarted)} icon={ShoppingCart} />
+          <StatCard label={ar ? "تخلوا عن الطلب" : "Abandoned"} value={loading ? "…" : fmt(stats.checkoutsAbandoned)} icon={AlertTriangle} />
+          <StatCard label={ar ? "أكملوا الطلب" : "Completed"} value={loading ? "…" : fmt(stats.checkoutsConverted)} icon={ShoppingBag} />
+          <StatCard label={ar ? "معدل التحويل" : "Conversion rate"} value={`${stats.conversionRate.toFixed(1)}%`} icon={TrendingUp} />
+        </div>
+
+        {stats.insights.length > 0 && (
+          <div className="mt-4 rounded-xl border border-border bg-card p-4">
+            <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              {ar ? "رؤى ذكية" : "Smart insights"}
+            </h3>
+            <ul className="space-y-1.5 text-xs text-muted-foreground">
+              {stats.insights.map((tip, i) => (
+                <li key={i} className="flex gap-2"><span className="text-primary">•</span><span>{tip}</span></li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <section className="rounded-xl border border-border bg-card p-4">
+            <h3 className="mb-3 text-sm font-semibold">{ar ? "نقاط التوقف" : "Where they dropped off"}</h3>
+            {stats.stageBreakdown.length === 0 ? (
+              <p className="p-4 text-center text-xs text-muted-foreground">{ar ? "لا توجد بيانات" : "No data"}</p>
+            ) : (
+              <ul className="space-y-2">
+                {stats.stageBreakdown.map((s, i) => {
+                  const total = stats.stageBreakdown.reduce((sum, x) => sum + x.count, 0) || 1;
+                  const pct = (s.count / total) * 100;
+                  const stageLabel = ar
+                    ? ({ cart: "السلة", checkout: "نموذج الدفع", payment: "بوابة الدفع" } as any)[s.stage] || s.stage
+                    : ({ cart: "Cart", checkout: "Checkout form", payment: "Payment gateway" } as any)[s.stage] || s.stage;
+                  return (
+                    <li key={i}>
+                      <div className="mb-1 flex items-center justify-between text-xs">
+                        <span>{stageLabel}</span>
+                        <span className="font-medium">{fmt(s.count)} ({pct.toFixed(0)}%)</span>
+                      </div>
+                      <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                        <div className="h-full bg-destructive/70" style={{ width: `${pct}%` }} />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            <div className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">
+              {ar ? "القيمة المتروكة: " : "Abandoned value: "}
+              <span className="font-medium text-foreground">{fmt(stats.abandonedValue)} {ar ? "ر.س" : "SAR"}</span>
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-border bg-card p-4">
+            <h3 className="mb-3 text-sm font-semibold">{ar ? "أسباب التخلي" : "Abandonment reasons"}</h3>
+            {stats.topReasons.length === 0 ? (
+              <p className="p-4 text-center text-xs text-muted-foreground">{ar ? "لا توجد أسباب مسجلة" : "No reasons recorded"}</p>
+            ) : (
+              <ul className="space-y-2">
+                {stats.topReasons.map((r, i) => {
+                  const max = stats.topReasons[0].count || 1;
+                  const pct = (r.count / max) * 100;
+                  return (
+                    <li key={i}>
+                      <div className="mb-1 flex items-center justify-between text-xs">
+                        <span className="truncate">{r.reason}</span>
+                        <span className="font-medium">{fmt(r.count)}</span>
+                      </div>
+                      <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                        <div className="h-full bg-amber-500/70" style={{ width: `${pct}%` }} />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+        </div>
+
+        <section className="mt-4 rounded-xl border border-border bg-card p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="flex items-center gap-2 text-sm font-semibold">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              {ar ? "آخر العملاء الذين توقفوا" : "Recent drop-offs"}
+            </h3>
+            <Link to="/admin/abandoned" className="text-xs text-primary hover:underline">
+              {ar ? "عرض الكل →" : "View all →"}
+            </Link>
+          </div>
+          {stats.recentDropoffs.length === 0 ? (
+            <p className="p-4 text-center text-xs text-muted-foreground">{ar ? "لا توجد بيانات" : "No data"}</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead className="text-muted-foreground">
+                  <tr className="border-b border-border">
+                    <th className="py-2 text-start font-medium">{ar ? "العميل" : "Customer"}</th>
+                    <th className="py-2 text-start font-medium">{ar ? "المرحلة" : "Stage"}</th>
+                    <th className="py-2 text-start font-medium">{ar ? "القيمة" : "Value"}</th>
+                    <th className="py-2 text-start font-medium">{ar ? "السبب" : "Reason"}</th>
+                    <th className="py-2 text-start font-medium">{ar ? "متى" : "When"}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.recentDropoffs.map((d) => (
+                    <tr key={d.id} className="border-b border-border/50">
+                      <td className="py-2">{d.email || d.phone || "—"}</td>
+                      <td className="py-2">{d.stage}</td>
+                      <td className="py-2">{fmt(d.subtotal)}</td>
+                      <td className="py-2 text-muted-foreground">{d.reason || "—"}</td>
+                      <td className="py-2 text-muted-foreground">{new Date(d.updated_at).toLocaleString(ar ? "ar" : "en", { dateStyle: "short", timeStyle: "short" })}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }
