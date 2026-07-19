@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { PageHeader } from "@/features/admin/components/PageHeader";
-import { ShoppingBag, DollarSign, Users, Package, TrendingUp, Activity } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ShoppingBag, DollarSign, Users, Package, TrendingUp, Activity, ShoppingCart, AlertTriangle, Clock, Target } from "lucide-react";
 
 export const Route = createFileRoute("/admin/analytics")({
   component: AnalyticsPage,
