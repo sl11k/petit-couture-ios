@@ -60,8 +60,8 @@ export const validateCoupon = createServerFn({ method: "POST" })
             .in("id", variantIds)
         : Promise.resolve({ data: [] as any[] }),
     ]);
-    const productBySlug = new Map(products?.map((p: any) => [p.slug, p]) || []);
-    const variantById = new Map(variants?.map((v: any) => [v.id, v]) || []);
+    const productBySlug = new Map<string, any>(products?.map((p: any) => [p.slug, p]) || []);
+    const variantById = new Map<string, any>(variants?.map((v: any) => [v.id, v]) || []);
     
     const dbCartItems = data.cart_items.map((it) => {
       const product = productBySlug.get(it.slug);
