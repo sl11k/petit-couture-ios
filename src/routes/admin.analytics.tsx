@@ -40,6 +40,16 @@ function AnalyticsPage() {
     sessions: 0,
     topProducts: [] as { name: string; qty: number }[],
     topStatuses: [] as { status: string; count: number }[],
+    // Customer behaviour / drop-off
+    checkoutsStarted: 0,
+    checkoutsAbandoned: 0,
+    checkoutsConverted: 0,
+    conversionRate: 0,
+    abandonedValue: 0,
+    stageBreakdown: [] as { stage: string; count: number }[],
+    topReasons: [] as { reason: string; count: number }[],
+    recentDropoffs: [] as { id: string; email: string | null; phone: string | null; stage: string; subtotal: number; updated_at: string; reason: string | null }[],
+    insights: [] as string[],
   });
 
   useEffect(() => {
