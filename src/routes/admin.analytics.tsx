@@ -56,11 +56,15 @@ function AnalyticsPage() {
     (async () => {
       setLoading(true);
       const since = new Date(Date.now() - RANGE_DAYS[range] * 86400000).toISOString();
-      const [ordersRes, sessionsRes, itemsRes, customersRes] = await Promise.all([
-        supabase.from("orders").select("total, status, created_at").gte("created_at", since),
+      const [ordersRes, sessionsRes, itemsRes, customersRes, cartsRes] = await Promise.all([
+        // Only count confirmed orders in KPIs (exclude never-paid checkout attempts).
+        supabase.from("orders").select("total, status, payment_status, created_at").gte("created_at", since).or("payment_status.neq.unpaid,status.neq.pending"),
         supabase.from("analytics_events").select("session_id").gte("created_at", since),
         supabase.from("order_items").select("product_name, qty, orders!inner(created_at)").gte("orders.created_at", since),
         supabase.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", since),
+        supabase.from("abandoned_carts")
+          .select("id, email, phone, stage, subtotal, updated_at, converted, reached_checkout, abandonment_reason")
+          .gte("updated_at", since),
       ]);
       const orders = ordersRes.data ?? [];
       const revenue = orders.reduce((s, o: any) => s + Number(o.total ?? 0), 0);
@@ -85,6 +89,78 @@ function AnalyticsPage() {
         .sort((a, b) => b[1] - a[1])
         .map(([status, count]) => ({ status, count }));
 
+      // ============ Customer behaviour / drop-off ============
+      const carts = cartsRes.data ?? [];
+      const checkoutsStarted = carts.length;
+      const checkoutsConverted = carts.filter((c: any) => c.converted).length;
+      const checkoutsAbandoned = checkoutsStarted - checkoutsConverted;
+      const conversionRate = checkoutsStarted > 0 ? (checkoutsConverted / checkoutsStarted) * 100 : 0;
+      const abandonedValue = carts
+        .filter((c: any) => !c.converted)
+        .reduce((s: number, c: any) => s + Number(c.subtotal ?? 0), 0);
+
+      const stageMap = new Map<string, number>();
+      carts.filter((c: any) => !c.converted).forEach((c: any) => {
+        const k = c.stage || (c.reached_checkout ? "checkout" : "cart");
+        stageMap.set(k, (stageMap.get(k) ?? 0) + 1);
+      });
+      const stageBreakdown = Array.from(stageMap.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([stage, count]) => ({ stage, count }));
+
+      const reasonMap = new Map<string, number>();
+      carts.filter((c: any) => !c.converted && c.abandonment_reason).forEach((c: any) => {
+        reasonMap.set(c.abandonment_reason, (reasonMap.get(c.abandonment_reason) ?? 0) + 1);
+      });
+      const topReasons = Array.from(reasonMap.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([reason, count]) => ({ reason, count }));
+
+      const recentDropoffs = carts
+        .filter((c: any) => !c.converted)
+        .sort((a: any, b: any) => (a.updated_at < b.updated_at ? 1 : -1))
+        .slice(0, 10)
+        .map((c: any) => ({
+          id: c.id,
+          email: c.email,
+          phone: c.phone,
+          stage: c.stage || (c.reached_checkout ? "checkout" : "cart"),
+          subtotal: Number(c.subtotal ?? 0),
+          updated_at: c.updated_at,
+          reason: c.abandonment_reason,
+        }));
+
+      // Smart insights
+      const insights: string[] = [];
+      if (conversionRate > 0 && conversionRate < 20) {
+        insights.push(ar
+          ? `معدل التحويل منخفض (${conversionRate.toFixed(1)}%). راجع سرعة الدفع وطرق الدفع المتاحة.`
+          : `Low conversion rate (${conversionRate.toFixed(1)}%). Review checkout speed and payment options.`);
+      }
+      const paymentDrops = stageMap.get("payment") ?? 0;
+      if (paymentDrops > 0 && paymentDrops >= checkoutsAbandoned * 0.4) {
+        insights.push(ar
+          ? `${paymentDrops} عميل توقف في مرحلة الدفع — قد تكون هناك مشكلة في بوابة الدفع.`
+          : `${paymentDrops} customers dropped at payment — possible payment gateway issue.`);
+      }
+      const checkoutDrops = stageMap.get("checkout") ?? 0;
+      if (checkoutDrops > 0 && checkoutDrops >= checkoutsAbandoned * 0.4) {
+        insights.push(ar
+          ? `${checkoutDrops} عميل تخلى عن الطلب في نموذج الدفع — بسّط الحقول أو أضف تسجيل دخول سريع.`
+          : `${checkoutDrops} customers left at checkout form — simplify fields or add express login.`);
+      }
+      if (abandonedValue > revenue * 0.3 && revenue > 0) {
+        insights.push(ar
+          ? `قيمة السلال المتروكة (${abandonedValue.toFixed(0)}) كبيرة مقارنة بالإيرادات — فعّل حملة استرداد.`
+          : `Abandoned value (${abandonedValue.toFixed(0)}) is high vs revenue — enable a recovery campaign.`);
+      }
+      if (insights.length === 0 && checkoutsStarted > 0) {
+        insights.push(ar
+          ? `أداء صحي: معدل التحويل ${conversionRate.toFixed(1)}%.`
+          : `Healthy performance: ${conversionRate.toFixed(1)}% conversion rate.`);
+      }
+
       setStats({
         revenue,
         orders: orders.length,
@@ -93,10 +169,19 @@ function AnalyticsPage() {
         sessions,
         topProducts,
         topStatuses,
+        checkoutsStarted,
+        checkoutsAbandoned,
+        checkoutsConverted,
+        conversionRate,
+        abandonedValue,
+        stageBreakdown,
+        topReasons,
+        recentDropoffs,
+        insights,
       });
       setLoading(false);
     })();
-  }, [range]);
+  }, [range, ar]);
 
   const fmt = (n: number) => n.toLocaleString(ar ? "ar" : "en", { maximumFractionDigits: 0 });
 
