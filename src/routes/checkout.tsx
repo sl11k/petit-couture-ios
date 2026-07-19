@@ -1301,7 +1301,9 @@ function CheckoutPage() {
                         {coupon.code}
                       </span>
                       <span className="text-[11.5px] text-muted-foreground">
-                        −{fmt(coupon.discount)} {isRTL ? "ر.س" : "SAR"}
+                        {coupon.discount_type === "free_shipping"
+                          ? (isRTL ? "شحن مجاني" : "Free shipping")
+                          : `−${fmt(pricing.discount)} ${isRTL ? "ر.س" : "SAR"}`}
                       </span>
                     </div>
                     <button
