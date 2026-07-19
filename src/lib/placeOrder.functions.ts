@@ -449,44 +449,8 @@ export const placeOrder = createServerFn({ method: "POST" })
       }
     }
 
-    // 6. Enqueue order.created notification (best-effort, non-blocking).
-    //    For async gateways (card/apple_pay/tabby/tamara) the customer should NOT
-    //    receive a WhatsApp until payment is confirmed — only the admin gets an
-    //    "order attempted" alert. The paid confirmation goes out from the webhook.
-    try {
-      const { enqueueNotification } = await import("@/lib/notif/engine.server");
-      const vars = {
-        order_number: order.order_number,
-        order_total: finalTotal,
-        currency: data.currency,
-        customer_name: data.address.fullName,
-        customer_phone: data.address.phone,
-        customer_email: data.address.email,
-        payment_method: data.payment_method,
-        items_count: pricedItems.length,
-      };
-      const isAsyncGateway = ["card", "apple_pay", "tabby", "tamara"].includes(
-        data.payment_method,
-      );
-      // For async gateways skip the "order.created" event entirely — the paid
-      // webhook fires order.paid to both audiences. This prevents admins from
-      // getting a "new order" alert for abandoned/cancelled checkout attempts.
-      if (!isAsyncGateway) {
-        await enqueueNotification({
-          event_code: "order.created",
-          audience: "both",
-          recipient_phone: data.address.phone,
-          recipient_email: data.address.email,
-          recipient_user_id: verifiedUserId,
-          variables: vars,
-          related_entity: "order",
-          related_entity_id: order.id,
-          dedupe_key: `order.created:${order.id}`,
-        });
-      }
-    } catch (e: any) {
-      console.warn("[placeOrder] notif enqueue failed:", e?.message || e);
-    }
+    // 6. No order/admin WhatsApp at placement time. Notifications are emitted
+    //    only after payment is confirmed by the payment finalization flow.
 
 
 

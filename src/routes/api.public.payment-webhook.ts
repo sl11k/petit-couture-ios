@@ -247,32 +247,8 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
                 console.warn("[payment-webhook] finalize_order_stock threw:", e?.message || e);
               }
 
-              // Enqueue order.paid for both customer + admin.
-              try {
-                const { enqueueNotification } = await import("@/lib/notif/engine.server");
-                if (updated.customer_phone) {
-                  await enqueueNotification({
-                    event_code: "order.paid",
-                    audience: "both",
-                    recipient_phone: updated.customer_phone,
-                    recipient_email: updated.customer_email,
-                    recipient_user_id: updated.user_id,
-                    variables: {
-                      order_number: updated.order_number,
-                      order_total: updated.total,
-                      currency: updated.currency,
-                      customer_name: updated.customer_name,
-                      payment_method: updated.payment_method,
-                      amount: payload.amount,
-                    },
-                    related_entity: "order",
-                    related_entity_id: updated.id,
-                    dedupe_key: `order.paid:${updated.id}`,
-                  });
-                }
-              } catch (e: any) {
-                console.warn("[payment-webhook] order.paid enqueue failed:", e?.message || e);
-              }
+              // Notifications are emitted by the payment-status database trigger
+              // so paid-order WhatsApp messages have a single source of truth.
             }
           } else if (orderId && status === "failed") {
 
