@@ -398,7 +398,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     }
 
     // 3c. Record coupon redemption + bump used_count (best-effort).
-    if (coupon_id) {
+    if (coupon_id && !asyncPayment) {
       try {
         await supabaseAdmin.from("coupon_redemptions").insert({
           coupon_id,
