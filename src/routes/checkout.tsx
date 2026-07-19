@@ -172,7 +172,12 @@ function CheckoutPage() {
 
   // Coupon state
   const [couponInput, setCouponInput] = useState("");
-  const [coupon, setCoupon] = useState<{ code: string; discount: number } | null>(null);
+  const [coupon, setCoupon] = useState<{
+    code: string;
+    discount: number;
+    discount_type: string;
+    discount_value: number;
+  } | null>(null);
   const [couponBusy, setCouponBusy] = useState(false);
   const [couponError, setCouponError] = useState<string | null>(null);
 
@@ -324,7 +329,10 @@ function CheckoutPage() {
     // Only add shipping fee in step 3 (shipping/payment page), not in steps 1-2
     const shipping_fee = step >= 3 ? shipping.fee : 0;
     const tax = Math.round(subtotal * taxRate * 100) / 100;
-    const discount = coupon ? Math.min(coupon.discount, subtotal) : 0;
+    const couponDiscount = coupon?.discount_type === "free_shipping"
+      ? shipping_fee
+      : (coupon?.discount ?? 0);
+    const discount = coupon ? Math.min(couponDiscount, subtotal + shipping_fee) : 0;
     const total = Math.max(0, Math.round((subtotal + shipping_fee + tax - discount) * 100) / 100);
     return { subtotal, shipping_fee, tax, discount, total };
   }, [bag.subtotal, shipping.fee, coupon, taxRate, step]);
@@ -343,6 +351,7 @@ function CheckoutPage() {
             code: coupon.code,
             cart_items: bag.items.map((it) => ({
               slug: it.slug,
+              variant_id: it.variantId ?? null,
               price: it.price,
               qty: it.qty,
               is_discounted: false,
@@ -352,7 +361,12 @@ function CheckoutPage() {
           },
         });
         if (cancelled) return;
-        if (res.ok) setCoupon({ code: res.code, discount: res.discount_amount });
+        if (res.ok) setCoupon({
+          code: res.code,
+          discount: res.discount_amount,
+          discount_type: res.discount_type,
+          discount_value: res.discount_value,
+        });
         else {
           setCoupon(null);
           setCouponError(isRTL ? res.message_ar : res.message_en);
@@ -379,6 +393,7 @@ function CheckoutPage() {
           code,
           cart_items: bag.items.map((it) => ({
             slug: it.slug,
+            variant_id: it.variantId ?? null,
             price: it.price,
             qty: it.qty,
             is_discounted: false,
@@ -388,7 +403,12 @@ function CheckoutPage() {
         },
       });
       if (res.ok) {
-        setCoupon({ code: res.code, discount: res.discount_amount });
+        setCoupon({
+          code: res.code,
+          discount: res.discount_amount,
+          discount_type: res.discount_type,
+          discount_value: res.discount_value,
+        });
         toast.success(isRTL ? "تم تطبيق الكوبون" : "Coupon applied");
       } else {
         setCoupon(null);
