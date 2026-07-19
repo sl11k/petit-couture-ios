@@ -97,6 +97,8 @@ export type AdminPageConfig<T = any> = {
   fallbackSelect?: string;
   rowHref?: (row: T) => string;
   enrichRows?: (rows: T[]) => Promise<T[]> | T[];
+  /** Apply extra Supabase query modifiers (e.g. .eq / .or / .not) to the list query. */
+  applyQuery?: (query: any) => any;
 };
 
 export type DetailFieldType =
