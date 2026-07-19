@@ -7547,6 +7547,10 @@ export type Database = {
       mask_email: { Args: { _email: string }; Returns: string }
       mask_phone: { Args: { _phone: string }; Returns: string }
       next_invoice_number: { Args: { _prefix?: string }; Returns: string }
+      notif_template_render: {
+        Args: { _body: string; _payload: Json }
+        Returns: string
+      }
       notify_shipping_delays: {
         Args: {
           _intransit_threshold_days?: number

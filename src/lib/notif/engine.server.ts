@@ -261,6 +261,9 @@ export async function processQueueBatch(limit = 20): Promise<{
   failed: number;
 }> {
   const nowIso = new Date().toISOString();
+  // Wasender account protection is strict. Process one WhatsApp message per run;
+  // the cron endpoint can run every minute, which is safer than sending bursts.
+  const safeLimit = Math.max(1, Math.min(limit, 1));
   // Fetch candidate rows
   const { data: rows, error } = await supabaseAdmin
     .from("notif_queue")
@@ -270,7 +273,7 @@ export async function processQueueBatch(limit = 20): Promise<{
     .is("locked_at", null)
     .order("priority", { ascending: true })
     .order("scheduled_at", { ascending: true })
-    .limit(limit);
+    .limit(safeLimit);
   if (error) {
     console.error("[notif] fetch queue:", error.message);
     return { processed: 0, sent: 0, failed: 0 };
@@ -399,7 +402,12 @@ export async function processQueueBatch(limit = 20): Promise<{
     } else {
       const nextAttempt = (row.attempts ?? 0) + 1;
       const isTerminal = nextAttempt >= (row.max_attempts ?? 3);
-      const backoffMinutes = Math.min(60, Math.pow(2, nextAttempt));
+      const isProviderRateLimit = /account protection|rate limit|too many|429|5 seconds/i.test(
+        result.error_message ?? "",
+      );
+      const backoffMinutes = isProviderRateLimit
+        ? Math.min(30, 5 * nextAttempt)
+        : Math.min(60, Math.pow(2, nextAttempt));
       const nextRun = new Date(Date.now() + backoffMinutes * 60_000).toISOString();
       await supabaseAdmin
         .from("notif_queue")
