@@ -255,119 +255,201 @@ async function bumpAnalytics(
  * Process pending queue items. Returns number of processed rows.
  * Safe to call repeatedly (row-level lock via locked_at).
  */
+const SITE_NAME = "petit-couture-ios";
+const EMAIL_SENDER_DOMAIN = "notify.lppme.com";
+const EMAIL_FROM_DOMAIN = "lppme.com";
+
+function generateEmailToken(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function textToHtml(text: string, language: string): string {
+  const isRtl = language === "ar";
+  const dir = isRtl ? "rtl" : "ltr";
+  const align = isRtl ? "right" : "left";
+  const escaped = String(text)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  const paragraphs = escaped.split(/\n{2,}/).map((p) =>
+    `<p style="margin:0 0 14px 0;line-height:1.7;color:#1f2937;">${p.replace(/\n/g, "<br/>")}</p>`
+  ).join("");
+  return `<!doctype html><html lang="${language}" dir="${dir}"><head><meta charset="utf-8"/></head>
+<body style="margin:0;padding:0;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Cairo',Roboto,Helvetica,Arial,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:32px 12px;">
+<tr><td align="center">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid #f3e8ff;border-radius:14px;overflow:hidden;">
+<tr><td style="background:linear-gradient(135deg,#f9a8d4,#c084fc);padding:22px 28px;text-align:center;color:#ffffff;font-weight:700;font-size:18px;letter-spacing:.3px;">${SITE_NAME}</td></tr>
+<tr><td dir="${dir}" align="${align}" style="padding:26px 28px;">${paragraphs}</td></tr>
+<tr><td style="padding:16px 28px;background:#fafafa;color:#6b7280;font-size:12px;text-align:center;border-top:1px solid #f3f4f6;">© ${new Date().getFullYear()} LPPME</td></tr>
+</table></td></tr></table></body></html>`;
+}
+
+async function getOrCreateUnsubscribeToken(email: string): Promise<string> {
+  const normalized = email.toLowerCase();
+  const { data: existing } = await supabaseAdmin
+    .from("email_unsubscribe_tokens")
+    .select("token, used_at")
+    .eq("email", normalized)
+    .maybeSingle();
+  if (existing && !existing.used_at) return (existing as any).token;
+  const token = generateEmailToken();
+  await supabaseAdmin
+    .from("email_unsubscribe_tokens")
+    .upsert({ token, email: normalized }, { onConflict: "email", ignoreDuplicates: true });
+  const { data: stored } = await supabaseAdmin
+    .from("email_unsubscribe_tokens")
+    .select("token")
+    .eq("email", normalized)
+    .maybeSingle();
+  return (stored as any)?.token ?? token;
+}
+
+/**
+ * Dispatch an email row via Lovable's email queue (enqueue_email RPC).
+ */
+async function dispatchEmailRow(row: any, rendered: string, subject: string): Promise<{
+  ok: boolean; error_message?: string; duration_ms: number;
+}> {
+  const started = Date.now();
+  try {
+    const to = (row.recipient_email as string | null)?.trim();
+    if (!to) return { ok: false, error_message: "recipient_email missing", duration_ms: 0 };
+
+    // Suppression check
+    const { data: suppressed } = await supabaseAdmin
+      .from("suppressed_emails").select("id").eq("email", to.toLowerCase()).maybeSingle();
+    if (suppressed) return { ok: false, error_message: "email_suppressed", duration_ms: Date.now() - started };
+
+    const unsubscribeToken = await getOrCreateUnsubscribeToken(to);
+    const messageId = `notif-${row.id}`;
+    const html = textToHtml(rendered, row.language || "ar");
+    const label = `${row.event_code}:${row.audience}`;
+
+    await supabaseAdmin.from("email_send_log").insert({
+      message_id: messageId, template_name: label,
+      recipient_email: to, status: "pending",
+    });
+
+    const { error } = await supabaseAdmin.rpc("enqueue_email" as any, {
+      queue_name: "transactional_emails",
+      payload: {
+        message_id: messageId,
+        to,
+        from: `${SITE_NAME} <noreply@${EMAIL_FROM_DOMAIN}>`,
+        sender_domain: EMAIL_SENDER_DOMAIN,
+        subject: subject || label,
+        html,
+        text: rendered,
+        purpose: "transactional",
+        label,
+        idempotency_key: messageId,
+        unsubscribe_token: unsubscribeToken,
+        queued_at: new Date().toISOString(),
+      },
+    });
+    if (error) {
+      await supabaseAdmin.from("email_send_log").insert({
+        message_id: messageId, template_name: label,
+        recipient_email: to, status: "failed", error_message: error.message,
+      });
+      return { ok: false, error_message: error.message, duration_ms: Date.now() - started };
+    }
+    return { ok: true, duration_ms: Date.now() - started };
+  } catch (e: any) {
+    return { ok: false, error_message: e?.message || String(e), duration_ms: Date.now() - started };
+  }
+}
+
+/**
+ * Process pending queue items. Returns number of processed rows.
+ */
 export async function processQueueBatch(limit = 20): Promise<{
-  processed: number;
-  sent: number;
-  failed: number;
+  processed: number; sent: number; failed: number;
 }> {
   const nowIso = new Date().toISOString();
-  // Wasender account protection is strict. Process one WhatsApp message per run;
-  // the cron endpoint can run every minute, which is safer than sending bursts.
-  const safeLimit = Math.max(1, Math.min(limit, 1));
-  // Fetch candidate rows
-  const { data: rows, error } = await supabaseAdmin
-    .from("notif_queue")
-    .select("*")
-    .in("status", ["pending", "retry"])
-    .lte("scheduled_at", nowIso)
-    .is("locked_at", null)
-    .order("priority", { ascending: true })
-    .order("scheduled_at", { ascending: true })
-    .limit(safeLimit);
-  if (error) {
-    console.error("[notif] fetch queue:", error.message);
-    return { processed: 0, sent: 0, failed: 0 };
-  }
-  if (!rows || rows.length === 0) return { processed: 0, sent: 0, failed: 0 };
 
-  const providerBundle = await loadDefaultProvider("whatsapp");
+  // WhatsApp: strict rate limit → 1 per run. Email + others: process up to `limit`.
+  const { data: waRows } = await supabaseAdmin
+    .from("notif_queue").select("*")
+    .in("status", ["pending", "retry"]).lte("scheduled_at", nowIso).is("locked_at", null)
+    .eq("channel", "whatsapp")
+    .order("priority", { ascending: true }).order("scheduled_at", { ascending: true })
+    .limit(1);
+  const { data: otherRows } = await supabaseAdmin
+    .from("notif_queue").select("*")
+    .in("status", ["pending", "retry"]).lte("scheduled_at", nowIso).is("locked_at", null)
+    .neq("channel", "whatsapp")
+    .order("priority", { ascending: true }).order("scheduled_at", { ascending: true })
+    .limit(Math.max(1, limit));
+  const rows = [...(waRows || []), ...(otherRows || [])];
+  if (rows.length === 0) return { processed: 0, sent: 0, failed: 0 };
 
-  let sent = 0,
-    failed = 0;
+  const whatsappBundle = rows.some((r) => r.channel === "whatsapp")
+    ? await loadDefaultProvider("whatsapp") : null;
 
-  // Throttle between provider calls so WhatsApp "account protection" (1 msg / few seconds) does not reject us.
   const THROTTLE_MS = 10_000;
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-  let sentInThisBatch = 0;
+  let sent = 0, failed = 0, waSentInBatch = 0;
 
   for (const row of rows) {
-    if (sentInThisBatch > 0) await sleep(THROTTLE_MS);
-    // Lock
+    if (row.channel === "whatsapp" && waSentInBatch > 0) await sleep(THROTTLE_MS);
+
     const { data: locked } = await supabaseAdmin
       .from("notif_queue")
       .update({ locked_at: nowIso, locked_by: "worker", status: "processing" })
-      .eq("id", row.id)
-      .is("locked_at", null)
-      .select("id")
-      .maybeSingle();
+      .eq("id", row.id).is("locked_at", null).select("id").maybeSingle();
     if (!locked) continue;
 
-    if (!providerBundle) {
-      await supabaseAdmin
-        .from("notif_queue")
-        .update({
-          status: "failed",
-          last_error: "No enabled provider configured",
-          locked_at: null,
-          updated_at: nowIso,
-        })
-        .eq("id", row.id);
-      failed++;
-      continue;
-    }
-
-    // Render template
-    const template = await resolveTemplate(
-      row.event_code,
-      row.channel,
-      row.audience,
-      row.language,
-    );
+    const template = await resolveTemplate(row.event_code, row.channel, row.audience, row.language);
     if (!template) {
-      await supabaseAdmin
-        .from("notif_queue")
-        .update({
-          status: "failed",
-          last_error: `No template for ${row.event_code}/${row.channel}/${row.audience}/${row.language}`,
-          locked_at: null,
-          updated_at: nowIso,
-        })
-        .eq("id", row.id);
-      failed++;
-      continue;
+      await supabaseAdmin.from("notif_queue").update({
+        status: "failed",
+        last_error: `No template for ${row.event_code}/${row.channel}/${row.audience}/${row.language}`,
+        locked_at: null, updated_at: nowIso,
+      }).eq("id", row.id);
+      failed++; continue;
     }
     const rendered = renderTemplate(template.body, (row.payload as any) || {});
+    const subject = template.subject
+      ? renderTemplate(template.subject, (row.payload as any) || {})
+      : "";
 
-    // Send
-    const provider = getProvider(providerBundle.provider.code);
-    if (!provider) {
-      await supabaseAdmin
-        .from("notif_queue")
-        .update({
-          status: "failed",
-          last_error: `Unknown provider adapter: ${providerBundle.provider.code}`,
-          locked_at: null,
-          updated_at: nowIso,
-        })
-        .eq("id", row.id);
-      failed++;
-      continue;
+    let result: { ok: boolean; error_message?: string; http_status?: number; duration_ms?: number;
+      request_snapshot?: any; response_snapshot?: any };
+    let providerIdForLog: string | null = null;
+
+    if (row.channel === "email") {
+      const r = await dispatchEmailRow(row, rendered, subject);
+      result = { ok: r.ok, error_message: r.error_message, duration_ms: r.duration_ms };
+    } else {
+      // WhatsApp / SMS via provider adapters
+      if (!whatsappBundle) {
+        await supabaseAdmin.from("notif_queue").update({
+          status: "failed", last_error: "No enabled provider configured",
+          locked_at: null, updated_at: nowIso,
+        }).eq("id", row.id);
+        failed++; continue;
+      }
+      const provider = getProvider(whatsappBundle.provider.code);
+      if (!provider) {
+        await supabaseAdmin.from("notif_queue").update({
+          status: "failed", last_error: `Unknown provider adapter: ${whatsappBundle.provider.code}`,
+          locked_at: null, updated_at: nowIso,
+        }).eq("id", row.id);
+        failed++; continue;
+      }
+      result = await provider.send(whatsappBundle.creds, {
+        to: row.recipient_phone ?? "", body: rendered, language: row.language,
+      });
+      providerIdForLog = whatsappBundle.provider.id;
+      waSentInBatch++;
     }
 
-    const result = await provider.send(providerBundle.creds, {
-      to: row.recipient_phone ?? "",
-      body: rendered,
-      language: row.language,
-    });
-    sentInThisBatch++;
-
-    // Log delivery
     await supabaseAdmin.from("notif_delivery_logs").insert({
-      queue_id: row.id,
-      provider_id: providerBundle.provider.id,
-      event_code: row.event_code,
-      audience: row.audience,
-      channel: row.channel,
+      queue_id: row.id, provider_id: providerIdForLog,
+      event_code: row.event_code, audience: row.audience, channel: row.channel,
       recipient_phone: row.recipient_phone,
       status: result.ok ? "sent" : "failed",
       http_status: result.http_status ?? null,
@@ -378,55 +460,35 @@ export async function processQueueBatch(limit = 20): Promise<{
       attempt: (row.attempts ?? 0) + 1,
     });
 
-    await bumpAnalytics(
-      row.event_code,
-      providerBundle.provider.id,
-      result.ok,
-      result.duration_ms ?? null,
-    );
+    await bumpAnalytics(row.event_code, providerIdForLog, result.ok, result.duration_ms ?? null);
 
     if (result.ok) {
-      await supabaseAdmin
-        .from("notif_queue")
-        .update({
-          status: "sent",
-          rendered_body: rendered,
-          sent_at: nowIso,
-          attempts: (row.attempts ?? 0) + 1,
-          last_error: null,
-          locked_at: null,
-          updated_at: nowIso,
-        })
-        .eq("id", row.id);
+      await supabaseAdmin.from("notif_queue").update({
+        status: "sent", rendered_body: rendered, sent_at: nowIso,
+        attempts: (row.attempts ?? 0) + 1, last_error: null,
+        locked_at: null, updated_at: nowIso,
+      }).eq("id", row.id);
       sent++;
     } else {
       const nextAttempt = (row.attempts ?? 0) + 1;
       const isTerminal = nextAttempt >= (row.max_attempts ?? 3);
-      const isProviderRateLimit = /account protection|rate limit|too many|429|5 seconds/i.test(
-        result.error_message ?? "",
-      );
-      const backoffMinutes = isProviderRateLimit
-        ? Math.min(30, 5 * nextAttempt)
-        : Math.min(60, Math.pow(2, nextAttempt));
+      const isRate = /account protection|rate limit|too many|429|5 seconds/i.test(result.error_message ?? "");
+      const backoffMinutes = isRate ? Math.min(30, 5 * nextAttempt) : Math.min(60, Math.pow(2, nextAttempt));
       const nextRun = new Date(Date.now() + backoffMinutes * 60_000).toISOString();
-      await supabaseAdmin
-        .from("notif_queue")
-        .update({
-          status: isTerminal ? "failed" : "retry",
-          rendered_body: rendered,
-          attempts: nextAttempt,
-          last_error: result.error_message ?? "Unknown error",
-          scheduled_at: isTerminal ? row.scheduled_at : nextRun,
-          locked_at: null,
-          updated_at: nowIso,
-        })
-        .eq("id", row.id);
+      await supabaseAdmin.from("notif_queue").update({
+        status: isTerminal ? "failed" : "retry",
+        rendered_body: rendered, attempts: nextAttempt,
+        last_error: result.error_message ?? "Unknown error",
+        scheduled_at: isTerminal ? row.scheduled_at : nextRun,
+        locked_at: null, updated_at: nowIso,
+      }).eq("id", row.id);
       failed++;
     }
   }
 
   return { processed: rows.length, sent, failed };
 }
+
 
 /**
  * Send an immediate test message via the default provider, bypassing the queue.
