@@ -152,6 +152,7 @@ import { Route as AdminCmsPagesIdRouteImport } from './routes/admin.cms-pages.$i
 import { Route as AdminCampaignsIdRouteImport } from './routes/admin.campaigns.$id'
 import { Route as AdminAuditIdRouteImport } from './routes/admin.audit.$id'
 import { Route as AccountReturnsNewRouteImport } from './routes/account.returns.new'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicOtoWebhookRouteImport } from './routes/api.public.oto.webhook'
 import { Route as ApiPublicCronNotifyDelaysRouteImport } from './routes/api/public/cron.notify-delays'
 import { Route as ApiPublicCronNotifProcessRouteImport } from './routes/api.public.cron.notif-process'
@@ -877,6 +878,12 @@ const AccountReturnsNewRoute = AccountReturnsNewRouteImport.update({
   path: '/returns/new',
   getParentRoute: () => AccountRoute,
 } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicOtoWebhookRoute = ApiPublicOtoWebhookRouteImport.update({
   id: '/api/public/oto/webhook',
   path: '/api/public/oto/webhook',
@@ -1048,6 +1055,7 @@ export interface FileRoutesByFullPath {
   '/api/public/cron/notif-process': typeof ApiPublicCronNotifProcessRoute
   '/api/public/cron/notify-delays': typeof ApiPublicCronNotifyDelaysRoute
   '/api/public/oto/webhook': typeof ApiPublicOtoWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -1184,6 +1192,7 @@ export interface FileRoutesByTo {
   '/api/public/cron/notif-process': typeof ApiPublicCronNotifProcessRoute
   '/api/public/cron/notify-delays': typeof ApiPublicCronNotifyDelaysRoute
   '/api/public/oto/webhook': typeof ApiPublicOtoWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -1334,6 +1343,7 @@ export interface FileRoutesById {
   '/api/public/cron/notif-process': typeof ApiPublicCronNotifProcessRoute
   '/api/public/cron/notify-delays': typeof ApiPublicCronNotifyDelaysRoute
   '/api/public/oto/webhook': typeof ApiPublicOtoWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1485,6 +1495,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/notif-process'
     | '/api/public/cron/notify-delays'
     | '/api/public/oto/webhook'
+    | '/lovable/email/queue/process'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1621,6 +1632,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/notif-process'
     | '/api/public/cron/notify-delays'
     | '/api/public/oto/webhook'
+    | '/lovable/email/queue/process'
   id:
     | '__root__'
     | '/'
@@ -1770,6 +1782,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/notif-process'
     | '/api/public/cron/notify-delays'
     | '/api/public/oto/webhook'
+    | '/lovable/email/queue/process'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1813,6 +1826,7 @@ export interface RootRouteChildren {
   ApiPublicCronNotifProcessRoute: typeof ApiPublicCronNotifProcessRoute
   ApiPublicCronNotifyDelaysRoute: typeof ApiPublicCronNotifyDelaysRoute
   ApiPublicOtoWebhookRoute: typeof ApiPublicOtoWebhookRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2818,6 +2832,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountReturnsNewRouteImport
       parentRoute: typeof AccountRoute
     }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/oto/webhook': {
       id: '/api/public/oto/webhook'
       path: '/api/public/oto/webhook'
@@ -3269,17 +3290,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCronNotifProcessRoute: ApiPublicCronNotifProcessRoute,
   ApiPublicCronNotifyDelaysRoute: ApiPublicCronNotifyDelaysRoute,
   ApiPublicOtoWebhookRoute: ApiPublicOtoWebhookRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
