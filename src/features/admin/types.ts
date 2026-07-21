@@ -91,7 +91,7 @@ export type AdminPageConfig<T = any> = {
   columns: ColumnDef<T>[];
   filters?: FilterDef[];
   form?: FormFieldDef[];
-  actions?: { create?: boolean; edit?: boolean; delete?: boolean; export?: boolean };
+  actions?: { create?: boolean; edit?: boolean; delete?: boolean; export?: boolean; bulkDelete?: boolean };
   rowActions?: RowAction<T>[];
   select?: string;
   fallbackSelect?: string;

@@ -34,6 +34,10 @@ export function DataTable<T extends Record<string, any>>({
   rowHref,
   rowActions,
   emptyMessage,
+  selectable,
+  selectedIds,
+  onToggleRow,
+  onToggleAll,
 }: {
   rows: T[];
   columns: ColumnDef<T>[];
@@ -41,6 +45,10 @@ export function DataTable<T extends Record<string, any>>({
   rowHref?: (row: T) => string;
   rowActions?: RowAction<T>[];
   emptyMessage?: string;
+  selectable?: boolean;
+  selectedIds?: Set<string>;
+  onToggleRow?: (id: string, checked: boolean) => void;
+  onToggleAll?: (checked: boolean) => void;
 }) {
   const { lang } = useLanguage();
   const navigate = useNavigate();
@@ -62,11 +70,26 @@ export function DataTable<T extends Record<string, any>>({
     );
   }
 
+  const allChecked = selectable && selectedIds ? rows.length > 0 && rows.every((r) => selectedIds.has(String(r.id))) : false;
+  const someChecked = selectable && selectedIds ? rows.some((r) => selectedIds.has(String(r.id))) && !allChecked : false;
+
   return (
     <div className="overflow-x-auto rounded-xl border border-border bg-card">
       <table className="w-full text-sm">
         <thead className="border-b border-border bg-muted/30 text-xs text-muted-foreground">
           <tr>
+            {selectable && (
+              <th className="p-3 w-8">
+                <input
+                  type="checkbox"
+                  checked={allChecked}
+                  ref={(el) => { if (el) el.indeterminate = someChecked; }}
+                  onChange={(e) => onToggleAll?.(e.target.checked)}
+                  className="h-4 w-4 rounded border-border cursor-pointer"
+                  aria-label={ar ? "تحديد الكل" : "Select all"}
+                />
+              </th>
+            )}
             {columns.map((c) => (
               <th
                 key={c.key}
@@ -86,17 +109,31 @@ export function DataTable<T extends Record<string, any>>({
         <tbody>
           {rows.map((row, idx) => {
             const href = rowHref?.(row);
+            const rowId = String(row.id ?? idx);
+            const isSelected = selectable && selectedIds?.has(rowId);
             return (
               <tr
                 key={row.id ?? idx}
                 className={cn(
                   "border-b border-border/50 last:border-0",
                   href && "cursor-pointer hover:bg-muted/30",
+                  isSelected && "bg-primary/5",
                 )}
                 onClick={() => {
                   if (href) navigate({ to: href as any });
                 }}
               >
+                {selectable && (
+                  <td className="p-3" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={!!isSelected}
+                      onChange={(e) => onToggleRow?.(rowId, e.target.checked)}
+                      className="h-4 w-4 rounded border-border cursor-pointer"
+                      aria-label={ar ? "تحديد الصف" : "Select row"}
+                    />
+                  </td>
+                )}
                 {columns.map((c) => (
                   <td
                     key={c.key}

@@ -55,7 +55,7 @@ export const ordersConfig: AdminPageConfig = {
       ],
     },
   ],
-  actions: { export: true },
+  actions: { export: true, delete: true, bulkDelete: true },
   rowActions: [
     {
       key: "view",
