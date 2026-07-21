@@ -24,6 +24,7 @@ const couponForm: FormFieldDef[] = [
   { key: "exclude_discounted_products", label: { ar: "استثناء المخفض", en: "Exclude discounted" }, type: "boolean" },
   { key: "excluded_product_ids", label: { ar: "استثناء منتجات", en: "Exclude products" }, type: "lookup", lookup: { table: "products", multiple: true, labelColumns: ["name_ar", "name_en"] } },
   { key: "included_product_ids", label: { ar: "منتجات معينة فقط", en: "Specific products" }, type: "lookup", lookup: { table: "products", multiple: true, labelColumns: ["name_ar", "name_en"] } },
+  { key: "included_category_ids", label: { ar: "فئات معينة فقط (الخصم يطبّق على هذه الفئات فقط)", en: "Specific categories only (discount applies only to these categories)" }, type: "lookup", lookup: { table: "categories", multiple: true, labelColumns: ["name_ar", "name_en"] } },
   { key: "allowed_user_ids", label: { ar: "مستخدمين محددين", en: "Specific users" }, type: "lookup", lookup: { table: "profiles", multiple: true, labelColumns: ["full_name", "email", "phone"] } },
 ];
 
