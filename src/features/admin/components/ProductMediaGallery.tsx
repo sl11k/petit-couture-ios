@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { IMAGE_MAX_BYTES, VIDEO_MAX_BYTES } from "./MediaUploader";
 import { cn } from "@/lib/utils";
+import { ImageCropDialog, type CroppedItem } from "./ImageCropDialog";
 
 type Props = {
   /** Array of media URLs. First item is the "main" media. */
