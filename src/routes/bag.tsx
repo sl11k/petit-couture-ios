@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { buildMeta } from "@/lib/seo";
+import { productImg, productSrcSet } from "@/lib/productImage";
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
@@ -227,7 +228,7 @@ function BagPage() {
                         className="h-[112px] w-[92px] overflow-hidden rounded-[16px] bg-pastel-peach shrink-0"
                       >
                         <img
-                          src={it.image}
+                          src={productImg(it.image, "small")} srcSet={productSrcSet(it.image, "small")}
                           alt={it.name}
                           loading="lazy"
                           className="w-full h-full object-cover"
@@ -395,7 +396,7 @@ function BagPage() {
                       >
                         <div className="aspect-[4/5] rounded-[14px] overflow-hidden bg-pastel-peach">
                           <img
-                            src={p.images[0]}
+                            src={productImg(p.images[0], "small")} srcSet={productSrcSet(p.images[0], "small")}
                             alt={p.category}
                             className="w-full h-full object-cover"
                             loading="lazy"

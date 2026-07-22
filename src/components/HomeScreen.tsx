@@ -15,6 +15,7 @@ import { usePriceFormatter } from "@/state/CurrencyContext";
 import { useDbCategories } from "@/hooks/useDbCategories";
 import { HomeReviews } from "@/components/HomeReviews";
 import { normalizeInternalHref } from "@/lib/links";
+import { productImg, productSrcSet } from "@/lib/productImage";
 
 import {
   fetchAnnouncements,
@@ -690,11 +691,15 @@ function BestSellersSection({
               >
                 <div className="relative w-full overflow-hidden rounded-[18px] bg-cream-warm aspect-[4/5]">
                   <img
-                    src={p.image}
+                    src={productImg(p.image, "medium")}
+                    srcSet={productSrcSet(p.image, "medium")}
+                    sizes="(min-width: 640px) 300px, 50vw"
                     alt={(ar ? p.name_ar : p.name_en) ?? ""}
                     loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04]"
                   />
+
                   {p.compareAt && (
                     <span className="absolute top-2 start-2 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium tracking-wide">
                       {ar ? "خصم" : "SALE"}
@@ -795,11 +800,15 @@ function DynamicSection({
               <div className="relative w-full overflow-hidden rounded-[22px] bg-cream-warm aspect-[1.35/1]">
                 {p.image_url && (
                   <img
-                    src={p.image_url}
+                    src={productImg(p.image_url, "medium")}
+                    srcSet={productSrcSet(p.image_url, "medium")}
+                    sizes="(min-width: 640px) 300px, 50vw"
                     alt={name ?? ""}
                     loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04]"
                   />
+
                 )}
               </div>
               <span className="mt-3 text-[14px] text-foreground/85 font-medium tracking-tight text-center">

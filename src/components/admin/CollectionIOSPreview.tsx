@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { productImg, productSrcSet } from "@/lib/productImage";
 
 type SortMode = "manual" | "newest" | "best_sellers" | "price_asc" | "price_desc";
 
@@ -78,8 +79,11 @@ export function CollectionIOSPreview({ page }: { page: PreviewPage }) {
             {page.hero_image ? (
               <div className="relative">
                 <img
-                  src={page.hero_image}
+                  src={productImg(page.hero_image, "large")}
+                  srcSet={productSrcSet(page.hero_image, "large")}
                   alt=""
+                  loading="lazy"
+                  decoding="async"
                   className="w-full aspect-[4/5] object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-3 text-white">
@@ -125,7 +129,7 @@ export function CollectionIOSPreview({ page }: { page: PreviewPage }) {
                     return (
                       <div key={p.id} className="block">
                         {p.image_url ? (
-                          <img src={p.image_url} alt="" className="w-full aspect-[4/5] object-cover rounded" />
+                          <img src={productImg(p.image_url, "small")} srcSet={productSrcSet(p.image_url, "small")} alt="" loading="lazy" decoding="async" className="w-full aspect-[4/5] object-cover rounded" />
                         ) : (
                           <div className="aspect-[4/5] bg-muted rounded" />
                         )}

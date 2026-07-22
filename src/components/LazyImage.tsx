@@ -1,4 +1,5 @@
 import { useState, type ImgHTMLAttributes } from "react";
+import { productImg, productSrcSet, productSizes, type ImgSize } from "@/lib/productImage";
 
 interface Props extends ImgHTMLAttributes<HTMLImageElement> {
   src: string;
@@ -11,6 +12,13 @@ interface Props extends ImgHTMLAttributes<HTMLImageElement> {
   width?: number;
   /** Intrinsic height in pixels. Required for native aspect-ratio + zero CLS. */
   height?: number;
+  /**
+   * When set, request an optimized/resized copy from Supabase Storage
+   * (thumb ~200px, small ~320px, medium ~600px, large ~1000px, xlarge ~1600px)
+   * and emit a 1x/2x/3x srcSet automatically. Falls back to the original URL
+   * for non-Supabase sources.
+   */
+  size?: ImgSize;
 }
 
 /**
@@ -20,6 +28,8 @@ interface Props extends ImgHTMLAttributes<HTMLImageElement> {
  *  - Reserves layout space (no CLS) via `aspect` and/or width/height
  *  - Fades in once the image decodes
  *  - Smooth on iOS scroll (no main-thread decode for above-the-fold)
+ *  - Serves resized/optimized copies via Supabase image transformations
+ *    when `size` is provided (thumb / small / medium / large / xlarge)
  */
 export function LazyImage({
   src,
@@ -28,14 +38,22 @@ export function LazyImage({
   aspect,
   width,
   height,
+  size,
+  srcSet,
+  sizes,
   className = "",
   style,
   ...rest
 }: Props) {
   const [loaded, setLoaded] = useState(false);
+  const resolvedSrc = size ? productImg(src, size) : src;
+  const resolvedSrcSet = srcSet ?? (size ? productSrcSet(src, size) : undefined);
+  const resolvedSizes = sizes ?? (size ? `${productSizes(size)}px` : undefined);
   return (
     <img
-      src={src}
+      src={resolvedSrc}
+      srcSet={resolvedSrcSet}
+      sizes={resolvedSizes}
       alt={alt}
       width={width}
       height={height}

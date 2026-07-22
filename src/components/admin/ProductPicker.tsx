@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Search, X, ArrowUp, ArrowDown, Trash2, Plus } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import { productImg } from "@/lib/productImage";
 
 export type ProductLite = {
   id: string;
@@ -102,7 +103,7 @@ export function ProductPickerModal({
                         className="h-4 w-4"
                       />
                       {p.image_url ? (
-                        <img src={p.image_url} alt="" className="h-12 w-12 object-cover rounded" />
+                        <img src={productImg(p.image_url, "thumb")} alt="" loading="lazy" decoding="async" className="h-12 w-12 object-cover rounded" />
                       ) : (
                         <div className="h-12 w-12 bg-muted rounded" />
                       )}
@@ -206,7 +207,7 @@ export function SelectedProductsList({
               </div>
               <span className="text-[11px] tabular-nums text-muted-foreground w-5 text-center">{idx + 1}</span>
               {p.image_url ? (
-                <img src={p.image_url} alt="" className="h-10 w-10 object-cover rounded" />
+                <img src={productImg(p.image_url, "thumb")} alt="" loading="lazy" decoding="async" className="h-10 w-10 object-cover rounded" />
               ) : (
                 <div className="h-10 w-10 bg-muted rounded" />
               )}

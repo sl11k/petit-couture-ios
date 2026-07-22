@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { buildMeta } from "@/lib/seo";
+import { productImg, productSrcSet } from "@/lib/productImage";
 import { ChevronLeft, ChevronRight, Heart, Share2, Sparkles, Trash2, UserCircle2, Undo2, ArrowUpDown, Check } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -550,7 +551,7 @@ function WishlistPage() {
                         renderLink(
                           "h-[112px] w-[92px] overflow-hidden rounded-[16px] bg-pastel-peach shrink-0 active:opacity-90",
                           <img
-                            src={it.image}
+                            src={productImg(it.image, "small")} srcSet={productSrcSet(it.image, "small")}
                             alt={it.name}
                             loading="lazy"
                             className="w-full h-full object-cover"
@@ -560,7 +561,7 @@ function WishlistPage() {
                       ) : (
                         <div className="h-[112px] w-[92px] overflow-hidden rounded-[16px] bg-pastel-peach shrink-0">
                           <img
-                            src={it.image}
+                            src={productImg(it.image, "small")} srcSet={productSrcSet(it.image, "small")}
                             alt={it.name}
                             loading="lazy"
                             className="w-full h-full object-cover"
