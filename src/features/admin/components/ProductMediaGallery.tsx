@@ -126,6 +126,8 @@ export function ProductMediaGallery({
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [cropOpen, setCropOpen] = useState(false);
   const [lastError, setLastError] = useState<{ title: string; lines: string[] } | null>(null);
+  const [isDraggingFiles, setIsDraggingFiles] = useState(false);
+  const dragDepthRef = useRef(0);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const urls = Array.isArray(value) ? value.filter(Boolean) : [];
   const isVideo = kind === "video";
