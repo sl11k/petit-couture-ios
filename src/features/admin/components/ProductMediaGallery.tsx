@@ -126,6 +126,8 @@ export function ProductMediaGallery({
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [cropOpen, setCropOpen] = useState(false);
   const [lastError, setLastError] = useState<{ title: string; lines: string[] } | null>(null);
+  const [isDraggingFiles, setIsDraggingFiles] = useState(false);
+  const dragDepthRef = useRef(0);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const urls = Array.isArray(value) ? value.filter(Boolean) : [];
   const isVideo = kind === "video";
@@ -351,63 +353,98 @@ export function ProductMediaGallery({
         </div>
       )}
 
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={urls} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-            {urls.map((url, i) => (
-              <SortableThumb
-                key={url}
-                url={url}
-                isMain={i === 0}
-                onMakeMain={() => handleMakeMain(url)}
-                onRemove={() => handleRemove(url)}
-                ar={ar}
-                kind={kind}
-              />
-            ))}
-            {urls.length < max && (
-              <label
-                htmlFor={inputId}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => { e.preventDefault(); handleFilesSelected(e.dataTransfer.files); }}
-                className={cn(
-                  "flex flex-col items-center justify-center h-28 rounded-md border-2 border-dashed cursor-pointer",
-                  "bg-muted/20 hover:bg-muted/40 hover:border-primary/50 transition",
-                  uploading && "pointer-events-none opacity-70",
-                )}
-              >
-                {uploading ? (
-                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                ) : isVideo ? (
-                  <>
-                    <Film className="h-5 w-5 text-muted-foreground" />
-                    <span className="text-[10px] mt-1 text-muted-foreground">
-                      {ar ? "إضافة فيديوهات" : "Add videos"}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <ImagePlus className="h-5 w-5 text-muted-foreground" />
-                    <span className="text-[10px] mt-1 text-muted-foreground">
-                      {ar ? "إضافة صور" : "Add images"}
-                    </span>
-                  </>
-                )}
-                <input
-                  id={inputId}
-                  ref={inputRef}
-                  type="file"
-                  accept={isVideo ? "video/*" : "image/jpeg,image/webp"}
-                  multiple
-                  className="sr-only"
-                  onChange={(e) => handleFilesSelected(e.target.files)}
-                  disabled={uploading}
-                />
-              </label>
-            )}
+      <div
+        onDragEnter={(e) => {
+          if (!e.dataTransfer?.types?.includes("Files")) return;
+          e.preventDefault();
+          dragDepthRef.current += 1;
+          setIsDraggingFiles(true);
+        }}
+        onDragOver={(e) => {
+          if (!e.dataTransfer?.types?.includes("Files")) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "copy";
+        }}
+        onDragLeave={() => {
+          dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
+          if (dragDepthRef.current === 0) setIsDraggingFiles(false);
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          dragDepthRef.current = 0;
+          setIsDraggingFiles(false);
+          if (e.dataTransfer?.files?.length) handleFilesSelected(e.dataTransfer.files);
+        }}
+        className={cn(
+          "relative rounded-lg border-2 border-dashed border-transparent p-2 transition",
+          isDraggingFiles && "border-primary bg-primary/5",
+        )}
+      >
+        {isDraggingFiles && (
+          <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg bg-primary/10 backdrop-blur-[1px]">
+            <Upload className="h-8 w-8 text-primary" />
+            <span className="mt-2 text-sm font-medium text-primary">
+              {ar ? `أفلت الصور هنا لرفعها (${max - urls.length} متبقٍ)` : `Drop images to upload (${max - urls.length} left)`}
+            </span>
           </div>
-        </SortableContext>
-      </DndContext>
+        )}
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={urls} strategy={rectSortingStrategy}>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              {urls.map((url, i) => (
+                <SortableThumb
+                  key={url}
+                  url={url}
+                  isMain={i === 0}
+                  onMakeMain={() => handleMakeMain(url)}
+                  onRemove={() => handleRemove(url)}
+                  ar={ar}
+                  kind={kind}
+                />
+              ))}
+              {urls.length < max && (
+                <label
+                  htmlFor={inputId}
+                  className={cn(
+                    "flex flex-col items-center justify-center h-28 rounded-md border-2 border-dashed cursor-pointer text-center px-2",
+                    "bg-muted/20 hover:bg-muted/40 hover:border-primary/50 transition",
+                    uploading && "pointer-events-none opacity-70",
+                  )}
+                >
+                  {uploading ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  ) : isVideo ? (
+                    <>
+                      <Film className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-[10px] mt-1 text-muted-foreground">
+                        {ar ? "إضافة أو إفلات فيديوهات" : "Add or drop videos"}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-[10px] mt-1 text-muted-foreground leading-tight">
+                        {ar ? "اسحب وأفلت عدة صور هنا أو انقر للاختيار" : "Drag & drop multiple images or click to browse"}
+                      </span>
+                    </>
+                  )}
+                  <input
+                    id={inputId}
+                    ref={inputRef}
+                    type="file"
+                    accept={isVideo ? "video/*" : "image/jpeg,image/webp"}
+                    multiple
+                    className="sr-only"
+                    onChange={(e) => { handleFilesSelected(e.target.files); if (inputRef.current) inputRef.current.value = ""; }}
+                    disabled={uploading}
+                  />
+                </label>
+              )}
+            </div>
+          </SortableContext>
+        </DndContext>
+      </div>
+
       <p className="text-[10px] text-muted-foreground">
         {ar
           ? isVideo
