@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Search, X, Loader2 } from "lucide-react";
 import { autocomplete, spellSuggest, recordSearchClick, type SuggestionItem } from "@/lib/search";
+import { productImg } from "@/lib/productImage";
 
 interface Props {
   isRTL?: boolean;
