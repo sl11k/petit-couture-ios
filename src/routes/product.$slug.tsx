@@ -667,7 +667,9 @@ function ProductDetails() {
                     aria-label={`${i + 1} / ${displayImages.length}`}
                   >
                     <img
-                      src={src}
+                      src={productImg(src, "xlarge")}
+                      srcSet={productSrcSet(src, "xlarge")}
+                      sizes="(min-width: 640px) 500px, 100vw"
                       alt={`${product.name} — ${i + 1}`}
                       className="w-full h-full object-cover"
                       width={1024}
@@ -742,7 +744,7 @@ function ProductDetails() {
                   className={`h-[68px] w-[56px] shrink-0 overflow-hidden rounded-[14px] border transition active:scale-95 ${i === activeImg ? "border-gold ring-1 ring-gold/40" : "border-border opacity-80"}`}
                 >
                   <img
-                    src={src}
+                    src={productImg(src, "thumb")}
                     alt=""
                     loading="lazy"
                     decoding="async"
@@ -1006,7 +1008,7 @@ function ProductDetails() {
                         className="h-4 w-4 accent-foreground"
                       />
                       <img
-                        src={u.image}
+                        src={productImg(u.image, "thumb")}
                         alt={u.name}
                         width={56}
                         height={56}
@@ -1349,7 +1351,8 @@ function ProductDetails() {
                 >
                   <div className="aspect-[4/5] rounded-[16px] overflow-hidden bg-pastel-peach">
                     <img
-                      src={p.images[0]}
+                      src={productImg(p.images[0], "small")}
+                      srcSet={productSrcSet(p.images[0], "small")}
                       alt={p.name}
                       width={400}
                       height={500}
@@ -1444,7 +1447,7 @@ function ProductDetails() {
             <X className="h-5 w-5" />
           </button>
           <img
-            src={displayImages[activeImg]}
+            src={productImg(displayImages[activeImg], "xlarge")}
             alt={product.name}
             width={1280}
             height={1600}
