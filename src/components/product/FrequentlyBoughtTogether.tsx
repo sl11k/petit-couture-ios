@@ -6,6 +6,7 @@ import { useRelatedOffers, type RelatedOffer } from "@/hooks/useRelatedOffers";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePriceFormatter } from "@/state/CurrencyContext";
 import { useBag } from "@/state/BagContext";
+import { productImg } from "@/lib/productImage";
 
 type Props = {
   productId: string | null;
@@ -104,7 +105,7 @@ export function FrequentlyBoughtTogether({ productId, currentProduct }: Props) {
         {/* Current product (always included, not toggleable) */}
         <li className="flex items-center gap-3 p-3 rounded-[14px] border border-border bg-cream-warm/30">
           <img
-            src={currentProduct.image}
+            src={productImg(currentProduct.image, "thumb")}
             alt={currentProduct.name}
             className="w-14 h-14 rounded-lg object-cover bg-muted"
             loading="lazy"
@@ -151,7 +152,7 @@ export function FrequentlyBoughtTogether({ productId, currentProduct }: Props) {
               </button>
               <Link to="/product/$slug" params={{ slug: o.related.slug }}>
                 <img
-                  src={o.related.image_url ?? ""}
+                  src={productImg(o.related.image_url, "thumb")}
                   alt={name || ""}
                   className="w-14 h-14 rounded-lg object-cover bg-muted"
                   loading="lazy"
