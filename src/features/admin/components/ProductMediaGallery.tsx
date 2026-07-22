@@ -1,4 +1,4 @@
-import { useCallback, useId, useState } from "react";
+import { useCallback, useId, useRef, useState } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -14,7 +14,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Star, Trash2, GripVertical, Loader2, ImagePlus, Film } from "lucide-react";
+import { Star, Trash2, GripVertical, Loader2, ImagePlus, Film, AlertTriangle, RotateCcw, CheckCircle2, XCircle, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
