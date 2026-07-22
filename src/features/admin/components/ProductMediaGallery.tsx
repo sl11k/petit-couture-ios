@@ -271,6 +271,14 @@ export function ProductMediaGallery({
           ? `أول ${isVideo ? "فيديو" : "صورة"} ${isVideo ? "هو الرئيسي" : "هي الرئيسية"}. اسحب لإعادة الترتيب. (${urls.length}/${max})`
           : `First ${isVideo ? "video" : "image"} is the main. Drag to reorder. (${urls.length}/${max})`}
       </p>
+      {!isVideo && (
+        <ImageCropDialog
+          files={pendingFiles}
+          open={cropOpen}
+          onClose={() => { setCropOpen(false); setPendingFiles([]); }}
+          onDone={handleCropDone}
+        />
+      )}
     </div>
   );
 }
