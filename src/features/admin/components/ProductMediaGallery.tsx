@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { IMAGE_MAX_BYTES, VIDEO_MAX_BYTES } from "./MediaUploader";
 import { cn } from "@/lib/utils";
+import { ImageCropDialog, type CroppedItem } from "./ImageCropDialog";
 
 type Props = {
   /** Array of media URLs. First item is the "main" media. */
@@ -121,11 +122,38 @@ export function ProductMediaGallery({
   const ar = lang === "ar";
   const inputId = useId();
   const [uploading, setUploading] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [cropOpen, setCropOpen] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const urls = Array.isArray(value) ? value.filter(Boolean) : [];
   const isVideo = kind === "video";
 
-  const handleUpload = useCallback(async (files: FileList | null) => {
+  const uploadItems = useCallback(async (items: { blob: Blob; name: string; type: string }[]) => {
+    setUploading(true);
+    const next = [...urls];
+    const maxBytes = isVideo ? VIDEO_MAX_BYTES : IMAGE_MAX_BYTES;
+    for (const it of items) {
+      if (it.blob.size > maxBytes) {
+        toast.error(ar ? `${it.name}: حجم كبير` : `${it.name}: too large`);
+        continue;
+      }
+      const ext = it.name.split(".").pop()?.toLowerCase() || (isVideo ? "mp4" : "jpg");
+      const safe = it.name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9-_]/g, "-").slice(0, 40) || (isVideo ? "vid" : "img");
+      const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2,8)}-${safe}.${ext}`;
+      const { error } = await supabase.storage.from(bucket).upload(path, it.blob, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: it.type,
+      });
+      if (error) { toast.error(error.message); continue; }
+      const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+      next.push(data.publicUrl);
+    }
+    onChange(next);
+    setUploading(false);
+  }, [urls, bucket, folder, ar, onChange, isVideo]);
+
+  const handleFilesSelected = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const remaining = max - urls.length;
     const list = Array.from(files).slice(0, remaining);
@@ -133,41 +161,28 @@ export function ProductMediaGallery({
       toast.error(ar ? `الحد الأقصى ${max} ${isVideo ? "فيديو" : "صورة"}` : `Max ${max} ${isVideo ? "videos" : "images"}`);
       return;
     }
-    setUploading(true);
-    const next = [...urls];
-    const maxBytes = isVideo ? VIDEO_MAX_BYTES : IMAGE_MAX_BYTES;
     const typePrefix = isVideo ? "video/" : "image/";
-    for (const file of list) {
-      if (!file.type.startsWith(typePrefix)) {
-        toast.error(
-          ar
-            ? isVideo ? "يجب اختيار فيديوهات فقط" : "يجب اختيار صور فقط"
-            : isVideo ? "Videos only" : "Images only",
-        );
-        continue;
+    const valid = list.filter((f) => {
+      if (!f.type.startsWith(typePrefix)) {
+        toast.error(ar ? (isVideo ? "يجب اختيار فيديوهات فقط" : "يجب اختيار صور فقط") : (isVideo ? "Videos only" : "Images only"));
+        return false;
       }
-      if (file.size > maxBytes) {
-        toast.error(ar ? `${file.name}: حجم كبير` : `${file.name}: too large`);
-        continue;
-      }
-      const ext = file.name.split(".").pop()?.toLowerCase() || (isVideo ? "mp4" : "jpg");
-      const safe = file.name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9-_]/g, "-").slice(0, 40) || (isVideo ? "vid" : "img");
-      const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2,8)}-${safe}.${ext}`;
-      const { error } = await supabase.storage.from(bucket).upload(path, file, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: file.type,
-      });
-      if (error) {
-        toast.error(error.message);
-        continue;
-      }
-      const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-      next.push(data.publicUrl);
+      return true;
+    });
+    if (valid.length === 0) return;
+    if (isVideo) {
+      await uploadItems(valid.map((f) => ({ blob: f, name: f.name, type: f.type })));
+    } else {
+      setPendingFiles(valid);
+      setCropOpen(true);
     }
-    onChange(next);
-    setUploading(false);
-  }, [urls, max, bucket, folder, ar, onChange, isVideo]);
+  }, [urls.length, max, ar, isVideo, uploadItems]);
+
+  const handleCropDone = useCallback(async (items: CroppedItem[]) => {
+    setCropOpen(false);
+    setPendingFiles([]);
+    if (items.length > 0) await uploadItems(items);
+  }, [uploadItems]);
 
   const handleRemove = async (url: string) => {
     try {
@@ -213,7 +228,7 @@ export function ProductMediaGallery({
               <label
                 htmlFor={inputId}
                 onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => { e.preventDefault(); handleUpload(e.dataTransfer.files); }}
+                onDrop={(e) => { e.preventDefault(); handleFilesSelected(e.dataTransfer.files); }}
                 className={cn(
                   "flex flex-col items-center justify-center h-28 rounded-md border-2 border-dashed cursor-pointer",
                   "bg-muted/20 hover:bg-muted/40 hover:border-primary/50 transition",
@@ -243,7 +258,7 @@ export function ProductMediaGallery({
                   accept={isVideo ? "video/*" : "image/*"}
                   multiple
                   className="sr-only"
-                  onChange={(e) => handleUpload(e.target.files)}
+                  onChange={(e) => handleFilesSelected(e.target.files)}
                   disabled={uploading}
                 />
               </label>
@@ -256,6 +271,14 @@ export function ProductMediaGallery({
           ? `أول ${isVideo ? "فيديو" : "صورة"} ${isVideo ? "هو الرئيسي" : "هي الرئيسية"}. اسحب لإعادة الترتيب. (${urls.length}/${max})`
           : `First ${isVideo ? "video" : "image"} is the main. Drag to reorder. (${urls.length}/${max})`}
       </p>
+      {!isVideo && (
+        <ImageCropDialog
+          files={pendingFiles}
+          open={cropOpen}
+          onClose={() => { setCropOpen(false); setPendingFiles([]); }}
+          onDone={handleCropDone}
+        />
+      )}
     </div>
   );
 }
