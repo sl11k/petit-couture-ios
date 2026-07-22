@@ -165,45 +165,48 @@ export function ProductMediaGallery({
     });
 
   const handleFilesSelected = useCallback(async (files: FileList | null) => {
+    setLastError(null);
     if (!files || files.length === 0) return;
     const remaining = max - urls.length;
     const list = Array.from(files).slice(0, remaining);
     if (list.length === 0) {
-      toast.error(ar ? `الحد الأقصى ${max} ${isVideo ? "فيديو" : "صورة"}` : `Max ${max} ${isVideo ? "videos" : "images"}`);
+      const title = ar ? `الحد الأقصى ${max} ${isVideo ? "فيديو" : "صورة"}` : `Max ${max} ${isVideo ? "videos" : "images"}`;
+      setLastError({ title, lines: [] });
       return;
     }
     const typePrefix = isVideo ? "video/" : "image/";
     const valid: File[] = [];
+    const rejected: { name: string; reason: string }[] = [];
     for (const f of list) {
       if (!f.type.startsWith(typePrefix)) {
-        toast.error(ar ? (isVideo ? `${f.name}: يجب اختيار فيديوهات فقط` : `${f.name}: يجب اختيار صور فقط`) : `${f.name}: ${isVideo ? "Videos only" : "Images only"}`);
+        rejected.push({ name: f.name, reason: ar ? (isVideo ? "يجب اختيار فيديوهات فقط" : "يجب اختيار صور فقط") : (isVideo ? "Videos only" : "Images only") });
         continue;
       }
       if (!isVideo) {
         // Format: JPG or WebP only
         const allowed = ["image/jpeg", "image/jpg", "image/webp", "image/pjpeg"];
         if (!allowed.includes(f.type.toLowerCase())) {
-          toast.error(ar ? `${f.name}: يُقبل JPG أو WebP فقط` : `${f.name}: only JPG or WebP allowed`);
+          rejected.push({ name: f.name, reason: ar ? "يُقبل JPG أو WebP فقط" : "Only JPG or WebP allowed" });
           continue;
         }
         // Size: max 5MB before crop
         if (f.size > 5 * 1024 * 1024) {
-          toast.error(ar ? `${f.name}: الحجم أكبر من 5MB` : `${f.name}: exceeds 5MB`);
+          rejected.push({ name: f.name, reason: ar ? `الحجم أكبر من 5MB (${(f.size / (1024 * 1024)).toFixed(1)}MB)` : `Exceeds 5MB (${(f.size / (1024 * 1024)).toFixed(1)}MB)` });
           continue;
         }
         const meta = await readImageMeta(f);
         if (!meta) {
-          toast.error(ar ? `${f.name}: صورة غير صالحة` : `${f.name}: invalid image`);
+          rejected.push({ name: f.name, reason: ar ? "تعذّر قراءة أبعاد الصورة" : "Could not read image dimensions" });
           continue;
         }
         // Min dimensions
         if (meta.w < 1000 || meta.h < 1000) {
-          toast.error(ar ? `${f.name}: المقاس صغير (${meta.w}×${meta.h}). الموصى: 1200×1500 أو 1200×1200` : `${f.name}: too small (${meta.w}×${meta.h}). Recommend 1200×1500 or 1200×1200`);
+          rejected.push({ name: f.name, reason: ar ? `أبعاد صغيرة جدًا (${meta.w}×${meta.h}). الحد الأدنى 1000×1000px` : `Too small (${meta.w}×${meta.h}). Minimum 1000×1000px` });
           continue;
         }
         // Max dimensions (prevent oversized uploads)
         if (meta.w > 4000 || meta.h > 4000) {
-          toast.error(ar ? `${f.name}: أبعاد كبيرة جدًا (${meta.w}×${meta.h}). الحد 4000px` : `${f.name}: too large (${meta.w}×${meta.h}). Max 4000px`);
+          rejected.push({ name: f.name, reason: ar ? `أبعاد كبيرة جدًا (${meta.w}×${meta.h}). الحد الأقصى 4000×4000px` : `Too large (${meta.w}×${meta.h}). Maximum 4000×4000px` });
           continue;
         }
         // Aspect ratio advisory (4:5 or 1:1)
@@ -215,7 +218,14 @@ export function ProductMediaGallery({
       }
       valid.push(f);
     }
-    if (valid.length === 0) return;
+    if (valid.length === 0) {
+      if (rejected.length > 0) {
+        const title = ar ? `لم يتم رفع أي صورة` : "No images uploaded";
+        const lines = rejected.map((r) => `${r.name}: ${r.reason}`);
+        setLastError({ title, lines });
+      }
+      return;
+    }
     if (isVideo) {
       await uploadItems(valid.map((f) => ({ blob: f, name: f.name, type: f.type })));
     } else {
