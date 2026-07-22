@@ -121,9 +121,11 @@ export function ProductMediaGallery({
   const { lang } = useLanguage();
   const ar = lang === "ar";
   const inputId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [cropOpen, setCropOpen] = useState(false);
+  const [lastError, setLastError] = useState<{ title: string; lines: string[] } | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const urls = Array.isArray(value) ? value.filter(Boolean) : [];
   const isVideo = kind === "video";
