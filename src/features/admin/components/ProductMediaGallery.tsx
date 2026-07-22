@@ -264,8 +264,93 @@ export function ProductMediaGallery({
     onChange(arrayMove(urls, oldIndex, newIndex));
   };
 
+  const retryUpload = () => {
+    setLastError(null);
+    if (inputRef.current) {
+      inputRef.current.value = "";
+      inputRef.current.click();
+    }
+  };
+
+  const specs = isVideo
+    ? (ar ? [
+      { icon: Film, ok: true, text: "الصيغة: MP4 أو WebM" },
+      { icon: CheckCircle2, ok: true, text: "الحد الأقصى للحجم: 50MB" },
+      { icon: CheckCircle2, ok: true, text: "أول فيديو يُعرض كرئيسي" },
+    ] : [
+      { icon: Film, ok: true, text: "Format: MP4 or WebM" },
+      { icon: CheckCircle2, ok: true, text: "Max size: 50MB" },
+      { icon: CheckCircle2, ok: true, text: "First video is the main one" },
+    ])
+    : (ar ? [
+      { icon: CheckCircle2, ok: true, text: "الصيغة: JPG أو WebP فقط" },
+      { icon: CheckCircle2, ok: true, text: "الحجم الأقصى: 5MB لكل صورة" },
+      { icon: CheckCircle2, ok: true, text: "الأبعاد: 1000–4000px" },
+      { icon: CheckCircle2, ok: true, text: "المقاس المثالي: 1200×1500px (4:5) أو 1200×1200px (1:1)" },
+      { icon: CheckCircle2, ok: true, text: "يمكن التعديل بالقاصّ قبل الحفظ" },
+    ] : [
+      { icon: CheckCircle2, ok: true, text: "Format: JPG or WebP only" },
+      { icon: CheckCircle2, ok: true, text: "Max size: 5MB per image" },
+      { icon: CheckCircle2, ok: true, text: "Dimensions: 1000–4000px" },
+      { icon: CheckCircle2, ok: true, text: "Ideal size: 1200×1500px (4:5) or 1200×1200px (1:1)" },
+      { icon: CheckCircle2, ok: true, text: "You can adjust cropping before saving" },
+    ]);
+
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
+      {/* Instruction card */}
+      <div className="rounded-lg border bg-muted/20 p-3 text-sm">
+        <div className="flex items-center gap-2 mb-2">
+          <Upload className="h-4 w-4 text-primary" />
+          <span className="font-medium">
+            {ar ? "مواصفات الصور المطلوبة" : "Required image specifications"}
+          </span>
+        </div>
+        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {specs.map((s, i) => (
+            <li key={i} className="flex items-start gap-2 text-muted-foreground">
+              <s.icon className={cn("h-4 w-4 mt-0.5 shrink-0", s.ok ? "text-emerald-500" : "text-amber-500")} />
+              <span className="text-xs leading-5">{s.text}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="text-[11px] text-muted-foreground mt-2">
+          {ar
+            ? "أي صورة لا تطابق المواصفات لن تُرفع. استخدم زر إعادة المحاولة لاختيار صورة أخرى."
+            : "Any image that does not match the specifications will not be uploaded. Use the retry button to pick another image."}
+        </p>
+      </div>
+
+      {/* Error alert */}
+      {lastError && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <XCircle className="h-4 w-4 text-destructive" />
+                <span className="font-medium text-sm">{lastError.title}</span>
+              </div>
+              {lastError.lines.length > 0 && (
+                <ul className="mt-2 space-y-1 text-xs text-destructive/90">
+                  {lastError.lines.map((line, i) => (
+                    <li key={i} className="break-words">• {line}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={retryUpload}
+              className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 shrink-0"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              {ar ? "إعادة المحاولة" : "Retry"}
+            </button>
+          </div>
+        </div>
+      )}
+
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={urls} strategy={rectSortingStrategy}>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
@@ -310,6 +395,7 @@ export function ProductMediaGallery({
                 )}
                 <input
                   id={inputId}
+                  ref={inputRef}
                   type="file"
                   accept={isVideo ? "video/*" : "image/jpeg,image/webp"}
                   multiple
