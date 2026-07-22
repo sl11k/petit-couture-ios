@@ -228,7 +228,7 @@ export function ProductMediaGallery({
               <label
                 htmlFor={inputId}
                 onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => { e.preventDefault(); handleUpload(e.dataTransfer.files); }}
+                onDrop={(e) => { e.preventDefault(); handleFilesSelected(e.dataTransfer.files); }}
                 className={cn(
                   "flex flex-col items-center justify-center h-28 rounded-md border-2 border-dashed cursor-pointer",
                   "bg-muted/20 hover:bg-muted/40 hover:border-primary/50 transition",
@@ -258,7 +258,7 @@ export function ProductMediaGallery({
                   accept={isVideo ? "video/*" : "image/*"}
                   multiple
                   className="sr-only"
-                  onChange={(e) => handleUpload(e.target.files)}
+                  onChange={(e) => handleFilesSelected(e.target.files)}
                   disabled={uploading}
                 />
               </label>
