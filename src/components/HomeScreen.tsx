@@ -800,11 +800,15 @@ function DynamicSection({
               <div className="relative w-full overflow-hidden rounded-[22px] bg-cream-warm aspect-[1.35/1]">
                 {p.image_url && (
                   <img
-                    src={p.image_url}
+                    src={productImg(p.image_url, "medium")}
+                    srcSet={productSrcSet(p.image_url, "medium")}
+                    sizes="(min-width: 640px) 300px, 50vw"
                     alt={name ?? ""}
                     loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.04]"
                   />
+
                 )}
               </div>
               <span className="mt-3 text-[14px] text-foreground/85 font-medium tracking-tight text-center">
