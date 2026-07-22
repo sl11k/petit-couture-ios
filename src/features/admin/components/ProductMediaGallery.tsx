@@ -153,6 +153,15 @@ export function ProductMediaGallery({
     setUploading(false);
   }, [urls, bucket, folder, ar, onChange, isVideo]);
 
+  const readImageMeta = (file: File) =>
+    new Promise<{ w: number; h: number } | null>((resolve) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => { URL.revokeObjectURL(url); resolve({ w: img.naturalWidth, h: img.naturalHeight }); };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+      img.src = url;
+    });
+
   const handleFilesSelected = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const remaining = max - urls.length;
@@ -162,13 +171,48 @@ export function ProductMediaGallery({
       return;
     }
     const typePrefix = isVideo ? "video/" : "image/";
-    const valid = list.filter((f) => {
+    const valid: File[] = [];
+    for (const f of list) {
       if (!f.type.startsWith(typePrefix)) {
-        toast.error(ar ? (isVideo ? "يجب اختيار فيديوهات فقط" : "يجب اختيار صور فقط") : (isVideo ? "Videos only" : "Images only"));
-        return false;
+        toast.error(ar ? (isVideo ? `${f.name}: يجب اختيار فيديوهات فقط` : `${f.name}: يجب اختيار صور فقط`) : `${f.name}: ${isVideo ? "Videos only" : "Images only"}`);
+        continue;
       }
-      return true;
-    });
+      if (!isVideo) {
+        // Format: JPG or WebP only
+        const allowed = ["image/jpeg", "image/jpg", "image/webp", "image/pjpeg"];
+        if (!allowed.includes(f.type.toLowerCase())) {
+          toast.error(ar ? `${f.name}: يُقبل JPG أو WebP فقط` : `${f.name}: only JPG or WebP allowed`);
+          continue;
+        }
+        // Size: max 5MB before crop
+        if (f.size > 5 * 1024 * 1024) {
+          toast.error(ar ? `${f.name}: الحجم أكبر من 5MB` : `${f.name}: exceeds 5MB`);
+          continue;
+        }
+        const meta = await readImageMeta(f);
+        if (!meta) {
+          toast.error(ar ? `${f.name}: صورة غير صالحة` : `${f.name}: invalid image`);
+          continue;
+        }
+        // Min dimensions
+        if (meta.w < 1000 || meta.h < 1000) {
+          toast.error(ar ? `${f.name}: المقاس صغير (${meta.w}×${meta.h}). الموصى: 1200×1500 أو 1200×1200` : `${f.name}: too small (${meta.w}×${meta.h}). Recommend 1200×1500 or 1200×1200`);
+          continue;
+        }
+        // Max dimensions (prevent oversized uploads)
+        if (meta.w > 4000 || meta.h > 4000) {
+          toast.error(ar ? `${f.name}: أبعاد كبيرة جدًا (${meta.w}×${meta.h}). الحد 4000px` : `${f.name}: too large (${meta.w}×${meta.h}). Max 4000px`);
+          continue;
+        }
+        // Aspect ratio advisory (4:5 or 1:1)
+        const ratio = meta.w / meta.h;
+        const okAspect = Math.abs(ratio - 0.8) < 0.06 || Math.abs(ratio - 1) < 0.06;
+        if (!okAspect) {
+          toast.warning(ar ? `${f.name}: النسبة ${ratio.toFixed(2)} ليست مثالية — استخدم القاصّ لضبطها إلى 4:5 أو 1:1` : `${f.name}: aspect ${ratio.toFixed(2)} not ideal — use the cropper (4:5 or 1:1)`);
+        }
+      }
+      valid.push(f);
+    }
     if (valid.length === 0) return;
     if (isVideo) {
       await uploadItems(valid.map((f) => ({ blob: f, name: f.name, type: f.type })));
