@@ -299,7 +299,7 @@ export function ProductMediaGallery({
                 <input
                   id={inputId}
                   type="file"
-                  accept={isVideo ? "video/*" : "image/*"}
+                  accept={isVideo ? "video/*" : "image/jpeg,image/webp"}
                   multiple
                   className="sr-only"
                   onChange={(e) => handleFilesSelected(e.target.files)}
@@ -312,8 +312,12 @@ export function ProductMediaGallery({
       </DndContext>
       <p className="text-[10px] text-muted-foreground">
         {ar
-          ? `أول ${isVideo ? "فيديو" : "صورة"} ${isVideo ? "هو الرئيسي" : "هي الرئيسية"}. اسحب لإعادة الترتيب. (${urls.length}/${max})`
-          : `First ${isVideo ? "video" : "image"} is the main. Drag to reorder. (${urls.length}/${max})`}
+          ? isVideo
+            ? `أول فيديو هو الرئيسي. اسحب لإعادة الترتيب. (${urls.length}/${max})`
+            : `أول صورة هي الرئيسية. JPG أو WebP فقط، الحد 5MB، الأبعاد ≥ 1000px، الموصى 1200×1500 أو 1200×1200. (${urls.length}/${max})`
+          : isVideo
+            ? `First video is the main. Drag to reorder. (${urls.length}/${max})`
+            : `First image is the main. JPG or WebP only, max 5MB, ≥ 1000px, recommended 1200×1500 or 1200×1200. (${urls.length}/${max})`}
       </p>
       {!isVideo && (
         <ImageCropDialog
