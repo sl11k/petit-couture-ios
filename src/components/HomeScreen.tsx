@@ -15,6 +15,7 @@ import { usePriceFormatter } from "@/state/CurrencyContext";
 import { useDbCategories } from "@/hooks/useDbCategories";
 import { HomeReviews } from "@/components/HomeReviews";
 import { normalizeInternalHref } from "@/lib/links";
+import { productImg, productSrcSet } from "@/lib/productImage";
 
 import {
   fetchAnnouncements,
