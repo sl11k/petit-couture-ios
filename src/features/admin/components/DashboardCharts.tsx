@@ -52,10 +52,11 @@ export function DashboardCharts() {
       since.setDate(since.getDate() - (range - 1));
       const { data: rows } = await supabase
         .from("orders")
-        .select("created_at,total,status")
+        .select("created_at,total,status,payment_status")
         .gte("created_at", since.toISOString())
-        .neq("status", "cancelled")
+        .eq("payment_status", "paid")
         .limit(5000);
+
 
       if (cancelled) return;
       const buckets = buildBuckets(range);
