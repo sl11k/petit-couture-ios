@@ -118,7 +118,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     const slugs = [...new Set(data.items.map((item) => item.slug))];
     const { data: products, error: productsError } = await supabaseAdmin
       .from("products")
-      .select("id, slug, name_ar, name_en, brand, image_url, price, compare_at_price, currency, is_active, weight")
+      .select("id, slug, name_ar, name_en, brand, image_url, price, compare_at_price, currency, is_active, weight, stock")
       .in("slug", slugs)
       .eq("is_active", true);
     if (productsError) throw new Error(`Catalog validation failed: ${productsError.message}`);
@@ -129,13 +129,21 @@ export const placeOrder = createServerFn({ method: "POST" })
     const productBySlug = new Map(products.map((product) => [product.slug, product]));
     const { data: variants, error: variantsError } = await supabaseAdmin
       .from("product_variants")
-      .select("id, product_id, sku, price, price_override, compare_at_price, is_active, weight")
+      .select("id, product_id, sku, price, price_override, compare_at_price, is_active, weight, stock")
       .in(
         "product_id",
         products.map((product) => product.id),
       )
       .eq("is_active", true);
     if (variantsError) throw new Error(`Variant validation failed: ${variantsError.message}`);
+
+    // Aggregate requested qty per (product, variant) so multiple lines of the same
+    // variant don't slip past a per-line check.
+    const requestedQty = new Map<string, number>();
+    for (const it of data.items) {
+      const key = `${it.slug}::${it.variant_id ?? it.sku ?? ""}`;
+      requestedQty.set(key, (requestedQty.get(key) ?? 0) + it.qty);
+    }
 
     const pricedItems = data.items.map((item) => {
       const product = productBySlug.get(item.slug);
@@ -154,6 +162,22 @@ export const placeOrder = createServerFn({ method: "POST" })
       if (productVariants.length > 0 && !variant) {
         throw new Error(`Variant unavailable for ${item.slug}`);
       }
+
+      // Stock validation: variant stock wins when present, else product stock.
+      const key = `${item.slug}::${item.variant_id ?? item.sku ?? ""}`;
+      const requested = requestedQty.get(key) ?? item.qty;
+      const available = variant
+        ? Number(variant.stock ?? 0)
+        : Number(product.stock ?? 0);
+      if (!Number.isFinite(available) || available <= 0) {
+        throw new Error(`OUT_OF_STOCK:${item.name || item.slug}`);
+      }
+      if (requested > available) {
+        throw new Error(
+          `INSUFFICIENT_STOCK:${item.name || item.slug}:${available}`,
+        );
+      }
+
       const unitPrice = getCanonicalProductPrice(product.price, variant?.price_override ?? variant?.price);
       if (!Number.isFinite(unitPrice) || unitPrice < 0) throw new Error("Invalid catalog price");
       return {
@@ -167,6 +191,7 @@ export const placeOrder = createServerFn({ method: "POST" })
         price: Math.round(unitPrice * 100) / 100,
       };
     });
+
 
     const subtotal =
       Math.round(pricedItems.reduce((sum, item) => sum + item.price * item.qty, 0) * 100) / 100;

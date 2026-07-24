@@ -4,12 +4,15 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
-import { trackServerEvent } from "@/lib/serverAnalytics";
+import { trackServerEvent, getCurrentSessionId } from "@/lib/serverAnalytics";
+import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_KEY = "maisonnet:bag:v1";
+
 
 export type BagItem = {
   id: string;
@@ -93,7 +96,64 @@ export function BagProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
+  // Snapshot the cart into abandoned_carts whenever it changes (debounced).
+  // Guests and signed-in users alike get captured, so the Abandoned page
+  // reflects real drop-offs — not just users who reached checkout.
+  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    syncTimerRef.current = setTimeout(async () => {
+      try {
+        const session_id = getCurrentSessionId();
+        if (!session_id || session_id === "ssr") return;
+        const { data: auth } = await supabase.auth.getUser();
+        const user_id = auth.user?.id ?? null;
+        const subtotal = items.reduce((s, i) => s + i.qty * i.price, 0);
+
+        if (items.length === 0) {
+          // Empty cart: leave prior snapshots alone (they represent past drop-offs).
+          return;
+        }
+
+        await (supabase.from("abandoned_carts") as any).upsert(
+          {
+            session_id,
+            user_id,
+            email: auth.user?.email ?? null,
+            items: items.map((i) => ({
+              slug: i.slug,
+              name: i.name,
+              brand: i.brand,
+              image: i.image,
+              price: i.price,
+              qty: i.qty,
+              size: i.size,
+              color: i.color,
+              sku: i.sku ?? null,
+              variant_id: i.variantId ?? null,
+              variant_label: i.variantLabel ?? null,
+            })),
+            subtotal,
+            currency: items[0]?.currency ?? "SAR",
+            stage: "cart",
+            converted: false,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "session_id" },
+        );
+
+      } catch {
+        /* best effort */
+      }
+    }, 1500);
+    return () => {
+      if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    };
+  }, [items]);
+
   const add = useCallback((input: AddInput) => {
+
     const id = makeId(input.slug, input.size, input.color, input.variantId);
     const qty = input.qty ?? 1;
     setItems((prev) => {
