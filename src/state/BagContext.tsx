@@ -109,8 +109,7 @@ export function BagProvider({ children }: { children: ReactNode }) {
         if (!session_id || session_id === "ssr") return;
         const { data: auth } = await supabase.auth.getUser();
         const user_id = auth.user?.id ?? null;
-        const item_count = items.reduce((s, i) => s + i.qty, 0);
-        const cart_total = items.reduce((s, i) => s + i.qty * i.price, 0);
+        const subtotal = items.reduce((s, i) => s + i.qty * i.price, 0);
 
         if (items.length === 0) {
           // Empty cart: leave prior snapshots alone (they represent past drop-offs).
@@ -135,14 +134,15 @@ export function BagProvider({ children }: { children: ReactNode }) {
               variant_id: i.variantId ?? null,
               variant_label: i.variantLabel ?? null,
             })),
-            item_count,
-            cart_total,
+            subtotal,
             currency: items[0]?.currency ?? "SAR",
+            stage: "cart",
             converted: false,
             updated_at: new Date().toISOString(),
           },
           { onConflict: "session_id" },
         );
+
       } catch {
         /* best effort */
       }
