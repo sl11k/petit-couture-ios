@@ -58,9 +58,9 @@ function AnalyticsPage() {
       const since = new Date(Date.now() - RANGE_DAYS[range] * 86400000).toISOString();
       const [ordersRes, sessionsRes, itemsRes, customersRes, cartsRes] = await Promise.all([
         // Only count confirmed orders in KPIs (exclude never-paid checkout attempts).
-        supabase.from("orders").select("total, status, payment_status, created_at").gte("created_at", since).or("payment_status.neq.unpaid,status.neq.pending"),
+        supabase.from("orders").select("total, status, payment_status, created_at").gte("created_at", since).eq("payment_status", "paid"),
         supabase.from("analytics_events").select("session_id").gte("created_at", since),
-        supabase.from("order_items").select("product_name, qty, orders!inner(created_at)").gte("orders.created_at", since),
+        supabase.from("order_items").select("product_name, qty, orders!inner(created_at, payment_status)").gte("orders.created_at", since).eq("orders.payment_status", "paid"),
         supabase.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", since),
         supabase.from("abandoned_carts")
           .select("id, email, phone, stage, subtotal, updated_at, converted, reached_checkout, abandonment_reason")
