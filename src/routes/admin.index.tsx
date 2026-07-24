@@ -176,49 +176,71 @@ function Dashboard() {
         productsTotal,
         productsActive,
         productsAll,
+        variantsAll,
         customersTotal,
         customersNew,
         itemsRes,
       ] = await Promise.all([
-        supabase.from("orders").select("id", { count: "exact", head: true }),
-        supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        // Total orders / revenue = paid only (matches the Orders list filter).
+        supabase.from("orders").select("id", { count: "exact", head: true }).eq("payment_status", "paid"),
+        supabase.from("orders").select("id", { count: "exact", head: true }).eq("payment_status", "paid").eq("status", "pending"),
         supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "delivered"),
         supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "cancelled"),
-        supabase.from("orders").select("total").neq("status", "cancelled"),
-        supabase.from("orders").select("total").neq("status", "cancelled").gte("created_at", since30),
+        supabase.from("orders").select("total").eq("payment_status", "paid"),
+        supabase.from("orders").select("total").eq("payment_status", "paid").gte("created_at", since30),
         supabase.from("products").select("id", { count: "exact", head: true }),
         supabase.from("products").select("id", { count: "exact", head: true }).eq("is_active", true),
-        supabase.from("products").select("stock,low_stock_threshold"),
+        supabase.from("products").select("id,stock,low_stock_threshold"),
+        supabase.from("product_variants").select("id,product_id,stock,is_active").eq("is_active", true),
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", since30),
+        // Top sellers: only from paid orders, correct column names.
         supabase
           .from("order_items")
-          .select("product_id,quantity,product_name_ar,product_name_en")
-          .limit(1000),
+          .select("product_id,qty,product_name,orders!inner(payment_status)")
+          .eq("orders.payment_status", "paid")
+          .limit(2000),
       ]);
 
       const sum = (rows: any[] | null) =>
         (rows ?? []).reduce((a, r) => a + Number(r.total ?? 0), 0);
 
       const allProds = productsAll.data ?? [];
-      const lowStock = allProds.filter(
-        (p: any) => Number(p.stock) > 0 && Number(p.stock) <= Number(p.low_stock_threshold ?? 5),
-      ).length;
-      const outStock = allProds.filter((p: any) => Number(p.stock) <= 0).length;
+      const allVariants = variantsAll.data ?? [];
+      // Group variant stock by product; when a product has variants,
+      // variant stock is the source of truth (matches the storefront picker).
+      const variantByProduct = new Map<string, any[]>();
+      for (const v of allVariants) {
+        const list = variantByProduct.get((v as any).product_id) ?? [];
+        list.push(v);
+        variantByProduct.set((v as any).product_id, list);
+      }
+      let lowStock = 0;
+      let outStock = 0;
+      for (const p of allProds as any[]) {
+        const variants = variantByProduct.get(p.id) ?? [];
+        const threshold = Number(p.low_stock_threshold ?? 5);
+        const stockVal = variants.length > 0
+          ? variants.reduce((s, v: any) => s + Number(v.stock ?? 0), 0)
+          : Number(p.stock ?? 0);
+        if (stockVal <= 0) outStock += 1;
+        else if (stockVal <= threshold) lowStock += 1;
+      }
 
       const agg = new Map<string, TopProduct>();
       for (const it of itemsRes.data ?? []) {
-        const key = (it as any).product_id ?? `${(it as any).product_name_en}`;
+        const key = (it as any).product_id ?? `${(it as any).product_name}`;
         const cur = agg.get(key) ?? {
           id: key,
-          name_ar: (it as any).product_name_ar ?? "",
-          name_en: (it as any).product_name_en ?? "",
+          name_ar: (it as any).product_name ?? "",
+          name_en: (it as any).product_name ?? "",
           qty: 0,
         };
-        cur.qty += Number((it as any).quantity ?? 0);
+        cur.qty += Number((it as any).qty ?? 0);
         agg.set(key, cur);
       }
       const topList = [...agg.values()].sort((a, b) => b.qty - a.qty).slice(0, 5);
+
 
       setStats({
         ordersTotal: ordersAll.count ?? 0,
