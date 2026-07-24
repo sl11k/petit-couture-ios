@@ -4,12 +4,15 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
-import { trackServerEvent } from "@/lib/serverAnalytics";
+import { trackServerEvent, getCurrentSessionId } from "@/lib/serverAnalytics";
+import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_KEY = "maisonnet:bag:v1";
+
 
 export type BagItem = {
   id: string;
