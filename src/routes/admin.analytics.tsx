@@ -57,8 +57,9 @@ function AnalyticsPage() {
       setLoading(true);
       const since = new Date(Date.now() - RANGE_DAYS[range] * 86400000).toISOString();
       const [ordersRes, sessionsRes, itemsRes, customersRes, cartsRes] = await Promise.all([
-        // Only count confirmed orders in KPIs (exclude never-paid checkout attempts).
-        supabase.from("orders").select("total, refunded_amount, status, payment_status, created_at").gte("created_at", since).eq("payment_status", "paid"),
+        // Pull every order in range, then split paid / refunded / cancelled locally
+        // so the revenue breakdown reconciles exactly with the orders table.
+        supabase.from("orders").select("total, refunded_amount, status, payment_status, payment_method, created_at").gte("created_at", since),
         supabase.from("analytics_events").select("session_id").gte("created_at", since),
         supabase.from("order_items").select("product_name, qty, orders!inner(created_at, payment_status)").gte("orders.created_at", since).eq("orders.payment_status", "paid"),
         supabase.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", since),
@@ -66,8 +67,39 @@ function AnalyticsPage() {
           .select("id, email, phone, stage, subtotal, updated_at, converted, reached_checkout, abandonment_reason")
           .gte("updated_at", since),
       ]);
-      const orders = (ordersRes.data ?? []).filter((o: any) => !["cancelled", "refunded", "returned", "payment_failed"].includes(String(o.status)));
+      const allOrders = (ordersRes.data ?? []) as any[];
+      const paidOrders = allOrders.filter((o: any) => String(o.payment_status) === "paid");
+      const VOID_STATUSES = ["cancelled", "refunded", "returned", "payment_failed"];
+      const orders = paidOrders.filter((o: any) => !VOID_STATUSES.includes(String(o.status)));
+
+      // Revenue reconciliation buckets
+      const grossPaid = paidOrders.reduce((s, o: any) => s + Number(o.total ?? 0), 0);
+      const refundedAmount = paidOrders.reduce((s, o: any) => s + Number(o.refunded_amount ?? 0), 0);
+      const cancelledAmount = paidOrders
+        .filter((o: any) => VOID_STATUSES.includes(String(o.status)))
+        .reduce((s, o: any) => s + Math.max(0, Number(o.total ?? 0) - Number(o.refunded_amount ?? 0)), 0);
+      const unpaidAmount = allOrders
+        .filter((o: any) => String(o.payment_status) !== "paid")
+        .reduce((s, o: any) => s + Number(o.total ?? 0), 0);
+      const refundedOrdersCount = paidOrders.filter((o: any) => Number(o.refunded_amount ?? 0) > 0).length;
+      const cancelledOrdersCount = paidOrders.filter((o: any) => VOID_STATUSES.includes(String(o.status))).length;
+      const unpaidOrdersCount = allOrders.length - paidOrders.length;
+
       const revenue = orders.reduce((s, o: any) => s + Math.max(0, Number(o.total ?? 0) - Number(o.refunded_amount ?? 0)), 0);
+
+      // Paid-only revenue sources (payment methods)
+      const sourceMap = new Map<string, { amount: number; count: number }>();
+      orders.forEach((o: any) => {
+        const k = String(o.payment_method ?? "unknown");
+        const cur = sourceMap.get(k) ?? { amount: 0, count: 0 };
+        cur.amount += Math.max(0, Number(o.total ?? 0) - Number(o.refunded_amount ?? 0));
+        cur.count += 1;
+        sourceMap.set(k, cur);
+      });
+      const revenueSources = Array.from(sourceMap.entries())
+        .map(([source, v]) => ({ source, ...v }))
+        .sort((a, b) => b.amount - a.amount);
+
       const avgOrder = orders.length > 0 ? revenue / orders.length : 0;
       const sessions = new Set((sessionsRes.data ?? []).map((s: any) => s.session_id).filter(Boolean)).size;
 
