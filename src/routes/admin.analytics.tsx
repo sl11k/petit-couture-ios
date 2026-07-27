@@ -203,6 +203,14 @@ function AnalyticsPage() {
 
       setStats({
         revenue,
+        grossPaid,
+        refundedAmount,
+        cancelledAmount,
+        unpaidAmount,
+        refundedOrdersCount,
+        cancelledOrdersCount,
+        unpaidOrdersCount,
+        revenueSources,
         orders: orders.length,
         avgOrder,
         customers: customersRes.count ?? 0,
