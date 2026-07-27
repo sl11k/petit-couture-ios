@@ -89,6 +89,7 @@ import { Route as AdminNotifAnalyticsRouteImport } from './routes/admin.notif-an
 import { Route as AdminNotifAdminsRouteImport } from './routes/admin.notif-admins'
 import { Route as AdminMetricsRouteImport } from './routes/admin.metrics'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
+import { Route as AdminMarketingOutreachRouteImport } from './routes/admin.marketing-outreach'
 import { Route as AdminLoyaltyTransactionsRouteImport } from './routes/admin.loyalty-transactions'
 import { Route as AdminLoyaltyRouteImport } from './routes/admin.loyalty'
 import { Route as AdminLandingPagesRouteImport } from './routes/admin.landing-pages'
@@ -566,6 +567,11 @@ const AdminMessagesRoute = AdminMessagesRouteImport.update({
   path: '/messages',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminMarketingOutreachRoute = AdminMarketingOutreachRouteImport.update({
+  id: '/marketing-outreach',
+  path: '/marketing-outreach',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminLoyaltyTransactionsRoute =
   AdminLoyaltyTransactionsRouteImport.update({
     id: '/loyalty-transactions',
@@ -989,6 +995,7 @@ export interface FileRoutesByFullPath {
   '/admin/landing-pages': typeof AdminLandingPagesRouteWithChildren
   '/admin/loyalty': typeof AdminLoyaltyRoute
   '/admin/loyalty-transactions': typeof AdminLoyaltyTransactionsRoute
+  '/admin/marketing-outreach': typeof AdminMarketingOutreachRoute
   '/admin/messages': typeof AdminMessagesRouteWithChildren
   '/admin/metrics': typeof AdminMetricsRoute
   '/admin/notif-admins': typeof AdminNotifAdminsRoute
@@ -1136,6 +1143,7 @@ export interface FileRoutesByTo {
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/loyalty': typeof AdminLoyaltyRoute
   '/admin/loyalty-transactions': typeof AdminLoyaltyTransactionsRoute
+  '/admin/marketing-outreach': typeof AdminMarketingOutreachRoute
   '/admin/metrics': typeof AdminMetricsRoute
   '/admin/notif-admins': typeof AdminNotifAdminsRoute
   '/admin/notif-analytics': typeof AdminNotifAnalyticsRoute
@@ -1287,6 +1295,7 @@ export interface FileRoutesById {
   '/admin/landing-pages': typeof AdminLandingPagesRouteWithChildren
   '/admin/loyalty': typeof AdminLoyaltyRoute
   '/admin/loyalty-transactions': typeof AdminLoyaltyTransactionsRoute
+  '/admin/marketing-outreach': typeof AdminMarketingOutreachRoute
   '/admin/messages': typeof AdminMessagesRouteWithChildren
   '/admin/metrics': typeof AdminMetricsRoute
   '/admin/notif-admins': typeof AdminNotifAdminsRoute
@@ -1444,6 +1453,7 @@ export interface FileRouteTypes {
     | '/admin/landing-pages'
     | '/admin/loyalty'
     | '/admin/loyalty-transactions'
+    | '/admin/marketing-outreach'
     | '/admin/messages'
     | '/admin/metrics'
     | '/admin/notif-admins'
@@ -1591,6 +1601,7 @@ export interface FileRouteTypes {
     | '/admin/invoices'
     | '/admin/loyalty'
     | '/admin/loyalty-transactions'
+    | '/admin/marketing-outreach'
     | '/admin/metrics'
     | '/admin/notif-admins'
     | '/admin/notif-analytics'
@@ -1741,6 +1752,7 @@ export interface FileRouteTypes {
     | '/admin/landing-pages'
     | '/admin/loyalty'
     | '/admin/loyalty-transactions'
+    | '/admin/marketing-outreach'
     | '/admin/messages'
     | '/admin/metrics'
     | '/admin/notif-admins'
@@ -2455,6 +2467,13 @@ declare module '@tanstack/react-router' {
       path: '/messages'
       fullPath: '/admin/messages'
       preLoaderRoute: typeof AdminMessagesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/marketing-outreach': {
+      id: '/admin/marketing-outreach'
+      path: '/marketing-outreach'
+      fullPath: '/admin/marketing-outreach'
+      preLoaderRoute: typeof AdminMarketingOutreachRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/loyalty-transactions': {
@@ -3204,6 +3223,7 @@ interface AdminRouteChildren {
   AdminLandingPagesRoute: typeof AdminLandingPagesRouteWithChildren
   AdminLoyaltyRoute: typeof AdminLoyaltyRoute
   AdminLoyaltyTransactionsRoute: typeof AdminLoyaltyTransactionsRoute
+  AdminMarketingOutreachRoute: typeof AdminMarketingOutreachRoute
   AdminMessagesRoute: typeof AdminMessagesRouteWithChildren
   AdminMetricsRoute: typeof AdminMetricsRoute
   AdminNotifAdminsRoute: typeof AdminNotifAdminsRoute
@@ -3286,6 +3306,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminLandingPagesRoute: AdminLandingPagesRouteWithChildren,
   AdminLoyaltyRoute: AdminLoyaltyRoute,
   AdminLoyaltyTransactionsRoute: AdminLoyaltyTransactionsRoute,
+  AdminMarketingOutreachRoute: AdminMarketingOutreachRoute,
   AdminMessagesRoute: AdminMessagesRouteWithChildren,
   AdminMetricsRoute: AdminMetricsRoute,
   AdminNotifAdminsRoute: AdminNotifAdminsRoute,
