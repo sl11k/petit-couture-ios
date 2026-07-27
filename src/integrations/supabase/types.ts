@@ -1910,6 +1910,78 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_ledger: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          delta: number
+          id: string
+          movement_type: string
+          notes: string | null
+          order_id: string | null
+          order_item_id: string | null
+          order_number: string | null
+          order_status: string | null
+          payment_event: string | null
+          payment_status: string | null
+          product_id: string | null
+          product_name: string | null
+          qty: number
+          sku: string | null
+          source: string
+          stock_after: number | null
+          stock_before: number | null
+          variant_id: string | null
+          warehouse_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          delta: number
+          id?: string
+          movement_type: string
+          notes?: string | null
+          order_id?: string | null
+          order_item_id?: string | null
+          order_number?: string | null
+          order_status?: string | null
+          payment_event?: string | null
+          payment_status?: string | null
+          product_id?: string | null
+          product_name?: string | null
+          qty: number
+          sku?: string | null
+          source?: string
+          stock_after?: number | null
+          stock_before?: number | null
+          variant_id?: string | null
+          warehouse_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          delta?: number
+          id?: string
+          movement_type?: string
+          notes?: string | null
+          order_id?: string | null
+          order_item_id?: string | null
+          order_number?: string | null
+          order_status?: string | null
+          payment_event?: string | null
+          payment_status?: string | null
+          product_id?: string | null
+          product_name?: string | null
+          qty?: number
+          sku?: string | null
+          source?: string
+          stock_after?: number | null
+          stock_before?: number | null
+          variant_id?: string | null
+          warehouse_id?: string | null
+        }
+        Relationships: []
+      }
       invoice_counters: {
         Row: {
           last_number: number
@@ -7545,6 +7617,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      current_unit_stock: {
+        Args: { _product_id: string; _variant_id: string }
+        Returns: number
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -7663,6 +7739,23 @@ export type Database = {
           _ua?: string
         }
         Returns: string
+      }
+      log_inventory_movement: {
+        Args: {
+          _delta: number
+          _movement_type: string
+          _notes?: string
+          _order_id: string
+          _order_item_id: string
+          _payment_event?: string
+          _product_id: string
+          _qty: number
+          _stock_after: number
+          _stock_before: number
+          _variant_id: string
+          _warehouse_id: string
+        }
+        Returns: undefined
       }
       mask_email: { Args: { _email: string }; Returns: string }
       mask_phone: { Args: { _phone: string }; Returns: string }
