@@ -227,7 +227,7 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
 
             const { error: completeErr } = await (supabaseAdmin as any).rpc("complete_async_payment", {
               _order_id: updated.id,
-              _gateway: updated.payment_method,
+              _gateway: payload.gateway,
               _gateway_transaction_id: payload.transaction_id,
               _transaction_id: txnId,
               _amount: payload.amount,
