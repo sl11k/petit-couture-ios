@@ -349,7 +349,9 @@ function ProductDetails() {
       image: product.images[0],
       size,
       color,
+      qty,
       sku: selectedSizeVariant?.sku ?? product.sku ?? undefined,
+      stockLimit: maxQty,
     });
     toast.success(ar ? "تمت الإضافة إلى السلة" : "Added to bag", {
       action: {
@@ -378,7 +380,9 @@ function ProductDetails() {
       image: product.images[0],
       size,
       color,
+      qty,
       sku: selectedSizeVariant?.sku ?? product.sku ?? undefined,
+      stockLimit: maxQty,
     });
     navigate({ to: "/checkout" });
   };
