@@ -592,6 +592,104 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_audience_members: {
+        Row: {
+          audience_id: string
+          consent_at: string | null
+          consent_source: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          last_order_at: string | null
+          orders_count: number
+          phone: string | null
+          total_spent: number
+          user_id: string | null
+        }
+        Insert: {
+          audience_id: string
+          consent_at?: string | null
+          consent_source?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          last_order_at?: string | null
+          orders_count?: number
+          phone?: string | null
+          total_spent?: number
+          user_id?: string | null
+        }
+        Update: {
+          audience_id?: string
+          consent_at?: string | null
+          consent_source?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          last_order_at?: string | null
+          orders_count?: number
+          phone?: string | null
+          total_spent?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_audience_members_audience_id_fkey"
+            columns: ["audience_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_audiences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_audiences: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          filters: Json
+          id: string
+          last_generated_at: string | null
+          member_count: number
+          name: string
+          provider: string | null
+          provider_list_id: string | null
+          synced_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          filters?: Json
+          id?: string
+          last_generated_at?: string | null
+          member_count?: number
+          name: string
+          provider?: string | null
+          provider_list_id?: string | null
+          synced_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          filters?: Json
+          id?: string
+          last_generated_at?: string | null
+          member_count?: number
+          name?: string
+          provider?: string | null
+          provider_list_id?: string | null
+          synced_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       campaign_events: {
         Row: {
           campaign_id: string
@@ -626,6 +724,83 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_requests: {
+        Row: {
+          audience_id: string | null
+          channel: string
+          coupon_code: string | null
+          created_at: string
+          email_body: string | null
+          email_subject: string | null
+          id: string
+          objective: string | null
+          provider: string | null
+          provider_campaign_id: string | null
+          rejection_reason: string | null
+          requested_by: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          scheduled_at: string | null
+          sent_at: string | null
+          sent_count: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audience_id?: string | null
+          channel?: string
+          coupon_code?: string | null
+          created_at?: string
+          email_body?: string | null
+          email_subject?: string | null
+          id?: string
+          objective?: string | null
+          provider?: string | null
+          provider_campaign_id?: string | null
+          rejection_reason?: string | null
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audience_id?: string | null
+          channel?: string
+          coupon_code?: string | null
+          created_at?: string
+          email_body?: string | null
+          email_subject?: string | null
+          id?: string
+          objective?: string | null
+          provider?: string | null
+          provider_campaign_id?: string | null
+          rejection_reason?: string | null
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_requests_audience_id_fkey"
+            columns: ["audience_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_audiences"
             referencedColumns: ["id"]
           },
         ]

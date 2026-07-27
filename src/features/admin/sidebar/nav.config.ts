@@ -84,6 +84,8 @@ export const ADMIN_NAV: NavGroup[] = [
     label: { ar: "التسويق", en: "Marketing" },
     items: [
       { to: "/admin/campaigns", label: { ar: "الحملات", en: "Campaigns" }, icon: Megaphone },
+      { to: "/admin/marketing-outreach", label: { ar: "طلبات الحملات وقوائم العملاء", en: "Campaign requests & lists" }, icon: Mail },
+
       { to: "/admin/landing-pages", label: { ar: "صفحات الهبوط", en: "Landing pages" }, icon: Globe },
       { to: "/admin/ab-tests", label: { ar: "اختبارات A/B", en: "A/B tests" }, icon: Activity },
       { to: "/admin/conversion", label: { ar: "التحويل", en: "Conversion" }, icon: Activity },
