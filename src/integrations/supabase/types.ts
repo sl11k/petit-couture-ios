@@ -7727,6 +7727,10 @@ export type Database = {
         Args: { _product_id: string }
         Returns: undefined
       }
+      lock_order_stock_units: {
+        Args: { _order_id: string }
+        Returns: undefined
+      }
       log_audit_event: {
         Args: {
           _action: string
