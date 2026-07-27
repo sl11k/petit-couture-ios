@@ -410,16 +410,18 @@ export const placeOrder = createServerFn({ method: "POST" })
         _order_id: order.id,
       });
       if (stockErr) {
-        console.warn(
-          `[placeOrder] ${rpcName} soft-failed for order ${order.order_number}:`,
-          stockErr.message || stockErr,
-        );
+        await supabaseAdmin.from("order_items").delete().eq("order_id", order.id);
+        await supabaseAdmin.from("orders").delete().eq("id", order.id);
+        throw new Error(stockErr.message || "Insufficient stock");
       }
     } catch (error) {
-      console.warn(
-        `[placeOrder] ${rpcName} threw for order ${order.order_number}:`,
-        error instanceof Error ? error.message : error,
-      );
+      await supabaseAdmin.from("order_items").delete().eq("order_id", order.id);
+      await supabaseAdmin.from("orders").delete().eq("id", order.id);
+      const rawMessage = error instanceof Error ? error.message : String(error);
+      if (/stock|مخزون|quantity|available/i.test(rawMessage)) {
+        throw new Error("INSUFFICIENT_STOCK:cart");
+      }
+      throw new Error(rawMessage);
     }
 
     // 3c. Record coupon redemption + bump used_count (best-effort).

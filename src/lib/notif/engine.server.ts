@@ -255,7 +255,7 @@ async function bumpAnalytics(
  * Process pending queue items. Returns number of processed rows.
  * Safe to call repeatedly (row-level lock via locked_at).
  */
-const SITE_NAME = "petit-couture-ios";
+const SITE_NAME = "le petit paradis";
 const EMAIL_SENDER_DOMAIN = "notify.lppme.com";
 const EMAIL_FROM_DOMAIN = "lppme.com";
 

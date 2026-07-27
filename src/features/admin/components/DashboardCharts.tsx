@@ -52,7 +52,7 @@ export function DashboardCharts() {
       since.setDate(since.getDate() - (range - 1));
       const { data: rows } = await supabase
         .from("orders")
-        .select("created_at,total,status,payment_status")
+        .select("created_at,total,refunded_amount,status,payment_status")
         .gte("created_at", since.toISOString())
         .eq("payment_status", "paid")
         .limit(5000);
@@ -62,11 +62,12 @@ export function DashboardCharts() {
       const buckets = buildBuckets(range);
       const idx = new Map(buckets.map((p, i) => [p.date, i]));
       for (const r of rows ?? []) {
+        if (["cancelled", "refunded", "returned", "payment_failed"].includes(String((r as any).status))) continue;
         const day = new Date((r as any).created_at).toISOString().slice(0, 10);
         const i = idx.get(day);
         if (i === undefined) continue;
         buckets[i].orders += 1;
-        buckets[i].revenue += Number((r as any).total ?? 0);
+        buckets[i].revenue += Math.max(0, Number((r as any).total ?? 0) - Number((r as any).refunded_amount ?? 0));
       }
       setData(buckets);
       setLoading(false);

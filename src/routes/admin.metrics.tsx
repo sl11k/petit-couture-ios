@@ -114,9 +114,9 @@ function MetricsPage() {
             .limit(5000),
           supabase
             .from("orders")
-            .select("total,status,created_at")
+            .select("total,refunded_amount,status,payment_status,created_at")
             .gte("created_at", compareSince)
-            .neq("status", "cancelled")
+            .eq("payment_status", "paid")
             .limit(10000),
           supabase
             .from("analytics_events")
@@ -129,7 +129,7 @@ function MetricsPage() {
         setApi(apiR.data ?? []);
         setErrs(errR.data ?? []);
         setPerf(perfR.data ?? []);
-        setOrders(ordersR.data ?? []);
+        setOrders((ordersR.data ?? []).filter((order: any) => !["cancelled", "refunded", "returned", "payment_failed"].includes(String(order.status))));
         setSessions(sessR.data ?? []);
       } catch (e: any) {
         if (!cancelled) setLoadErr(e?.message ?? String(e));
@@ -188,7 +188,7 @@ function MetricsPage() {
       return { today, yesterday, thisWeek, prevWeek };
     };
 
-    const rev = bucket(orders, (o) => Number(o.total ?? 0));
+    const rev = bucket(orders, (o) => Math.max(0, Number(o.total ?? 0) - Number(o.refunded_amount ?? 0)));
     const ord = bucket(orders, () => 1);
     const errC = bucket(errs, () => 1);
     const uniq = (rows: any[], from: number, to?: number) => {
@@ -226,7 +226,7 @@ function MetricsPage() {
       const b = map.get(key);
       if (b) {
         b.orders += 1;
-        b.revenue += Number(o.total ?? 0);
+        b.revenue += Math.max(0, Number(o.total ?? 0) - Number(o.refunded_amount ?? 0));
       }
     }
     for (const s of sessions) {
