@@ -62,6 +62,7 @@ function AnalyticsPage() {
   const { lang } = useLanguage();
   const ar = lang === "ar";
   const [range, setRange] = useState<Range>("30d");
+  const [netMode, setNetMode] = useState(true);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     revenue: 0,
