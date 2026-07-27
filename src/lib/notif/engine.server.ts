@@ -56,7 +56,8 @@ export async function enqueueNotification(params: EnqueueParams): Promise<void> 
     const rows: any[] = [];
 
     // Customer row(s)
-    if ((audience === "customer" || audience === "both") && params.recipient_phone) {
+    const hasCustomerRecipient = channel === "email" ? !!params.recipient_email : !!params.recipient_phone;
+    if ((audience === "customer" || audience === "both") && hasCustomerRecipient) {
       rows.push({
         event_code: params.event_code,
         audience: "customer",
@@ -91,7 +92,8 @@ export async function enqueueNotification(params: EnqueueParams): Promise<void> 
       );
       const baseTime = new Date(scheduledAt).getTime();
       matching.forEach((a: any, idx: number) => {
-        if (!a.phone) return;
+        const hasAdminRecipient = channel === "email" ? !!a.email : !!a.phone;
+        if (!hasAdminRecipient) return;
         // Customer (if any) is at baseTime; first admin at +10s, next +20s, ...
         const offsetSec = (audience === "both" ? 10 : 0) + idx * 10;
         const adminScheduled = new Date(baseTime + offsetSec * 1000).toISOString();
@@ -255,7 +257,7 @@ async function bumpAnalytics(
  * Process pending queue items. Returns number of processed rows.
  * Safe to call repeatedly (row-level lock via locked_at).
  */
-const SITE_NAME = "petit-couture-ios";
+const SITE_NAME = "le petit paradis";
 const EMAIL_SENDER_DOMAIN = "notify.lppme.com";
 const EMAIL_FROM_DOMAIN = "lppme.com";
 

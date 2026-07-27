@@ -174,7 +174,7 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
 
           // Validate amount matches (security check)
           if (payload.amount && orderId) {
-            const { data: order } = await supabaseAdmin
+              const { data: order } = await supabaseAdmin
               .from("orders")
               .select("total, currency")
               .eq("id", orderId)
@@ -219,16 +219,26 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
           if (orderId && (status === "captured" || status === "paid")) {
             const { data: updated } = await supabaseAdmin
               .from("orders")
-              .update({
-                payment_status: "paid",
-                status: "processing",
-                payment_gateway: payload.gateway,
-                last_transaction_id: txnId,
-                captured_amount: payload.amount,
-              })
-              .eq("id", orderId)
               .select("id, order_number, user_id, customer_name, customer_phone, customer_email, total, currency, payment_method")
+              .eq("id", orderId)
               .maybeSingle();
+
+            if (!updated) throw new Error("Order not found");
+
+            const { error: completeErr } = await (supabaseAdmin as any).rpc("complete_async_payment", {
+              _order_id: updated.id,
+              _gateway: payload.gateway,
+              _gateway_transaction_id: payload.transaction_id,
+              _transaction_id: txnId,
+              _amount: payload.amount,
+              _currency: payload.currency,
+            });
+            if (completeErr) throw new Error(completeErr.message);
+
+            await supabaseAdmin
+              .from("orders")
+              .update({ payment_gateway: payload.gateway })
+              .eq("id", updated.id);
 
             // Trigger OTO shipment now that payment is confirmed (idempotent).
             if (updated?.id) {
@@ -239,14 +249,6 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
               } catch (e: any) {
                 console.error("[payment-webhook] OTO auto-create threw:", e?.message || e);
               }
-
-              // Finalize stock (idempotent — safe if placeOrder already reserved).
-              try {
-                await (supabaseAdmin as any).rpc("finalize_order_stock", { _order_id: updated.id });
-              } catch (e: any) {
-                console.warn("[payment-webhook] finalize_order_stock threw:", e?.message || e);
-              }
-
               // Notifications are emitted by the payment-status database trigger
               // so paid-order WhatsApp messages have a single source of truth.
             }

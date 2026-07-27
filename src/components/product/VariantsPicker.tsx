@@ -50,8 +50,16 @@ export function VariantsPicker(props: Props) {
 
   const addThisVariant = () => {
     if (!current) return;
-    if (Number(current.available_quantity) <= 0) {
+    const available = Math.max(0, Number(current.available_quantity) || 0);
+    if (available <= 0) {
       toast.error(ar ? "غير متوفر" : "Out of stock");
+      return;
+    }
+    const currentInBag = bag.items
+      .filter((item) => item.variantId === current.variant_id)
+      .reduce((sum, item) => sum + item.qty, 0);
+    if (currentInBag >= available) {
+      toast.error(ar ? `الحد الأقصى المتاح ${available}` : `Max available: ${available}`);
       return;
     }
     bag.add({
@@ -65,6 +73,7 @@ export function VariantsPicker(props: Props) {
       color: "",
       variantId: current.variant_id,
       variantLabel: labelFor(current),
+      stockLimit: available,
     });
     toast.success(ar ? "تمت الإضافة" : "Added to bag");
   };

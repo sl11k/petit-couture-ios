@@ -719,7 +719,13 @@ function CheckoutPage() {
     } catch (e) {
       console.error(e);
       const message = e instanceof Error ? e.message : "";
-      toast.error(message || (isRTL ? "تعذّر إنشاء الطلب" : "Could not place order"));
+      toast.error(
+        message.startsWith("INSUFFICIENT_STOCK") || message.startsWith("OUT_OF_STOCK")
+          ? isRTL
+            ? "الكمية المطلوبة غير متوفرة حاليًا. عدّل السلة ثم حاول مرة أخرى."
+            : "Requested quantity is no longer available. Update your bag and try again."
+          : message || (isRTL ? "تعذّر إنشاء الطلب" : "Could not place order"),
+      );
     } finally {
       setPlacing(false);
     }

@@ -28,6 +28,7 @@ export type BagItem = {
   sku?: string;
   variantId?: string;
   variantLabel?: string;
+  stockLimit?: number;
 };
 
 type AddInput = Omit<BagItem, "id" | "qty"> & { qty?: number };
@@ -36,7 +37,7 @@ type Ctx = {
   items: BagItem[];
   add: (input: AddInput) => void;
   remove: (id: string) => void;
-  setQty: (id: string, qty: number) => void;
+  setQty: (id: string, qty: number, stockLimit?: number | null) => void;
   updatePrice: (id: string, price: number) => void;
   clear: () => void;
   count: number;
@@ -48,6 +49,18 @@ const BagContext = createContext<Ctx | null>(null);
 
 function makeId(slug: string, size: string, color: string, variantId?: string) {
   return variantId ? `${slug}::v::${variantId}` : `${slug}::${size}::${color}`;
+}
+
+function normalizeStockLimit(stockLimit?: number | null) {
+  if (stockLimit === null || stockLimit === undefined) return undefined;
+  const limit = Math.floor(Number(stockLimit));
+  return Number.isFinite(limit) && limit >= 0 ? limit : undefined;
+}
+
+function clampToStock(qty: number, stockLimit?: number) {
+  const cleanQty = Math.max(0, Math.floor(Number(qty) || 0));
+  if (stockLimit === undefined) return cleanQty;
+  return Math.min(cleanQty, stockLimit);
 }
 
 function readInitial(): BagItem[] {
@@ -155,13 +168,20 @@ export function BagProvider({ children }: { children: ReactNode }) {
   const add = useCallback((input: AddInput) => {
 
     const id = makeId(input.slug, input.size, input.color, input.variantId);
-    const qty = input.qty ?? 1;
+    const limit = normalizeStockLimit(input.stockLimit);
+    const qty = clampToStock(input.qty ?? 1, limit);
+    if (qty <= 0) return;
     setItems((prev) => {
       const existing = prev.find((p) => p.id === id);
       if (existing) {
-        return prev.map((p) => (p.id === id ? { ...p, qty: p.qty + qty } : p));
+        const nextLimit = limit ?? normalizeStockLimit(existing.stockLimit);
+        return prev.map((p) =>
+          p.id === id
+            ? { ...p, ...input, id, stockLimit: nextLimit, qty: clampToStock(p.qty + qty, nextLimit) }
+            : p,
+        );
       }
-      return [...prev, { ...input, qty, id }];
+      return [...prev, { ...input, stockLimit: limit, qty, id }];
     });
     void trackServerEvent("add_to_cart", {
       slug: input.slug,
@@ -178,11 +198,15 @@ export function BagProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  const setQty = useCallback((id: string, qty: number) => {
+  const setQty = useCallback((id: string, qty: number, stockLimit?: number | null) => {
     setItems((prev) =>
       qty <= 0
         ? prev.filter((p) => p.id !== id)
-        : prev.map((p) => (p.id === id ? { ...p, qty } : p)),
+        : prev.map((p) => {
+            if (p.id !== id) return p;
+            const nextLimit = normalizeStockLimit(stockLimit) ?? normalizeStockLimit(p.stockLimit);
+            return { ...p, stockLimit: nextLimit, qty: clampToStock(qty, nextLimit) };
+          }),
     );
   }, []);
 
