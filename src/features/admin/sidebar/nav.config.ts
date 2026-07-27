@@ -47,6 +47,7 @@ export const ADMIN_NAV: NavGroup[] = [
       { to: "/admin/products", label: { ar: "المنتجات", en: "Products" }, icon: Package },
       { to: "/admin/categories", label: { ar: "التصنيفات", en: "Categories" }, icon: FolderTree },
       { to: "/admin/inventory", label: { ar: "المخزون", en: "Inventory" }, icon: Boxes },
+      { to: "/admin/inventory-ledger", label: { ar: "سجل حركات المخزون", en: "Inventory ledger" }, icon: ScrollText },
       { to: "/admin/size-skus", label: { ar: "أكواد المقاسات", en: "Size SKUs" }, icon: FileSpreadsheet },
       { to: "/admin/warehouses", label: { ar: "المستودعات", en: "Warehouses" }, icon: Boxes },
       { to: "/admin/bundles", label: { ar: "الباقات", en: "Bundles" }, icon: Boxes },

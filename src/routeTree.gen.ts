@@ -93,6 +93,7 @@ import { Route as AdminLoyaltyTransactionsRouteImport } from './routes/admin.loy
 import { Route as AdminLoyaltyRouteImport } from './routes/admin.loyalty'
 import { Route as AdminLandingPagesRouteImport } from './routes/admin.landing-pages'
 import { Route as AdminInvoicesRouteImport } from './routes/admin.invoices'
+import { Route as AdminInventoryLedgerRouteImport } from './routes/admin.inventory-ledger'
 import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
 import { Route as AdminIntegrationsRouteImport } from './routes/admin.integrations'
 import { Route as AdminIncompleteRouteImport } from './routes/admin.incomplete'
@@ -586,6 +587,11 @@ const AdminInvoicesRoute = AdminInvoicesRouteImport.update({
   path: '/invoices',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminInventoryLedgerRoute = AdminInventoryLedgerRouteImport.update({
+  id: '/inventory-ledger',
+  path: '/inventory-ledger',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminInventoryRoute = AdminInventoryRouteImport.update({
   id: '/inventory',
   path: '/inventory',
@@ -978,6 +984,7 @@ export interface FileRoutesByFullPath {
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRouteWithChildren
   '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/inventory-ledger': typeof AdminInventoryLedgerRoute
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/landing-pages': typeof AdminLandingPagesRouteWithChildren
   '/admin/loyalty': typeof AdminLoyaltyRoute
@@ -1125,6 +1132,7 @@ export interface FileRoutesByTo {
   '/admin/incoming-webhooks': typeof AdminIncomingWebhooksRoute
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/inventory-ledger': typeof AdminInventoryLedgerRoute
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/loyalty': typeof AdminLoyaltyRoute
   '/admin/loyalty-transactions': typeof AdminLoyaltyTransactionsRoute
@@ -1274,6 +1282,7 @@ export interface FileRoutesById {
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRouteWithChildren
   '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/inventory-ledger': typeof AdminInventoryLedgerRoute
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/landing-pages': typeof AdminLandingPagesRouteWithChildren
   '/admin/loyalty': typeof AdminLoyaltyRoute
@@ -1430,6 +1439,7 @@ export interface FileRouteTypes {
     | '/admin/incomplete'
     | '/admin/integrations'
     | '/admin/inventory'
+    | '/admin/inventory-ledger'
     | '/admin/invoices'
     | '/admin/landing-pages'
     | '/admin/loyalty'
@@ -1577,6 +1587,7 @@ export interface FileRouteTypes {
     | '/admin/incoming-webhooks'
     | '/admin/incomplete'
     | '/admin/inventory'
+    | '/admin/inventory-ledger'
     | '/admin/invoices'
     | '/admin/loyalty'
     | '/admin/loyalty-transactions'
@@ -1725,6 +1736,7 @@ export interface FileRouteTypes {
     | '/admin/incomplete'
     | '/admin/integrations'
     | '/admin/inventory'
+    | '/admin/inventory-ledger'
     | '/admin/invoices'
     | '/admin/landing-pages'
     | '/admin/loyalty'
@@ -2473,6 +2485,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminInvoicesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/inventory-ledger': {
+      id: '/admin/inventory-ledger'
+      path: '/inventory-ledger'
+      fullPath: '/admin/inventory-ledger'
+      preLoaderRoute: typeof AdminInventoryLedgerRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/inventory': {
       id: '/admin/inventory'
       path: '/inventory'
@@ -3180,6 +3199,7 @@ interface AdminRouteChildren {
   AdminIncompleteRoute: typeof AdminIncompleteRoute
   AdminIntegrationsRoute: typeof AdminIntegrationsRouteWithChildren
   AdminInventoryRoute: typeof AdminInventoryRoute
+  AdminInventoryLedgerRoute: typeof AdminInventoryLedgerRoute
   AdminInvoicesRoute: typeof AdminInvoicesRoute
   AdminLandingPagesRoute: typeof AdminLandingPagesRouteWithChildren
   AdminLoyaltyRoute: typeof AdminLoyaltyRoute
@@ -3261,6 +3281,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminIncompleteRoute: AdminIncompleteRoute,
   AdminIntegrationsRoute: AdminIntegrationsRouteWithChildren,
   AdminInventoryRoute: AdminInventoryRoute,
+  AdminInventoryLedgerRoute: AdminInventoryLedgerRoute,
   AdminInvoicesRoute: AdminInvoicesRoute,
   AdminLandingPagesRoute: AdminLandingPagesRouteWithChildren,
   AdminLoyaltyRoute: AdminLoyaltyRoute,
