@@ -254,12 +254,83 @@ function AnalyticsPage() {
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        <StatCard label={ar ? "الإيرادات" : "Revenue"} value={`${fmt(stats.revenue)} ${ar ? "ر.س" : "SAR"}`} icon={DollarSign} />
+        <StatCard
+          label={netMode ? (ar ? "الإيراد الصافي" : "Net revenue") : (ar ? "إجمالي المدفوع" : "Gross paid")}
+          value={`${fmt(netMode ? stats.revenue : stats.grossPaid)} ${ar ? "ر.س" : "SAR"}`}
+          sub={netMode ? (ar ? "صافي" : "Net") : (ar ? "إجمالي" : "Gross")}
+          icon={DollarSign}
+        />
         <StatCard label={ar ? "الطلبات" : "Orders"} value={loading ? "…" : fmt(stats.orders)} icon={ShoppingBag} />
         <StatCard label={ar ? "متوسط الطلب" : "Avg order"} value={`${fmt(stats.avgOrder)} ${ar ? "ر.س" : "SAR"}`} icon={TrendingUp} />
         <StatCard label={ar ? "عملاء جدد" : "New customers"} value={loading ? "…" : fmt(stats.customers)} icon={Users} />
         <StatCard label={ar ? "الجلسات" : "Sessions"} value={loading ? "…" : fmt(stats.sessions)} icon={Activity} />
       </div>
+
+      {/* Revenue reconciliation: paid / refunded / cancelled with an explicit net filter */}
+      <section className="mt-4 rounded-xl border border-border bg-card p-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 text-sm font-semibold">
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            {ar ? "مطابقة الإيراد" : "Revenue reconciliation"}
+          </h2>
+          <div className="flex gap-1 rounded-md border border-border p-0.5 text-xs">
+            <button
+              onClick={() => setNetMode(true)}
+              className={`rounded px-2.5 py-1 ${netMode ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+            >
+              {ar ? "صافي" : "Net"}
+            </button>
+            <button
+              onClick={() => setNetMode(false)}
+              className={`rounded px-2.5 py-1 ${!netMode ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+            >
+              {ar ? "إجمالي" : "Gross"}
+            </button>
+          </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <ReconRow tone="paid" label={ar ? "مدفوع (إجمالي)" : "Paid (gross)"} amount={stats.grossPaid} count={stats.orders + stats.cancelledOrdersCount} ar={ar} fmt={fmt} />
+          <ReconRow tone="refund" label={ar ? "مسترجع" : "Refunded"} amount={-stats.refundedAmount} count={stats.refundedOrdersCount} ar={ar} fmt={fmt} />
+          <ReconRow tone="cancel" label={ar ? "ملغى / مرتجع" : "Cancelled / returned"} amount={-stats.cancelledAmount} count={stats.cancelledOrdersCount} ar={ar} fmt={fmt} />
+          <ReconRow tone="net" label={ar ? "الصافي" : "Net"} amount={stats.revenue} count={stats.orders} ar={ar} fmt={fmt} />
+        </div>
+
+        <p className="mt-3 text-[11px] text-muted-foreground">
+          {ar
+            ? `المعادلة: ${fmt(stats.grossPaid)} − ${fmt(stats.refundedAmount)} (مسترجع) − ${fmt(stats.cancelledAmount)} (ملغى) = ${fmt(stats.revenue)} ر.س صافي. طلبات لم تُدفع مستبعدة: ${fmt(stats.unpaidAmount)} ر.س (${fmt(stats.unpaidOrdersCount)} طلب).`
+            : `Formula: ${fmt(stats.grossPaid)} − ${fmt(stats.refundedAmount)} refunded − ${fmt(stats.cancelledAmount)} cancelled = ${fmt(stats.revenue)} SAR net. Unpaid orders excluded: ${fmt(stats.unpaidAmount)} SAR (${fmt(stats.unpaidOrdersCount)} orders).`}
+        </p>
+
+        <div className="mt-4">
+          <h3 className="mb-2 text-xs font-semibold text-muted-foreground">
+            {ar ? "مصدر الإيراد (المدفوع فقط)" : "Revenue source (paid only)"}
+          </h3>
+          {stats.revenueSources.length === 0 ? (
+            <p className="p-3 text-center text-xs text-muted-foreground">{ar ? "لا توجد بيانات" : "No data"}</p>
+          ) : (
+            <ul className="space-y-2">
+              {stats.revenueSources.map((s) => {
+                const pct = stats.revenue > 0 ? (s.amount / stats.revenue) * 100 : 0;
+                return (
+                  <li key={s.source}>
+                    <div className="mb-1 flex items-center justify-between text-xs">
+                      <span>{PAYMENT_LABELS[s.source]?.[ar ? "ar" : "en"] ?? s.source}</span>
+                      <span className="font-medium">
+                        {fmt(s.amount)} {ar ? "ر.س" : "SAR"} · {pct.toFixed(0)}% · {fmt(s.count)} {ar ? "طلب" : "orders"}
+                      </span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                      <div className="h-full bg-emerald-500" style={{ width: `${Math.min(100, pct)}%` }} />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </section>
+
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <section className="rounded-xl border border-border bg-card p-4">
