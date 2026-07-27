@@ -14,6 +14,37 @@ type Range = "7d" | "30d" | "90d";
 
 const RANGE_DAYS: Record<Range, number> = { "7d": 7, "30d": 30, "90d": 90 };
 
+const PAYMENT_LABELS: Record<string, { ar: string; en: string }> = {
+  card: { ar: "بطاقة (Stripe)", en: "Card (Stripe)" },
+  apple_pay: { ar: "Apple Pay", en: "Apple Pay" },
+  cod: { ar: "الدفع عند الاستلام", en: "Cash on delivery" },
+  bank_transfer: { ar: "تحويل بنكي", en: "Bank transfer" },
+  tabby: { ar: "تابي", en: "Tabby" },
+  tamara: { ar: "تمارا", en: "Tamara" },
+  unknown: { ar: "غير محدد", en: "Unknown" },
+};
+
+const RECON_TONES: Record<string, string> = {
+  paid: "border-emerald-500/40 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400",
+  refund: "border-amber-500/40 bg-amber-500/5 text-amber-600 dark:text-amber-400",
+  cancel: "border-rose-500/40 bg-rose-500/5 text-rose-600 dark:text-rose-400",
+  net: "border-primary/40 bg-primary/5 text-primary",
+};
+
+function ReconRow({
+  tone, label, amount, count, ar, fmt,
+}: { tone: string; label: string; amount: number; count: number; ar: boolean; fmt: (n: number) => string }) {
+  return (
+    <div className={`rounded-lg border p-3 ${RECON_TONES[tone] ?? "border-border"}`}>
+      <div className="text-xs opacity-80">{label}</div>
+      <div className="mt-1 text-lg font-semibold">
+        {amount < 0 ? "−" : ""}{fmt(Math.abs(amount))} <span className="text-xs font-normal">{ar ? "ر.س" : "SAR"}</span>
+      </div>
+      <div className="mt-0.5 text-[11px] opacity-70">{fmt(count)} {ar ? "طلب" : "orders"}</div>
+    </div>
+  );
+}
+
 function StatCard({ label, value, sub, icon: Icon }: { label: string; value: string; sub?: string; icon: typeof ShoppingBag }) {
   return (
     <div className="rounded-xl border border-border bg-card p-4">
