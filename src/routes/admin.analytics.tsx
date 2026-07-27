@@ -34,6 +34,14 @@ function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     revenue: 0,
+    grossPaid: 0,
+    refundedAmount: 0,
+    cancelledAmount: 0,
+    unpaidAmount: 0,
+    refundedOrdersCount: 0,
+    cancelledOrdersCount: 0,
+    unpaidOrdersCount: 0,
+    revenueSources: [] as { source: string; amount: number; count: number }[],
     orders: 0,
     avgOrder: 0,
     customers: 0,
