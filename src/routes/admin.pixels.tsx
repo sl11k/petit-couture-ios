@@ -39,7 +39,7 @@ function PixelsAdminPage() {
       .select("id,provider,label,pixel_id,custom_script,enabled,placement,sort_order")
       .order("sort_order", { ascending: true });
     if (error) toast.error(error.message);
-    setRows(((data ?? []) as unknown as Row[]) ?? []);
+    setRows((data ?? []) as unknown as Row[]);
     setLoading(false);
   };
 
