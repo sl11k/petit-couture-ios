@@ -161,6 +161,7 @@ import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lova
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicOtoWebhookRouteImport } from './routes/api.public.oto.webhook'
+import { Route as ApiPublicCronReconcileStripeRouteImport } from './routes/api.public.cron.reconcile-stripe'
 import { Route as ApiPublicCronNotifyDelaysRouteImport } from './routes/api/public/cron.notify-delays'
 import { Route as ApiPublicCronNotifProcessRouteImport } from './routes/api.public.cron.notif-process'
 import { Route as AdminProductsIdVariantsRouteImport } from './routes/admin.products.$id.variants'
@@ -933,6 +934,12 @@ const ApiPublicOtoWebhookRoute = ApiPublicOtoWebhookRouteImport.update({
   path: '/api/public/oto/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCronReconcileStripeRoute =
+  ApiPublicCronReconcileStripeRouteImport.update({
+    id: '/api/public/cron/reconcile-stripe',
+    path: '/api/public/cron/reconcile-stripe',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCronNotifyDelaysRoute =
   ApiPublicCronNotifyDelaysRouteImport.update({
     id: '/api/public/cron/notify-delays',
@@ -1103,6 +1110,7 @@ export interface FileRoutesByFullPath {
   '/admin/products/$id/variants': typeof AdminProductsIdVariantsRoute
   '/api/public/cron/notif-process': typeof ApiPublicCronNotifProcessRoute
   '/api/public/cron/notify-delays': typeof ApiPublicCronNotifyDelaysRoute
+  '/api/public/cron/reconcile-stripe': typeof ApiPublicCronReconcileStripeRoute
   '/api/public/oto/webhook': typeof ApiPublicOtoWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -1247,6 +1255,7 @@ export interface FileRoutesByTo {
   '/admin/products/$id/variants': typeof AdminProductsIdVariantsRoute
   '/api/public/cron/notif-process': typeof ApiPublicCronNotifProcessRoute
   '/api/public/cron/notify-delays': typeof ApiPublicCronNotifyDelaysRoute
+  '/api/public/cron/reconcile-stripe': typeof ApiPublicCronReconcileStripeRoute
   '/api/public/oto/webhook': typeof ApiPublicOtoWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -1405,6 +1414,7 @@ export interface FileRoutesById {
   '/admin/products/$id/variants': typeof AdminProductsIdVariantsRoute
   '/api/public/cron/notif-process': typeof ApiPublicCronNotifProcessRoute
   '/api/public/cron/notify-delays': typeof ApiPublicCronNotifyDelaysRoute
+  '/api/public/cron/reconcile-stripe': typeof ApiPublicCronReconcileStripeRoute
   '/api/public/oto/webhook': typeof ApiPublicOtoWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -1564,6 +1574,7 @@ export interface FileRouteTypes {
     | '/admin/products/$id/variants'
     | '/api/public/cron/notif-process'
     | '/api/public/cron/notify-delays'
+    | '/api/public/cron/reconcile-stripe'
     | '/api/public/oto/webhook'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -1708,6 +1719,7 @@ export interface FileRouteTypes {
     | '/admin/products/$id/variants'
     | '/api/public/cron/notif-process'
     | '/api/public/cron/notify-delays'
+    | '/api/public/cron/reconcile-stripe'
     | '/api/public/oto/webhook'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -1865,6 +1877,7 @@ export interface FileRouteTypes {
     | '/admin/products/$id/variants'
     | '/api/public/cron/notif-process'
     | '/api/public/cron/notify-delays'
+    | '/api/public/cron/reconcile-stripe'
     | '/api/public/oto/webhook'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -1913,6 +1926,7 @@ export interface RootRouteChildren {
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicCronNotifProcessRoute: typeof ApiPublicCronNotifProcessRoute
   ApiPublicCronNotifyDelaysRoute: typeof ApiPublicCronNotifyDelaysRoute
+  ApiPublicCronReconcileStripeRoute: typeof ApiPublicCronReconcileStripeRoute
   ApiPublicOtoWebhookRoute: typeof ApiPublicOtoWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -2985,6 +2999,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicOtoWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/reconcile-stripe': {
+      id: '/api/public/cron/reconcile-stripe'
+      path: '/api/public/cron/reconcile-stripe'
+      fullPath: '/api/public/cron/reconcile-stripe'
+      preLoaderRoute: typeof ApiPublicCronReconcileStripeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/notify-delays': {
       id: '/api/public/cron/notify-delays'
       path: '/api/public/cron/notify-delays'
@@ -3436,6 +3457,7 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicCronNotifProcessRoute: ApiPublicCronNotifProcessRoute,
   ApiPublicCronNotifyDelaysRoute: ApiPublicCronNotifyDelaysRoute,
+  ApiPublicCronReconcileStripeRoute: ApiPublicCronReconcileStripeRoute,
   ApiPublicOtoWebhookRoute: ApiPublicOtoWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
