@@ -104,7 +104,6 @@ export const Route = createRootRoute({
       },
       { name: "author", content: "Le Petit Paradis" },
       { property: "og:site_name", content: "Le Petit Paradis" },
-      { rel: "icon", type: "image/png", href: faviconSrc.url },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:title", content: "Le Petit Paradis — أزياء الأطفال الفاخرة" },
