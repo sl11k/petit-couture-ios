@@ -40,6 +40,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { isPageContent, type Section } from "@/page-builder/schemas/pageSchema";
 import { PageRenderer } from "@/page-builder/components/PageRenderer";
 
+import faviconSrc from "@/assets/favicon-lpp.png.asset.json";
 import appCss from "../styles.css?url";
 
 const queryClient = new QueryClient({
@@ -103,7 +104,6 @@ export const Route = createRootRoute({
       },
       { name: "author", content: "Le Petit Paradis" },
       { property: "og:site_name", content: "Le Petit Paradis" },
-      { rel: "icon", href: "/favicon.ico" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:title", content: "Le Petit Paradis — أزياء الأطفال الفاخرة" },
@@ -131,6 +131,14 @@ export const Route = createRootRoute({
       { name: "google-site-verification", content: "VlzVDbZFLTDQ_yVwf8NIbUAtfW4QjVcXhzzaMIc_IRc" },
     ],
     links: [
+      {
+        rel: "icon",
+        href: faviconSrc.url,
+      },
+      {
+        rel: "apple-touch-icon",
+        href: faviconSrc.url,
+      },
       {
         rel: "stylesheet",
         href: appCss,
