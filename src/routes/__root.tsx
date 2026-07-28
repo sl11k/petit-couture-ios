@@ -40,6 +40,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { isPageContent, type Section } from "@/page-builder/schemas/pageSchema";
 import { PageRenderer } from "@/page-builder/components/PageRenderer";
 
+import faviconSrc from "@/assets/favicon-lpp.png.asset.json";
 import appCss from "../styles.css?url";
 
 const queryClient = new QueryClient({
