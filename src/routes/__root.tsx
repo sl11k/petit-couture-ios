@@ -18,6 +18,7 @@ import { DesktopHeader } from "@/components/DesktopHeader";
 import { MobileBottomNav, StorefrontMobileHeader } from "@/components/mobile/MobileNav";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
+import { TrackingPixels } from "@/components/TrackingPixels";
 import { CookieBanner } from "@/components/CookieBanner";
 import { Footer } from "@/components/Footer";
 import { TranslateScope } from "@/i18n/TranslateScope";
@@ -326,6 +327,7 @@ function StorefrontShell({
       {showStoreChrome && <DesktopHeader />}
       {showStoreChrome && <StorefrontMobileHeader />}
       <AnalyticsTracker />
+      {showStoreChrome && <TrackingPixels />}
       <div id="main-content" tabIndex={-1}>
         {/* For native route types (product/category) always render the Outlet
             so the actual product/category component is never hidden by CMS records.

@@ -7091,6 +7091,45 @@ export type Database = {
         }
         Relationships: []
       }
+      tracking_pixels: {
+        Row: {
+          created_at: string
+          custom_script: string | null
+          enabled: boolean
+          id: string
+          label: string | null
+          pixel_id: string | null
+          placement: string
+          provider: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          custom_script?: string | null
+          enabled?: boolean
+          id?: string
+          label?: string | null
+          pixel_id?: string | null
+          placement?: string
+          provider: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          custom_script?: string | null
+          enabled?: boolean
+          id?: string
+          label?: string | null
+          pixel_id?: string | null
+          placement?: string
+          provider?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       unsubscribe_tokens: {
         Row: {
           channel: string

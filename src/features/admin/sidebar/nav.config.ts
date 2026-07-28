@@ -89,6 +89,7 @@ export const ADMIN_NAV: NavGroup[] = [
       { to: "/admin/landing-pages", label: { ar: "صفحات الهبوط", en: "Landing pages" }, icon: Globe },
       { to: "/admin/ab-tests", label: { ar: "اختبارات A/B", en: "A/B tests" }, icon: Activity },
       { to: "/admin/conversion", label: { ar: "التحويل", en: "Conversion" }, icon: Activity },
+      { to: "/admin/pixels", label: { ar: "بكسلات التتبع", en: "Tracking pixels" }, icon: Activity },
       { to: "/admin/search", label: { ar: "البحث", en: "Search" }, icon: Search },
     ],
   },
