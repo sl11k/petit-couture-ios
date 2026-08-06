@@ -30,99 +30,32 @@ function SiteAnalyticsPage() {
     (async () => {
       setLoading(true);
       const since = new Date(Date.now() - RANGE_DAYS[range] * 86400000).toISOString();
-      const [searches, products, events] = await Promise.all([
-        supabase.from("search_logs").select("query, results_count").gte("created_at", since).limit(1000),
+      const hostDomain = window.location.hostname.replace("www.", "");
+      
+      const [rpcRes, productsRes] = await Promise.all([
+        supabase.rpc("get_site_analytics_v1", { since, host_domain: hostDomain }),
         supabase.from("products").select("id, name_ar, name_en, views_count").order("views_count", { ascending: false }).limit(10),
-        supabase.from("analytics_events").select("session_id, created_at, referrer, event_name, path").gte("created_at", since),
       ]);
 
-      const queryMap = new Map<string, number>();
-      (searches.data ?? []).forEach((r: any) => {
-        const q = (r.query ?? "").trim().toLowerCase();
-        if (q) queryMap.set(q, (queryMap.get(q) ?? 0) + 1);
-      });
-      const top = [...queryMap.entries()].map(([q, c]) => ({ q, c })).sort((a, b) => b.c - a.c).slice(0, 10);
-
-      const visitsMap = new Map<string, Set<string>>();
-      const refMap = new Map<string, number>();
-      const pathMap = new Map<string, number>();
-      const eventMap = new Map<string, number>();
-
-      const EXCLUDED_DOMAINS = ["lovable.dev", "lovableproject.com", "lovable.app"];
-
-      (events.data ?? []).forEach((ev: any) => {
-        // Collect detailed event stats
-        if (ev.event_name) {
-          eventMap.set(ev.event_name, (eventMap.get(ev.event_name) ?? 0) + 1);
-        }
-        
-        // Exclude specific lovable referrers completely from counts if they are the source
-        // Wait, if we want to exclude visits ENTIRELY from these referrers:
-        let r = ev.referrer ?? "";
-        try { r = new URL(r).hostname.replace("www.", ""); } catch(e) {}
-        
-        if (EXCLUDED_DOMAINS.some((d) => r.endsWith(d))) {
-          return; // Skip this event completely from the dashboard
-        }
-
-        const day = ev.created_at.slice(0, 10);
-        if (!visitsMap.has(day)) visitsMap.set(day, new Set());
-        visitsMap.get(day)!.add(ev.session_id);
-
-        if (ev.path) {
-          pathMap.set(ev.path, (pathMap.get(ev.path) ?? 0) + 1);
-        }
-
-        if (r && r !== window.location.hostname) {
-          refMap.set(r, (refMap.get(r) ?? 0) + 1);
-        }
-      });
-
-      const daily = Array.from(visitsMap.entries())
-        .map(([date, set]) => ({ date, visits: set.size }))
-        .sort((a, b) => a.date.localeCompare(b.date));
-
-      const referrersList = Array.from(refMap.entries())
-        .map(([source, count]) => ({ source, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 15);
-
-      const topPagesList = Array.from(pathMap.entries())
-        .map(([path, count]) => ({ path, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 15);
-
-      const topEventsList = Array.from(eventMap.entries())
-        .map(([name, count]) => ({ name, count }))
-        .sort((a, b) => b.count - a.count);
-
-      const uniqueSessions = Array.from(visitsMap.values()).reduce((sum, s) => sum + s.size, 0); // Or track globally
-      // Actually global unique over the range is:
-      const allSessions = new Set();
-      (events.data ?? []).forEach((ev: any) => {
-        let r = ev.referrer ?? "";
-        try { r = new URL(r).hostname.replace("www.", ""); } catch(e) {}
-        if (!EXCLUDED_DOMAINS.some((d) => r.endsWith(d))) {
-          allSessions.add(ev.session_id);
-        }
-      });
-      const globalUniqueSessions = allSessions.size;
-
-      const referralClicks = Array.from(refMap.values()).reduce((a, b) => a + b, 0);
-
+      const data = rpcRes.data as any || {};
+      
       setStats({
-        totalSearches: searches.data?.length ?? 0,
-        zeroResults: (searches.data ?? []).filter((r: any) => r.results_count === 0).length,
-        totalViews: (products.data ?? []).reduce((s: number, p: any) => s + (p.views_count ?? 0), 0),
-        uniqueSessions: globalUniqueSessions,
-        referralClicks,
+        totalSearches: data.total_searches ?? 0,
+        zeroResults: data.zero_results ?? 0,
+        totalViews: (productsRes.data ?? []).reduce((s: number, p: any) => s + (p.views_count ?? 0), 0),
+        uniqueSessions: data.unique_sessions ?? 0,
+        referralClicks: data.referral_clicks ?? 0,
       });
-      setTopQueries(top);
-      setTopProducts(products.data ?? []);
-      setTopPages(topPagesList);
-      setTopEvents(topEventsList);
+      setTopQueries(data.top_queries ?? []);
+      setTopProducts(productsRes.data ?? []);
+      setTopPages(data.top_pages ?? []);
+      setTopEvents(data.top_events ?? []);
+      
+      // Ensure daily visits dates are nicely formatted
+      const daily = (data.daily_visits ?? []).sort((a: any, b: any) => a.date.localeCompare(b.date));
       setDailyVisits(daily);
-      setTopReferrers(referrersList);
+      
+      setTopReferrers(data.top_referrers ?? []);
       setLoading(false);
     })();
   }, [range]);
