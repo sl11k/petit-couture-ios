@@ -21,7 +21,7 @@ VALUES
 
   ('cart_abandoned_1h', 'whatsapp', 'customer', 'ar', 'سلتك في انتظارك', $$مرحباً! لاحظنا أنك تركت بعض المنتجات الرائعة في سلتك 🛒.
 لإكمال طلبك، يسعدنا أن نقدم لك كود خصم خاص: *COMEBACK10* للحصول على خصم 10% على سلتك!
-يمكنك إكمال الطلب من هنا: https://petitcouture.com/bag$$, true, true, ARRAY[])
+يمكنك إكمال الطلب من هنا: https://petitcouture.com/bag$$, true, true, ARRAY[]::text[])
 ON CONFLICT (event_code, channel, audience, language) DO UPDATE SET
   subject = EXCLUDED.subject,
   body = EXCLUDED.body,
