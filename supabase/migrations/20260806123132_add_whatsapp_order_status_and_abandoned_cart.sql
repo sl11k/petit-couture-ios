@@ -51,12 +51,12 @@ WHERE NOT EXISTS (
 
 -- Insert the COMEBACK10 discount coupon
 INSERT INTO public.coupons (
-  id, code, type, value, is_active, max_uses, usage_count,
-  min_order_amount, applies_to, product_ids, category_ids
+  id, code, discount_type, discount_value, is_active, max_uses, used_count,
+  min_subtotal
 )
 SELECT 
   gen_random_uuid(), 'COMEBACK10', 'percentage', 10, true, null, 0,
-  0, 'all', null, null
+  0
 WHERE NOT EXISTS (
   SELECT 1 FROM public.coupons WHERE code = 'COMEBACK10'
 );
