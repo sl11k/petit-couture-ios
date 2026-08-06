@@ -32,9 +32,8 @@ function SiteAnalyticsPage() {
       const since = new Date(Date.now() - RANGE_DAYS[range] * 86400000).toISOString();
       const hostDomain = window.location.hostname.replace("www.", "");
       
-      const [rpcRes, productsRes] = await Promise.all([
+      const [rpcRes] = await Promise.all([
         supabase.rpc("get_site_analytics_v1", { since, host_domain: hostDomain }),
-        supabase.from("products").select("id, name_ar, name_en, views_count").order("views_count", { ascending: false }).limit(10),
       ]);
 
       const data = rpcRes.data as any || {};
@@ -42,12 +41,12 @@ function SiteAnalyticsPage() {
       setStats({
         totalSearches: data.total_searches ?? 0,
         zeroResults: data.zero_results ?? 0,
-        totalViews: (productsRes.data ?? []).reduce((s: number, p: any) => s + (p.views_count ?? 0), 0),
+        totalViews: data.total_product_views ?? (data.top_products ?? []).reduce((s: number, p: any) => s + (p.views_count ?? 0), 0),
         uniqueSessions: data.unique_sessions ?? 0,
         referralClicks: data.referral_clicks ?? 0,
       });
       setTopQueries(data.top_queries ?? []);
-      setTopProducts(productsRes.data ?? []);
+      setTopProducts(data.top_products ?? []);
       setTopPages(data.top_pages ?? []);
       setTopEvents(data.top_events ?? []);
       

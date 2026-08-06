@@ -96,18 +96,15 @@ function AnalyticsPage() {
     (async () => {
       setLoading(true);
       const since = new Date(Date.now() - RANGE_DAYS[range] * 86400000).toISOString();
-      const [ordersRes, sessionsRes, itemsRes, customersRes, cartsRes] = await Promise.all([
-        // Pull every order in range, then split paid / refunded / cancelled locally
-        // so the revenue breakdown reconciles exactly with the orders table.
-        supabase.from("orders").select("total, refunded_amount, status, payment_status, payment_method, created_at").gte("created_at", since),
-        supabase.from("analytics_events").select("session_id").gte("created_at", since),
-        supabase.from("order_items").select("product_name, qty, orders!inner(created_at, payment_status)").gte("orders.created_at", since).eq("orders.payment_status", "paid"),
-        supabase.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", since),
-        supabase.from("abandoned_carts")
-          .select("id, email, phone, stage, subtotal, updated_at, converted, reached_checkout, abandonment_reason")
-          .gte("updated_at", since),
-      ]);
-      const allOrders = (ordersRes.data ?? []) as any[];
+      const rpcRes = await supabase.rpc("get_store_analytics_data_v1", { since });
+      const data = rpcRes.data as any || {};
+
+      const allOrders = data.orders || [];
+      const sessionsCount = data.sessions_count || 0;
+      const customersCount = data.customers_count || 0;
+      const itemsData = data.items || [];
+      const cartsData = data.carts || [];
+
       const paidOrders = allOrders.filter((o: any) => String(o.payment_status) === "paid");
       const VOID_STATUSES = ["cancelled", "refunded", "returned", "payment_failed"];
       const orders = paidOrders.filter((o: any) => !VOID_STATUSES.includes(String(o.status)));
@@ -141,11 +138,11 @@ function AnalyticsPage() {
         .sort((a, b) => b.amount - a.amount);
 
       const avgOrder = orders.length > 0 ? revenue / orders.length : 0;
-      const sessions = new Set((sessionsRes.data ?? []).map((s: any) => s.session_id).filter(Boolean)).size;
+      const sessions = sessionsCount;
 
       // Top products
       const productMap = new Map<string, number>();
-      (itemsRes.data ?? []).forEach((it: any) => {
+      itemsData.forEach((it: any) => {
         const name = it.product_name ?? "—";
         productMap.set(name, (productMap.get(name) ?? 0) + Number(it.qty ?? 1));
       });
@@ -162,7 +159,7 @@ function AnalyticsPage() {
         .map(([status, count]) => ({ status, count }));
 
       // ============ Customer behaviour / drop-off ============
-      const carts = cartsRes.data ?? [];
+      const carts = cartsData;
       const checkoutsStarted = carts.length;
       const checkoutsConverted = carts.filter((c: any) => c.converted).length;
       const checkoutsAbandoned = checkoutsStarted - checkoutsConverted;
@@ -245,7 +242,7 @@ function AnalyticsPage() {
         revenueSources,
         orders: orders.length,
         avgOrder,
-        customers: customersRes.count ?? 0,
+        customers: customersCount,
         sessions,
         topProducts,
         topStatuses,
