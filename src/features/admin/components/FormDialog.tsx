@@ -116,6 +116,10 @@ function buildSchema(fields: FormFieldDef[], mode: "create" | "edit", ar: boolea
         s = z.any();
         alreadyHandled = true;
         break;
+      case "stringArray":
+        s = z.array(z.string());
+        alreadyHandled = true;
+        break;
       case "select":
         s = z.string();
         break;
@@ -874,6 +878,16 @@ export function FormDialog({
                     />
                   ) : f.type === "json" ? (
                     <FriendlyDataEditor value={values[f.key]} onChange={(v) => setVal(f.key, v)} />
+                  ) : f.type === "stringArray" ? (
+                    <Textarea
+                      id={f.key}
+                      value={Array.isArray(values[f.key]) ? values[f.key].join("\n") : ""}
+                      onChange={(e) => setVal(f.key, e.target.value.split("\n").map(s => s.trim()).filter(Boolean))}
+                      placeholder={ph}
+                      rows={f.rows ?? 4}
+                      className="text-start"
+                      dir="ltr"
+                    />
                   ) : f.type === "link" ? (
                     <LinkPicker
                       value={values[f.key] ?? ""}

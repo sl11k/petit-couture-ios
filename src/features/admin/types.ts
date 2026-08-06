@@ -21,7 +21,7 @@ export type FilterDef =
 export type FormFieldType =
   | "text" | "textarea" | "number" | "select" | "boolean" | "date" | "datetime"
   | "image" | "video" | "gallery" | "url" | "email" | "tel" | "color" | "json"
-  | "videoGallery" | "warehouseStock"
+  | "videoGallery" | "warehouseStock" | "stringArray"
   | "lookup"
   | "link"
   | "productVariants"
