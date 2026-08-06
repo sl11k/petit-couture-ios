@@ -110,19 +110,19 @@ function AnalyticsPage() {
       const orders = paidOrders.filter((o: any) => !VOID_STATUSES.includes(String(o.status)));
 
       // Revenue reconciliation buckets
-      const grossPaid = paidOrders.reduce((s, o: any) => s + Number(o.total ?? 0), 0);
-      const refundedAmount = paidOrders.reduce((s, o: any) => s + Number(o.refunded_amount ?? 0), 0);
+      const grossPaid = paidOrders.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
+      const refundedAmount = paidOrders.reduce((s: number, o: any) => s + Number(o.refunded_amount ?? 0), 0);
       const cancelledAmount = paidOrders
         .filter((o: any) => VOID_STATUSES.includes(String(o.status)))
-        .reduce((s, o: any) => s + Math.max(0, Number(o.total ?? 0) - Number(o.refunded_amount ?? 0)), 0);
+        .reduce((s: number, o: any) => s + Math.max(0, Number(o.total ?? 0) - Number(o.refunded_amount ?? 0)), 0);
       const unpaidAmount = allOrders
         .filter((o: any) => String(o.payment_status) !== "paid")
-        .reduce((s, o: any) => s + Number(o.total ?? 0), 0);
+        .reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
       const refundedOrdersCount = paidOrders.filter((o: any) => Number(o.refunded_amount ?? 0) > 0).length;
       const cancelledOrdersCount = paidOrders.filter((o: any) => VOID_STATUSES.includes(String(o.status))).length;
       const unpaidOrdersCount = allOrders.length - paidOrders.length;
 
-      const revenue = orders.reduce((s, o: any) => s + Math.max(0, Number(o.total ?? 0) - Number(o.refunded_amount ?? 0)), 0);
+      const revenue = orders.reduce((s: number, o: any) => s + Math.max(0, Number(o.total ?? 0) - Number(o.refunded_amount ?? 0)), 0);
 
       // Paid-only revenue sources (payment methods)
       const sourceMap = new Map<string, { amount: number; count: number }>();

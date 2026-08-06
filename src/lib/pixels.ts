@@ -375,8 +375,7 @@ export function pixelTrack(event: PixelEventName, payload: PixelEventPayload = {
   // 1. TikTok
   try {
     if (w.ttq && w.ttq.track) {
-      let ttEvent = event;
-      if (event === "Purchase") ttEvent = "CompletePayment";
+      const ttEvent: string = event === "Purchase" ? "CompletePayment" : event;
       
       w.ttq.track(ttEvent, {
         content_name: payload.content_name,
@@ -405,11 +404,13 @@ export function pixelTrack(event: PixelEventName, payload: PixelEventPayload = {
   // 3. Snapchat
   try {
     if (w.snaptr) {
-      let snapEvent = event;
-      if (event === "ViewContent") snapEvent = "VIEW_CONTENT";
-      if (event === "AddToCart") snapEvent = "ADD_CART";
-      if (event === "InitiateCheckout") snapEvent = "START_CHECKOUT";
-      if (event === "Purchase") snapEvent = "PURCHASE";
+      const snapMap: Record<PixelEventName, string> = {
+        ViewContent: "VIEW_CONTENT",
+        AddToCart: "ADD_CART",
+        InitiateCheckout: "START_CHECKOUT",
+        Purchase: "PURCHASE",
+      };
+      const snapEvent: string = snapMap[event] ?? event;
 
       w.snaptr("track", snapEvent, {
         item_category: payload.content_name,

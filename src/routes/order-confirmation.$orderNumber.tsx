@@ -156,7 +156,11 @@ function OrderConfirmationPage() {
         value: order.total,
         currency: order.currency,
         order_id: order.id,
-        quantity: order.items?.reduce((sum, i) => sum + (i.qty || 1), 0) || 1
+        quantity:
+          ((order as any).items as Array<{ qty?: number }> | undefined)?.reduce(
+            (sum: number, i) => sum + (i.qty || 1),
+            0,
+          ) || 1
       });
     }
   }, [state, order]);

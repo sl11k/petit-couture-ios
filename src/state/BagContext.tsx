@@ -194,7 +194,7 @@ export function BagProvider({ children }: { children: ReactNode }) {
     });
     pixelTrack("AddToCart", {
       content_name: input.name,
-      content_id: input.id || input.slug,
+      content_id: input.slug,
       value: input.price * qty,
       currency: input.currency || "SAR",
       quantity: qty
