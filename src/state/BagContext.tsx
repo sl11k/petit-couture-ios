@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { trackServerEvent, getCurrentSessionId } from "@/lib/serverAnalytics";
+import { pixelTrack } from "@/lib/pixels";
 import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_KEY = "maisonnet:bag:v1";
@@ -190,6 +191,13 @@ export function BagProvider({ children }: { children: ReactNode }) {
       qty,
       size: input.size,
       color: input.color,
+    });
+    pixelTrack("AddToCart", {
+      content_name: input.name,
+      content_id: input.id || input.slug,
+      value: input.price * qty,
+      currency: input.currency || "SAR",
+      quantity: qty
     });
   }, []);
 

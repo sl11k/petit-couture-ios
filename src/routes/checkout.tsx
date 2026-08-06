@@ -28,6 +28,7 @@ import { trackServerEvent, getCurrentSessionId } from "@/lib/serverAnalytics";
 import { supabase } from "@/integrations/supabase/client";
 import { placeOrder } from "@/lib/placeOrder.functions";
 import { validateCoupon } from "@/lib/coupons.functions";
+import { pixelTrack } from "@/lib/pixels";
 import {
   getAvailableShippingCountries,
   resolveShippingRates,
@@ -71,6 +72,16 @@ function CheckoutPage() {
   const fmt = (n: number) => n.toLocaleString(locale, { maximumFractionDigits: 2 });
 
   const bagEmpty = bag.items.length === 0;
+
+  useEffect(() => {
+    if (!bagEmpty) {
+      pixelTrack("InitiateCheckout", {
+        value: bag.subtotal,
+        currency: bag.currency,
+        quantity: bag.count
+      });
+    }
+  }, [bagEmpty, bag.subtotal, bag.currency, bag.count]);
 
   // ───── Form state (single source of truth across steps) ─────
   const [step, setStep] = useState<Step>(1);

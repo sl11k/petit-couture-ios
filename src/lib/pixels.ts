@@ -342,7 +342,6 @@ export function loadPixel(row: PixelRow): void {
   }
 }
 
-/** Fires a page view on all loaded pixels (used on client-side route changes). */
 export function pixelPageView(): void {
   if (typeof window === "undefined") return;
   const w = window as any;
@@ -350,4 +349,75 @@ export function pixelPageView(): void {
   try { w.fbq?.("track", "PageView"); } catch { /* noop */ }
   try { w.snaptr?.("track", "PAGE_VIEW"); } catch { /* noop */ }
   try { w.pintrk?.("page"); } catch { /* noop */ }
+}
+
+export type PixelEventName = "ViewContent" | "AddToCart" | "InitiateCheckout" | "Purchase";
+
+export interface PixelEventPayload {
+  content_name?: string;
+  content_id?: string;
+  content_type?: string;
+  value?: number;
+  currency?: string;
+  quantity?: number;
+  order_id?: string;
+}
+
+/** Fires a specific ecommerce event to all configured pixels. */
+export function pixelTrack(event: PixelEventName, payload: PixelEventPayload = {}): void {
+  if (typeof window === "undefined") return;
+  const w = window as any;
+
+  // Common mapping for currency
+  const currency = payload.currency || "SAR";
+  const value = payload.value || 0;
+
+  // 1. TikTok
+  try {
+    if (w.ttq && w.ttq.track) {
+      let ttEvent = event;
+      if (event === "Purchase") ttEvent = "PlaceAnOrder";
+      
+      w.ttq.track(ttEvent, {
+        content_name: payload.content_name,
+        content_id: payload.content_id,
+        content_type: payload.content_type || "product",
+        value: value,
+        currency: currency,
+        quantity: payload.quantity || 1,
+      });
+    }
+  } catch { /* noop */ }
+
+  // 2. Meta / Facebook
+  try {
+    if (w.fbq) {
+      w.fbq("track", event, {
+        content_name: payload.content_name,
+        content_ids: payload.content_id ? [payload.content_id] : [],
+        content_type: payload.content_type || "product",
+        value: value,
+        currency: currency,
+      });
+    }
+  } catch { /* noop */ }
+
+  // 3. Snapchat
+  try {
+    if (w.snaptr) {
+      let snapEvent = event;
+      if (event === "ViewContent") snapEvent = "VIEW_CONTENT";
+      if (event === "AddToCart") snapEvent = "ADD_CART";
+      if (event === "InitiateCheckout") snapEvent = "START_CHECKOUT";
+      if (event === "Purchase") snapEvent = "PURCHASE";
+
+      w.snaptr("track", snapEvent, {
+        item_category: payload.content_name,
+        item_ids: payload.content_id ? [payload.content_id] : [],
+        price: value,
+        currency: currency,
+        transaction_id: payload.order_id,
+      });
+    }
+  } catch { /* noop */ }
 }

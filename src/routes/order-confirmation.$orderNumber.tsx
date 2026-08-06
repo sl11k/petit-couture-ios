@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2, Package, Truck, Home, MapPin, Copy, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { pixelTrack } from "@/lib/pixels";
 import { getOrderConfirmation } from "@/lib/orderConfirmation.functions";
 import { finalizeStripeOrder } from "@/lib/stripeFinalize.functions";
 import { supabase } from "@/integrations/supabase/client";
@@ -146,6 +147,19 @@ function OrderConfirmationPage() {
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderNumber]);
+
+  const pixelFired = useRef(false);
+  useEffect(() => {
+    if (state === "ready" && order && !pixelFired.current) {
+      pixelFired.current = true;
+      pixelTrack("Purchase", {
+        value: order.total,
+        currency: order.currency,
+        order_id: order.id,
+        quantity: order.items?.reduce((sum, i) => sum + (i.qty || 1), 0) || 1
+      });
+    }
+  }, [state, order]);
 
   if (state === "loading" || (state === "waiting_payment" && !order)) {
     return (

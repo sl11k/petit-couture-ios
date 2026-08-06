@@ -36,6 +36,7 @@ import { useWishlist } from "@/state/WishlistContext";
 import { useBag } from "@/state/BagContext";
 import { usePriceFormatter } from "@/state/CurrencyContext";
 import { trackEvent } from "@/lib/analytics";
+import { pixelTrack } from "@/lib/pixels";
 import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
 
 import { VariantsPicker } from "@/components/product/VariantsPicker";
@@ -166,6 +167,18 @@ function ProductDetails() {
   useEffect(() => {
     if (activeImage) setActiveImg(0);
   }, [activeImage]);
+
+  useEffect(() => {
+    // Fire ViewContent when product details render
+    const pName = ar ? (product.name_ar || product.name) : (product.name_en || product.name);
+    const pPrice = getCanonicalProductPrice(product);
+    pixelTrack("ViewContent", {
+      content_name: pName,
+      content_id: productId,
+      value: pPrice,
+      currency: "SAR"
+    });
+  }, [productId, ar, product]);
 
   // Re-sync selection if the loaded product no longer contains the picks.
   useEffect(() => {
