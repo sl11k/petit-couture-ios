@@ -197,7 +197,8 @@ export function BagProvider({ children }: { children: ReactNode }) {
       content_id: input.slug,
       value: input.price * qty,
       currency: input.currency || "SAR",
-      quantity: qty
+      quantity: qty,
+      contents: [{ id: input.id || input.slug, quantity: qty, price: input.price }]
     });
   }, []);
 

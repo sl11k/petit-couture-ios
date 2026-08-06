@@ -351,7 +351,7 @@ export function pixelPageView(): void {
   try { w.pintrk?.("page"); } catch { /* noop */ }
 }
 
-export type PixelEventName = "ViewContent" | "AddToCart" | "InitiateCheckout" | "Purchase";
+export type PixelEventName = "ViewContent" | "AddToCart" | "InitiateCheckout" | "Purchase" | "Search";
 
 export interface PixelEventPayload {
   content_name?: string;
@@ -361,6 +361,8 @@ export interface PixelEventPayload {
   currency?: string;
   quantity?: number;
   order_id?: string;
+  contents?: { id: string; quantity: number; price?: number }[];
+  search_string?: string;
 }
 
 /** Fires a specific ecommerce event to all configured pixels. */
@@ -375,50 +377,95 @@ export function pixelTrack(event: PixelEventName, payload: PixelEventPayload = {
   // 1. TikTok
   try {
     if (w.ttq && w.ttq.track) {
-      const ttEvent: string = event === "Purchase" ? "CompletePayment" : event;
-      
-      w.ttq.track(ttEvent, {
+      if (event === "Search") {
+        w.ttq.track("Search", { query: payload.search_string });
+      } else {
+        const ttEvent: string = event === "Purchase" ? "CompletePayment" : event;
+        const ttPayload: any = {
         content_name: payload.content_name,
         content_id: payload.content_id,
         content_type: payload.content_type || "product",
         value: value,
         currency: currency,
         quantity: payload.quantity || 1,
-      });
+      };
+
+      if (payload.contents && payload.contents.length > 0) {
+        ttPayload.contents = payload.contents.map(c => ({
+          content_id: c.id,
+          content_type: "product",
+          quantity: c.quantity,
+          price: c.price
+        }));
+      }
+
+        w.ttq.track(ttEvent, ttPayload);
+      }
     }
   } catch { /* noop */ }
 
   // 2. Meta / Facebook
   try {
     if (w.fbq) {
-      w.fbq("track", event, {
-        content_name: payload.content_name,
-        content_ids: payload.content_id ? [payload.content_id] : [],
-        content_type: payload.content_type || "product",
-        value: value,
-        currency: currency,
-      });
+      if (event === "Search") {
+        w.fbq("track", "Search", { search_string: payload.search_string });
+      } else {
+        const fbPayload: any = {
+          content_name: payload.content_name,
+          content_type: payload.content_type || "product",
+          value: value,
+          currency: currency,
+        };
+      
+      if (payload.contents && payload.contents.length > 0) {
+        fbPayload.contents = payload.contents.map(c => ({
+          id: c.id,
+          quantity: c.quantity,
+          item_price: c.price
+        }));
+        fbPayload.content_ids = payload.contents.map(c => c.id);
+        fbPayload.num_items = payload.contents.reduce((sum, c) => sum + (c.quantity || 1), 0);
+      } else if (payload.content_id) {
+        fbPayload.content_ids = [payload.content_id];
+        fbPayload.num_items = payload.quantity || 1;
+      }
+      
+        w.fbq("track", event, fbPayload);
+      }
     }
   } catch { /* noop */ }
 
   // 3. Snapchat
   try {
     if (w.snaptr) {
-      const snapMap: Record<PixelEventName, string> = {
-        ViewContent: "VIEW_CONTENT",
-        AddToCart: "ADD_CART",
-        InitiateCheckout: "START_CHECKOUT",
-        Purchase: "PURCHASE",
-      };
-      const snapEvent: string = snapMap[event] ?? event;
+      if (event === "Search") {
+        w.snaptr("track", "SEARCH", { search_string: payload.search_string });
+      } else {
+        const snapMap: Record<PixelEventName, string> = {
+          ViewContent: "VIEW_CONTENT",
+          AddToCart: "ADD_CART",
+          InitiateCheckout: "START_CHECKOUT",
+          Purchase: "PURCHASE",
+          Search: "SEARCH" // To satisfy type but handled above
+        };
+        const snapEvent: string = snapMap[event] ?? event;
 
-      w.snaptr("track", snapEvent, {
-        item_category: payload.content_name,
-        item_ids: payload.content_id ? [payload.content_id] : [],
+        const snapPayload: any = {
         price: value,
         currency: currency,
         transaction_id: payload.order_id,
-      });
+      };
+
+      if (payload.contents && payload.contents.length > 0) {
+        snapPayload.item_ids = payload.contents.map(c => c.id);
+        snapPayload.number_items = payload.contents.reduce((sum, c) => sum + (c.quantity || 1), 0);
+      } else if (payload.content_id) {
+        snapPayload.item_ids = [payload.content_id];
+        snapPayload.item_category = payload.content_name;
+      }
+
+        w.snaptr("track", snapEvent, snapPayload);
+      }
     }
   } catch { /* noop */ }
 }

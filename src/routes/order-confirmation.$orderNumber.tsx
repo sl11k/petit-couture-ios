@@ -160,7 +160,8 @@ function OrderConfirmationPage() {
           ((order as any).items as Array<{ qty?: number }> | undefined)?.reduce(
             (sum: number, i) => sum + (i.qty || 1),
             0,
-          ) || 1
+          ) || 1,
+        contents: order.items?.map(i => ({ id: i.product_id, quantity: i.qty || 1, price: i.price })) || []
       });
     }
   }, [state, order]);

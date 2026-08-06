@@ -78,10 +78,11 @@ function CheckoutPage() {
       pixelTrack("InitiateCheckout", {
         value: bag.subtotal,
         currency: bag.currency,
-        quantity: bag.count
+        quantity: bag.count,
+        contents: bag.items.map(i => ({ id: i.id || i.slug, quantity: i.qty, price: i.price }))
       });
     }
-  }, [bagEmpty, bag.subtotal, bag.currency, bag.count]);
+  }, [bagEmpty, bag.subtotal, bag.currency, bag.count, bag.items]);
 
   // ───── Form state (single source of truth across steps) ─────
   const [step, setStep] = useState<Step>(1);

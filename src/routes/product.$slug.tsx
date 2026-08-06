@@ -176,7 +176,8 @@ function ProductDetails() {
       content_name: pName,
       content_id: productId ?? undefined,
       value: pPrice,
-      currency: "SAR"
+      currency: "SAR",
+      contents: [{ id: productId, quantity: 1, price: pPrice }]
     });
   }, [productId, ar, product]);
 
