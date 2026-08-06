@@ -170,11 +170,11 @@ function ProductDetails() {
 
   useEffect(() => {
     // Fire ViewContent when product details render
-    const pName = ar ? (product.name_ar || product.name) : (product.name_en || product.name);
-    const pPrice = getCanonicalProductPrice(product);
+    const pName = product.name;
+    const pPrice = getCanonicalProductPrice(product.price);
     pixelTrack("ViewContent", {
       content_name: pName,
-      content_id: productId,
+      content_id: productId ?? undefined,
       value: pPrice,
       currency: "SAR"
     });

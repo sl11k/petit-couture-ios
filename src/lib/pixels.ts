@@ -375,8 +375,7 @@ export function pixelTrack(event: PixelEventName, payload: PixelEventPayload = {
   // 1. TikTok
   try {
     if (w.ttq && w.ttq.track) {
-      let ttEvent = event;
-      if (event === "Purchase") ttEvent = "CompletePayment";
+      const ttEvent: string = event === "Purchase" ? "CompletePayment" : event;
       
       w.ttq.track(ttEvent, {
         content_name: payload.content_name,
