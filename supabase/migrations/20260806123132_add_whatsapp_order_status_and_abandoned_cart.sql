@@ -9,19 +9,19 @@ ON CONFLICT (code) DO UPDATE SET
 -- Ensure templates for WhatsApp exist for these events
 INSERT INTO public.notif_templates(event_code, channel, audience, language, subject, body, is_enabled, is_default, variables_used)
 VALUES
-  ('order_shipped', 'whatsapp', 'customer', 'ar', 'تم شحن طلبك', '📦 مرحباً {{customer_name}}، طلبك *{{order_number}}* في طريقه إليك!
+  ('order_shipped', 'whatsapp', 'customer', 'ar', 'تم شحن طلبك', $$📦 مرحباً {{customer_name}}، طلبك *{{order_number}}* في طريقه إليك!
 رقم التتبع: {{tracking_number}}
-تتبع شحنتك من هنا: {{tracking_url}}', true, true, ARRAY['customer_name','order_number','tracking_number','tracking_url']),
+تتبع شحنتك من هنا: {{tracking_url}}$$, true, true, ARRAY['customer_name','order_number','tracking_number','tracking_url']),
   
-  ('order_delivered', 'whatsapp', 'customer', 'ar', 'تم تسليم طلبك', '✅ أهلاً {{customer_name}}، تم تسليم طلبك رقم {{order_number}} بنجاح.
-نتمنى أن تنال منتجاتنا إعجابك! يسعدنا تقييمك للطلب.', true, true, ARRAY['customer_name','order_number']),
+  ('order_delivered', 'whatsapp', 'customer', 'ar', 'تم تسليم طلبك', $$✅ أهلاً {{customer_name}}، تم تسليم طلبك رقم {{order_number}} بنجاح.
+نتمنى أن تنال منتجاتنا إعجابك! يسعدنا تقييمك للطلب.$$, true, true, ARRAY['customer_name','order_number']),
 
-  ('order_cancelled_by_admin', 'whatsapp', 'customer', 'ar', 'تم إلغاء طلبك', '⚠️ أهلاً {{customer_name}}، نعتذر منك، لقد تم إلغاء طلبك رقم {{order_number}}.
-إذا كان لديك استفسار، يرجى التواصل مع الدعم الفني.', true, true, ARRAY['customer_name','order_number']),
+  ('order_cancelled_by_admin', 'whatsapp', 'customer', 'ar', 'تم إلغاء طلبك', $$⚠️ أهلاً {{customer_name}}، نعتذر منك، لقد تم إلغاء طلبك رقم {{order_number}}.
+إذا كان لديك استفسار، يرجى التواصل مع الدعم الفني.$$, true, true, ARRAY['customer_name','order_number']),
 
-  ('cart_abandoned_1h', 'whatsapp', 'customer', 'ar', 'سلتك في انتظارك', 'مرحباً! لاحظنا أنك تركت بعض المنتجات الرائعة في سلتك 🛒.
+  ('cart_abandoned_1h', 'whatsapp', 'customer', 'ar', 'سلتك في انتظارك', $$مرحباً! لاحظنا أنك تركت بعض المنتجات الرائعة في سلتك 🛒.
 لإكمال طلبك، يسعدنا أن نقدم لك كود خصم خاص: *COMEBACK10* للحصول على خصم 10% على سلتك!
-يمكنك إكمال الطلب من هنا: https://petitcouture.com/bag', true, true, ARRAY[])
+يمكنك إكمال الطلب من هنا: https://petitcouture.com/bag$$, true, true, ARRAY[])
 ON CONFLICT (event_code, channel, audience, language) DO UPDATE SET
   subject = EXCLUDED.subject,
   body = EXCLUDED.body,
