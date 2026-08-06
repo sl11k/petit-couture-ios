@@ -7907,6 +7907,11 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_site_analytics_v1: {
+        Args: { host_domain?: string; since: string }
+        Returns: Json
+      }
+      get_store_analytics_data_v1: { Args: { since: string }; Returns: Json }
       get_user_emails: {
         Args: { _ids: string[] }
         Returns: {
