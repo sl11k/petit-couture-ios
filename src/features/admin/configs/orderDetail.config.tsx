@@ -217,6 +217,8 @@ export const orderDetailConfig: AdminDetailConfig = {
         { key: "subtotal", label: { ar: "المجموع الفرعي", en: "Subtotal" }, type: "currency" },
         { key: "shipping_fee", label: { ar: "الشحن", en: "Shipping" }, type: "currency" },
         { key: "tax", label: { ar: "الضريبة", en: "Tax" }, type: "currency" },
+        { key: "discount_amount", label: { ar: "الخصم", en: "Discount" }, type: "currency", hideIfEmpty: true },
+        { key: "coupon_code", label: { ar: "كود الخصم", en: "Promo code" }, hideIfEmpty: true },
         { key: "total", label: { ar: "الإجمالي", en: "Total" }, type: "currency" },
       ],
     },

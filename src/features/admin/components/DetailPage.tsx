@@ -46,10 +46,26 @@ function formatValue(value: any, type: DetailFieldDef["type"], lang: string): Re
     case "json":
       return <FriendlyDataView value={value} />;
     case "address": {
-      if (typeof value !== "object") return String(value);
-      const parts = [value.line1, value.line2, value.city, value.region, value.country, value.postal_code]
-        .filter(Boolean);
-      return <span className="whitespace-pre-wrap text-sm">{parts.join("، ")}</span>;
+      if (typeof value !== "object" || !value) return String(value);
+      
+      const v = value as any;
+      const building = v.buildingNumber ? `${ar ? "مبنى" : "Bldg"} ${v.buildingNumber}` : "";
+      const addNo = v.additionalNumber ? `${ar ? "رقم إضافي" : "Add#"} ${v.additionalNumber}` : "";
+      const zip = v.postalCode ? `${ar ? "الرمز البريدي" : "ZIP"} ${v.postalCode}` : "";
+      
+      const parts = [
+        v.geoAddress,
+        v.street,
+        v.district,
+        v.city,
+        v.countryName || v.countryCode,
+        building,
+        addNo,
+        zip,
+        v.shortCode,
+      ].filter(Boolean);
+
+      return <span className="whitespace-pre-wrap text-sm leading-relaxed block max-w-md">{parts.join(ar ? "، " : ", ")}</span>;
     }
     default:
       return String(value);

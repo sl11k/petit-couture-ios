@@ -115,6 +115,23 @@ export const couponDetailConfig: AdminDetailConfig = {
         }
       }
     }
+  ],
+  related: [
+    {
+      title: { ar: "الطلبات المستخدمة لهذا الكوبون", en: "Orders using this coupon" },
+      table: "orders",
+      foreignKey: "coupon_id",
+      orderBy: { column: "created_at", ascending: false },
+      columns: [
+        { key: "order_number", label: { ar: "رقم الطلب", en: "Order #" } },
+        { key: "customer_name", label: { ar: "العميل", en: "Customer" } },
+        { key: "customer_phone", label: { ar: "الهاتف", en: "Phone" }, hideOnMobile: true },
+        { key: "total", label: { ar: "الإجمالي", en: "Total" }, type: "currency" },
+        { key: "status", label: { ar: "الحالة", en: "Status" }, type: "badge" },
+        { key: "created_at", label: { ar: "التاريخ", en: "Date" }, type: "datetime" },
+      ],
+      rowHref: (r) => `/admin/orders/${r.id}`,
+    }
   ]
 };
 
