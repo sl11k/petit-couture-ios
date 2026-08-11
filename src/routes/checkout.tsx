@@ -86,20 +86,6 @@ function CheckoutPage() {
     }
   }, [bagEmpty, bag.subtotal, bag.currency, bag.count, bag.items]);
 
-  // AddPaymentInfo: fires once the shopper picks a payment method and moves to review.
-  const paymentInfoFired = useRef(false);
-  useEffect(() => {
-    if (bagEmpty || step < 4 || paymentInfoFired.current) return;
-    paymentInfoFired.current = true;
-    pixelTrack("AddPaymentInfo", {
-      value: bag.subtotal,
-      currency: bag.currency,
-      quantity: bag.count,
-      content_name: payment,
-      contents: bag.items.map((i) => ({ id: i.id || i.slug, quantity: i.qty, price: i.price })),
-    });
-  }, [step, bagEmpty, bag.subtotal, bag.currency, bag.count, bag.items, payment]);
-
   // ───── Form state (single source of truth across steps) ─────
   const [step, setStep] = useState<Step>(1);
   const [contact, setContact] = useState({
@@ -136,6 +122,20 @@ function CheckoutPage() {
     [],
   );
   const [payment, setPayment] = useState<PayMethod>("card");
+
+  // AddPaymentInfo: fires once the shopper picks a payment method and moves to review.
+  const paymentInfoFired = useRef(false);
+  useEffect(() => {
+    if (bagEmpty || step < 4 || paymentInfoFired.current) return;
+    paymentInfoFired.current = true;
+    pixelTrack("AddPaymentInfo", {
+      value: bag.subtotal,
+      currency: bag.currency,
+      quantity: bag.count,
+      content_name: payment,
+      contents: bag.items.map((i) => ({ id: i.id || i.slug, quantity: i.qty, price: i.price })),
+    });
+  }, [step, bagEmpty, bag.subtotal, bag.currency, bag.count, bag.items, payment]);
   const [agree, setAgree] = useState(false);
   const [placing, setPlacing] = useState(false);
   const [orderWeightKg, setOrderWeightKg] = useState<number>(1);
