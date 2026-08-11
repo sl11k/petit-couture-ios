@@ -365,7 +365,13 @@ export function pixelPageView(): void {
   try { w.pintrk?.("page"); } catch { /* noop */ }
 }
 
-export type PixelEventName = "ViewContent" | "AddToCart" | "InitiateCheckout" | "Purchase" | "Search";
+export type PixelEventName =
+  | "ViewContent"
+  | "AddToCart"
+  | "InitiateCheckout"
+  | "AddPaymentInfo"
+  | "Purchase"
+  | "Search";
 
 export interface PixelEventPayload {
   content_name?: string;
