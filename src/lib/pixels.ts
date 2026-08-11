@@ -342,6 +342,19 @@ export function loadPixel(row: PixelRow): void {
   }
 }
 
+// ── Event buffering ───────────────────────────────────────────────
+// Pixel rows are fetched from the database, so scripts load a moment after
+// hydration. Events fired before that (ViewContent / InitiateCheckout on a
+// hard load) would otherwise be silently dropped. Buffer and flush them.
+let pixelsReady = false;
+const pending: { event: PixelEventName; payload: PixelEventPayload }[] = [];
+
+export function markPixelsReady(): void {
+  pixelsReady = true;
+  const queued = pending.splice(0, pending.length);
+  queued.forEach(({ event, payload }) => dispatchPixelEvent(event, payload));
+}
+
 export function pixelPageView(): void {
   if (typeof window === "undefined") return;
   const w = window as any;
@@ -368,6 +381,14 @@ export interface PixelEventPayload {
 /** Fires a specific ecommerce event to all configured pixels. */
 export function pixelTrack(event: PixelEventName, payload: PixelEventPayload = {}): void {
   if (typeof window === "undefined") return;
+  if (!pixelsReady) {
+    if (pending.length < 50) pending.push({ event, payload });
+    return;
+  }
+  dispatchPixelEvent(event, payload);
+}
+
+function dispatchPixelEvent(event: PixelEventName, payload: PixelEventPayload): void {
   const w = window as any;
 
   // Common mapping for currency

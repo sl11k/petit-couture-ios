@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { loadPixel, pixelPageView, type PixelRow } from "@/lib/pixels";
+import { loadPixel, markPixelsReady, pixelPageView, type PixelRow } from "@/lib/pixels";
 
 /**
  * Loads all enabled marketing pixels configured in the admin,
@@ -22,6 +22,7 @@ export function TrackingPixels() {
       if (!active || !data) return;
       (data as unknown as PixelRow[]).forEach(loadPixel);
       ready.current = true;
+      markPixelsReady();
     })();
     return () => {
       active = false;
