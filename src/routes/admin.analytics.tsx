@@ -140,10 +140,14 @@ function AnalyticsPage() {
       const avgOrder = orders.length > 0 ? revenue / orders.length : 0;
       const sessions = sessionsCount;
 
-      // Top products
+      // Top products (localized: prefer the canonical product name for the active UI language,
+      // falling back to the order-item snapshot name when the product no longer exists)
       const productMap = new Map<string, number>();
       itemsData.forEach((it: any) => {
-        const name = it.product_name ?? "—";
+        const localized = ar
+          ? (it.name_ar || it.name_en)
+          : (it.name_en || it.name_ar);
+        const name = localized || it.product_name || "—";
         productMap.set(name, (productMap.get(name) ?? 0) + Number(it.qty ?? 1));
       });
       const topProducts = Array.from(productMap.entries())
