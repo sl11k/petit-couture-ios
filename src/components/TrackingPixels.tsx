@@ -19,8 +19,8 @@ export function TrackingPixels() {
         .select("id,provider,label,pixel_id,custom_script,enabled,placement,sort_order")
         .eq("enabled", true)
         .order("sort_order", { ascending: true });
-      if (!active || !data) return;
-      (data as unknown as PixelRow[]).forEach(loadPixel);
+      if (!active) return;
+      ((data ?? []) as unknown as PixelRow[]).forEach(loadPixel);
       ready.current = true;
       markPixelsReady();
     })();
