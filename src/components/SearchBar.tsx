@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Search, X, Loader2 } from "lucide-react";
 import { autocomplete, spellSuggest, recordSearchClick, type SuggestionItem } from "@/lib/search";
 import { productImg } from "@/lib/productImage";
+import { pixelTrack } from "@/lib/pixels";
 
 interface Props {
   isRTL?: boolean;
@@ -47,6 +48,7 @@ export function SearchBar({ isRTL = true, placeholder, autoFocus, onClose }: Pro
     if (!text) return;
     setOpen(false);
     onClose?.();
+    pixelTrack("Search", { search_string: text });
     navigate({ to: "/search", search: { q: text } as any });
   }
 
