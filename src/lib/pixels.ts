@@ -399,6 +399,8 @@ export function pixelTrack(event: PixelEventName, payload: PixelEventPayload = {
 
 function dispatchPixelEvent(event: PixelEventName, payload: PixelEventPayload): void {
   const w = window as any;
+  // Debug trail: inspect with window.__pixelEvents in the browser console.
+  (w.__pixelEvents = w.__pixelEvents || []).push({ t: Date.now(), event, payload });
 
   // Common mapping for currency
   const currency = payload.currency || "SAR";
