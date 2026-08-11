@@ -365,7 +365,13 @@ export function pixelPageView(): void {
   try { w.pintrk?.("page"); } catch { /* noop */ }
 }
 
-export type PixelEventName = "ViewContent" | "AddToCart" | "InitiateCheckout" | "Purchase" | "Search";
+export type PixelEventName =
+  | "ViewContent"
+  | "AddToCart"
+  | "InitiateCheckout"
+  | "AddPaymentInfo"
+  | "Purchase"
+  | "Search";
 
 export interface PixelEventPayload {
   content_name?: string;
@@ -412,7 +418,7 @@ function dispatchPixelEvent(event: PixelEventName, payload: PixelEventPayload): 
       if (event === "Search") {
         w.ttq.track("Search", { query: payload.search_string });
       } else {
-        const ttEvent: string = event === "Purchase" ? "CompletePayment" : event;
+        const ttEvent: string = event === "Purchase" ? "CompletePayment" : event === "AddPaymentInfo" ? "AddPaymentInfo" : event;
         const ttPayload: any = {
         content_name: payload.content_name,
         content_id: payload.content_id,
@@ -477,6 +483,7 @@ function dispatchPixelEvent(event: PixelEventName, payload: PixelEventPayload): 
           ViewContent: "VIEW_CONTENT",
           AddToCart: "ADD_CART",
           InitiateCheckout: "START_CHECKOUT",
+          AddPaymentInfo: "ADD_BILLING",
           Purchase: "PURCHASE",
           Search: "SEARCH" // To satisfy type but handled above
         };
