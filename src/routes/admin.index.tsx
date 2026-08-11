@@ -190,7 +190,7 @@ function Dashboard() {
         supabase.from("orders").select("total").eq("payment_status", "paid").gte("created_at", since30),
         supabase.from("products").select("id", { count: "exact", head: true }),
         supabase.from("products").select("id", { count: "exact", head: true }).eq("is_active", true),
-        supabase.from("products").select("id,stock,low_stock_threshold"),
+        supabase.from("products").select("id,stock,low_stock_threshold,name_ar,name_en"),
         supabase.from("product_variants").select("id,product_id,stock,is_active").eq("is_active", true),
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", since30),
@@ -238,6 +238,19 @@ function Dashboard() {
         };
         cur.qty += Number((it as any).qty ?? 0);
         agg.set(key, cur);
+      }
+      // Prefer the real product row names so the dashboard respects the
+      // admin UI language instead of the snapshot name stored on the order.
+      const nameById = new Map<string, { ar: string; en: string }>();
+      for (const p of allProds as any[]) {
+        nameById.set(p.id, { ar: p.name_ar ?? "", en: p.name_en ?? "" });
+      }
+      for (const t of agg.values()) {
+        const n = nameById.get(t.id);
+        if (n) {
+          t.name_ar = n.ar || t.name_ar;
+          t.name_en = n.en || t.name_en;
+        }
       }
       const topList = [...agg.values()].sort((a, b) => b.qty - a.qty).slice(0, 5);
 
