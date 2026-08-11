@@ -342,6 +342,20 @@ export function loadPixel(row: PixelRow): void {
   }
 }
 
+// ── Event buffering ───────────────────────────────────────────────
+// Pixel rows are fetched from the database, so scripts load a moment after
+// hydration. Events fired before that (ViewContent / InitiateCheckout on a
+// hard load) would otherwise be silently dropped. Buffer and flush them.
+let pixelsReady = false;
+const pending: { event: PixelEventName; payload: PixelEventPayload }[] = [];
+const recentEvents = new Map<string, number>();
+
+export function markPixelsReady(): void {
+  pixelsReady = true;
+  const queued = pending.splice(0, pending.length);
+  queued.forEach(({ event, payload }) => dispatchPixelEvent(event, payload));
+}
+
 export function pixelPageView(): void {
   if (typeof window === "undefined") return;
   const w = window as any;
@@ -368,7 +382,25 @@ export interface PixelEventPayload {
 /** Fires a specific ecommerce event to all configured pixels. */
 export function pixelTrack(event: PixelEventName, payload: PixelEventPayload = {}): void {
   if (typeof window === "undefined") return;
+  // Drop accidental duplicates (re-renders, StrictMode double-effects):
+  // same event + same content within 2s is the same user action.
+  const dedupeKey = `${event}|${payload.content_id ?? ""}|${payload.order_id ?? ""}|${payload.value ?? ""}|${payload.quantity ?? ""}|${payload.search_string ?? ""}`;
+  const now = Date.now();
+  const seenAt = recentEvents.get(dedupeKey);
+  if (seenAt && now - seenAt < 2000) return;
+  recentEvents.set(dedupeKey, now);
+
+  if (!pixelsReady) {
+    if (pending.length < 50) pending.push({ event, payload });
+    return;
+  }
+  dispatchPixelEvent(event, payload);
+}
+
+function dispatchPixelEvent(event: PixelEventName, payload: PixelEventPayload): void {
   const w = window as any;
+  // Debug trail: inspect with window.__pixelEvents in the browser console.
+  (w.__pixelEvents = w.__pixelEvents || []).push({ t: Date.now(), event, payload });
 
   // Common mapping for currency
   const currency = payload.currency || "SAR";

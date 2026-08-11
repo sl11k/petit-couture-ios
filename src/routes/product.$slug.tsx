@@ -168,8 +168,14 @@ function ProductDetails() {
     if (activeImage) setActiveImg(0);
   }, [activeImage]);
 
+  const viewFiredFor = useRef<string | null>(null);
   useEffect(() => {
-    // Fire ViewContent when product details render
+    // Fire ViewContent once per product (avoid duplicate events on re-render)
+    const key = productId ?? product.slug ?? product.name;
+    // Wait until real product data is resolved (avoid an empty ViewContent).
+    if (!productId || !product.name) return;
+    if (!key || viewFiredFor.current === key) return;
+    viewFiredFor.current = key;
     const pName = product.name;
     const pPrice = getCanonicalProductPrice(product.price);
     pixelTrack("ViewContent", {

@@ -73,8 +73,10 @@ function CheckoutPage() {
 
   const bagEmpty = bag.items.length === 0;
 
+  const checkoutFired = useRef(false);
   useEffect(() => {
-    if (!bagEmpty) {
+    if (!bagEmpty && !checkoutFired.current) {
+      checkoutFired.current = true;
       pixelTrack("InitiateCheckout", {
         value: bag.subtotal,
         currency: bag.currency,
