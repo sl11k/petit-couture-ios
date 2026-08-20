@@ -53,6 +53,32 @@ function connectionType(): string | null {
 const buffer: any[] = [];
 let flushTimer: any = null;
 
+// ── Sampling ────────────────────────────────────────────────────────────────
+// Web-vitals data is statistical: a small random sample gives the same picture
+// as logging every visitor, at a fraction of the database writes/storage.
+const SAMPLE_RATE = 0.02; // 2% of sessions
+// Only these metrics are stored, and at most once per session each.
+const ALLOWED_METRICS = new Set(["LCP", "CLS", "INP", "TTFB", "FCP"]);
+const seenMetrics = new Set<string>();
+
+let _sampled: boolean | null = null;
+function isSampledSession() {
+  if (_sampled !== null) return _sampled;
+  if (typeof window === "undefined") return false;
+  let flag: string | null = null;
+  try {
+    flag = sessionStorage.getItem("_perf_sampled");
+    if (flag === null) {
+      flag = Math.random() < SAMPLE_RATE ? "1" : "0";
+      sessionStorage.setItem("_perf_sampled", flag);
+    }
+  } catch {
+    flag = Math.random() < SAMPLE_RATE ? "1" : "0";
+  }
+  _sampled = flag === "1";
+  return _sampled;
+}
+
 async function flush() {
   flushTimer = null;
   if (!buffer.length) return;
@@ -64,6 +90,10 @@ async function flush() {
 
 export function recordMetric(metric: string, value: number, page?: string) {
   if (typeof window === "undefined") return;
+  if (!ALLOWED_METRICS.has(metric)) return;
+  if (!isSampledSession()) return;
+  if (seenMetrics.has(metric)) return;
+  seenMetrics.add(metric);
   buffer.push({
     metric,
     value: Number(value.toFixed(3)),
@@ -74,7 +104,7 @@ export function recordMetric(metric: string, value: number, page?: string) {
     connection: connectionType(),
     session_id: sessionId(),
   });
-  if (!flushTimer) flushTimer = setTimeout(flush, 4000);
+  if (!flushTimer) flushTimer = setTimeout(flush, 8000);
 }
 
 // ===== Web Vitals collection (no extra deps) =====
