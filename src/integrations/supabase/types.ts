@@ -8019,6 +8019,7 @@ export type Database = {
         }
         Returns: string
       }
+      purge_telemetry_logs: { Args: never; Returns: undefined }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
