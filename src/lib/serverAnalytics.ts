@@ -14,6 +14,11 @@ function getSessionId(): string {
   return id;
 }
 
+function trim(value: string | null | undefined, max: number) {
+  if (!value) return null;
+  return value.length > max ? value.slice(0, max) : value;
+}
+
 export async function trackServerEvent(
   eventName: string,
   metadata: Record<string, unknown> = {},
@@ -21,15 +26,19 @@ export async function trackServerEvent(
 ) {
   try {
     const session_id = getSessionId();
-    const { data: auth } = await supabase.auth.getUser();
+    // getSession() reads the locally cached session — no network round-trip
+    // per tracked event (getUser() hits the auth server every time).
+    const { data: auth } = await supabase.auth.getSession();
+    const rawPath = path ?? (typeof window !== "undefined" ? window.location.pathname : null);
     await (supabase.from("analytics_events") as any).insert({
       session_id,
-      user_id: auth.user?.id ?? null,
+      user_id: auth.session?.user?.id ?? null,
       event_name: eventName,
-      path: path ?? (typeof window !== "undefined" ? window.location.pathname : null),
-      referrer: typeof document !== "undefined" ? document.referrer || null : null,
+      // Strip tracking query strings: they bloat storage and never get reported on.
+      path: trim(rawPath ? rawPath.split("?")[0] : null, 200),
+      referrer: trim(typeof document !== "undefined" ? document.referrer || null : null, 120),
       metadata,
-      user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+      user_agent: trim(typeof navigator !== "undefined" ? navigator.userAgent : null, 120),
     });
   } catch {
     /* ignore */
