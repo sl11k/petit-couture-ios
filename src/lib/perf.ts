@@ -110,6 +110,8 @@ export function recordMetric(metric: string, value: number, page?: string) {
 // ===== Web Vitals collection (no extra deps) =====
 export function startWebVitals() {
   if (typeof window === "undefined" || !("PerformanceObserver" in window)) return;
+  // Skip all observers entirely for non-sampled sessions (no CPU, no writes).
+  if (!isSampledSession()) return;
 
   // LCP
   try {
