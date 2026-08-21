@@ -1,14 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import {
+  amountsMatch,
   completeGatewayPayment,
   failGatewayPayment,
   loadGatewayOrder,
   logPaymentWebhook,
+  money,
   refundGatewayPayment,
   updatePaymentWebhookLog,
 } from "@/lib/payment-gateway.server";
+import { convertPegged } from "@/lib/tabby-currency";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
 
 async function getTabbySecret() {
   const envSecret = String(process.env.TABBY_SECRET_KEY || "").trim();
@@ -58,11 +62,15 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
           request.headers.get("x-real-ip") ||
           request.headers.get("x-forwarded-for") ||
           "";
-        const secret = process.env.TABBY_WEBHOOK_SECRET;
+        // Tabby signs webhooks with the merchant secret unless a dedicated
+        // webhook secret was registered, so fall back to the API secret.
+        const secret =
+          String(process.env.TABBY_WEBHOOK_SECRET || "").trim() || (await getTabbySecret());
         if (!secret) {
-          console.error("[tabby-webhook] TABBY_WEBHOOK_SECRET is not configured");
+          console.error("[tabby-webhook] no Tabby secret configured");
           return new Response("Webhook is not configured", { status: 503 });
         }
+
 
         let payload: Record<string, unknown>;
         try {
@@ -104,12 +112,19 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
         }
 
         try {
-          const order = await loadGatewayOrder({
-            orderNumber,
-            gateway: "tabby",
-            amount: payload.amount,
-            currency: payload.currency,
-          });
+          // The Tabby merchant account settles in its own currency (AED), while
+          // the order is stored in the store currency (SAR). Validate the amount
+          // after converting with the same fixed peg used at checkout.
+          const order = await loadGatewayOrder({ orderNumber, gateway: "tabby" });
+          const settlementCurrency = String(payload.currency || order.currency).toUpperCase();
+          const expectedAmount = convertPegged(
+            money(order.total),
+            String(order.currency).toUpperCase(),
+            settlementCurrency,
+          );
+          if (payload.amount !== undefined && !amountsMatch(expectedAmount, payload.amount)) {
+            throw new Error("Payment amount mismatch");
+          }
           let transactionId: string | null = null;
 
           if (status === "authorized") {
@@ -125,10 +140,11 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${apiKey}`,
                   },
-                  body: JSON.stringify({ amount: Number(order.total).toFixed(2) }),
+                  body: JSON.stringify({ amount: expectedAmount.toFixed(2) }),
                 },
               );
               capture = await captureResponse.json().catch(() => ({}));
+
               if (!captureResponse.ok) {
                 throw new Error(
                   `Tabby capture failed (${captureResponse.status}): ${JSON.stringify(capture).slice(0, 300)}`,
