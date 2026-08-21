@@ -62,11 +62,15 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
           request.headers.get("x-real-ip") ||
           request.headers.get("x-forwarded-for") ||
           "";
-        const secret = process.env.TABBY_WEBHOOK_SECRET;
+        // Tabby signs webhooks with the merchant secret unless a dedicated
+        // webhook secret was registered, so fall back to the API secret.
+        const secret =
+          String(process.env.TABBY_WEBHOOK_SECRET || "").trim() || (await getTabbySecret());
         if (!secret) {
-          console.error("[tabby-webhook] TABBY_WEBHOOK_SECRET is not configured");
+          console.error("[tabby-webhook] no Tabby secret configured");
           return new Response("Webhook is not configured", { status: 503 });
         }
+
 
         let payload: Record<string, unknown>;
         try {
