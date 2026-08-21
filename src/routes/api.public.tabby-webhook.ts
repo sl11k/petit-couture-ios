@@ -63,7 +63,9 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
           "";
         // Tabby echoes the static x-hook-signature value configured when the
         // webhook is registered; it is not an HMAC of the request body.
-        const secret = String(process.env.TABBY_WEBHOOK_SECRET || "").trim();
+        const secret =
+          String(process.env.TABBY_WEBHOOK_SECRET || "").trim() ||
+          String(process.env.PAYMENT_WEBHOOK_SECRET || "").trim();
         if (!secret) {
           console.error("[tabby-webhook] no Tabby secret configured");
           return new Response("Webhook is not configured", { status: 503 });

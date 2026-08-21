@@ -131,5 +131,24 @@ export async function reconcileDeferredPayments(options: { orderNumber?: string;
       });
     }
   }
+  const finalizedOrderNumbers = results.filter((result) => result.finalized).map((result) => result.order_number);
+  if (finalizedOrderNumbers.length) {
+    try {
+      const { data: finalizedOrders } = await supabaseAdmin
+        .from("orders")
+        .select("id, user_id, order_number")
+        .in("order_number", finalizedOrderNumbers);
+      const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
+      for (const order of finalizedOrders ?? []) {
+        try {
+          await createOtoShipmentForOrder(order.id, order.user_id ?? null);
+        } catch (error) {
+          console.error(`[deferred-reconciliation] OTO failed for ${order.order_number}`, error);
+        }
+      }
+    } catch (error) {
+      console.error("[deferred-reconciliation] OTO reconciliation failed", error);
+    }
+  }
   return { ok: true as const, checked: data?.length ?? 0, results };
 }
