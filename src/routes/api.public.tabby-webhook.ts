@@ -112,12 +112,19 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
         }
 
         try {
-          const order = await loadGatewayOrder({
-            orderNumber,
-            gateway: "tabby",
-            amount: payload.amount,
-            currency: payload.currency,
-          });
+          // The Tabby merchant account settles in its own currency (AED), while
+          // the order is stored in the store currency (SAR). Validate the amount
+          // after converting with the same fixed peg used at checkout.
+          const order = await loadGatewayOrder({ orderNumber, gateway: "tabby" });
+          const settlementCurrency = String(payload.currency || order.currency).toUpperCase();
+          const expectedAmount = convertPegged(
+            money(order.total),
+            String(order.currency).toUpperCase(),
+            settlementCurrency,
+          );
+          if (payload.amount !== undefined && !amountsMatch(expectedAmount, payload.amount)) {
+            throw new Error("Payment amount mismatch");
+          }
           let transactionId: string | null = null;
 
           if (status === "authorized") {
@@ -133,10 +140,11 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${apiKey}`,
                   },
-                  body: JSON.stringify({ amount: Number(order.total).toFixed(2) }),
+                  body: JSON.stringify({ amount: expectedAmount.toFixed(2) }),
                 },
               );
               capture = await captureResponse.json().catch(() => ({}));
+
               if (!captureResponse.ok) {
                 throw new Error(
                   `Tabby capture failed (${captureResponse.status}): ${JSON.stringify(capture).slice(0, 300)}`,
