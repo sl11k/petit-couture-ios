@@ -579,10 +579,30 @@ function CheckoutPage() {
         contents: bag.items.map((i) => ({ id: i.id || i.slug, quantity: i.qty, price: i.price })),
       });
     }
+    // Re-validate every step before placing (a restored address or skipped step
+    // could otherwise send an empty/invalid email to the server).
+    if (errs.fullName || errs.email || errs.phone) {
+      toast.error(errs.fullName || errs.email || errs.phone);
+      setStep(1);
+      if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (errs.city || errs.location || errs.country) {
+      toast.error(errs.city || errs.location || errs.country);
+      setStep(2);
+      if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (errs.shipping) {
+      toast.error(errs.shipping);
+      setStep(3);
+      return;
+    }
     if (!canProceed(4)) {
       toast.error(errs.agree ?? (isRTL ? "أكمل البيانات" : "Complete the form"));
       return;
     }
+
     setPlacing(true);
     try {
       const { data: auth } = await supabase.auth.getSession();
