@@ -5,6 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { pixelTrack } from "@/lib/pixels";
 import { getOrderConfirmation } from "@/lib/orderConfirmation.functions";
 import { finalizeStripeOrder } from "@/lib/stripeFinalize.functions";
+import { reconcileReturnedPayment } from "@/lib/deferred-payment.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -95,6 +96,11 @@ function OrderConfirmationPage() {
       void finalizeStripeOrder({
         data: { order_number: orderNumber, stripe_session_id: stripeSessionId },
       }).catch((err) => console.warn("[order-confirmation] finalize failed", err));
+    }
+    if (url?.searchParams.get("tabby") === "success" || url?.searchParams.get("tamara") === "success") {
+      void reconcileReturnedPayment({ data: { order_number: orderNumber } }).catch((err) =>
+        console.warn("[order-confirmation] deferred payment reconciliation failed", err),
+      );
     }
 
     async function poll() {
