@@ -94,7 +94,22 @@ function CheckoutPage() {
     phone: address?.phone ?? "",
     createAccount: false,
   });
+  // Prefill the email from the signed-in account when the saved address has none.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase.auth.getSession();
+      const authEmail = data.session?.user?.email;
+      if (!cancelled && authEmail) {
+        setContact((c) => (c.email.trim() ? c : { ...c, email: authEmail }));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [countryCode, setCountryCode] = useState(address?.countryCode ?? "");
+
   const [taxRate, setTaxRate] = useState<number>(0);
   const [loc, setLoc] = useState<{
     lat?: number;
