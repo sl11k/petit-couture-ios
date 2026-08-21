@@ -157,7 +157,11 @@ export const Route = createFileRoute("/api/public/tamara-webhook")({
                   total_amount: remote.total_amount,
                   tax_amount: remote.tax_amount,
                   shipping_amount: remote.shipping_amount,
-                  discount_amount: remote.discount_amount,
+                  discount_amount:
+                    remote.discount_amount ??
+                    ((remote.discount as { amount?: unknown } | undefined)?.amount
+                      ? (remote.discount as { amount: unknown }).amount
+                      : { amount: "0.00", currency: String((remote.total_amount as { currency?: unknown })?.currency || "SAR") }),
                   items: remote.items,
                   shipping_info: {
                     shipped_at: new Date().toISOString(),
