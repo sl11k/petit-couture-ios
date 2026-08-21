@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { timingSafeEqual } from "node:crypto";
 import {
   amountsMatch,
   completeGatewayPayment,
@@ -40,11 +40,10 @@ async function getTabbySecret() {
   return candidates.find(Boolean) || null;
 }
 
-function validSignature(body: string, signature: string, secret: string) {
+function validSignature(signature: string, secret: string) {
   try {
-    const expected = createHmac("sha256", secret).update(body).digest("hex");
     const received = Buffer.from(signature, "utf8");
-    const wanted = Buffer.from(expected, "utf8");
+    const wanted = Buffer.from(secret, "utf8");
     return received.length === wanted.length && timingSafeEqual(received, wanted);
   } catch {
     return false;
@@ -62,10 +61,9 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
           request.headers.get("x-real-ip") ||
           request.headers.get("x-forwarded-for") ||
           "";
-        // Tabby signs webhooks with the merchant secret unless a dedicated
-        // webhook secret was registered, so fall back to the API secret.
-        const secret =
-          String(process.env.TABBY_WEBHOOK_SECRET || "").trim() || (await getTabbySecret());
+        // Tabby echoes the static x-hook-signature value configured when the
+        // webhook is registered; it is not an HMAC of the request body.
+        const secret = String(process.env.TABBY_WEBHOOK_SECRET || "").trim();
         if (!secret) {
           console.error("[tabby-webhook] no Tabby secret configured");
           return new Response("Webhook is not configured", { status: 503 });
@@ -88,7 +86,7 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
           return new Response("Bad JSON", { status: 400 });
         }
 
-        const signatureValid = validSignature(body, signature, secret);
+        const signatureValid = validSignature(signature, secret);
         const status = String(payload.status || "").toLowerCase();
         const logId = await logPaymentWebhook({
           gateway: "tabby",
