@@ -14,6 +14,14 @@ type PendingTransaction = {
   gateway_transaction_id: string | null;
 };
 
+type ReconciliationResult = {
+  order_number: string;
+  gateway: string;
+  status: string;
+  finalized: boolean;
+  error: string | null;
+};
+
 async function getIntegrationToken(provider: "tabby" | "tamara") {
   const envToken = provider === "tabby" ? process.env.TABBY_SECRET_KEY : process.env.TAMARA_API_TOKEN;
   if (envToken) return envToken;
@@ -33,7 +41,7 @@ async function getIntegrationToken(provider: "tabby" | "tamara") {
 async function reconcileTamara(tx: PendingTransaction) {
   const orderNumber = String(tx.order_number || "");
   const providerId = String(tx.gateway_transaction_id || "");
-  if (!orderNumber || !providerId) return { order_number: orderNumber, skipped: "missing_provider_id" };
+  if (!orderNumber || !providerId) return { order_number: orderNumber, gateway: "tamara", status: "missing_provider_id", finalized: false, error: null };
   const token = await getIntegrationToken("tamara");
   if (!token) throw new Error("TAMARA_API_TOKEN is not configured");
   const response = await fetch(`https://api.tamara.co/orders/${encodeURIComponent(providerId)}`, {
@@ -45,18 +53,18 @@ async function reconcileTamara(tx: PendingTransaction) {
   const order = await loadGatewayOrder({ orderNumber, gateway: "tamara" });
   if (["fully_captured", "partially_captured", "captured"].includes(status)) {
     await completeGatewayPayment({ order, gateway: "tamara", gatewayTransactionId: providerId, rawResponse: remote });
-    return { order_number: orderNumber, status, finalized: true };
+    return { order_number: orderNumber, gateway: "tamara", status, finalized: true, error: null };
   }
   if (["declined", "canceled", "cancelled", "expired"].includes(status)) {
     await failGatewayPayment({ order, gateway: "tamara", gatewayTransactionId: providerId, reason: `tamara_${status}`, rawResponse: remote });
   }
-  return { order_number: orderNumber, status, finalized: false };
+  return { order_number: orderNumber, gateway: "tamara", status, finalized: false, error: null };
 }
 
 async function reconcileTabby(tx: PendingTransaction) {
   const orderNumber = String(tx.order_number || "");
   const checkoutId = String(tx.gateway_reference || "");
-  if (!orderNumber || !checkoutId) return { order_number: orderNumber, skipped: "missing_checkout_id" };
+  if (!orderNumber || !checkoutId) return { order_number: orderNumber, gateway: "tabby", status: "missing_checkout_id", finalized: false, error: null };
   const token = await getIntegrationToken("tabby");
   if (!token) throw new Error("TABBY_SECRET_KEY is not configured");
   const response = await fetch(`https://api.tabby.ai/api/v2/checkout/${encodeURIComponent(checkoutId)}`, {
@@ -83,16 +91,16 @@ async function reconcileTabby(tx: PendingTransaction) {
     const capture = await captureResponse.json().catch(() => ({}));
     if (!captureResponse.ok) throw new Error(`Tabby capture failed (${captureResponse.status})`);
     await completeGatewayPayment({ order, gateway: "tabby", gatewayTransactionId: paymentId, rawResponse: { checkout: remote, capture } });
-    return { order_number: orderNumber, status: "closed", finalized: true };
+    return { order_number: orderNumber, gateway: "tabby", status: "closed", finalized: true, error: null };
   }
   if (status === "closed" && paymentId) {
     await completeGatewayPayment({ order, gateway: "tabby", gatewayTransactionId: paymentId, rawResponse: remote });
-    return { order_number: orderNumber, status, finalized: true };
+    return { order_number: orderNumber, gateway: "tabby", status, finalized: true, error: null };
   }
   if (["rejected", "expired"].includes(status) && paymentId) {
     await failGatewayPayment({ order, gateway: "tabby", gatewayTransactionId: paymentId, reason: `tabby_${status}`, rawResponse: remote });
   }
-  return { order_number: orderNumber, status, finalized: false };
+  return { order_number: orderNumber, gateway: "tabby", status, finalized: false, error: null };
 }
 
 export async function reconcileDeferredPayments(options: { orderNumber?: string; lookbackHours?: number } = {}) {
@@ -109,12 +117,18 @@ export async function reconcileDeferredPayments(options: { orderNumber?: string;
   const { data, error } = await query;
   if (error) throw new Error(error.message);
 
-  const results: Array<Record<string, unknown>> = [];
+  const results: ReconciliationResult[] = [];
   for (const tx of (data ?? []) as PendingTransaction[]) {
     try {
       results.push(tx.gateway === "tabby" ? await reconcileTabby(tx) : await reconcileTamara(tx));
     } catch (error) {
-      results.push({ order_number: tx.order_number, gateway: tx.gateway, error: error instanceof Error ? error.message : String(error) });
+      results.push({
+        order_number: String(tx.order_number || ""),
+        gateway: tx.gateway,
+        status: "error",
+        finalized: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
   return { ok: true as const, checked: data?.length ?? 0, results };
