@@ -3,13 +3,18 @@ import { Eye } from "lucide-react";
 
 export const customersConfig: AdminPageConfig = {
   title: { ar: "العملاء", en: "Customers" },
-  table: "profiles",
+  // View that unions registered profiles + guest checkout customers so ALL customers appear.
+  table: "admin_customers",
   orderBy: { column: "created_at", ascending: false },
-  rowHref: (row) => `/admin/customers/${row.id}`,
+  rowHref: (row) => (row.user_id ? `/admin/customers/${row.id}` : ""),
   columns: [
     { key: "full_name", label: { ar: "الاسم", en: "Name" } },
     { key: "email", label: { ar: "الإيميل", en: "Email" } },
     { key: "phone", label: { ar: "الهاتف", en: "Phone" }, hideOnMobile: true },
+    { key: "orders_count", label: { ar: "الطلبات", en: "Orders" }, type: "number", hideOnMobile: true },
+    { key: "paid_orders_count", label: { ar: "مدفوعة", en: "Paid" }, type: "number", hideOnMobile: true },
+    { key: "total_spent", label: { ar: "إجمالي الإنفاق", en: "Total spent" }, type: "currency", hideOnMobile: true },
+    { key: "has_account", label: { ar: "لديه حساب", en: "Account" }, type: "boolean" },
     { key: "created_at", label: { ar: "تاريخ التسجيل", en: "Joined" }, type: "date", hideOnMobile: true },
   ],
   filters: [
@@ -26,10 +31,11 @@ export const customersConfig: AdminPageConfig = {
       key: "view",
       label: { ar: "عرض", en: "View" },
       icon: <Eye className="h-3.5 w-3.5" />,
-      to: (row) => `/admin/customers/${row.id}`,
+      to: (row) => (row.user_id ? `/admin/customers/${row.id}` : `/admin/orders?search=${encodeURIComponent(row.email ?? "")}`),
     },
   ],
 };
+
 
 export const categoriesConfig: AdminPageConfig = {
   title: { ar: "التصنيفات", en: "Categories" },
