@@ -57,7 +57,7 @@ function InventoryLedgerPage() {
         .from("inventory_ledger")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(500);
+        .limit(5000);
       if (type !== "all") q = q.eq("movement_type", type);
       const { data, error } = await q;
       if (error) throw error;

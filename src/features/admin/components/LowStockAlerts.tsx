@@ -32,7 +32,7 @@ export function LowStockAlerts() {
         .from("products")
         .select("id,sku,name_ar,name_en,image_url,stock,low_stock_threshold")
         .eq("is_active", true)
-        .limit(500),
+        .limit(5000),
       supabase
         .from("product_variants")
         .select("product_id,stock,is_active")
