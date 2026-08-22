@@ -28,7 +28,7 @@ import { trackServerEvent, getCurrentSessionId } from "@/lib/serverAnalytics";
 import { supabase } from "@/integrations/supabase/client";
 import { placeOrder } from "@/lib/placeOrder.functions";
 import { validateCoupon } from "@/lib/coupons.functions";
-import { pixelTrack } from "@/lib/pixels";
+import { pixelTrack, setPixelUser } from "@/lib/pixels";
 import {
   getAvailableShippingCountries,
   resolveShippingRates,
