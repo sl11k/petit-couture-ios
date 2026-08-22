@@ -1,0 +1,1 @@
+ALTER FUNCTION public.audit_row_change() SET search_path = public;
