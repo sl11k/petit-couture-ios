@@ -502,7 +502,8 @@ function CheckoutPage() {
     if (step >= 2) {
       if (!countryCode) e.country = isRTL ? "اختر دولة التوصيل" : "Select delivery country";
       if (!loc.city) e.city = isRTL ? "المدينة مطلوبة" : "City required";
-      if (!loc.street && !loc.geoAddress)
+      const hasPin = loc.lat != null && loc.lng != null;
+      if (!loc.street?.trim() && !loc.geoAddress?.trim() && !hasPin)
         e.location = isRTL
           ? "أدخل العنوان أو حدده على الخريطة"
           : "Enter an address or set it on the map";
@@ -1059,7 +1060,21 @@ function CheckoutPage() {
                   isRTL={isRTL}
                   supportedCountries={availableCountries.map((country) => country.code)}
                   value={loc.lat != null && loc.lng != null ? { lat: loc.lat, lng: loc.lng } : null}
-                  onChange={(r) => setLoc((p) => ({ ...p, ...r }))}
+                  onChange={(r) =>
+                    setLoc((p) => ({
+                      ...p,
+                      lat: r.lat,
+                      lng: r.lng,
+                      city: r.city || p.city,
+                      district: r.district || p.district,
+                      street: r.street || p.street,
+                      postalCode: r.postalCode || p.postalCode,
+                      geoAddress:
+                        r.address ??
+                        p.geoAddress ??
+                        `${r.lat.toFixed(5)}, ${r.lng.toFixed(5)}`,
+                    }))
+                  }
                 />
               </Suspense>
 
