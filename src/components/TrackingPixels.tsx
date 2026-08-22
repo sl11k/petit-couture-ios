@@ -12,6 +12,7 @@ export function TrackingPixels() {
   const ready = useRef(false);
 
   useEffect(() => {
+    captureMetaClickId();
     let active = true;
     void (async () => {
       const { data } = await supabase
