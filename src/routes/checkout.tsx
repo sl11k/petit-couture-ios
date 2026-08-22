@@ -464,6 +464,25 @@ function CheckoutPage() {
     }
   };
 
+  // Auto-apply a recovery coupon arriving from the abandoned-cart WhatsApp link
+  // (/recover/<token> redirects to /checkout?coupon=CODE).
+  const autoCouponRef = useRef(false);
+  useEffect(() => {
+    if (autoCouponRef.current || bagEmpty) return;
+    if (typeof window === "undefined") return;
+    const code = new URLSearchParams(window.location.search).get("coupon");
+    if (!code) return;
+    autoCouponRef.current = true;
+    setCouponInput(code);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bagEmpty]);
+
+  useEffect(() => {
+    if (!autoCouponRef.current || coupon || couponBusy || !couponInput || bagEmpty) return;
+    void applyCoupon();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [couponInput, bagEmpty]);
+
   const removeCoupon = () => {
     setCoupon(null);
     setCouponInput("");
