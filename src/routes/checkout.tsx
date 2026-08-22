@@ -151,7 +151,6 @@ function CheckoutPage() {
       contents: bag.items.map((i) => ({ id: i.id || i.slug, quantity: i.qty, price: i.price })),
     });
   }, [step, bagEmpty, bag.subtotal, bag.currency, bag.count, bag.items, payment]);
-  const [agree, setAgree] = useState(false);
   const [placing, setPlacing] = useState(false);
   const [orderWeightKg, setOrderWeightKg] = useState<number>(1);
   const placedRef = useRef(false);
@@ -663,7 +662,7 @@ function CheckoutPage() {
       return;
     }
     if (!canProceed(4)) {
-      toast.error(errs.agree ?? (isRTL ? "أكمل البيانات" : "Complete the form"));
+      toast.error(isRTL ? "أكمل البيانات" : "Complete the form");
       return;
     }
 
@@ -1587,7 +1586,7 @@ function CheckoutPage() {
             )}
             <button
               type="button"
-              disabled={placing || (step === 4 && !agree)}
+              disabled={placing}
               onClick={step < 4 ? next : onPlaceOrder}
               className={[
                 "w-full h-[54px] rounded-[16px] font-medium tracking-soft text-[14px] transition flex items-center justify-center gap-2",
