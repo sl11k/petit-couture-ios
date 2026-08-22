@@ -7450,6 +7450,22 @@ export type Database = {
       }
     }
     Views: {
+      admin_customers: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          has_account: boolean | null
+          id: string | null
+          last_order_at: string | null
+          orders_count: number | null
+          paid_orders_count: number | null
+          phone: string | null
+          total_spent: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       product_options_public: {
         Row: {
           color_hex: string | null
