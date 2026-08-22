@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2, Package, Truck, Home, MapPin, Copy, Loader2 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { pixelTrack } from "@/lib/pixels";
+import { pixelTrack, setPixelUser } from "@/lib/pixels";
 import { getOrderConfirmation } from "@/lib/orderConfirmation.functions";
 import { finalizeStripeOrder } from "@/lib/stripeFinalize.functions";
 import { reconcileReturnedPayment } from "@/lib/deferred-payment.functions";
@@ -158,6 +158,7 @@ function OrderConfirmationPage() {
   useEffect(() => {
     if (state === "ready" && order && !pixelFired.current) {
       pixelFired.current = true;
+      setPixelUser({ email: order.customer_email, phone: order.customer_phone });
       pixelTrack("Purchase", {
         value: order.total,
         currency: order.currency,
