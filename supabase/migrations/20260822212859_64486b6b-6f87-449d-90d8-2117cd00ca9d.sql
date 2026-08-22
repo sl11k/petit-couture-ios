@@ -1,0 +1,1 @@
+ALTER FUNCTION public.support_messages_notify() SET search_path = public;

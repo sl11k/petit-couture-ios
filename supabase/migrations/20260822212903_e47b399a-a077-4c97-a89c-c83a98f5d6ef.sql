@@ -1,0 +1,1 @@
+ALTER FUNCTION public.payment_refunds_notify() SET search_path = public;

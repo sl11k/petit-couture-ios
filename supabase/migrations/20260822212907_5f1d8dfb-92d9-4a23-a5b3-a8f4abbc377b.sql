@@ -1,0 +1,1 @@
+ALTER FUNCTION public.coupon_redemptions_notify() SET search_path = public;

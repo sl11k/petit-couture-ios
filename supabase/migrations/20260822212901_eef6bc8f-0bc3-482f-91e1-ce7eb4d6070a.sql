@@ -1,0 +1,1 @@
+ALTER FUNCTION public.support_tickets_notify() SET search_path = public;
