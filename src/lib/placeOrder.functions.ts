@@ -461,11 +461,8 @@ export const placeOrder = createServerFn({ method: "POST" })
       }
     }
 
-    // 4. Mark abandoned cart converted (best-effort).
-    await supabaseAdmin
-      .from("abandoned_carts")
-      .update({ converted: true, updated_at: new Date().toISOString() })
-      .eq("session_id", data.session_id);
+    // 4. Keep the cart incomplete until payment is verified. The database
+    // payment-status trigger marks its order snapshot converted after capture.
 
     // 5. Auto-create OTO shipment.
     //    For COD / bank_transfer we trigger immediately (no upstream webhook will fire).

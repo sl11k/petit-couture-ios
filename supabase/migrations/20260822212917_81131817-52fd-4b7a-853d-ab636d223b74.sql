@@ -1,0 +1,1 @@
+ALTER FUNCTION public.account_lockouts_notify() SET search_path = public;

@@ -1,0 +1,1 @@
+ALTER FUNCTION public.notify_webhook_failure() SET search_path = public;

@@ -1,0 +1,1 @@
+ALTER FUNCTION public.prevent_audit_modification() SET search_path = public;

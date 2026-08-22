@@ -176,6 +176,7 @@ export const abandonedConfig: AdminPageConfig = {
   title: { ar: "السلال المتروكة", en: "Abandoned Carts" },
   table: "abandoned_carts",
   orderBy: { column: "updated_at", ascending: false },
+  applyQuery: (query) => query.eq("converted", false),
   columns: [
     { key: "updated_at", label: { ar: "آخر نشاط", en: "Last activity" }, type: "datetime" },
     { key: "email", label: { ar: "البريد", en: "Email" } },
@@ -211,6 +212,7 @@ export const incompleteConfig: AdminPageConfig = {
   description: { ar: "وصلت لمرحلة الدفع ولم تكتمل", en: "Reached checkout but didn't convert" },
   table: "abandoned_carts",
   orderBy: { column: "updated_at", ascending: false },
+  applyQuery: (query) => query.eq("converted", false).eq("reached_checkout", true),
   columns: [
     { key: "updated_at", label: { ar: "آخر نشاط", en: "Last activity" }, type: "datetime" },
     { key: "email", label: { ar: "البريد", en: "Email" } },
