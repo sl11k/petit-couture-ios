@@ -283,9 +283,8 @@ function textToHtml(text: string, language: string): string {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:32px 12px;">
 <tr><td align="center">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid #f3e8ff;border-radius:14px;overflow:hidden;">
-<tr><td style="background:linear-gradient(135deg,#f9a8d4,#c084fc);padding:22px 28px;text-align:center;color:#ffffff;font-weight:700;font-size:18px;letter-spacing:.3px;">
-<img src="${EMAIL_LOGO_URL}" alt="${SITE_NAME}" width="96" height="96" style="display:block;margin:0 auto 12px auto;width:96px;height:96px;border-radius:50%;background:#ffffff;object-fit:cover;border:0;" />
-<div>${SITE_NAME}</div></td></tr>
+<tr><td style="background:#ffffff;padding:28px;text-align:center;border-bottom:1px solid #f3f4f6;">
+<img src="${EMAIL_LOGO_URL}" alt="${SITE_NAME}" width="110" height="110" style="display:block;margin:0 auto;width:110px;height:110px;border-radius:50%;background:#ffffff;object-fit:cover;border:0;" /></td></tr>
 <tr><td dir="${dir}" align="${align}" style="padding:26px 28px;">${paragraphs}</td></tr>
 <tr><td style="padding:16px 28px;background:#fafafa;color:#6b7280;font-size:12px;text-align:center;border-top:1px solid #f3f4f6;">© ${new Date().getFullYear()} LPPME</td></tr>
 </table></td></tr></table></body></html>`;
