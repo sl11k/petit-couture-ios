@@ -1564,13 +1564,6 @@ function CheckoutPage() {
                 </p>
               )}
 
-              {/* Terms notice (implicit consent — no checkbox required) */}
-              <p className="text-[12px] text-muted-foreground leading-snug text-center px-1">
-                {isRTL
-                  ? "بإتمامك عملية الشراء فإنك توافق على الشروط والأحكام وسياسة الإرجاع والاستبدال."
-                  : "By completing your purchase you agree to the terms & conditions and the return policy."}
-              </p>
-
 
               <div className="flex items-center justify-center gap-4 text-[10.5px] tracking-luxury text-muted-foreground pt-2">
                 <span className="inline-flex items-center gap-1">
