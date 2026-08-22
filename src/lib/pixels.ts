@@ -442,11 +442,13 @@ function dispatchPixelEvent(event: PixelEventName, payload: PixelEventPayload): 
     }
   } catch { /* noop */ }
 
-  // 2. Meta / Facebook
+  // 2. Meta / Facebook — browser pixel + Conversions API with a shared
+  //    event_id so Meta deduplicates the pair instead of double-counting.
+  const metaEventId = `${event.toLowerCase()}.${payload.order_id || payload.content_id || "x"}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}`;
   try {
     if (w.fbq) {
       if (event === "Search") {
-        w.fbq("track", "Search", { search_string: payload.search_string });
+        w.fbq("track", "Search", { search_string: payload.search_string }, { eventID: metaEventId });
       } else {
         const fbPayload: any = {
           content_name: payload.content_name,
@@ -468,10 +470,14 @@ function dispatchPixelEvent(event: PixelEventName, payload: PixelEventPayload): 
         fbPayload.num_items = payload.quantity || 1;
       }
       
-        w.fbq("track", event, fbPayload);
+        w.fbq("track", event, fbPayload, { eventID: metaEventId });
       }
     }
   } catch { /* noop */ }
+
+  // 2b. Server-side mirror (survives ad-blockers, ITP and payment redirects).
+  void mirrorToMetaCapi(event, payload, metaEventId, currency, value);
+
 
   // 3. Snapchat
   try {
