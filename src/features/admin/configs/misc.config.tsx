@@ -92,9 +92,11 @@ categoriesConfig.form = [
   { key: "meta_description", label: { ar: "Meta Description", en: "Meta Description" }, type: "textarea", rows: 2 },
 ];
 
-customersConfig.actions = { ...customersConfig.actions, edit: true };
+// Editing happens on the customer detail page (profiles table); the list is a
+// read-only union view that also includes guest customers.
 customersConfig.form = [
   { key: "full_name", label: { ar: "الاسم الكامل", en: "Full name" }, type: "text", required: true, maxLength: 120 },
   { key: "email", label: { ar: "البريد الإلكتروني", en: "Email" }, type: "email", editOnly: true },
   { key: "phone", label: { ar: "الهاتف", en: "Phone" }, type: "tel" },
 ];
+
