@@ -11,6 +11,8 @@ import { toast } from "sonner";
 
 type OrderItem = {
   id: string;
+  product_id: string | null;
+  variant_id: string | null;
   product_name: string;
   brand: string | null;
   qty: number;
@@ -159,21 +161,20 @@ function OrderConfirmationPage() {
     if (state === "ready" && order && !pixelFired.current) {
       pixelFired.current = true;
       setPixelUser({ email: order.customer_email, phone: order.customer_phone });
+      // Purchase value is the real amount charged for THIS order (items +
+      // shipping + tax − discounts), never a fixed placeholder.
+      const items = order.order_items ?? [];
       pixelTrack("Purchase", {
-        value: order.total,
+        value: Number(order.total) || 0,
         currency: order.currency,
-        order_id: order.id,
-        quantity:
-          ((order as any).items as Array<{ qty?: number }> | undefined)?.reduce(
-            (sum: number, i) => sum + (i.qty || 1),
-            0,
-          ) || 1,
-        contents:
-          ((order as any).items as Array<any> | undefined)?.map((i: any) => ({
-            id: i.product_id,
-            quantity: i.qty || 1,
-            price: i.price,
-          })) || [],
+        order_id: order.order_number,
+        content_type: "product",
+        quantity: items.reduce((sum, i) => sum + (Number(i.qty) || 1), 0) || 1,
+        contents: items.map((i) => ({
+          id: i.variant_id || i.product_id || i.sku || i.id,
+          quantity: Number(i.qty) || 1,
+          price: Number(i.unit_price) || 0,
+        })),
       });
     }
   }, [state, order]);
