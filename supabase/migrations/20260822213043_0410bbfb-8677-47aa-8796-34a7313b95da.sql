@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Admins read carts" ON public.abandoned_carts;
