@@ -15,7 +15,7 @@ export const listWarehouseInventory = createServerFn({ method: "POST" })
       .select("id, product_id, variant_id, warehouse_id, sku, quantity, reserved_quantity, low_stock_threshold, status, updated_at, products(id, name, name_ar, name_en, slug, image_url, sku), product_variants(id, sku)")
       .eq("warehouse_id", data.warehouseId)
       .order("updated_at", { ascending: false })
-      .limit(500);
+      .limit(5000);
     if (error) throw new Error(error.message);
     return { rows: rows ?? [] };
   });
