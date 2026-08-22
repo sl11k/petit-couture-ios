@@ -258,6 +258,7 @@ async function bumpAnalytics(
  * Safe to call repeatedly (row-level lock via locked_at).
  */
 const SITE_NAME = "le petit paradis";
+const EMAIL_LOGO_URL = "https://lppme.com/__l5e/assets-v1/cb66358e-ed5c-4c3b-80df-2fe632dae397/lpp-logo.jpeg";
 const EMAIL_SENDER_DOMAIN = "notify.lppme.com";
 const EMAIL_FROM_DOMAIN = "lppme.com";
 
