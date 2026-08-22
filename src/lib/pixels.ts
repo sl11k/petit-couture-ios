@@ -408,9 +408,17 @@ function dispatchPixelEvent(event: PixelEventName, payload: PixelEventPayload): 
   // Debug trail: inspect with window.__pixelEvents in the browser console.
   (w.__pixelEvents = w.__pixelEvents || []).push({ t: Date.now(), event, payload });
 
-  // Common mapping for currency
+  // Common mapping for currency / value. The value is always whatever the
+  // caller measured for this specific event; if items are itemised we prefer
+  // their sum so the reported value can never drift from the line items.
   const currency = payload.currency || "SAR";
-  const value = payload.value || 0;
+  const itemsSum = (payload.contents ?? []).reduce(
+    (sum, c) => sum + (Number(c.price) || 0) * (Number(c.quantity) || 1),
+    0,
+  );
+  const explicit = Number(payload.value);
+  const value = Number.isFinite(explicit) && explicit > 0 ? explicit : itemsSum;
+
 
   // 1. TikTok
   try {

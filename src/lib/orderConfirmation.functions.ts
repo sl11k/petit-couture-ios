@@ -21,7 +21,7 @@ export const getOrderConfirmation = createServerFn({ method: "POST" })
     const { data: order, error } = await supabaseAdmin
       .from("orders")
       .select(
-        "id, order_number, status, payment_status, payment_method, payment_gateway, customer_name, customer_email, customer_phone, subtotal, shipping_fee, tax, total, currency, shipping_address, idempotency_key, user_id, created_at, order_items(id, product_name, brand, qty, size, color, sku, unit_price, line_total, image_url)",
+        "id, order_number, status, payment_status, payment_method, payment_gateway, customer_name, customer_email, customer_phone, subtotal, shipping_fee, tax, total, currency, shipping_address, idempotency_key, user_id, created_at, order_items(id, product_id, variant_id, product_name, brand, qty, size, color, sku, unit_price, line_total, image_url)",
       )
       .eq("order_number", data.order_number)
       .maybeSingle();
