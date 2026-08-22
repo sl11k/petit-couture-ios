@@ -571,6 +571,9 @@ function CheckoutPage() {
     const email = contact.email.trim();
     const phone = contact.phone.trim() ? toInternationalPhone(contact.phone, countryCode) : "";
     if (!email && !phone) return;
+    // Feed Meta advanced matching / Conversions API with the shopper identity.
+    setPixelUser({ email, phone, city: loc.city ?? null, country: countryCode || null });
+
     if (contactSyncRef.current) clearTimeout(contactSyncRef.current);
     contactSyncRef.current = setTimeout(() => {
       void (async () => {
