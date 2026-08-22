@@ -1,0 +1,1 @@
+ALTER FUNCTION public.auto_cancel_expired_orders() SET search_path = public;
