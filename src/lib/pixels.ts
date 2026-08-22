@@ -514,3 +514,86 @@ function dispatchPixelEvent(event: PixelEventName, payload: PixelEventPayload): 
     }
   } catch { /* noop */ }
 }
+
+// ── Meta Conversions API bridge ───────────────────────────────────
+// Identity the shopper typed in checkout (hashed server-side, never stored raw
+// anywhere else) so Meta can attribute conversions even without cookies.
+const PIXEL_USER_KEY = "lpp:pixel_user:v1";
+
+export function setPixelUser(user: { email?: string | null; phone?: string | null; city?: string | null; country?: string | null }): void {
+  if (typeof window === "undefined") return;
+  try {
+    const prev = readPixelUser();
+    const next = { ...prev, ...Object.fromEntries(Object.entries(user).filter(([, v]) => !!v)) };
+    window.localStorage.setItem(PIXEL_USER_KEY, JSON.stringify(next));
+  } catch { /* noop */ }
+}
+
+function readPixelUser(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  try {
+    return JSON.parse(window.localStorage.getItem(PIXEL_USER_KEY) || "{}") || {};
+  } catch {
+    return {};
+  }
+}
+
+function readCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const m = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+/** Captures fbclid from the landing URL into an _fbc cookie (Meta expects this). */
+export function captureMetaClickId(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const fbclid = new URLSearchParams(window.location.search).get("fbclid");
+    if (!fbclid || readCookie("_fbc")) return;
+    const value = `fb.1.${Date.now()}.${fbclid}`;
+    document.cookie = `_fbc=${encodeURIComponent(value)}; path=/; max-age=${90 * 86400}; SameSite=Lax`;
+  } catch { /* noop */ }
+}
+
+function mirrorToMetaCapi(
+  event: PixelEventName,
+  payload: PixelEventPayload,
+  eventId: string,
+  currency: string,
+  value: number,
+): void {
+  if (typeof window === "undefined") return;
+  const user = readPixelUser();
+  void import("@/lib/meta-capi.functions")
+    .then(({ trackMetaConversion }) =>
+      trackMetaConversion({
+        data: {
+          event_name: event,
+          event_id: eventId,
+          event_source_url: window.location.href.slice(0, 500),
+          value,
+          currency,
+          content_name: payload.content_name ?? null,
+          content_type: payload.content_type ?? null,
+          order_id: payload.order_id ?? null,
+          search_string: payload.search_string ?? null,
+          num_items: payload.quantity ?? null,
+          contents:
+            payload.contents && payload.contents.length > 0
+              ? payload.contents
+              : payload.content_id
+                ? [{ id: payload.content_id, quantity: payload.quantity || 1, price: payload.value }]
+                : undefined,
+          user: {
+            email: user.email ?? null,
+            phone: user.phone ?? null,
+            city: user.city ?? null,
+            country: user.country ?? null,
+            fbp: readCookie("_fbp"),
+            fbc: readCookie("_fbc"),
+          },
+        },
+      }),
+    )
+    .catch(() => { /* never break the storefront */ });
+}
