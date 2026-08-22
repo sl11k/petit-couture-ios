@@ -8089,6 +8089,19 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      track_cart: {
+        Args: {
+          _currency?: string
+          _email?: string
+          _items: Json
+          _phone?: string
+          _reached_checkout?: boolean
+          _session_id: string
+          _stage?: string
+          _subtotal: number
+        }
+        Returns: undefined
+      }
       transfer_inventory: {
         Args: {
           _from_warehouse: string
