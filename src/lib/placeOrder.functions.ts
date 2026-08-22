@@ -340,6 +340,13 @@ export const placeOrder = createServerFn({ method: "POST" })
         shipping_lat: (data.address as any).lat ?? null,
         shipping_lng: (data.address as any).lng ?? null,
         notes: (data.address as any).notes ?? null,
+        // Unpaid orders hold stock for 15 minutes only; a cron job then
+        // releases the reserved units back to inventory and cancels the order.
+        expires_at: ["card", "apple_pay", "tabby", "tamara", "bank_transfer"].includes(
+          data.payment_method,
+        )
+          ? new Date(Date.now() + 15 * 60 * 1000).toISOString()
+          : null,
       })
       .select("id, order_number, status, total, currency")
       .single();

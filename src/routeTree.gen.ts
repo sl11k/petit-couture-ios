@@ -31,6 +31,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as WishlistShareRouteImport } from './routes/wishlist.share'
 import { Route as SupportNewRouteImport } from './routes/support.new'
+import { Route as RecoverTokenRouteImport } from './routes/recover.$token'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 import { Route as PageSlugRouteImport } from './routes/page.$slug'
 import { Route as OrderConfirmationOrderNumberRouteImport } from './routes/order-confirmation.$orderNumber'
@@ -275,6 +276,11 @@ const WishlistShareRoute = WishlistShareRouteImport.update({
 const SupportNewRoute = SupportNewRouteImport.update({
   id: '/support/new',
   path: '/support/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecoverTokenRoute = RecoverTokenRouteImport.update({
+  id: '/recover/$token',
+  path: '/recover/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProductSlugRoute = ProductSlugRouteImport.update({
@@ -1075,6 +1081,7 @@ export interface FileRoutesByFullPath {
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/page/$slug': typeof PageSlugRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/recover/$token': typeof RecoverTokenRoute
   '/support/new': typeof SupportNewRoute
   '/wishlist/share': typeof WishlistShareRoute
   '/admin/': typeof AdminIndexRoute
@@ -1221,6 +1228,7 @@ export interface FileRoutesByTo {
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/page/$slug': typeof PageSlugRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/recover/$token': typeof RecoverTokenRoute
   '/support/new': typeof SupportNewRoute
   '/wishlist/share': typeof WishlistShareRoute
   '/admin': typeof AdminIndexRoute
@@ -1381,6 +1389,7 @@ export interface FileRoutesById {
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/page/$slug': typeof PageSlugRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/recover/$token': typeof RecoverTokenRoute
   '/support/new': typeof SupportNewRoute
   '/wishlist/share': typeof WishlistShareRoute
   '/admin/': typeof AdminIndexRoute
@@ -1542,6 +1551,7 @@ export interface FileRouteTypes {
     | '/order-confirmation/$orderNumber'
     | '/page/$slug'
     | '/product/$slug'
+    | '/recover/$token'
     | '/support/new'
     | '/wishlist/share'
     | '/admin/'
@@ -1688,6 +1698,7 @@ export interface FileRouteTypes {
     | '/order-confirmation/$orderNumber'
     | '/page/$slug'
     | '/product/$slug'
+    | '/recover/$token'
     | '/support/new'
     | '/wishlist/share'
     | '/admin'
@@ -1847,6 +1858,7 @@ export interface FileRouteTypes {
     | '/order-confirmation/$orderNumber'
     | '/page/$slug'
     | '/product/$slug'
+    | '/recover/$token'
     | '/support/new'
     | '/wishlist/share'
     | '/admin/'
@@ -1926,6 +1938,7 @@ export interface RootRouteChildren {
   OrderConfirmationOrderNumberRoute: typeof OrderConfirmationOrderNumberRoute
   PageSlugRoute: typeof PageSlugRoute
   ProductSlugRoute: typeof ProductSlugRoute
+  RecoverTokenRoute: typeof RecoverTokenRoute
   SupportNewRoute: typeof SupportNewRoute
   ApiPublicPaymentWebhookRoute: typeof ApiPublicPaymentWebhookRoute
   ApiPublicShippingWebhookRoute: typeof ApiPublicShippingWebhookRoute
@@ -2101,6 +2114,13 @@ declare module '@tanstack/react-router' {
       path: '/support/new'
       fullPath: '/support/new'
       preLoaderRoute: typeof SupportNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recover/$token': {
+      id: '/recover/$token'
+      path: '/recover/$token'
+      fullPath: '/recover/$token'
+      preLoaderRoute: typeof RecoverTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/product/$slug': {
@@ -3465,6 +3485,7 @@ const rootRouteChildren: RootRouteChildren = {
   OrderConfirmationOrderNumberRoute: OrderConfirmationOrderNumberRoute,
   PageSlugRoute: PageSlugRoute,
   ProductSlugRoute: ProductSlugRoute,
+  RecoverTokenRoute: RecoverTokenRoute,
   SupportNewRoute: SupportNewRoute,
   ApiPublicPaymentWebhookRoute: ApiPublicPaymentWebhookRoute,
   ApiPublicShippingWebhookRoute: ApiPublicShippingWebhookRoute,
