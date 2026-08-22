@@ -8037,6 +8037,10 @@ export type Database = {
         Returns: undefined
       }
       recover_abandoned_carts: { Args: { _minutes?: number }; Returns: number }
+      recovery_recently_contacted: {
+        Args: { _days?: number; _email: string; _phone: string }
+        Returns: boolean
+      }
       redeem_unsubscribe_token: {
         Args: { _token: string }
         Returns: {
