@@ -512,18 +512,16 @@ function CheckoutPage() {
       if (!shippingId || !selectedShippingOption)
         e.shipping = isRTL ? "الشحن غير متوفر لهذه المنطقة" : "Shipping not available for this region";
     }
-    if (step === 4 && !agree) {
-      e.agree = isRTL ? "يجب الموافقة على الشروط" : "Please accept the terms";
-    }
     return e;
-  }, [step, contact, loc, countryCode, shippingId, selectedShippingOption, agree, isRTL]);
+  }, [step, contact, loc, countryCode, shippingId, selectedShippingOption, isRTL]);
 
   const canProceed = (s: Step) => {
     if (s === 1) return !errs.fullName && !errs.email && !errs.phone && !errs.country;
     if (s === 2) return !errs.location && !errs.city;
     if (s === 3) return !errs.shipping;
-    return !errs.agree;
+    return true;
   };
+
 
   // ───── Begin checkout analytics + abandoned cart snapshot ─────
   const beganRef = useRef(false);
