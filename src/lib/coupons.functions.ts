@@ -89,12 +89,15 @@ export const validateCoupon = createServerFn({ method: "POST" })
         variant?.price_override ?? variant?.price ?? null,
       );
       const compareAt = Number(variant?.compare_at_price ?? product?.compare_at_price ?? 0);
+      const fallbackPrice = Number(it.price) > 0 ? Number(it.price) : 0;
+      const price = Number.isFinite(catalogPrice) && catalogPrice > 0 ? catalogPrice : fallbackPrice;
       return {
         product_id: product?.id || "",
-        price: Number.isFinite(catalogPrice) && catalogPrice >= 0 ? catalogPrice : it.price,
+        price,
         qty: it.qty,
-        is_discounted: it.is_discounted || (compareAt > 0 && catalogPrice < compareAt),
+        is_discounted: it.is_discounted || (compareAt > 0 && price < compareAt),
       };
+
     });
 
     const { data: rows, error } = await (supabaseAdmin as any).rpc("validate_coupon", {
