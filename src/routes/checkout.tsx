@@ -542,20 +542,15 @@ function CheckoutPage() {
     void (async () => {
       try {
         const { data: auth } = await supabase.auth.getUser();
-        await db.from("abandoned_carts").upsert(
-          {
-            session_id,
-            user_id: auth.user?.id ?? null,
-            email: auth.user?.email ?? contact.email ?? null,
-            items: bag.items,
-            subtotal: pricing.subtotal,
-            currency: bag.currency,
-            reached_checkout: true,
-            converted: false,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "session_id" },
-        );
+        await (db as any).rpc("track_cart", {
+          _session_id: session_id,
+          _items: bag.items,
+          _subtotal: pricing.subtotal,
+          _currency: bag.currency,
+          _email: auth.user?.email ?? contact.email ?? null,
+          _reached_checkout: true,
+          _stage: "checkout",
+        });
       } catch {
         /* ignore */
       }
@@ -578,15 +573,16 @@ function CheckoutPage() {
     contactSyncRef.current = setTimeout(() => {
       void (async () => {
         try {
-          await db
-            .from("abandoned_carts")
-            .update({
-              email: email || null,
-              phone: phone || null,
-              reached_checkout: true,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("session_id", getCurrentSessionId());
+          await (db as any).rpc("track_cart", {
+            _session_id: getCurrentSessionId(),
+            _items: bag.items,
+            _subtotal: pricing.subtotal,
+            _currency: bag.currency,
+            _email: email || null,
+            _phone: phone || null,
+            _reached_checkout: true,
+            _stage: "checkout",
+          });
         } catch {
           /* ignore */
         }
