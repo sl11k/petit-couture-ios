@@ -28,7 +28,7 @@ import { trackServerEvent, getCurrentSessionId } from "@/lib/serverAnalytics";
 import { supabase } from "@/integrations/supabase/client";
 import { placeOrder } from "@/lib/placeOrder.functions";
 import { validateCoupon } from "@/lib/coupons.functions";
-import { pixelTrack } from "@/lib/pixels";
+import { pixelTrack, setPixelUser } from "@/lib/pixels";
 import {
   getAvailableShippingCountries,
   resolveShippingRates,
@@ -571,6 +571,9 @@ function CheckoutPage() {
     const email = contact.email.trim();
     const phone = contact.phone.trim() ? toInternationalPhone(contact.phone, countryCode) : "";
     if (!email && !phone) return;
+    // Feed Meta advanced matching / Conversions API with the shopper identity.
+    setPixelUser({ email, phone, city: loc.city ?? null, country: countryCode || null });
+
     if (contactSyncRef.current) clearTimeout(contactSyncRef.current);
     contactSyncRef.current = setTimeout(() => {
       void (async () => {
