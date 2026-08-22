@@ -565,6 +565,38 @@ function CheckoutPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bagEmpty]);
 
+  // Keep contact details on the cart snapshot so the 15-minute abandoned-cart
+  // WhatsApp reminder has a phone number / email to reach the customer on.
+  const contactSyncRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (bagEmpty) return;
+    const email = contact.email.trim();
+    const phone = contact.phone.trim() ? toInternationalPhone(contact.phone, countryCode) : "";
+    if (!email && !phone) return;
+    if (contactSyncRef.current) clearTimeout(contactSyncRef.current);
+    contactSyncRef.current = setTimeout(() => {
+      void (async () => {
+        try {
+          await db
+            .from("abandoned_carts")
+            .update({
+              email: email || null,
+              phone: phone || null,
+              reached_checkout: true,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("session_id", getCurrentSessionId());
+        } catch {
+          /* ignore */
+        }
+      })();
+    }, 1200);
+    return () => {
+      if (contactSyncRef.current) clearTimeout(contactSyncRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contact.email, contact.phone, countryCode, bagEmpty]);
+
   // ───── Step navigation ─────
   const next = () => {
     if (!canProceed(step)) {
