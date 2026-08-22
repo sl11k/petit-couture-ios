@@ -151,7 +151,6 @@ function CheckoutPage() {
       contents: bag.items.map((i) => ({ id: i.id || i.slug, quantity: i.qty, price: i.price })),
     });
   }, [step, bagEmpty, bag.subtotal, bag.currency, bag.count, bag.items, payment]);
-  const [agree, setAgree] = useState(false);
   const [placing, setPlacing] = useState(false);
   const [orderWeightKg, setOrderWeightKg] = useState<number>(1);
   const placedRef = useRef(false);
@@ -512,18 +511,16 @@ function CheckoutPage() {
       if (!shippingId || !selectedShippingOption)
         e.shipping = isRTL ? "الشحن غير متوفر لهذه المنطقة" : "Shipping not available for this region";
     }
-    if (step === 4 && !agree) {
-      e.agree = isRTL ? "يجب الموافقة على الشروط" : "Please accept the terms";
-    }
     return e;
-  }, [step, contact, loc, countryCode, shippingId, selectedShippingOption, agree, isRTL]);
+  }, [step, contact, loc, countryCode, shippingId, selectedShippingOption, isRTL]);
 
   const canProceed = (s: Step) => {
     if (s === 1) return !errs.fullName && !errs.email && !errs.phone && !errs.country;
     if (s === 2) return !errs.location && !errs.city;
     if (s === 3) return !errs.shipping;
-    return !errs.agree;
+    return true;
   };
+
 
   // ───── Begin checkout analytics + abandoned cart snapshot ─────
   const beganRef = useRef(false);
@@ -665,7 +662,7 @@ function CheckoutPage() {
       return;
     }
     if (!canProceed(4)) {
-      toast.error(errs.agree ?? (isRTL ? "أكمل البيانات" : "Complete the form"));
+      toast.error(isRTL ? "أكمل البيانات" : "Complete the form");
       return;
     }
 
@@ -1552,20 +1549,13 @@ function CheckoutPage() {
                 </p>
               )}
 
-              {/* Terms */}
-              <label className="flex items-start gap-3 p-3 rounded-[14px] bg-cream-warm/40 border border-border cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="mt-0.5 h-4 w-4 accent-foreground"
-                  checked={agree}
-                  onChange={(e) => setAgree(e.target.checked)}
-                />
-                <span className="text-[12px] text-foreground/80 leading-snug">
-                  {isRTL
-                    ? "أوافق على الشروط والأحكام وسياسة الإرجاع والاستبدال"
-                    : "I agree to the terms & conditions and the return policy"}
-                </span>
-              </label>
+              {/* Terms notice (implicit consent — no checkbox required) */}
+              <p className="text-[12px] text-muted-foreground leading-snug text-center px-1">
+                {isRTL
+                  ? "بإتمامك عملية الشراء فإنك توافق على الشروط والأحكام وسياسة الإرجاع والاستبدال."
+                  : "By completing your purchase you agree to the terms & conditions and the return policy."}
+              </p>
+
 
               <div className="flex items-center justify-center gap-4 text-[10.5px] tracking-luxury text-muted-foreground pt-2">
                 <span className="inline-flex items-center gap-1">
@@ -1596,7 +1586,7 @@ function CheckoutPage() {
             )}
             <button
               type="button"
-              disabled={placing || (step === 4 && !agree)}
+              disabled={placing}
               onClick={step < 4 ? next : onPlaceOrder}
               className={[
                 "w-full h-[54px] rounded-[16px] font-medium tracking-soft text-[14px] transition flex items-center justify-center gap-2",
