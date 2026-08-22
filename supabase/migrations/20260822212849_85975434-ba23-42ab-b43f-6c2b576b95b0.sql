@@ -1,0 +1,1 @@
+ALTER FUNCTION public.return_requests_notify() SET search_path = public;

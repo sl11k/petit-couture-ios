@@ -1,0 +1,1 @@
+ALTER FUNCTION public.shipments_notify() SET search_path = public;

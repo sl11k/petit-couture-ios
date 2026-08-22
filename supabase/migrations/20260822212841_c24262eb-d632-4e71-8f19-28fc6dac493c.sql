@@ -1,0 +1,1 @@
+ALTER FUNCTION public.products_emit_low_stock() SET search_path = public;
