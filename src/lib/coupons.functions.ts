@@ -3,17 +3,28 @@ import { z } from "zod";
 import { sendMessage } from "@/lib/messaging";
 import { getCanonicalProductPrice } from "@/lib/pricing";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const asUuid = (v: unknown) => (typeof v === "string" && UUID_RE.test(v.trim()) ? v.trim() : null);
+const asEmail = (v: unknown) => {
+  const s = typeof v === "string" ? v.trim().toLowerCase() : "";
+  return s && s.length <= 255 && EMAIL_RE.test(s) ? s : null;
+};
+
+// Lenient on purpose: bad emails / non-uuid variant ids must never throw,
+// otherwise the UI shows a generic "could not validate coupon" error.
 const Input = z.object({
   code: z.string().min(1).max(64),
   cart_items: z.array(z.object({
     slug: z.string(),
-    variant_id: z.string().uuid().nullable().optional(),
-    price: z.number(),
-    qty: z.number(),
-    is_discounted: z.boolean().default(false),
-  })),
-  user_id: z.string().uuid().nullable().optional(),
-  customer_email: z.string().email().max(255).nullable().optional(),
+    variant_id: z.any().transform(asUuid).nullable().optional(),
+    price: z.coerce.number().catch(0),
+    qty: z.coerce.number().catch(0),
+    is_discounted: z.coerce.boolean().catch(false),
+  })).default([]),
+  user_id: z.any().transform(asUuid).nullable().optional(),
+  customer_email: z.any().transform(asEmail).nullable().optional(),
 });
 
 export type ValidateCouponResult =
@@ -29,6 +40,12 @@ function messageFor(reason: string, extra?: { min_subtotal?: number; currency?: 
     case "expired": return { ar: "انتهت صلاحية الكوبون", en: "Coupon has expired" };
     case "usage_limit_reached": return { ar: "تم استنفاد عدد مرات استخدام الكوبون", en: "Coupon usage limit reached" };
     case "per_customer_limit": return { ar: "استخدمت هذا الكوبون من قبل", en: "You've already used this coupon" };
+    case "not_first_order": return { ar: "هذا الكوبون للطلب الأول فقط", en: "This coupon is for first orders only" };
+    case "first_order_requires_login": return { ar: "أدخل بريدك الإلكتروني لاستخدام هذا الكوبون", en: "Enter your email to use this coupon" };
+    case "not_allowed_user": return { ar: "هذا الكوبون غير متاح لحسابك", en: "This coupon is not available for your account" };
+    case "empty_cart": return { ar: "سلتك فارغة", en: "Your cart is empty" };
+    case "no_eligible_items": return { ar: "الكوبون لا ينطبق على المنتجات في سلتك", en: "Coupon doesn't apply to items in your cart" };
+    case "unsupported_discount_type": return { ar: "نوع الخصم غير مدعوم", en: "Unsupported discount type" };
     case "min_subtotal":
       return extra?.min_subtotal
         ? { ar: `الحد الأدنى للطلب ${extra.min_subtotal} ${cur}`, en: `Minimum order amount is ${extra.min_subtotal} ${cur}` }
@@ -37,6 +54,7 @@ function messageFor(reason: string, extra?: { min_subtotal?: number; currency?: 
     default: return { ar: "كوبون غير صالح", en: "Invalid coupon" };
   }
 }
+
 
 
 export const validateCoupon = createServerFn({ method: "POST" })
