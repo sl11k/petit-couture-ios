@@ -502,7 +502,8 @@ function CheckoutPage() {
     if (step >= 2) {
       if (!countryCode) e.country = isRTL ? "اختر دولة التوصيل" : "Select delivery country";
       if (!loc.city) e.city = isRTL ? "المدينة مطلوبة" : "City required";
-      if (!loc.street && !loc.geoAddress)
+      const hasPin = loc.lat != null && loc.lng != null;
+      if (!loc.street?.trim() && !loc.geoAddress?.trim() && !hasPin)
         e.location = isRTL
           ? "أدخل العنوان أو حدده على الخريطة"
           : "Enter an address or set it on the map";
