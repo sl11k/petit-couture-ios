@@ -61,12 +61,7 @@ function MetricsPage() {
   const [to, setTo] = useState<string>(fmtDate(new Date()));
   const [loading, setLoading] = useState(true);
   const [loadErr, setLoadErr] = useState<string | null>(null);
-
-  const [api, setApi] = useState<any[]>([]);
-  const [errs, setErrs] = useState<any[]>([]);
-  const [perf, setPerf] = useState<any[]>([]);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [sessions, setSessions] = useState<any[]>([]);
+  const [data, setData] = useState<any>(null);
 
   // sync preset -> dates
   useEffect(() => {
@@ -84,53 +79,14 @@ function MetricsPage() {
       try {
         const fromIso = new Date(from + "T00:00:00").toISOString();
         const toIso = new Date(to + "T23:59:59").toISOString();
-
-        // We fetch a wider window (last 60 days) for orders/sessions so we can
-        // compute today-vs-yesterday and this-week-vs-last comparisons no
-        // matter what preset the user picked.
-        const compareSince = subDays(new Date(), 60).toISOString();
-
-        const [apiR, errR, perfR, ordersR, sessR] = await Promise.all([
-          supabase
-            .from("api_request_logs")
-            .select("status_code,duration_ms,path,created_at")
-            .gte("created_at", fromIso)
-            .lte("created_at", toIso)
-            .order("created_at", { ascending: false })
-            .limit(5000),
-          supabase
-            .from("error_logs")
-            .select("severity,category,code,created_at,resolved")
-            .gte("created_at", fromIso)
-            .lte("created_at", toIso)
-            .order("created_at", { ascending: false })
-            .limit(5000),
-          supabase
-            .from("perf_metrics")
-            .select("metric,value,rating,created_at")
-            .gte("created_at", fromIso)
-            .lte("created_at", toIso)
-            .order("created_at", { ascending: false })
-            .limit(5000),
-          supabase
-            .from("orders")
-            .select("total,refunded_amount,status,payment_status,created_at")
-            .gte("created_at", compareSince)
-            .eq("payment_status", "paid")
-            .limit(10000),
-          supabase
-            .from("analytics_events")
-            .select("session_id,created_at")
-            .gte("created_at", compareSince)
-            .limit(20000),
-        ]);
-
-        if (cancelled) return;
-        setApi(apiR.data ?? []);
-        setErrs(errR.data ?? []);
-        setPerf(perfR.data ?? []);
-        setOrders((ordersR.data ?? []).filter((order: any) => !["cancelled", "refunded", "returned", "payment_failed"].includes(String(order.status))));
-        setSessions(sessR.data ?? []);
+        // All aggregation happens in the database: no client-side row limits,
+        // so the numbers always cover 100% of the data (not a truncated sample).
+        const { data: res, error } = await (supabase as any).rpc("get_ops_metrics_v1", {
+          _from: fromIso,
+          _to: toIso,
+        });
+        if (error) throw error;
+        if (!cancelled) setData(res);
       } catch (e: any) {
         if (!cancelled) setLoadErr(e?.message ?? String(e));
       } finally {
@@ -142,163 +98,81 @@ function MetricsPage() {
     };
   }, [from, to]);
 
-  // ---------------- stats (over selected range) ----------------
-  const stats = useMemo(() => {
-    const durations = api.map((r) => r.duration_ms).filter((v: any) => typeof v === "number");
-    durations.sort((a, b) => a - b);
-    const p = (q: number) => (durations.length ? durations[Math.floor(durations.length * q)] : 0);
-    const avg = durations.length ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : 0;
-    const errorRate = api.length
-      ? Math.round((api.filter((r) => (r.status_code ?? 0) >= 500).length / api.length) * 1000) / 10
-      : 0;
-    return {
-      requests: api.length,
-      errorRate,
-      avg,
-      p50: p(0.5),
-      p95: p(0.95),
-      p99: p(0.99),
-      errors: errs.length,
-      criticals: errs.filter((e) => e.severity === "critical").length,
-      unresolved: errs.filter((e) => !e.resolved).length,
-    };
-  }, [api, errs]);
+  const emptyCmp = { today: 0, yesterday: 0, thisWeek: 0, prevWeek: 0 };
+  const comparison = useMemo(
+    () => ({
+      rev: data?.comparison?.rev ?? emptyCmp,
+      ord: data?.comparison?.ord ?? emptyCmp,
+      ses: data?.comparison?.ses ?? emptyCmp,
+      errC: data?.comparison?.errC ?? emptyCmp,
+    }),
+    [data],
+  );
 
-  // ---------------- day-over-day / week-over-week comparison ----------------
-  const comparison = useMemo(() => {
-    const now = new Date();
-    const startToday = startOfDay(now).getTime();
-    const startYesterday = startOfDay(subDays(now, 1)).getTime();
-    const startWeek = startOfDay(subDays(now, 7)).getTime();
-    const startPrevWeek = startOfDay(subDays(now, 14)).getTime();
+  const stats = useMemo(
+    () => ({
+      requests: Number(data?.stats?.requests ?? 0),
+      apiSamples: Number(data?.stats?.apiSamples ?? 0),
+      errorRate: Number(data?.stats?.errorRate ?? 0),
+      avg: Number(data?.stats?.avg ?? 0),
+      p95: Number(data?.stats?.p95 ?? 0),
+      p99: Number(data?.stats?.p99 ?? 0),
+      errors: Number(data?.stats?.errors ?? 0),
+      criticals: Number(data?.stats?.criticals ?? 0),
+      unresolved: Number(data?.stats?.unresolved ?? 0),
+      perfSamples: Number(data?.stats?.perfSamples ?? 0),
+      sessions: Number(data?.stats?.sessions ?? 0),
+    }),
+    [data],
+  );
 
-    const bucket = (rows: any[], amount: (r: any) => number) => {
-      let today = 0,
-        yesterday = 0,
-        thisWeek = 0,
-        prevWeek = 0;
-      for (const r of rows) {
-        const t = new Date(r.created_at).getTime();
-        const v = amount(r);
-        if (t >= startToday) today += v;
-        else if (t >= startYesterday) yesterday += v;
-        if (t >= startWeek) thisWeek += v;
-        else if (t >= startPrevWeek) prevWeek += v;
-      }
-      return { today, yesterday, thisWeek, prevWeek };
-    };
+  const daily = useMemo(
+    () =>
+      ((data?.daily ?? []) as any[]).map((d) => ({
+        label: d.label,
+        revenue: Number(d.revenue ?? 0),
+        orders: Number(d.orders ?? 0),
+        sessions: Number(d.sessions ?? 0),
+        errors: Number(d.errors ?? 0),
+      })),
+    [data],
+  );
 
-    const rev = bucket(orders, (o) => Math.max(0, Number(o.total ?? 0) - Number(o.refunded_amount ?? 0)));
-    const ord = bucket(orders, () => 1);
-    const errC = bucket(errs, () => 1);
-    const uniq = (rows: any[], from: number, to?: number) => {
-      const s = new Set<string>();
-      for (const r of rows) {
-        const t = new Date(r.created_at).getTime();
-        if (t >= from && (to === undefined || t < to) && r.session_id) s.add(r.session_id);
-      }
-      return s.size;
-    };
-    const ses = {
-      today: uniq(sessions, startToday),
-      yesterday: uniq(sessions, startYesterday, startToday),
-      thisWeek: uniq(sessions, startWeek),
-      prevWeek: uniq(sessions, startPrevWeek, startWeek),
-    };
+  const series = useMemo(
+    () =>
+      ((data?.series ?? []) as any[]).map((s) => ({
+        ts: s.ts,
+        req: Number(s.req ?? 0),
+        err5xx: Number(s.err5xx ?? 0),
+        errors: Number(s.errors ?? 0),
+        avg_ms: Number(s.avg_ms ?? 0),
+      })),
+    [data],
+  );
 
-    return { rev, ord, errC, ses };
-  }, [orders, errs, sessions]);
+  const webVitals = useMemo(
+    () =>
+      ((data?.vitals ?? []) as any[]).map((v) => ({
+        metric: v.metric,
+        p75: Math.round(Number(v.p75 ?? 0)),
+        avg: Math.round(Number(v.avg ?? 0)),
+        samples: Number(v.samples ?? 0),
+      })),
+    [data],
+  );
 
-  // ---------------- daily series (last 30 days) ----------------
-  const daily = useMemo(() => {
-    const days = 30;
-    const start = startOfDay(subDays(new Date(), days - 1));
-    const map = new Map<string, { day: string; label: string; revenue: number; orders: number; sessions: Set<string>; errors: number }>();
-    for (let i = 0; i < days; i++) {
-      const d = subDays(new Date(), days - 1 - i);
-      const key = fmtDate(startOfDay(d));
-      map.set(key, { day: key, label: fmtDay(d), revenue: 0, orders: 0, sessions: new Set(), errors: 0 });
-    }
-    for (const o of orders) {
-      const t = new Date(o.created_at);
-      if (t < start) continue;
-      const key = fmtDate(startOfDay(t));
-      const b = map.get(key);
-      if (b) {
-        b.orders += 1;
-        b.revenue += Math.max(0, Number(o.total ?? 0) - Number(o.refunded_amount ?? 0));
-      }
-    }
-    for (const s of sessions) {
-      const t = new Date(s.created_at);
-      if (t < start) continue;
-      const key = fmtDate(startOfDay(t));
-      const b = map.get(key);
-      if (b && s.session_id) b.sessions.add(s.session_id);
-    }
-    for (const e of errs) {
-      const t = new Date(e.created_at);
-      if (t < start) continue;
-      const key = fmtDate(startOfDay(t));
-      const b = map.get(key);
-      if (b) b.errors += 1;
-    }
-    return Array.from(map.values()).map((b) => ({
-      label: b.label,
-      revenue: Math.round(b.revenue),
-      orders: b.orders,
-      sessions: b.sessions.size,
-      errors: b.errors,
-    }));
-  }, [orders, sessions, errs]);
+  const errorsByCategory = useMemo(
+    () =>
+      ((data?.errorsByCategory ?? []) as any[]).map((c) => ({
+        category: c.category,
+        count: Number(c.count ?? 0),
+      })),
+    [data],
+  );
 
-  // ---------------- time series (latency/errors within selected range) ----------------
-  const series = useMemo(() => {
-    const bucketHourly = range === "24h";
-    const map = new Map<string, { ts: string; req: number; err5xx: number; total_ms: number; n: number; errors: number }>();
-    for (const r of api) {
-      const d = new Date(r.created_at);
-      const k = bucketHourly ? fmtHour(d) : fmtDay(startOfDay(d));
-      const cur = map.get(k) ?? { ts: k, req: 0, err5xx: 0, total_ms: 0, n: 0, errors: 0 };
-      cur.req++;
-      if ((r.status_code ?? 0) >= 500) cur.err5xx++;
-      if (typeof r.duration_ms === "number") {
-        cur.total_ms += r.duration_ms;
-        cur.n++;
-      }
-      map.set(k, cur);
-    }
-    for (const e of errs) {
-      const d = new Date(e.created_at);
-      const k = bucketHourly ? fmtHour(d) : fmtDay(startOfDay(d));
-      const cur = map.get(k) ?? { ts: k, req: 0, err5xx: 0, total_ms: 0, n: 0, errors: 0 };
-      cur.errors++;
-      map.set(k, cur);
-    }
-    return Array.from(map.values())
-      .map((b) => ({ ...b, avg_ms: b.n ? Math.round(b.total_ms / b.n) : 0 }))
-      .sort((a, b) => a.ts.localeCompare(b.ts));
-  }, [api, errs, range]);
+  const perf = { length: stats.perfSamples };
+  const hasApiData = stats.requests > 0;
 
-  const webVitals = useMemo(() => {
-    const groups: Record<string, number[]> = {};
-    for (const r of perf) {
-      if (!groups[r.metric]) groups[r.metric] = [];
-      groups[r.metric].push(Number(r.value));
-    }
-    return Object.entries(groups).map(([metric, vals]) => {
-      vals.sort((a, b) => a - b);
-      const p75 = vals[Math.floor(vals.length * 0.75)] ?? 0;
-      const avg = vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
-      return { metric, p75: Math.round(p75), avg, samples: vals.length };
-    });
-  }, [perf]);
-
-  const errorsByCategory = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const e of errs) map.set(e.category ?? "—", (map.get(e.category ?? "—") ?? 0) + 1);
-    return Array.from(map, ([category, count]) => ({ category, count })).sort((a, b) => b.count - a.count);
-  }, [errs]);
 
   const nf = (n: number) => n.toLocaleString(ar ? "ar" : "en");
 
