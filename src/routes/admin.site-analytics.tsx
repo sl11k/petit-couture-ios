@@ -13,6 +13,13 @@ export const Route = createFileRoute("/admin/site-analytics")({
 type Range = "7d" | "30d" | "90d";
 const RANGE_DAYS: Record<Range, number> = { "7d": 7, "30d": 30, "90d": 90 };
 
+type Row = { label: string; value: number; sub?: string };
+
+function flag(code: string) {
+  if (!code || code.length !== 2 || !/^[A-Z]{2}$/.test(code)) return "🏳️";
+  return String.fromCodePoint(...[...code].map((c) => 127397 + c.charCodeAt(0)));
+}
+
 function SiteAnalyticsPage() {
   const { lang } = useLanguage();
   const ar = lang === "ar";
@@ -20,11 +27,22 @@ function SiteAnalyticsPage() {
   const [stats, setStats] = useState<any>(null);
   const [topQueries, setTopQueries] = useState<any[]>([]);
   const [topProducts, setTopProducts] = useState<any[]>([]);
-  const [topPages, setTopPages] = useState<{ path: string; count: number }[]>([]);
-  const [topEvents, setTopEvents] = useState<{ name: string; count: number }[]>([]);
-  const [dailyVisits, setDailyVisits] = useState<{ date: string; visits: number }[]>([]);
+  const [topPages, setTopPages] = useState<any[]>([]);
+  const [topEvents, setTopEvents] = useState<any[]>([]);
+  const [dailyVisits, setDailyVisits] = useState<{ date: string; visits: number; pageviews: number }[]>([]);
   const [topReferrers, setTopReferrers] = useState<{ source: string; count: number }[]>([]);
+  const [sources, setSources] = useState<any[]>([]);
   const [devices, setDevices] = useState<{ device: string; count: number }[]>([]);
+  const [browsers, setBrowsers] = useState<any[]>([]);
+  const [oses, setOses] = useState<any[]>([]);
+  const [countries, setCountries] = useState<any[]>([]);
+  const [languages, setLanguages] = useState<any[]>([]);
+  const [entryPages, setEntryPages] = useState<any[]>([]);
+  const [exitPages, setExitPages] = useState<any[]>([]);
+  const [utmSources, setUtmSources] = useState<any[]>([]);
+  const [utmMediums, setUtmMediums] = useState<any[]>([]);
+  const [utmCampaigns, setUtmCampaigns] = useState<any[]>([]);
+  const [funnel, setFunnel] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -53,6 +71,17 @@ function SiteAnalyticsPage() {
         referralClicks: data.referral_clicks ?? 0,
       });
       setDevices(data.devices ?? []);
+      setBrowsers(data.browsers ?? []);
+      setOses(data.operating_systems ?? []);
+      setCountries(data.countries ?? []);
+      setLanguages(data.languages ?? []);
+      setEntryPages(data.entry_pages ?? []);
+      setExitPages(data.exit_pages ?? []);
+      setUtmSources(data.utm_sources ?? []);
+      setUtmMediums(data.utm_mediums ?? []);
+      setUtmCampaigns(data.utm_campaigns ?? []);
+      setSources(data.sources ?? []);
+      setFunnel(data.funnel ?? null);
       setTopQueries(data.top_queries ?? []);
       setTopProducts(data.top_products ?? []);
       setTopPages(data.top_pages ?? []);
@@ -66,6 +95,7 @@ function SiteAnalyticsPage() {
       setLoading(false);
     })();
   }, [range]);
+
 
   if (loading || !stats) {
     return <div className="flex items-center justify-center py-12 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /></div>;
@@ -91,6 +121,72 @@ function SiteAnalyticsPage() {
     desktop: { ar: "كمبيوتر", en: "Desktop" },
     tablet: { ar: "تابلت", en: "Tablet" },
     unknown: { ar: "غير معروف", en: "Unknown" },
+  };
+
+  const nf = (n: number) => Number(n || 0).toLocaleString(ar ? "ar" : "en");
+
+  /** Plausible-style ranked list with a proportional bar behind each row. */
+  const BarList = ({
+    title,
+    rows,
+    unit,
+    ltr = true,
+  }: {
+    title: string;
+    rows: Row[];
+    unit?: string;
+    ltr?: boolean;
+  }) => {
+    const max = Math.max(1, ...rows.map((r) => r.value));
+    return (
+      <div className="rounded-lg border border-border bg-card p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="text-sm font-medium">{title}</div>
+          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+            {unit ?? (ar ? "زوار" : "Visitors")}
+          </div>
+        </div>
+        {rows.length === 0 ? (
+          <div className="text-xs text-muted-foreground">{ar ? "لا توجد بيانات" : "No data"}</div>
+        ) : (
+          <ul className="max-h-[280px] space-y-1 overflow-y-auto pr-1">
+            {rows.map((r, i) => (
+              <li key={`${r.label}-${i}`} className="relative flex items-center justify-between gap-2 rounded px-2 py-1.5 text-xs">
+                <div
+                  className="absolute inset-y-0 start-0 rounded bg-primary/10"
+                  style={{ width: `${(r.value / max) * 100}%` }}
+                  aria-hidden
+                />
+                <span className="relative truncate" dir={ltr ? "ltr" : undefined} title={r.label}>
+                  {r.label}
+                </span>
+                <span className="relative shrink-0 font-medium tabular-nums">
+                  {nf(r.value)}
+                  {r.sub ? <span className="ms-1.5 text-muted-foreground">({r.sub})</span> : null}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  };
+
+  const countryName = (code: string) => {
+    if (!code || code === "unknown") return ar ? "غير معروف" : "Unknown";
+    try {
+      return new Intl.DisplayNames([ar ? "ar" : "en"], { type: "region" }).of(code) ?? code;
+    } catch {
+      return code;
+    }
+  };
+  const langName = (code: string) => {
+    if (!code || code === "unknown") return ar ? "غير معروف" : "Unknown";
+    try {
+      return new Intl.DisplayNames([ar ? "ar" : "en"], { type: "language" }).of(code) ?? code;
+    } catch {
+      return code;
+    }
   };
 
   return (
@@ -142,7 +238,9 @@ function SiteAnalyticsPage() {
       </div>
 
       <div className="mb-4 rounded-lg border border-border bg-card p-4">
-        <div className="mb-4 text-sm font-medium">{ar ? "الزيارات اليومية" : "Daily Visits"}</div>
+        <div className="mb-4 text-sm font-medium">
+          {ar ? "الزيارات ومشاهدات الصفحات يومياً" : "Daily visits & page views"}
+        </div>
         <div className="h-64 w-full text-xs">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={dailyVisits}>
@@ -154,90 +252,133 @@ function SiteAnalyticsPage() {
                 itemStyle={{ color: "#fff" }}
               />
               <Bar dataKey="visits" fill="currentColor" className="fill-primary" radius={[4, 4, 0, 0]} name={ar ? "الزيارات" : "Visits"} />
+              <Bar dataKey="pageviews" fill="currentColor" className="fill-primary/40" radius={[4, 4, 0, 0]} name={ar ? "مشاهدات الصفحات" : "Page views"} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
+      {funnel && (
+        <div className="mb-4 rounded-lg border border-border bg-card p-4">
+          <div className="mb-3 text-sm font-medium">{ar ? "رحلة الزائر" : "Visitor journey"}</div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              { k: "product_visits", ar: "شاهد منتجاً", en: "Viewed product" },
+              { k: "cart_visits", ar: "أضاف للسلة", en: "Added to bag" },
+              { k: "checkout_visits", ar: "وصل الدفع", en: "Reached checkout" },
+              { k: "purchase_visits", ar: "أتمّ الشراء", en: "Purchased" },
+            ].map((s, i, arr) => {
+              const v = Number(funnel[s.k] ?? 0);
+              const first = Number(funnel[arr[0].k] ?? 0) || 1;
+              return (
+                <div key={s.k} className="rounded-md border border-border p-3">
+                  <div className="text-xs text-muted-foreground">{ar ? s.ar : s.en}</div>
+                  <div className="text-lg font-semibold">{nf(v)}</div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {i === 0 ? "100%" : `${((v / first) * 100).toFixed(1)}%`}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Acquisition & audience breakdowns */}
+      <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <BarList
+          title={ar ? "المصادر (شامل المباشر)" : "Sources (incl. Direct)"}
+          rows={sources.map((s: any) => ({
+            label: s.source,
+            value: Number(s.visitors),
+            sub: `${Number(s.bounce_rate)}%`,
+          }))}
+        />
+        <BarList
+          title={ar ? "الدول" : "Countries"}
+          rows={countries.map((c: any) => ({
+            label: `${flag(c.code)} ${countryName(c.code)}`,
+            value: Number(c.count),
+          }))}
+          ltr={false}
+        />
+        <BarList
+          title={ar ? "أكثر الصفحات زيارة" : "Top pages"}
+          rows={topPages.map((p: any) => ({
+            label: p.path,
+            value: Number(p.visitors ?? p.count),
+            sub: `${nf(Number(p.count))} ${ar ? "مشاهدة" : "views"}`,
+          }))}
+        />
+        <BarList
+          title={ar ? "صفحات الدخول" : "Entry pages"}
+          rows={entryPages.map((p: any) => ({
+            label: p.path,
+            value: Number(p.visitors),
+            sub: `${Number(p.bounce_rate)}%`,
+          }))}
+        />
+        <BarList
+          title={ar ? "صفحات الخروج" : "Exit pages"}
+          rows={exitPages.map((p: any) => ({ label: p.path, value: Number(p.visitors) }))}
+        />
+        <BarList
+          title={ar ? "المتصفحات" : "Browsers"}
+          rows={browsers.map((b: any) => ({ label: b.name, value: Number(b.count) }))}
+        />
+        <BarList
+          title={ar ? "أنظمة التشغيل" : "Operating systems"}
+          rows={oses.map((o: any) => ({ label: o.name, value: Number(o.count) }))}
+        />
+        <BarList
+          title={ar ? "لغة المتصفح" : "Browser language"}
+          rows={languages.map((l: any) => ({ label: langName(l.code), value: Number(l.count) }))}
+          ltr={false}
+        />
+        <BarList
+          title={ar ? "حملات UTM" : "UTM campaigns"}
+          rows={[
+            ...utmCampaigns.map((u: any) => ({ label: `campaign: ${u.name}`, value: Number(u.count) })),
+            ...utmSources.map((u: any) => ({ label: `source: ${u.name}`, value: Number(u.count) })),
+            ...utmMediums.map((u: any) => ({ label: `medium: ${u.name}`, value: Number(u.count) })),
+          ]}
+        />
+      </div>
+
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Row 1 */}
-        <div className="rounded-lg border border-border bg-card p-4">
-          <div className="mb-3 text-sm font-medium">{ar ? "أهم مصادر الزيارات" : "Top Referral Sources"}</div>
-          {topReferrers.length === 0 ? (
-            <div className="text-xs text-muted-foreground">{ar ? "لا توجد بيانات" : "No data"}</div>
-          ) : (
-            <ul className="space-y-1.5 h-[240px] overflow-y-auto pr-1">
-              {topReferrers.map((r) => (
-                <li key={r.source} className="flex items-center justify-between text-xs">
-                  <span className="truncate" dir="ltr">{r.source}</span>
-                  <span className="font-medium text-muted-foreground">{r.count}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <div className="rounded-lg border border-border bg-card p-4">
-          <div className="mb-3 text-sm font-medium">{ar ? "أكثر الصفحات زيارة" : "Top Pages"}</div>
-          {topPages.length === 0 ? (
-            <div className="text-xs text-muted-foreground">{ar ? "لا توجد بيانات" : "No data"}</div>
-          ) : (
-            <ul className="space-y-1.5 h-[240px] overflow-y-auto pr-1">
-              {topPages.map((p) => (
-                <li key={p.path} className="flex items-center justify-between text-xs">
-                  <span className="truncate" dir="ltr" title={p.path}>{p.path}</span>
-                  <span className="font-medium text-muted-foreground">{p.count}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <div className="rounded-lg border border-border bg-card p-4">
-          <div className="mb-3 text-sm font-medium">{ar ? "توزيع الأحداث (Events)" : "Events Breakdown"}</div>
-          {topEvents.length === 0 ? (
-            <div className="text-xs text-muted-foreground">{ar ? "لا توجد بيانات" : "No data"}</div>
-          ) : (
-            <ul className="space-y-1.5 h-[240px] overflow-y-auto pr-1">
-              {topEvents.map((ev) => (
-                <li key={ev.name} className="flex items-center justify-between text-xs">
-                  <span className="truncate" dir="ltr">{ev.name}</span>
-                  <span className="font-medium text-muted-foreground">{ev.count}</span>
-                </li>
-              ))}
-            </ul>
-          )}
+        <BarList
+          title={ar ? "أهم مصادر الزيارات (روابط)" : "Top referral sources"}
+          rows={topReferrers.map((r) => ({ label: r.source, value: Number(r.count) }))}
+        />
+        <BarList
+          title={ar ? "توزيع الأحداث (Events)" : "Events breakdown"}
+          rows={topEvents.map((e: any) => ({
+            label: e.name,
+            value: Number(e.count),
+            sub: e.visitors ? `${nf(Number(e.visitors))} ${ar ? "زائر" : "visitors"}` : undefined,
+          }))}
+          unit={ar ? "أحداث" : "Events"}
+        />
+
+        <BarList
+          title={ar ? "أعلى الكلمات بحثاً" : "Top search queries"}
+          rows={topQueries.map((r: any) => ({ label: r.q, value: Number(r.c) }))}
+          unit={ar ? "بحث" : "Searches"}
+          ltr={false}
+        />
+        <div className="lg:col-span-3">
+          <BarList
+            title={ar ? "أكثر المنتجات مشاهدة" : "Most viewed products"}
+            rows={topProducts.map((p: any) => ({
+              label: (ar ? p.name_ar : p.name_en) ?? "—",
+              value: Number(p.views_count ?? 0),
+            }))}
+            unit={ar ? "مشاهدات" : "Views"}
+            ltr={false}
+          />
         </div>
 
-        {/* Row 2 */}
-        <div className="rounded-lg border border-border bg-card p-4">
-          <div className="mb-3 text-sm font-medium">{ar ? "أعلى الكلمات بحثاً" : "Top search queries"}</div>
-          {topQueries.length === 0 ? (
-            <div className="text-xs text-muted-foreground">{ar ? "لا توجد بيانات" : "No data"}</div>
-          ) : (
-            <ul className="space-y-1.5 h-[240px] overflow-y-auto pr-1">
-              {topQueries.map((r) => (
-                <li key={r.q} className="flex items-center justify-between text-xs">
-                  <span className="truncate">{r.q}</span>
-                  <span className="font-medium text-muted-foreground">{r.c}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <div className="rounded-lg border border-border bg-card p-4 lg:col-span-2">
-          <div className="mb-3 text-sm font-medium">{ar ? "أكثر المنتجات مشاهدة" : "Most viewed products"}</div>
-          {topProducts.length === 0 ? (
-            <div className="text-xs text-muted-foreground">{ar ? "لا توجد بيانات" : "No data"}</div>
-          ) : (
-            <ul className="space-y-1.5">
-              {topProducts.map((p) => (
-                <li key={p.id} className="flex items-center justify-between text-xs">
-                  <span className="truncate">{ar ? p.name_ar : p.name_en}</span>
-                  <span className="font-medium text-muted-foreground">{p.views_count ?? 0}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
       </div>
     </div>
   );
