@@ -74,9 +74,24 @@ function SiteAnalyticsPage() {
   const Card = ({ icon: Icon, label, value }: any) => (
     <div className="rounded-lg border border-border bg-card p-4">
       <div className="mb-1.5 flex items-center gap-1.5 text-xs text-muted-foreground"><Icon className="h-3.5 w-3.5" /> {label}</div>
-      <div className="text-2xl font-semibold">{value.toLocaleString(ar ? "ar" : "en")}</div>
+      <div className="text-2xl font-semibold">
+        {typeof value === "number" ? value.toLocaleString(ar ? "ar" : "en") : value}
+      </div>
     </div>
   );
+
+  const fmtDuration = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = Math.round(s % 60);
+    return `${m}m ${sec}s`;
+  };
+  const deviceTotal = devices.reduce((sum, d) => sum + Number(d.count || 0), 0) || 1;
+  const deviceLabel: Record<string, { ar: string; en: string }> = {
+    mobile: { ar: "جوال", en: "Mobile" },
+    desktop: { ar: "كمبيوتر", en: "Desktop" },
+    tablet: { ar: "تابلت", en: "Tablet" },
+    unknown: { ar: "غير معروف", en: "Unknown" },
+  };
 
   return (
     <div>
