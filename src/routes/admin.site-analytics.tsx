@@ -361,53 +361,24 @@ function SiteAnalyticsPage() {
           unit={ar ? "أحداث" : "Events"}
         />
 
-        <div className="rounded-lg border border-border bg-card p-4">
-          <div className="mb-3 text-sm font-medium">{ar ? "توزيع الأحداث (Events)" : "Events Breakdown"}</div>
-          {topEvents.length === 0 ? (
-            <div className="text-xs text-muted-foreground">{ar ? "لا توجد بيانات" : "No data"}</div>
-          ) : (
-            <ul className="space-y-1.5 h-[240px] overflow-y-auto pr-1">
-              {topEvents.map((ev) => (
-                <li key={ev.name} className="flex items-center justify-between text-xs">
-                  <span className="truncate" dir="ltr">{ev.name}</span>
-                  <span className="font-medium text-muted-foreground">{ev.count}</span>
-                </li>
-              ))}
-            </ul>
-          )}
+        <BarList
+          title={ar ? "أعلى الكلمات بحثاً" : "Top search queries"}
+          rows={topQueries.map((r: any) => ({ label: r.q, value: Number(r.c) }))}
+          unit={ar ? "بحث" : "Searches"}
+          ltr={false}
+        />
+        <div className="lg:col-span-3">
+          <BarList
+            title={ar ? "أكثر المنتجات مشاهدة" : "Most viewed products"}
+            rows={topProducts.map((p: any) => ({
+              label: (ar ? p.name_ar : p.name_en) ?? "—",
+              value: Number(p.views_count ?? 0),
+            }))}
+            unit={ar ? "مشاهدات" : "Views"}
+            ltr={false}
+          />
         </div>
 
-        {/* Row 2 */}
-        <div className="rounded-lg border border-border bg-card p-4">
-          <div className="mb-3 text-sm font-medium">{ar ? "أعلى الكلمات بحثاً" : "Top search queries"}</div>
-          {topQueries.length === 0 ? (
-            <div className="text-xs text-muted-foreground">{ar ? "لا توجد بيانات" : "No data"}</div>
-          ) : (
-            <ul className="space-y-1.5 h-[240px] overflow-y-auto pr-1">
-              {topQueries.map((r) => (
-                <li key={r.q} className="flex items-center justify-between text-xs">
-                  <span className="truncate">{r.q}</span>
-                  <span className="font-medium text-muted-foreground">{r.c}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <div className="rounded-lg border border-border bg-card p-4 lg:col-span-2">
-          <div className="mb-3 text-sm font-medium">{ar ? "أكثر المنتجات مشاهدة" : "Most viewed products"}</div>
-          {topProducts.length === 0 ? (
-            <div className="text-xs text-muted-foreground">{ar ? "لا توجد بيانات" : "No data"}</div>
-          ) : (
-            <ul className="space-y-1.5">
-              {topProducts.map((p) => (
-                <li key={p.id} className="flex items-center justify-between text-xs">
-                  <span className="truncate">{ar ? p.name_ar : p.name_en}</span>
-                  <span className="font-medium text-muted-foreground">{p.views_count ?? 0}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
       </div>
     </div>
   );
