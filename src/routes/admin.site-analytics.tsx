@@ -112,12 +112,33 @@ function SiteAnalyticsPage() {
           </div>
         }
       />
-      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <Card icon={Users} label={ar ? "إجمالي الزيارات" : "Total Visits"} value={stats.uniqueSessions} />
-        <Card icon={LinkIcon} label={ar ? "زيارات من روابط" : "Referral Clicks"} value={stats.referralClicks} />
+      <div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <Card icon={Users} label={ar ? "الزيارات" : "Visits"} value={stats.uniqueSessions} />
+        <Card icon={Users} label={ar ? "زوار فريدون" : "Unique visitors"} value={stats.uniqueVisitors} />
+        <Card icon={Eye} label={ar ? "مشاهدات الصفحات" : "Page views"} value={stats.pageviews} />
+        <Card icon={Eye} label={ar ? "مشاهدات لكل زيارة" : "Views / visit"} value={stats.viewsPerVisit} />
+        <Card icon={MousePointerClick} label={ar ? "مدة الزيارة" : "Visit duration"} value={fmtDuration(stats.avgDuration)} />
+        <Card icon={MousePointerClick} label={ar ? "معدل الارتداد" : "Bounce rate"} value={`${stats.bounceRate}%`} />
+      </div>
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <Card icon={LinkIcon} label={ar ? "زيارات من روابط" : "Referral visits"} value={stats.referralClicks} />
+        <Card icon={LinkIcon} label={ar ? "زيارات مباشرة" : "Direct visits"} value={stats.directVisits} />
         <Card icon={SearchIcon} label={ar ? "عمليات البحث" : "Searches"} value={stats.totalSearches} />
         <Card icon={MousePointerClick} label={ar ? "بحث بدون نتائج" : "Zero results"} value={stats.zeroResults} />
         <Card icon={Eye} label={ar ? "مشاهدات المنتجات" : "Product views"} value={stats.totalViews} />
+      </div>
+
+      <div className="mb-4 rounded-lg border border-border bg-card p-4">
+        <div className="mb-3 text-sm font-medium">{ar ? "الأجهزة" : "Devices"}</div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {devices.map((d) => (
+            <div key={d.device} className="rounded-md border border-border p-3">
+              <div className="text-xs text-muted-foreground">{deviceLabel[d.device]?.[ar ? "ar" : "en"] ?? d.device}</div>
+              <div className="text-lg font-semibold">{((Number(d.count) / deviceTotal) * 100).toFixed(1)}%</div>
+              <div className="text-[11px] text-muted-foreground">{Number(d.count).toLocaleString(ar ? "ar" : "en")}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="mb-4 rounded-lg border border-border bg-card p-4">
