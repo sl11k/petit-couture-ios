@@ -238,7 +238,9 @@ function SiteAnalyticsPage() {
       </div>
 
       <div className="mb-4 rounded-lg border border-border bg-card p-4">
-        <div className="mb-4 text-sm font-medium">{ar ? "الزيارات اليومية" : "Daily Visits"}</div>
+        <div className="mb-4 text-sm font-medium">
+          {ar ? "الزيارات ومشاهدات الصفحات يومياً" : "Daily visits & page views"}
+        </div>
         <div className="h-64 w-full text-xs">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={dailyVisits}>
@@ -250,43 +252,115 @@ function SiteAnalyticsPage() {
                 itemStyle={{ color: "#fff" }}
               />
               <Bar dataKey="visits" fill="currentColor" className="fill-primary" radius={[4, 4, 0, 0]} name={ar ? "الزيارات" : "Visits"} />
+              <Bar dataKey="pageviews" fill="currentColor" className="fill-primary/40" radius={[4, 4, 0, 0]} name={ar ? "مشاهدات الصفحات" : "Page views"} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
+      {funnel && (
+        <div className="mb-4 rounded-lg border border-border bg-card p-4">
+          <div className="mb-3 text-sm font-medium">{ar ? "رحلة الزائر" : "Visitor journey"}</div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              { k: "product_visits", ar: "شاهد منتجاً", en: "Viewed product" },
+              { k: "cart_visits", ar: "أضاف للسلة", en: "Added to bag" },
+              { k: "checkout_visits", ar: "وصل الدفع", en: "Reached checkout" },
+              { k: "purchase_visits", ar: "أتمّ الشراء", en: "Purchased" },
+            ].map((s, i, arr) => {
+              const v = Number(funnel[s.k] ?? 0);
+              const first = Number(funnel[arr[0].k] ?? 0) || 1;
+              return (
+                <div key={s.k} className="rounded-md border border-border p-3">
+                  <div className="text-xs text-muted-foreground">{ar ? s.ar : s.en}</div>
+                  <div className="text-lg font-semibold">{nf(v)}</div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {i === 0 ? "100%" : `${((v / first) * 100).toFixed(1)}%`}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Acquisition & audience breakdowns */}
+      <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <BarList
+          title={ar ? "المصادر (شامل المباشر)" : "Sources (incl. Direct)"}
+          rows={sources.map((s: any) => ({
+            label: s.source,
+            value: Number(s.visitors),
+            sub: `${Number(s.bounce_rate)}%`,
+          }))}
+        />
+        <BarList
+          title={ar ? "الدول" : "Countries"}
+          rows={countries.map((c: any) => ({
+            label: `${flag(c.code)} ${countryName(c.code)}`,
+            value: Number(c.count),
+          }))}
+          ltr={false}
+        />
+        <BarList
+          title={ar ? "أكثر الصفحات زيارة" : "Top pages"}
+          rows={topPages.map((p: any) => ({
+            label: p.path,
+            value: Number(p.visitors ?? p.count),
+            sub: `${nf(Number(p.count))} ${ar ? "مشاهدة" : "views"}`,
+          }))}
+        />
+        <BarList
+          title={ar ? "صفحات الدخول" : "Entry pages"}
+          rows={entryPages.map((p: any) => ({
+            label: p.path,
+            value: Number(p.visitors),
+            sub: `${Number(p.bounce_rate)}%`,
+          }))}
+        />
+        <BarList
+          title={ar ? "صفحات الخروج" : "Exit pages"}
+          rows={exitPages.map((p: any) => ({ label: p.path, value: Number(p.visitors) }))}
+        />
+        <BarList
+          title={ar ? "المتصفحات" : "Browsers"}
+          rows={browsers.map((b: any) => ({ label: b.name, value: Number(b.count) }))}
+        />
+        <BarList
+          title={ar ? "أنظمة التشغيل" : "Operating systems"}
+          rows={oses.map((o: any) => ({ label: o.name, value: Number(o.count) }))}
+        />
+        <BarList
+          title={ar ? "لغة المتصفح" : "Browser language"}
+          rows={languages.map((l: any) => ({ label: langName(l.code), value: Number(l.count) }))}
+          ltr={false}
+        />
+        <BarList
+          title={ar ? "حملات UTM" : "UTM campaigns"}
+          rows={[
+            ...utmCampaigns.map((u: any) => ({ label: `campaign: ${u.name}`, value: Number(u.count) })),
+            ...utmSources.map((u: any) => ({ label: `source: ${u.name}`, value: Number(u.count) })),
+            ...utmMediums.map((u: any) => ({ label: `medium: ${u.name}`, value: Number(u.count) })),
+          ]}
+        />
+      </div>
+
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Row 1 */}
-        <div className="rounded-lg border border-border bg-card p-4">
-          <div className="mb-3 text-sm font-medium">{ar ? "أهم مصادر الزيارات" : "Top Referral Sources"}</div>
-          {topReferrers.length === 0 ? (
-            <div className="text-xs text-muted-foreground">{ar ? "لا توجد بيانات" : "No data"}</div>
-          ) : (
-            <ul className="space-y-1.5 h-[240px] overflow-y-auto pr-1">
-              {topReferrers.map((r) => (
-                <li key={r.source} className="flex items-center justify-between text-xs">
-                  <span className="truncate" dir="ltr">{r.source}</span>
-                  <span className="font-medium text-muted-foreground">{r.count}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <div className="rounded-lg border border-border bg-card p-4">
-          <div className="mb-3 text-sm font-medium">{ar ? "أكثر الصفحات زيارة" : "Top Pages"}</div>
-          {topPages.length === 0 ? (
-            <div className="text-xs text-muted-foreground">{ar ? "لا توجد بيانات" : "No data"}</div>
-          ) : (
-            <ul className="space-y-1.5 h-[240px] overflow-y-auto pr-1">
-              {topPages.map((p) => (
-                <li key={p.path} className="flex items-center justify-between text-xs">
-                  <span className="truncate" dir="ltr" title={p.path}>{p.path}</span>
-                  <span className="font-medium text-muted-foreground">{p.count}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <BarList
+          title={ar ? "أهم مصادر الزيارات (روابط)" : "Top referral sources"}
+          rows={topReferrers.map((r) => ({ label: r.source, value: Number(r.count) }))}
+        />
+        <BarList
+          title={ar ? "توزيع الأحداث (Events)" : "Events breakdown"}
+          rows={topEvents.map((e: any) => ({
+            label: e.name,
+            value: Number(e.count),
+            sub: e.visitors ? `${nf(Number(e.visitors))} ${ar ? "زائر" : "visitors"}` : undefined,
+          }))}
+          unit={ar ? "أحداث" : "Events"}
+        />
+
         <div className="rounded-lg border border-border bg-card p-4">
           <div className="mb-3 text-sm font-medium">{ar ? "توزيع الأحداث (Events)" : "Events Breakdown"}</div>
           {topEvents.length === 0 ? (
