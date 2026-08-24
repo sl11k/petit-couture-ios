@@ -37,14 +37,21 @@ function SiteAnalyticsPage() {
       ]);
 
       const data = rpcRes.data as any || {};
-      
+
       setStats({
         totalSearches: data.total_searches ?? 0,
         zeroResults: data.zero_results ?? 0,
-        totalViews: data.total_product_views ?? (data.top_products ?? []).reduce((s: number, p: any) => s + (p.views_count ?? 0), 0),
+        totalViews: data.total_product_views ?? 0,
         uniqueSessions: data.unique_sessions ?? 0,
+        uniqueVisitors: data.unique_visitors ?? 0,
+        pageviews: data.total_pageviews ?? 0,
+        viewsPerVisit: Number(data.views_per_visit ?? 0),
+        avgDuration: Number(data.avg_duration_sec ?? 0),
+        bounceRate: Number(data.bounce_rate ?? 0),
+        directVisits: data.direct_visits ?? 0,
         referralClicks: data.referral_clicks ?? 0,
       });
+      setDevices(data.devices ?? []);
       setTopQueries(data.top_queries ?? []);
       setTopProducts(data.top_products ?? []);
       setTopPages(data.top_pages ?? []);
