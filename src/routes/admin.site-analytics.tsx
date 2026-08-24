@@ -13,6 +13,13 @@ export const Route = createFileRoute("/admin/site-analytics")({
 type Range = "7d" | "30d" | "90d";
 const RANGE_DAYS: Record<Range, number> = { "7d": 7, "30d": 30, "90d": 90 };
 
+type Row = { label: string; value: number; sub?: string };
+
+function flag(code: string) {
+  if (!code || code.length !== 2 || !/^[A-Z]{2}$/.test(code)) return "🏳️";
+  return String.fromCodePoint(...[...code].map((c) => 127397 + c.charCodeAt(0)));
+}
+
 function SiteAnalyticsPage() {
   const { lang } = useLanguage();
   const ar = lang === "ar";
@@ -20,11 +27,22 @@ function SiteAnalyticsPage() {
   const [stats, setStats] = useState<any>(null);
   const [topQueries, setTopQueries] = useState<any[]>([]);
   const [topProducts, setTopProducts] = useState<any[]>([]);
-  const [topPages, setTopPages] = useState<{ path: string; count: number }[]>([]);
-  const [topEvents, setTopEvents] = useState<{ name: string; count: number }[]>([]);
-  const [dailyVisits, setDailyVisits] = useState<{ date: string; visits: number }[]>([]);
+  const [topPages, setTopPages] = useState<any[]>([]);
+  const [topEvents, setTopEvents] = useState<any[]>([]);
+  const [dailyVisits, setDailyVisits] = useState<{ date: string; visits: number; pageviews: number }[]>([]);
   const [topReferrers, setTopReferrers] = useState<{ source: string; count: number }[]>([]);
+  const [sources, setSources] = useState<any[]>([]);
   const [devices, setDevices] = useState<{ device: string; count: number }[]>([]);
+  const [browsers, setBrowsers] = useState<any[]>([]);
+  const [oses, setOses] = useState<any[]>([]);
+  const [countries, setCountries] = useState<any[]>([]);
+  const [languages, setLanguages] = useState<any[]>([]);
+  const [entryPages, setEntryPages] = useState<any[]>([]);
+  const [exitPages, setExitPages] = useState<any[]>([]);
+  const [utmSources, setUtmSources] = useState<any[]>([]);
+  const [utmMediums, setUtmMediums] = useState<any[]>([]);
+  const [utmCampaigns, setUtmCampaigns] = useState<any[]>([]);
+  const [funnel, setFunnel] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -53,6 +71,17 @@ function SiteAnalyticsPage() {
         referralClicks: data.referral_clicks ?? 0,
       });
       setDevices(data.devices ?? []);
+      setBrowsers(data.browsers ?? []);
+      setOses(data.operating_systems ?? []);
+      setCountries(data.countries ?? []);
+      setLanguages(data.languages ?? []);
+      setEntryPages(data.entry_pages ?? []);
+      setExitPages(data.exit_pages ?? []);
+      setUtmSources(data.utm_sources ?? []);
+      setUtmMediums(data.utm_mediums ?? []);
+      setUtmCampaigns(data.utm_campaigns ?? []);
+      setSources(data.sources ?? []);
+      setFunnel(data.funnel ?? null);
       setTopQueries(data.top_queries ?? []);
       setTopProducts(data.top_products ?? []);
       setTopPages(data.top_pages ?? []);
@@ -66,6 +95,7 @@ function SiteAnalyticsPage() {
       setLoading(false);
     })();
   }, [range]);
+
 
   if (loading || !stats) {
     return <div className="flex items-center justify-center py-12 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /></div>;
