@@ -369,23 +369,37 @@ function MetricsPage() {
           </Card>
 
           {/* KPI cards — performance */}
+          {!hasApiData && (
+            <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+              {ar
+                ? "لا يوجد تسجيل لطلبات الخادم في هذا النطاق، لذلك مؤشرات زمن الاستجابة و 5xx تظهر «—» بدل أصفار غير حقيقية."
+                : "No server request logs in this range, so latency and 5xx indicators show “—” instead of misleading zeros."}
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <Kpi icon={Activity} label={ar ? "الطلبات" : "Requests"} value={nf(stats.requests)} />
+            <Kpi
+              icon={Users}
+              label={ar ? "الجلسات في النطاق" : "Sessions in range"}
+              value={nf(stats.sessions)}
+            />
+            <Kpi icon={Activity} label={ar ? "طلبات الخادم" : "Server requests"} value={hasApiData ? nf(stats.requests) : "—"} />
             <Kpi
               icon={AlertTriangle}
               label={ar ? "نسبة الأخطاء 5xx" : "5xx Error rate"}
-              value={`${stats.errorRate}%`}
-              tone={stats.errorRate > 2 ? "danger" : stats.errorRate > 0.5 ? "warn" : "ok"}
+              value={hasApiData ? `${stats.errorRate}%` : "—"}
+              tone={!hasApiData ? "default" : stats.errorRate > 2 ? "danger" : stats.errorRate > 0.5 ? "warn" : "ok"}
             />
-            <Kpi icon={Gauge} label={ar ? "متوسط الاستجابة" : "Avg latency"} value={`${stats.avg} ms`} />
-            <Kpi icon={Gauge} label="P95 / P99" value={`${stats.p95} / ${stats.p99} ms`} />
-            <Kpi icon={AlertTriangle} label={ar ? "أخطاء مسجّلة" : "Errors logged"} value={nf(stats.errors)} />
             <Kpi
-              icon={AlertTriangle}
-              label={ar ? "حرجة" : "Critical"}
-              value={String(stats.criticals)}
-              tone={stats.criticals ? "danger" : "ok"}
+              icon={Gauge}
+              label={ar ? "متوسط الاستجابة" : "Avg latency"}
+              value={stats.apiSamples > 0 ? `${stats.avg} ms` : "—"}
             />
+            <Kpi
+              icon={Gauge}
+              label="P95 / P99"
+              value={stats.apiSamples > 0 ? `${stats.p95} / ${stats.p99} ms` : "—"}
+            />
+            <Kpi icon={AlertTriangle} label={ar ? "أخطاء مسجّلة" : "Errors logged"} value={nf(stats.errors)} />
             <Kpi
               icon={AlertTriangle}
               label={ar ? "غير محلولة" : "Unresolved"}
@@ -394,6 +408,7 @@ function MetricsPage() {
             />
             <Kpi icon={Cpu} label={ar ? "عينات الأداء" : "Perf samples"} value={nf(perf.length)} />
           </div>
+
 
           {/* Latency over time */}
           <Card title={ar ? "زمن الاستجابة (متوسط/طلبات)" : "Latency & Requests over time"}>
