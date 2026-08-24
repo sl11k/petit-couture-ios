@@ -24,6 +24,7 @@ function SiteAnalyticsPage() {
   const [topEvents, setTopEvents] = useState<{ name: string; count: number }[]>([]);
   const [dailyVisits, setDailyVisits] = useState<{ date: string; visits: number }[]>([]);
   const [topReferrers, setTopReferrers] = useState<{ source: string; count: number }[]>([]);
+  const [devices, setDevices] = useState<{ device: string; count: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
