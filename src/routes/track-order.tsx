@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { useServerFn } from "@tanstack/react-start";
 import { findTrackingToken } from "@/lib/tracking.functions";
-import { Search, Package, Truck, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { Search, Package } from "lucide-react";
 import { buildMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/track-order")({
@@ -71,15 +71,6 @@ function TrackPage() {
         {error && <p className="text-center text-xs text-red-500">{error}</p>}
       </form>
 
-    </div>
-  );
-}
-
-      </div>
-      <div className="flex-1">
-        <p className="text-sm font-medium text-foreground">{title}</p>
-        <p className="text-[11px] text-muted-foreground">{date}</p>
-      </div>
     </div>
   );
 }
