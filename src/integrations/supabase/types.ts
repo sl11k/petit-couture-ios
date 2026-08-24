@@ -7900,6 +7900,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_ops_metrics_v1: {
+        Args: { _from: string; _to: string }
+        Returns: Json
+      }
       get_order_tracking: { Args: { _token: string }; Returns: Json }
       get_product_variants_with_stock: {
         Args: { _product_id: string }
