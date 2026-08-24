@@ -73,7 +73,7 @@ export async function refreshShipmentFromCarrier(shipmentId: string): Promise<vo
     const statusText = String(resp?.status ?? resp?.tracking?.status ?? "");
     const mapped = mapStatus(statusText);
 
-    const update: Record<string, unknown> = { last_polled_at: new Date().toISOString() };
+    const update: any = { last_polled_at: new Date().toISOString() };
     if (details.trackingNumber) update.tracking_number = details.trackingNumber;
     if (details.trackingUrl) update.tracking_url = details.trackingUrl;
     if (mapped) {
