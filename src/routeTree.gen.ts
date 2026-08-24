@@ -145,6 +145,7 @@ import { Route as ApiPublicTabbyWebhookRouteImport } from './routes/api.public.t
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe-webhook'
 import { Route as ApiPublicShippingWebhookRouteImport } from './routes/api.public.shipping-webhook'
 import { Route as ApiPublicPaymentWebhookRouteImport } from './routes/api.public.payment-webhook'
+import { Route as ApiPublicGeoRouteImport } from './routes/api/public/geo'
 import { Route as AdminWebhooksIdRouteImport } from './routes/admin.webhooks.$id'
 import { Route as AdminWarehousesIdRouteImport } from './routes/admin.warehouses.$id'
 import { Route as AdminSupportIdRouteImport } from './routes/admin.support.$id'
@@ -854,6 +855,11 @@ const ApiPublicPaymentWebhookRoute = ApiPublicPaymentWebhookRouteImport.update({
   path: '/api/public/payment-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicGeoRoute = ApiPublicGeoRouteImport.update({
+  id: '/api/public/geo',
+  path: '/api/public/geo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminWebhooksIdRoute = AdminWebhooksIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -1106,6 +1112,7 @@ export interface FileRoutesByFullPath {
   '/admin/support/$id': typeof AdminSupportIdRoute
   '/admin/warehouses/$id': typeof AdminWarehousesIdRoute
   '/admin/webhooks/$id': typeof AdminWebhooksIdRoute
+  '/api/public/geo': typeof ApiPublicGeoRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -1254,6 +1261,7 @@ export interface FileRoutesByTo {
   '/admin/support/$id': typeof AdminSupportIdRoute
   '/admin/warehouses/$id': typeof AdminWarehousesIdRoute
   '/admin/webhooks/$id': typeof AdminWebhooksIdRoute
+  '/api/public/geo': typeof ApiPublicGeoRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -1416,6 +1424,7 @@ export interface FileRoutesById {
   '/admin/support/$id': typeof AdminSupportIdRoute
   '/admin/warehouses/$id': typeof AdminWarehousesIdRoute
   '/admin/webhooks/$id': typeof AdminWebhooksIdRoute
+  '/api/public/geo': typeof ApiPublicGeoRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -1579,6 +1588,7 @@ export interface FileRouteTypes {
     | '/admin/support/$id'
     | '/admin/warehouses/$id'
     | '/admin/webhooks/$id'
+    | '/api/public/geo'
     | '/api/public/payment-webhook'
     | '/api/public/shipping-webhook'
     | '/api/public/stripe-webhook'
@@ -1727,6 +1737,7 @@ export interface FileRouteTypes {
     | '/admin/support/$id'
     | '/admin/warehouses/$id'
     | '/admin/webhooks/$id'
+    | '/api/public/geo'
     | '/api/public/payment-webhook'
     | '/api/public/shipping-webhook'
     | '/api/public/stripe-webhook'
@@ -1888,6 +1899,7 @@ export interface FileRouteTypes {
     | '/admin/support/$id'
     | '/admin/warehouses/$id'
     | '/admin/webhooks/$id'
+    | '/api/public/geo'
     | '/api/public/payment-webhook'
     | '/api/public/shipping-webhook'
     | '/api/public/stripe-webhook'
@@ -1953,6 +1965,7 @@ export interface RootRouteChildren {
   RecoverTokenRoute: typeof RecoverTokenRoute
   SupportNewRoute: typeof SupportNewRoute
   TrackTokenRoute: typeof TrackTokenRoute
+  ApiPublicGeoRoute: typeof ApiPublicGeoRoute
   ApiPublicPaymentWebhookRoute: typeof ApiPublicPaymentWebhookRoute
   ApiPublicShippingWebhookRoute: typeof ApiPublicShippingWebhookRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
@@ -2927,6 +2940,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/geo': {
+      id: '/api/public/geo'
+      path: '/api/public/geo'
+      fullPath: '/api/public/geo'
+      preLoaderRoute: typeof ApiPublicGeoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/webhooks/$id': {
       id: '/admin/webhooks/$id'
       path: '/$id'
@@ -3508,6 +3528,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecoverTokenRoute: RecoverTokenRoute,
   SupportNewRoute: SupportNewRoute,
   TrackTokenRoute: TrackTokenRoute,
+  ApiPublicGeoRoute: ApiPublicGeoRoute,
   ApiPublicPaymentWebhookRoute: ApiPublicPaymentWebhookRoute,
   ApiPublicShippingWebhookRoute: ApiPublicShippingWebhookRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
