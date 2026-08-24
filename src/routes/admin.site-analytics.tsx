@@ -123,6 +123,72 @@ function SiteAnalyticsPage() {
     unknown: { ar: "غير معروف", en: "Unknown" },
   };
 
+  const nf = (n: number) => Number(n || 0).toLocaleString(ar ? "ar" : "en");
+
+  /** Plausible-style ranked list with a proportional bar behind each row. */
+  const BarList = ({
+    title,
+    rows,
+    unit,
+    ltr = true,
+  }: {
+    title: string;
+    rows: Row[];
+    unit?: string;
+    ltr?: boolean;
+  }) => {
+    const max = Math.max(1, ...rows.map((r) => r.value));
+    return (
+      <div className="rounded-lg border border-border bg-card p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="text-sm font-medium">{title}</div>
+          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+            {unit ?? (ar ? "زوار" : "Visitors")}
+          </div>
+        </div>
+        {rows.length === 0 ? (
+          <div className="text-xs text-muted-foreground">{ar ? "لا توجد بيانات" : "No data"}</div>
+        ) : (
+          <ul className="max-h-[280px] space-y-1 overflow-y-auto pr-1">
+            {rows.map((r, i) => (
+              <li key={`${r.label}-${i}`} className="relative flex items-center justify-between gap-2 rounded px-2 py-1.5 text-xs">
+                <div
+                  className="absolute inset-y-0 start-0 rounded bg-primary/10"
+                  style={{ width: `${(r.value / max) * 100}%` }}
+                  aria-hidden
+                />
+                <span className="relative truncate" dir={ltr ? "ltr" : undefined} title={r.label}>
+                  {r.label}
+                </span>
+                <span className="relative shrink-0 font-medium tabular-nums">
+                  {nf(r.value)}
+                  {r.sub ? <span className="ms-1.5 text-muted-foreground">{r.sub}</span> : null}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  };
+
+  const countryName = (code: string) => {
+    if (!code || code === "unknown") return ar ? "غير معروف" : "Unknown";
+    try {
+      return new Intl.DisplayNames([ar ? "ar" : "en"], { type: "region" }).of(code) ?? code;
+    } catch {
+      return code;
+    }
+  };
+  const langName = (code: string) => {
+    if (!code || code === "unknown") return ar ? "غير معروف" : "Unknown";
+    try {
+      return new Intl.DisplayNames([ar ? "ar" : "en"], { type: "language" }).of(code) ?? code;
+    } catch {
+      return code;
+    }
+  };
+
   return (
     <div>
       <PageHeader
