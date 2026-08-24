@@ -3817,6 +3817,7 @@ export type Database = {
           tax: number
           total: number
           tracking_number: string | null
+          tracking_token: string | null
           tracking_url: string | null
           updated_at: string
           user_id: string | null
@@ -3874,6 +3875,7 @@ export type Database = {
           tax?: number
           total?: number
           tracking_number?: string | null
+          tracking_token?: string | null
           tracking_url?: string | null
           updated_at?: string
           user_id?: string | null
@@ -3931,6 +3933,7 @@ export type Database = {
           tax?: number
           total?: number
           tracking_number?: string | null
+          tracking_token?: string | null
           tracking_url?: string | null
           updated_at?: string
           user_id?: string | null
@@ -7897,6 +7900,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_order_tracking: { Args: { _token: string }; Returns: Json }
       get_product_variants_with_stock: {
         Args: { _product_id: string }
         Returns: {
@@ -8121,6 +8125,10 @@ export type Database = {
           _subtotal: number
         }
         Returns: undefined
+      }
+      tracking_status_label: {
+        Args: { _lang?: string; _status: string }
+        Returns: string
       }
       transfer_inventory: {
         Args: {
