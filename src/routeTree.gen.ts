@@ -30,6 +30,7 @@ import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as WishlistShareRouteImport } from './routes/wishlist.share'
+import { Route as TrackTokenRouteImport } from './routes/track.$token'
 import { Route as SupportNewRouteImport } from './routes/support.new'
 import { Route as RecoverTokenRouteImport } from './routes/recover.$token'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
@@ -272,6 +273,11 @@ const WishlistShareRoute = WishlistShareRouteImport.update({
   id: '/share',
   path: '/share',
   getParentRoute: () => WishlistRoute,
+} as any)
+const TrackTokenRoute = TrackTokenRouteImport.update({
+  id: '/track/$token',
+  path: '/track/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const SupportNewRoute = SupportNewRouteImport.update({
   id: '/support/new',
@@ -1083,6 +1089,7 @@ export interface FileRoutesByFullPath {
   '/product/$slug': typeof ProductSlugRoute
   '/recover/$token': typeof RecoverTokenRoute
   '/support/new': typeof SupportNewRoute
+  '/track/$token': typeof TrackTokenRoute
   '/wishlist/share': typeof WishlistShareRoute
   '/admin/': typeof AdminIndexRoute
   '/account/returns/new': typeof AccountReturnsNewRoute
@@ -1230,6 +1237,7 @@ export interface FileRoutesByTo {
   '/product/$slug': typeof ProductSlugRoute
   '/recover/$token': typeof RecoverTokenRoute
   '/support/new': typeof SupportNewRoute
+  '/track/$token': typeof TrackTokenRoute
   '/wishlist/share': typeof WishlistShareRoute
   '/admin': typeof AdminIndexRoute
   '/account/returns/new': typeof AccountReturnsNewRoute
@@ -1391,6 +1399,7 @@ export interface FileRoutesById {
   '/product/$slug': typeof ProductSlugRoute
   '/recover/$token': typeof RecoverTokenRoute
   '/support/new': typeof SupportNewRoute
+  '/track/$token': typeof TrackTokenRoute
   '/wishlist/share': typeof WishlistShareRoute
   '/admin/': typeof AdminIndexRoute
   '/account/returns/new': typeof AccountReturnsNewRoute
@@ -1553,6 +1562,7 @@ export interface FileRouteTypes {
     | '/product/$slug'
     | '/recover/$token'
     | '/support/new'
+    | '/track/$token'
     | '/wishlist/share'
     | '/admin/'
     | '/account/returns/new'
@@ -1700,6 +1710,7 @@ export interface FileRouteTypes {
     | '/product/$slug'
     | '/recover/$token'
     | '/support/new'
+    | '/track/$token'
     | '/wishlist/share'
     | '/admin'
     | '/account/returns/new'
@@ -1860,6 +1871,7 @@ export interface FileRouteTypes {
     | '/product/$slug'
     | '/recover/$token'
     | '/support/new'
+    | '/track/$token'
     | '/wishlist/share'
     | '/admin/'
     | '/account/returns/new'
@@ -1940,6 +1952,7 @@ export interface RootRouteChildren {
   ProductSlugRoute: typeof ProductSlugRoute
   RecoverTokenRoute: typeof RecoverTokenRoute
   SupportNewRoute: typeof SupportNewRoute
+  TrackTokenRoute: typeof TrackTokenRoute
   ApiPublicPaymentWebhookRoute: typeof ApiPublicPaymentWebhookRoute
   ApiPublicShippingWebhookRoute: typeof ApiPublicShippingWebhookRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
@@ -2108,6 +2121,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/wishlist/share'
       preLoaderRoute: typeof WishlistShareRouteImport
       parentRoute: typeof WishlistRoute
+    }
+    '/track/$token': {
+      id: '/track/$token'
+      path: '/track/$token'
+      fullPath: '/track/$token'
+      preLoaderRoute: typeof TrackTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/support/new': {
       id: '/support/new'
@@ -3487,6 +3507,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProductSlugRoute: ProductSlugRoute,
   RecoverTokenRoute: RecoverTokenRoute,
   SupportNewRoute: SupportNewRoute,
+  TrackTokenRoute: TrackTokenRoute,
   ApiPublicPaymentWebhookRoute: ApiPublicPaymentWebhookRoute,
   ApiPublicShippingWebhookRoute: ApiPublicShippingWebhookRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
