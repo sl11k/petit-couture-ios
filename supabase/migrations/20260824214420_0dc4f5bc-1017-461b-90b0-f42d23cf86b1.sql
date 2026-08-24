@@ -1,0 +1,2 @@
+REVOKE EXECUTE ON FUNCTION public.get_site_analytics_v1(timestamp with time zone, text) FROM anon, public;
+GRANT EXECUTE ON FUNCTION public.get_site_analytics_v1(timestamp with time zone, text) TO authenticated, service_role;
