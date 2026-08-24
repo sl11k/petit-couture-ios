@@ -162,7 +162,7 @@ function SiteAnalyticsPage() {
                 </span>
                 <span className="relative shrink-0 font-medium tabular-nums">
                   {nf(r.value)}
-                  {r.sub ? <span className="ms-1.5 text-muted-foreground">{r.sub}</span> : null}
+                  {r.sub ? <span className="ms-1.5 text-muted-foreground">({r.sub})</span> : null}
                 </span>
               </li>
             ))}
