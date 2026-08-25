@@ -4,7 +4,7 @@
 // for recent non-paid orders that have a Stripe session and finalizes them.
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { finalizeStripeOrder } from "@/lib/stripeFinalize.functions";
+import { finalizeStripeOrderOnServer } from "@/lib/stripeFinalize.server";
 
 const LOOKBACK_HOURS = 72;
 
@@ -38,8 +38,9 @@ async function run() {
     if (!order || order.payment_status === "paid") continue;
 
     try {
-      const res = await finalizeStripeOrder({
-        data: { order_number: orderNumber, stripe_session_id: sessionId },
+      const res = await finalizeStripeOrderOnServer({
+        order_number: orderNumber,
+        stripe_session_id: sessionId,
       });
       results.push({ order_number: orderNumber, ...res });
     } catch (err) {

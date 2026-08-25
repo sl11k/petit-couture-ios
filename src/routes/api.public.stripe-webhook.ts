@@ -185,7 +185,9 @@ async function completeStripeCheckout(object: Record<string, unknown>, event: St
     paymentIntent,
     amount,
     currency,
-    status: "captured",
+    // The atomic database finalizer changes this to captured only after the
+    // order, stock, and coupon updates all succeed.
+    status: "processing",
     event,
   });
 
@@ -202,12 +204,6 @@ async function completeStripeCheckout(object: Record<string, unknown>, event: St
     _currency: currency,
   });
   if (completeError) throw new Error(`Could not finalize Stripe payment safely: ${completeError.message}`);
-
-  const { error } = await supabaseAdmin
-    .from("orders")
-    .update({ payment_gateway: "stripe", last_transaction_id: transactionId, captured_amount: amount })
-    .eq("id", order.id);
-  if (error) throw new Error(`Could not mark Stripe order as paid: ${error.message}`);
 
   try {
     const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
@@ -435,7 +431,7 @@ async function findOrCreateStripeTransaction(input: {
   paymentIntent?: string | null;
   amount: number;
   currency: string;
-  status: "captured" | "failed";
+    status: "processing" | "failed";
   event: StripeEvent;
 }) {
   const { data: existing } = await supabaseAdmin
@@ -451,9 +447,9 @@ async function findOrCreateStripeTransaction(input: {
     webhook_verified: true,
     updated_at: new Date().toISOString(),
     ...(input.paymentIntent ? { gateway_reference: input.paymentIntent } : {}),
-    ...(input.status === "captured"
-      ? { captured_at: new Date().toISOString() }
-      : { failed_at: new Date().toISOString(), error_message: input.event.type }),
+    ...(input.status === "failed"
+      ? { failed_at: new Date().toISOString(), error_message: input.event.type }
+      : {}),
   };
 
   if (existing?.id) {

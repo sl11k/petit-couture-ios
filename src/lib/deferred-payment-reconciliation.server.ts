@@ -109,7 +109,9 @@ export async function reconcileDeferredPayments(options: { orderNumber?: string;
     .from("payment_transactions")
     .select("order_number, gateway, gateway_reference, gateway_transaction_id")
     .in("gateway", ["tabby", "tamara"])
-    .in("status", ["pending", "processing", "initiated"])
+    // Captured is included as a repair path for legacy/inconsistent rows where
+    // the provider succeeded but the order finalization did not commit.
+    .in("status", ["pending", "processing", "initiated", "captured"])
     .gte("created_at", since)
     .order("created_at", { ascending: false })
     .limit(100);
