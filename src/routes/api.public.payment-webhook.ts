@@ -194,8 +194,12 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
 
           // Update transaction
           const status = mapStatus(payload.status, payload.event_type);
+          const transactionStatus =
+            orderId && (status === "captured" || status === "paid") ? "processing" : status;
           const update: any = {
-            status,
+            // A successful payment remains recoverable until the atomic
+            // finalizer commits both the order and transaction together.
+            status: transactionStatus,
             webhook_verified: true,
             updated_at: new Date().toISOString(),
             raw_response: payload.raw || payload,
@@ -208,8 +212,6 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
           }
           if (payload.card_last4) update.card_last4 = payload.card_last4;
           if (payload.card_brand) update.card_brand = payload.card_brand;
-          if (status === "captured" || status === "paid")
-            update.captured_at = new Date().toISOString();
           if (status === "failed") update.failed_at = new Date().toISOString();
           if (status === "authorized") update.authorized_at = new Date().toISOString();
 

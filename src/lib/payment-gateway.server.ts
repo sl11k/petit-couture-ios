@@ -192,7 +192,9 @@ export async function completeGatewayPayment(input: {
 }) {
   const transactionId = await findOrCreateEventTransaction({
     ...input,
-    status: "captured",
+    // Keep the row recoverable until the atomic database finalizer marks both
+    // the transaction and order as paid in the same commit.
+    status: "processing",
   });
 
   const { data, error } = await (
@@ -211,19 +213,6 @@ export async function completeGatewayPayment(input: {
     _currency: input.order.currency.toUpperCase(),
   });
   if (error) throw new Error(`Could not finalize paid order: ${error.message}`);
-
-  const { error: transactionError } = await supabaseAdmin
-    .from("payment_transactions")
-    .update({
-      status: "captured",
-      captured_at: new Date().toISOString(),
-      webhook_verified: true,
-      raw_response: asJson(input.rawResponse),
-    })
-    .eq("id", transactionId);
-  if (transactionError) {
-    throw new Error(`Could not update captured transaction: ${transactionError.message}`);
-  }
 
   try {
     const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
