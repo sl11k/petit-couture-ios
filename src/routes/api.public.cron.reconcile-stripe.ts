@@ -15,7 +15,10 @@ async function run() {
     .from("payment_transactions")
     .select("gateway_transaction_id, order_number, created_at")
     .eq("gateway", "stripe")
-    .in("status", ["pending", "processing", "initiated"])
+    // "captured" is included on purpose: if the transaction was captured but the
+    // order update failed (trigger error, transient issue), the order would stay
+    // unpaid forever and never appear in the admin orders list.
+    .in("status", ["pending", "processing", "initiated", "captured"])
     .gte("created_at", since)
     .order("created_at", { ascending: false })
     .limit(100);
