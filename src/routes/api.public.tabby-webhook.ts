@@ -76,7 +76,7 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
           return new Response("Bad JSON", { status: 400 });
         }
 
-        const signatureValid = validSignature(signature, secret);
+        const signatureValid = secrets.some((s) => matches(signature, s));
         const status = String(payload.status || "").toLowerCase();
         const logId = await logPaymentWebhook({
           gateway: "tabby",
