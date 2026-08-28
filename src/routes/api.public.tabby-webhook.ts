@@ -119,29 +119,32 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
             let capture: unknown = { skipped: "order_already_paid" };
             if (order.payment_status !== "paid") {
               // Capture with the account that actually owns this payment
-              // (KSA and UAE merchants have separate secret keys).
+              // (KSA and UAE merchants have separate secret keys), falling back
+              // to the other account when the first one rejects the credentials.
               const candidates = await tabbyAccountsForOrder(order);
-              const apiKey = candidates[0]?.secret;
-              if (!apiKey) throw new Error("No Tabby account is configured");
-              const captureResponse = await fetch(
-                `https://api.tabby.ai/api/v1/payments/${encodeURIComponent(paymentId)}/captures`,
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${apiKey}`,
+              if (!candidates.length) throw new Error("No Tabby account is configured");
+              let captureResponse: Response | null = null;
+              for (const candidate of candidates) {
+                captureResponse = await fetch(
+                  `https://api.tabby.ai/api/v1/payments/${encodeURIComponent(paymentId)}/captures`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${candidate.secret}`,
+                    },
+                    body: JSON.stringify({ amount: expectedAmount.toFixed(2) }),
                   },
-                  body: JSON.stringify({ amount: expectedAmount.toFixed(2) }),
-                },
-              );
-              capture = await captureResponse.json().catch(() => ({}));
+                );
+                capture = await captureResponse.json().catch(() => ({}));
+                if (captureResponse.ok || ![401, 403, 404].includes(captureResponse.status)) break;
+              }
 
-              if (!captureResponse.ok) {
+              if (!captureResponse || !captureResponse.ok) {
                 throw new Error(
-                  `Tabby capture failed (${captureResponse.status}): ${JSON.stringify(capture).slice(0, 300)}`,
+                  `Tabby capture failed (${captureResponse?.status ?? 0}): ${JSON.stringify(capture).slice(0, 300)}`,
                 );
               }
-            }
             const completed = await completeGatewayPayment({
               order,
               gateway: "tabby",
