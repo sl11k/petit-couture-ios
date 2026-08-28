@@ -6,6 +6,7 @@ import {
   money,
 } from "@/lib/payment-gateway.server";
 import { convertPegged } from "@/lib/tabby-currency";
+import { tabbyAccountsForOrder } from "@/lib/tabby-accounts.server";
 
 type PendingTransaction = {
   order_number: string | null;
