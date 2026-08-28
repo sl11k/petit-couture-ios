@@ -180,7 +180,7 @@ export const createTabbyCheckout = createServerFn({ method: "POST" })
       const required = parseRequiredCurrency(attempt.result);
       if (required && required !== attempt.currency) {
         attempt = await send(required);
-        if (attempt.response.ok) void rememberTabbyCurrency(required);
+        if (attempt.response.ok) void rememberTabbyCurrency(account.key, required);
       }
     }
 
