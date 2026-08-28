@@ -66,7 +66,10 @@ function buildAccount(
     str(account.secret_key) ||
     str(account.api_secret) ||
     (isLegacyAccount ? legacy.secret : "");
-  if (!secret) return null;
+  // A Tabby secret key always starts with `sk_`; a public key pasted into the
+  // secret slot would silently create a broken account, so ignore it.
+  if (!secret || !secret.startsWith("sk_")) return null;
+
 
   const merchantCode =
     envFor(key, "MERCHANT_CODE") ||
