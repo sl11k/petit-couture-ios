@@ -213,7 +213,12 @@ export const createTabbyCheckout = createServerFn({ method: "POST" })
       gatewayReference: String(result.id || "") || null,
       rawResponse: {
         ...result,
-        settlement: { currency: attempt.currency, amount: attempt.amount },
+        settlement: {
+          currency: attempt.currency,
+          amount: attempt.amount,
+          account: account.key,
+          merchant_code: merchantCode,
+        },
       },
     });
     const { error: updateError } = await supabaseAdmin
