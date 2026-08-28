@@ -4,12 +4,8 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { loadCheckoutOrder, recordPaymentSession } from "@/lib/payment-gateway.server";
 import { assertOrderTotals, money } from "@/lib/payment-validation";
-import {
-  TABBY_MERCHANT_CODES,
-  convertPegged,
-  isConvertibleCurrency,
-  parseRequiredCurrency,
-} from "@/lib/tabby-currency";
+import { convertPegged, isConvertibleCurrency, parseRequiredCurrency } from "@/lib/tabby-currency";
+import { resolveTabbyAccount } from "@/lib/tabby-accounts.server";
 
 const TABBY_API = "https://api.tabby.ai/api/v2/checkout";
 const InputSchema = z.object({
@@ -18,78 +14,35 @@ const InputSchema = z.object({
   lang: z.enum(["ar", "en"]).default("ar"),
 });
 
-async function getTabbyIntegrationConfig() {
-  const { data } = await supabaseAdmin
-    .from("integrations")
-    .select("api_key, api_secret, config")
-    .eq("category", "payment")
-    .eq("provider", "tabby")
-    .eq("enabled", true)
-    .maybeSingle();
-
-  const config = (data?.config && typeof data.config === "object" ? data.config : {}) as Record<
-    string,
-    unknown
-  >;
-  return { row: data, config };
-}
-
-async function getTabbySecret() {
-  const envSecret = String(process.env.TABBY_SECRET_KEY || "").trim();
-  if (envSecret) return envSecret;
-
-  const { row, config } = await getTabbyIntegrationConfig();
-  const candidates = [
-    row?.api_secret,
-    config.secret_key,
-    config.tabby_secret_key,
-    config.api_secret,
-  ].map((value) => String(value || "").trim());
-
-  return candidates.find(Boolean) || null;
-}
-
-/**
- * A Tabby merchant account is bound to one settlement currency and one merchant
- * code. Ours settles in AED with merchant code "default", so we never guess the
- * code from the order currency any more — configuration wins, and the currency
- * is discovered from Tabby itself on the first rejection (then reused).
- */
-async function getTabbyMerchantSettings(orderCurrency: string) {
-  const { config } = await getTabbyIntegrationConfig();
-
-  const envCode = String(process.env.TABBY_MERCHANT_CODE || "").trim();
-  const configuredCode = String(config.merchant_code || config.tabby_merchant_code || "").trim();
-  const merchantCode =
-    envCode || configuredCode || TABBY_MERCHANT_CODES[orderCurrency] || "default";
-
-  const envCurrency = String(process.env.TABBY_CURRENCY || "").trim().toUpperCase();
-  const configuredCurrency = String(config.currency || config.tabby_currency || "")
-    .trim()
-    .toUpperCase();
-  const currency = envCurrency || configuredCurrency || orderCurrency;
-
-  return { merchantCode, currency };
-}
-
 /** Remember the settlement currency Tabby demanded so later orders skip the retry. */
-async function rememberTabbyCurrency(currency: string) {
+async function rememberTabbyCurrency(accountKey: string, currency: string) {
   try {
-    const { row, config } = await getTabbyIntegrationConfig();
-    if (!row) return;
-    await supabaseAdmin
+    const { data } = await supabaseAdmin
       .from("integrations")
-      .select("id")
+      .select("id, config")
       .eq("category", "payment")
       .eq("provider", "tabby")
-      .maybeSingle()
-      .then(async ({ data }) => {
-        if (!data?.id) return;
-        await supabaseAdmin
-          .from("integrations")
-          .update({ config: { ...config, currency } })
-          .eq("id", data.id);
-      });
+      .maybeSingle();
+    if (!data?.id) return;
+    const config = (data.config && typeof data.config === "object" ? data.config : {}) as Record<
+      string,
+      unknown
+    >;
+    const accounts = (config.accounts && typeof config.accounts === "object"
+      ? config.accounts
+      : {}) as Record<string, Record<string, unknown>>;
+    await supabaseAdmin
+      .from("integrations")
+      .update({
+        config: {
+          ...config,
+          accounts: {
+            ...accounts,
+            [accountKey]: { ...(accounts[accountKey] ?? {}), currency },
+          },
+        } as never,
+      })
+      .eq("id", data.id);
   } catch (error) {
     console.error("[tabby] could not persist settlement currency", error);
   }
@@ -107,9 +60,6 @@ function storefrontOrigin() {
 export const createTabbyCheckout = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }) => {
-    const secret = await getTabbySecret();
-    if (!secret) throw new Error("TABBY_SECRET_KEY is not configured");
-
     const order = await loadCheckoutOrder(data.order_id, data.session_id, "tabby");
     const { data: items, error: itemsError } = await supabaseAdmin
       .from("order_items")
@@ -120,11 +70,15 @@ export const createTabbyCheckout = createServerFn({ method: "POST" })
 
     assertOrderTotals(items, order);
 
+    // Pick the Tabby merchant account (KSA or UAE) that matches this order.
+    const account = await resolveTabbyAccount(order);
+    const secret = account.secret;
+
     const address = (order.shipping_address as Record<string, unknown>) || {};
     const phone = String(order.customer_phone || address.phone || "").replace(/\s/g, "");
     const orderCurrency = String(order.currency || "SAR").toUpperCase();
-    const { merchantCode, currency: preferredCurrency } =
-      await getTabbyMerchantSettings(orderCurrency);
+    const merchantCode = account.merchantCode;
+    const preferredCurrency = account.currency || orderCurrency;
     const origin = storefrontOrigin();
 
     const buildPayload = (currency: string) => {
@@ -226,7 +180,7 @@ export const createTabbyCheckout = createServerFn({ method: "POST" })
       const required = parseRequiredCurrency(attempt.result);
       if (required && required !== attempt.currency) {
         attempt = await send(required);
-        if (attempt.response.ok) void rememberTabbyCurrency(required);
+        if (attempt.response.ok) void rememberTabbyCurrency(account.key, required);
       }
     }
 
@@ -259,7 +213,12 @@ export const createTabbyCheckout = createServerFn({ method: "POST" })
       gatewayReference: String(result.id || "") || null,
       rawResponse: {
         ...result,
-        settlement: { currency: attempt.currency, amount: attempt.amount },
+        settlement: {
+          currency: attempt.currency,
+          amount: attempt.amount,
+          account: account.key,
+          merchant_code: merchantCode,
+        },
       },
     });
     const { error: updateError } = await supabaseAdmin

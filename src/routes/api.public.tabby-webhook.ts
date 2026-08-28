@@ -11,36 +11,25 @@ import {
   updatePaymentWebhookLog,
 } from "@/lib/payment-gateway.server";
 import { convertPegged } from "@/lib/tabby-currency";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { listTabbyAccounts, tabbyAccountsForOrder } from "@/lib/tabby-accounts.server";
 
-
-async function getTabbySecret() {
-  const envSecret = String(process.env.TABBY_SECRET_KEY || "").trim();
-  if (envSecret) return envSecret;
-
-  const { data } = await supabaseAdmin
-    .from("integrations")
-    .select("api_secret, config")
-    .eq("category", "payment")
-    .eq("provider", "tabby")
-    .eq("enabled", true)
-    .maybeSingle();
-
-  const config = (data?.config && typeof data.config === "object" ? data.config : {}) as Record<
-    string,
-    unknown
-  >;
-  const candidates = [
-    data?.api_secret,
-    config.secret_key,
-    config.tabby_secret_key,
-    config.api_secret,
-  ].map((value) => String(value || "").trim());
-
-  return candidates.find(Boolean) || null;
+/**
+ * Every configured Tabby account (KSA + UAE) registers its own webhook, so a
+ * request is authentic when its static signature matches ANY of them.
+ */
+async function webhookSecrets() {
+  const accounts = await listTabbyAccounts();
+  const secrets = accounts.map((a) => a.webhookSecret || "").filter(Boolean);
+  const globals = [
+    String(process.env.TABBY_WEBHOOK_SECRET || "").trim(),
+    String(process.env.TABBY_SA_WEBHOOK_SECRET || "").trim(),
+    String(process.env.TABBY_AE_WEBHOOK_SECRET || "").trim(),
+    String(process.env.PAYMENT_WEBHOOK_SECRET || "").trim(),
+  ].filter(Boolean);
+  return Array.from(new Set([...secrets, ...globals]));
 }
 
-function validSignature(signature: string, secret: string) {
+function matches(signature: string, secret: string) {
   try {
     const received = Buffer.from(signature, "utf8");
     const wanted = Buffer.from(secret, "utf8");
@@ -49,6 +38,7 @@ function validSignature(signature: string, secret: string) {
     return false;
   }
 }
+
 
 export const Route = createFileRoute("/api/public/tabby-webhook")({
   server: {
@@ -63,10 +53,8 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
           "";
         // Tabby echoes the static x-hook-signature value configured when the
         // webhook is registered; it is not an HMAC of the request body.
-        const secret =
-          String(process.env.TABBY_WEBHOOK_SECRET || "").trim() ||
-          String(process.env.PAYMENT_WEBHOOK_SECRET || "").trim();
-        if (!secret) {
+        const secrets = await webhookSecrets();
+        if (!secrets.length) {
           console.error("[tabby-webhook] no Tabby secret configured");
           return new Response("Webhook is not configured", { status: 503 });
         }
@@ -88,7 +76,7 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
           return new Response("Bad JSON", { status: 400 });
         }
 
-        const signatureValid = validSignature(signature, secret);
+        const signatureValid = secrets.some((s) => matches(signature, s));
         const status = String(payload.status || "").toLowerCase();
         const logId = await logPaymentWebhook({
           gateway: "tabby",
@@ -130,24 +118,31 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
           if (status === "authorized") {
             let capture: unknown = { skipped: "order_already_paid" };
             if (order.payment_status !== "paid") {
-              const apiKey = await getTabbySecret();
-              if (!apiKey) throw new Error("TABBY_SECRET_KEY is not configured");
-              const captureResponse = await fetch(
-                `https://api.tabby.ai/api/v1/payments/${encodeURIComponent(paymentId)}/captures`,
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${apiKey}`,
+              // Capture with the account that actually owns this payment
+              // (KSA and UAE merchants have separate secret keys), falling back
+              // to the other account when the first one rejects the credentials.
+              const candidates = await tabbyAccountsForOrder(order);
+              if (!candidates.length) throw new Error("No Tabby account is configured");
+              let captureResponse: Response | null = null;
+              for (const candidate of candidates) {
+                captureResponse = await fetch(
+                  `https://api.tabby.ai/api/v1/payments/${encodeURIComponent(paymentId)}/captures`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${candidate.secret}`,
+                    },
+                    body: JSON.stringify({ amount: expectedAmount.toFixed(2) }),
                   },
-                  body: JSON.stringify({ amount: expectedAmount.toFixed(2) }),
-                },
-              );
-              capture = await captureResponse.json().catch(() => ({}));
+                );
+                capture = await captureResponse.json().catch(() => ({}));
+                if (captureResponse.ok || ![401, 403, 404].includes(captureResponse.status)) break;
+              }
 
-              if (!captureResponse.ok) {
+              if (!captureResponse || !captureResponse.ok) {
                 throw new Error(
-                  `Tabby capture failed (${captureResponse.status}): ${JSON.stringify(capture).slice(0, 300)}`,
+                  `Tabby capture failed (${captureResponse?.status ?? 0}): ${JSON.stringify(capture).slice(0, 300)}`,
                 );
               }
             }
