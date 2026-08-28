@@ -40,7 +40,7 @@ async function rememberTabbyCurrency(accountKey: string, currency: string) {
             ...accounts,
             [accountKey]: { ...(accounts[accountKey] ?? {}), currency },
           },
-        },
+        } as never,
       })
       .eq("id", data.id);
   } catch (error) {
