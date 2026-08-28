@@ -11,36 +11,25 @@ import {
   updatePaymentWebhookLog,
 } from "@/lib/payment-gateway.server";
 import { convertPegged } from "@/lib/tabby-currency";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { listTabbyAccounts, tabbyAccountsForOrder } from "@/lib/tabby-accounts.server";
 
-
-async function getTabbySecret() {
-  const envSecret = String(process.env.TABBY_SECRET_KEY || "").trim();
-  if (envSecret) return envSecret;
-
-  const { data } = await supabaseAdmin
-    .from("integrations")
-    .select("api_secret, config")
-    .eq("category", "payment")
-    .eq("provider", "tabby")
-    .eq("enabled", true)
-    .maybeSingle();
-
-  const config = (data?.config && typeof data.config === "object" ? data.config : {}) as Record<
-    string,
-    unknown
-  >;
-  const candidates = [
-    data?.api_secret,
-    config.secret_key,
-    config.tabby_secret_key,
-    config.api_secret,
-  ].map((value) => String(value || "").trim());
-
-  return candidates.find(Boolean) || null;
+/**
+ * Every configured Tabby account (KSA + UAE) registers its own webhook, so a
+ * request is authentic when its static signature matches ANY of them.
+ */
+async function webhookSecrets() {
+  const accounts = await listTabbyAccounts();
+  const secrets = accounts.map((a) => a.webhookSecret || "").filter(Boolean);
+  const globals = [
+    String(process.env.TABBY_WEBHOOK_SECRET || "").trim(),
+    String(process.env.TABBY_SA_WEBHOOK_SECRET || "").trim(),
+    String(process.env.TABBY_AE_WEBHOOK_SECRET || "").trim(),
+    String(process.env.PAYMENT_WEBHOOK_SECRET || "").trim(),
+  ].filter(Boolean);
+  return Array.from(new Set([...secrets, ...globals]));
 }
 
-function validSignature(signature: string, secret: string) {
+function matches(signature: string, secret: string) {
   try {
     const received = Buffer.from(signature, "utf8");
     const wanted = Buffer.from(secret, "utf8");
@@ -49,6 +38,7 @@ function validSignature(signature: string, secret: string) {
     return false;
   }
 }
+
 
 export const Route = createFileRoute("/api/public/tabby-webhook")({
   server: {
