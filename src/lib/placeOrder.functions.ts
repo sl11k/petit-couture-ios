@@ -154,14 +154,33 @@ export const placeOrder = createServerFn({ method: "POST" })
       const productVariants = (variants || []).filter(
         (candidate) => candidate.product_id === product.id,
       );
-      const variant = productVariants.find(
-        (candidate) =>
-          (item.variant_id && candidate.id === item.variant_id) ||
-          (!item.variant_id && item.sku && candidate.sku === item.sku),
-      );
-      if (productVariants.length > 0 && !variant) {
+      const norm = (v: unknown) => String(v ?? "").trim().toLowerCase();
+      // Match order: explicit variant id -> sku -> selected size label.
+      let variant =
+        (item.variant_id
+          ? productVariants.find((c) => c.id === item.variant_id)
+          : undefined) ??
+        (item.sku
+          ? productVariants.find((c) => norm(c.sku) === norm(item.sku))
+          : undefined);
+      if (!variant && (item as any).size) {
+        const wanted = norm((item as any).size);
+        variant = productVariants.find((c: any) => {
+          const attrs = c.attributes ?? {};
+          return (
+            norm(c.size) === wanted ||
+            norm(attrs.size_en) === wanted ||
+            norm(attrs.size_ar) === wanted
+          );
+        });
+      }
+      // Only hard-fail when the client explicitly requested a variant id that no
+      // longer exists. Otherwise fall back to product-level stock and price so a
+      // legacy cart line never blocks checkout.
+      if (!variant && item.variant_id && productVariants.length > 0) {
         throw new Error(`Variant unavailable for ${item.slug}`);
       }
+
 
       // Stock validation: variant stock wins when present, else product stock.
       const key = `${item.slug}::${item.variant_id ?? item.sku ?? ""}`;
