@@ -65,17 +65,34 @@ async function reconcileTabby(tx: PendingTransaction) {
   const orderNumber = String(tx.order_number || "");
   const checkoutId = String(tx.gateway_reference || "");
   if (!orderNumber || !checkoutId) return { order_number: orderNumber, gateway: "tabby", status: "missing_checkout_id", finalized: false, error: null };
-  const token = await getIntegrationToken("tabby");
-  if (!token) throw new Error("TABBY_SECRET_KEY is not configured");
-  const response = await fetch(`https://api.tabby.ai/api/v2/checkout/${encodeURIComponent(checkoutId)}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const remote = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(`Tabby lookup failed (${response.status})`);
+  const order = await loadGatewayOrder({ orderNumber, gateway: "tabby" });
+
+  // The checkout may belong to either Tabby merchant account (KSA or UAE);
+  // try the best-matching one first and fall back to the other.
+  const accounts = await tabbyAccountsForOrder(order);
+  if (!accounts.length) throw new Error("No Tabby account is configured");
+  let token = "";
+  let remote: Record<string, unknown> = {};
+  let found = false;
+  for (const account of accounts) {
+    const response = await fetch(`https://api.tabby.ai/api/v2/checkout/${encodeURIComponent(checkoutId)}`, {
+      headers: { Authorization: `Bearer ${account.secret}` },
+    });
+    remote = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+    if (response.ok) {
+      token = account.secret;
+      found = true;
+      break;
+    }
+    if (![401, 403, 404].includes(response.status)) {
+      throw new Error(`Tabby lookup failed (${response.status})`);
+    }
+  }
+  if (!found) throw new Error("Tabby lookup failed for every configured account");
+
   const payment = (remote.payment && typeof remote.payment === "object" ? remote.payment : {}) as Record<string, unknown>;
   const status = String(payment.status || remote.status || "").toLowerCase();
   const paymentId = String(payment.id || "");
-  const order = await loadGatewayOrder({ orderNumber, gateway: "tabby" });
 
   if (status === "authorized" && paymentId) {
     const settlementCurrency = String(payment.currency || order.currency).toUpperCase();
