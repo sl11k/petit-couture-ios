@@ -129,7 +129,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     const productBySlug = new Map(products.map((product) => [product.slug, product]));
     const { data: variants, error: variantsError } = await supabaseAdmin
       .from("product_variants")
-      .select("id, product_id, sku, price, price_override, compare_at_price, is_active, weight, stock")
+      .select("id, product_id, sku, size, attributes, price, price_override, compare_at_price, is_active, weight, stock")
       .in(
         "product_id",
         products.map((product) => product.id),
