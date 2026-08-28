@@ -145,6 +145,7 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
                   `Tabby capture failed (${captureResponse?.status ?? 0}): ${JSON.stringify(capture).slice(0, 300)}`,
                 );
               }
+            }
             const completed = await completeGatewayPayment({
               order,
               gateway: "tabby",
