@@ -196,16 +196,44 @@ export const createTabbyCheckout = createServerFn({ method: "POST" })
       result?.configuration?.available_products?.installments?.[0] ||
       result?.configuration?.available_products?.pay_later?.[0];
     if (result?.status !== "created" || !configuration?.web_url) {
+      // Tabby returns products as an object keyed by product type (not an array).
+      const products = (result?.configuration?.products ?? {}) as Record<string, any>;
+      const rejection = String(
+        products.installments?.rejection_reason ||
+          products.pay_later?.rejection_reason ||
+          products.installments?.[0]?.rejection_reason ||
+          "not_available",
+      );
+      console.warn("[tabby] rejected", {
+        order: order.order_number,
+        account: account.key,
+        currency: attempt.currency,
+        status: result?.status,
+        rejection,
+      });
+      const ar = data.lang === "ar";
+      const messages: Record<string, { ar: string; en: string }> = {
+        not_available: {
+          ar: "تابي رفض هذه العملية لهذا الحساب (رقم الجوال/البريد) حاليًا. جرّب طريقة دفع أخرى أو تواصل مع تابي.",
+          en: "Tabby declined this purchase for this customer. Please use another payment method or contact Tabby.",
+        },
+        order_amount_too_high: {
+          ar: "قيمة الطلب أعلى من الحد المسموح به في تابي حاليًا. قلّل قيمة السلة أو اختر طريقة دفع أخرى.",
+          en: "The order amount exceeds your current Tabby limit. Reduce the cart total or use another payment method.",
+        },
+        order_amount_too_low: {
+          ar: "قيمة الطلب أقل من الحد الأدنى المسموح به في تابي. أضف منتجات أخرى أو اختر طريقة دفع أخرى.",
+          en: "The order amount is below Tabby's minimum. Add more items or use another payment method.",
+        },
+      };
+      const copy = messages[rejection] ?? messages.not_available;
       return {
         ok: false as const,
-        rejection:
-          result?.configuration?.products?.installments?.[0]?.rejection_reason || "not_available",
-        message:
-          data.lang === "ar"
-            ? "تابي غير متاح لهذا الطلب حاليًا. يرجى اختيار طريقة دفع أخرى."
-            : "Tabby is not available for this order. Please choose another payment method.",
+        rejection,
+        message: ar ? copy.ar : copy.en,
       };
     }
+
 
     const transactionId = await recordPaymentSession({
       order,
