@@ -654,6 +654,7 @@ function CheckoutPage() {
     }
     // Re-validate every step before placing (a restored address or skipped step
     // could otherwise send an empty/invalid email to the server).
+    setTouched((t) => ({ ...t, fullName: true, email: true, phone: true, country: true, city: true, location: true, shipping: true }));
     if (errs.fullName || errs.email || errs.phone) {
       toast.error(errs.fullName || errs.email || errs.phone);
       setStep(1);
@@ -949,6 +950,7 @@ function CheckoutPage() {
                 <input
                   className={fieldClass(!!shownErrs.fullName)}
                   value={contact.fullName}
+                  onBlur={() => touch("fullName")}
                   onChange={(e) => setContact({ ...contact, fullName: e.target.value })}
                   placeholder={isRTL ? "مثال: ليلى المنصور" : "e.g. Layla Al-Mansour"}
                   autoComplete="name"
@@ -989,6 +991,7 @@ function CheckoutPage() {
                   <input
                     className={fieldClass(!!shownErrs.phone) + " flex-1"}
                     value={contact.phone}
+                  onBlur={() => touch("phone")}
                     onChange={(e) => setContact({ ...contact, phone: e.target.value })}
                     placeholder={phonePlaceholderFor(countryCode)}
                     inputMode="tel"
@@ -1010,6 +1013,7 @@ function CheckoutPage() {
                 <input
                   className={fieldClass(!!shownErrs.email)}
                   value={contact.email}
+                  onBlur={() => touch("email")}
                   onChange={(e) => setContact({ ...contact, email: e.target.value })}
                   placeholder="you@example.com"
                   inputMode="email"
