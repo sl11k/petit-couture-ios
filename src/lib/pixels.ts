@@ -552,6 +552,44 @@ function readCookie(name: string): string | null {
   return m ? decodeURIComponent(m[1]) : null;
 }
 
+/**
+ * Stable anonymous visitor id, hashed server-side into Meta's `external_id`.
+ * Guarantees every CAPI event carries at least one user_data key even when the
+ * shopper has not typed an email/phone yet (ViewContent, AddToCart, ...).
+ */
+const VISITOR_ID_KEY = "lpp:visitor_id:v1";
+
+function visitorId(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    let id = window.localStorage.getItem(VISITOR_ID_KEY);
+    if (!id) {
+      id = (crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+      window.localStorage.setItem(VISITOR_ID_KEY, id);
+    }
+    return id;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Meta's browser pixel writes `_fbp`, but ad-blockers often stop it. Writing a
+ * spec-compliant fallback keeps server events attributable.
+ */
+function ensureFbp(): string | null {
+  if (typeof document === "undefined") return null;
+  const existing = readCookie("_fbp");
+  if (existing) return existing;
+  try {
+    const value = `fb.1.${Date.now()}.${Math.floor(Math.random() * 1e10)}`;
+    document.cookie = `_fbp=${value}; path=/; max-age=${90 * 86400}; SameSite=Lax`;
+    return value;
+  } catch {
+    return null;
+  }
+}
+
 /** Captures fbclid from the landing URL into an _fbc cookie (Meta expects this). */
 export function captureMetaClickId(): void {
   if (typeof window === "undefined") return;
@@ -597,7 +635,8 @@ function mirrorToMetaCapi(
             phone: user.phone ?? null,
             city: user.city ?? null,
             country: user.country ?? null,
-            fbp: readCookie("_fbp"),
+            external_id: user.external_id ?? visitorId(),
+            fbp: ensureFbp(),
             fbc: readCookie("_fbc"),
           },
         },
