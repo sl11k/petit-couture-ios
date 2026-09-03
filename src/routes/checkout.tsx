@@ -515,6 +515,16 @@ function CheckoutPage() {
     return e;
   }, [step, contact, loc, countryCode, shippingId, selectedShippingOption, isRTL]);
 
+  // Errors are only *shown* once a field has been touched, so a pristine empty
+  // form does not greet the shopper with red "invalid email" text.
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (field: string) => setTouched((t) => (t[field] ? t : { ...t, [field]: true }));
+  const shownErrs = useMemo(() => {
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(errs)) if (touched[k]) out[k] = v;
+    return out;
+  }, [errs, touched]);
+
   const canProceed = (s: Step) => {
     if (s === 1) return !errs.fullName && !errs.email && !errs.phone && !errs.country;
     if (s === 2) return !errs.location && !errs.city;
