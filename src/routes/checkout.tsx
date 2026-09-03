@@ -515,6 +515,16 @@ function CheckoutPage() {
     return e;
   }, [step, contact, loc, countryCode, shippingId, selectedShippingOption, isRTL]);
 
+  // Errors are only *shown* once a field has been touched, so a pristine empty
+  // form does not greet the shopper with red "invalid email" text.
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (field: string) => setTouched((t) => (t[field] ? t : { ...t, [field]: true }));
+  const shownErrs = useMemo(() => {
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(errs)) if (touched[k]) out[k] = v;
+    return out;
+  }, [errs, touched]);
+
   const canProceed = (s: Step) => {
     if (s === 1) return !errs.fullName && !errs.email && !errs.phone && !errs.country;
     if (s === 2) return !errs.location && !errs.city;
@@ -644,6 +654,7 @@ function CheckoutPage() {
     }
     // Re-validate every step before placing (a restored address or skipped step
     // could otherwise send an empty/invalid email to the server).
+    setTouched((t) => ({ ...t, fullName: true, email: true, phone: true, country: true, city: true, location: true, shipping: true }));
     if (errs.fullName || errs.email || errs.phone) {
       toast.error(errs.fullName || errs.email || errs.phone);
       setStep(1);
@@ -934,11 +945,12 @@ function CheckoutPage() {
               <Field
                 icon={<User className="h-4 w-4" />}
                 label={isRTL ? "الاسم الكامل" : "Full name"}
-                error={errs.fullName}
+                error={shownErrs.fullName}
               >
                 <input
-                  className={fieldClass(!!errs.fullName)}
+                  className={fieldClass(!!shownErrs.fullName)}
                   value={contact.fullName}
+                  onBlur={() => touch("fullName")}
                   onChange={(e) => setContact({ ...contact, fullName: e.target.value })}
                   placeholder={isRTL ? "مثال: ليلى المنصور" : "e.g. Layla Al-Mansour"}
                   autoComplete="name"
@@ -947,10 +959,10 @@ function CheckoutPage() {
               <Field
                 icon={<Globe2 className="h-4 w-4" />}
                 label={isRTL ? "الدولة" : "Country"}
-                error={errs.country}
+                error={shownErrs.country}
               >
                 <select
-                  className={fieldClass(!!errs.country)}
+                  className={fieldClass(!!shownErrs.country)}
                   value={countryCode}
                   onChange={(e) => changeCountry(e.target.value)}
                 >
@@ -970,15 +982,16 @@ function CheckoutPage() {
               <Field
                 icon={<Phone className="h-4 w-4" />}
                 label={isRTL ? "رقم الجوال" : "Mobile number"}
-                error={errs.phone}
+                error={shownErrs.phone}
               >
                 <div className="flex items-stretch gap-2" dir="ltr">
                   <span className="inline-flex items-center rounded-md border border-input bg-muted px-3 text-sm font-medium text-foreground/80 min-w-[64px] justify-center">
                     +{dialCodeFor(countryCode) || "—"}
                   </span>
                   <input
-                    className={fieldClass(!!errs.phone) + " flex-1"}
+                    className={fieldClass(!!shownErrs.phone) + " flex-1"}
                     value={contact.phone}
+                  onBlur={() => touch("phone")}
                     onChange={(e) => setContact({ ...contact, phone: e.target.value })}
                     placeholder={phonePlaceholderFor(countryCode)}
                     inputMode="tel"
@@ -995,11 +1008,12 @@ function CheckoutPage() {
               <Field
                 icon={<Mail className="h-4 w-4" />}
                 label={isRTL ? "البريد الإلكتروني" : "Email"}
-                error={errs.email}
+                error={shownErrs.email}
               >
                 <input
-                  className={fieldClass(!!errs.email)}
+                  className={fieldClass(!!shownErrs.email)}
                   value={contact.email}
+                  onBlur={() => touch("email")}
                   onChange={(e) => setContact({ ...contact, email: e.target.value })}
                   placeholder="you@example.com"
                   inputMode="email"
@@ -1078,9 +1092,9 @@ function CheckoutPage() {
               </Suspense>
 
               <div className="grid grid-cols-2 gap-3">
-                <Field label={isRTL ? "المدينة" : "City"} error={errs.city}>
+                <Field label={isRTL ? "المدينة" : "City"} error={shownErrs.city}>
                   <input
-                    className={fieldClass(!!errs.city)}
+                    className={fieldClass(!!shownErrs.city)}
                     value={loc.city ?? ""}
                     onChange={(e) => setLoc({ ...loc, city: e.target.value })}
                     placeholder={isRTL ? "الرياض" : "Riyadh"}
