@@ -1,5 +1,7 @@
 // Server-only notification engine. Enqueues, renders, dispatches, logs.
+import { EmailAPIError, sendLovableEmail } from "@lovable.dev/email-js";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
 import { decryptSecret } from "./crypto.server";
 import { getProvider } from "./providers";
 import type { ProviderCredentials } from "./providers/types";
@@ -262,11 +264,8 @@ const EMAIL_LOGO_URL = "https://lppme.com/__l5e/assets-v1/cb66358e-ed5c-4c3b-80d
 const EMAIL_SENDER_DOMAIN = "notify.lppme.com";
 const EMAIL_FROM_DOMAIN = "lppme.com";
 
-function generateEmailToken(): string {
-  const bytes = new Uint8Array(32);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
+
+
 
 function textToHtml(text: string, language: string): string {
   const isRtl = language === "ar";
@@ -290,56 +289,26 @@ function textToHtml(text: string, language: string): string {
 </table></td></tr></table></body></html>`;
 }
 
-async function getOrCreateUnsubscribeToken(email: string): Promise<string> {
-  const normalized = email.toLowerCase();
-  const { data: existing } = await supabaseAdmin
-    .from("email_unsubscribe_tokens")
-    .select("token, used_at")
-    .eq("email", normalized)
-    .maybeSingle();
-  if (existing && !existing.used_at) return (existing as any).token;
-  const token = generateEmailToken();
-  await supabaseAdmin
-    .from("email_unsubscribe_tokens")
-    .upsert({ token, email: normalized }, { onConflict: "email", ignoreDuplicates: true });
-  const { data: stored } = await supabaseAdmin
-    .from("email_unsubscribe_tokens")
-    .select("token")
-    .eq("email", normalized)
-    .maybeSingle();
-  return (stored as any)?.token ?? token;
-}
-
 /**
- * Dispatch an email row via Lovable's email queue (enqueue_email RPC).
+ * Dispatch an email row through Lovable's managed email delivery.
  */
 async function dispatchEmailRow(row: any, rendered: string, subject: string): Promise<{
   ok: boolean; error_message?: string; duration_ms: number;
 }> {
   const started = Date.now();
+  const to = (row.recipient_email as string | null)?.trim();
+  const messageId = `notif-${row.id}`;
+  const label = `${row.event_code}:${row.audience}`;
   try {
-    const to = (row.recipient_email as string | null)?.trim();
     if (!to) return { ok: false, error_message: "recipient_email missing", duration_ms: 0 };
 
-    // Suppression check
-    const { data: suppressed } = await supabaseAdmin
-      .from("suppressed_emails").select("id").eq("email", to.toLowerCase()).maybeSingle();
-    if (suppressed) return { ok: false, error_message: "email_suppressed", duration_ms: Date.now() - started };
+    const apiKey = process.env["LOVABLE_API_KEY"];
+    if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const unsubscribeToken = await getOrCreateUnsubscribeToken(to);
-    const messageId = `notif-${row.id}`;
     const html = textToHtml(rendered, row.language || "ar");
-    const label = `${row.event_code}:${row.audience}`;
 
-    await supabaseAdmin.from("email_send_log").insert({
-      message_id: messageId, template_name: label,
-      recipient_email: to, status: "pending",
-    });
-
-    const { error } = await supabaseAdmin.rpc("enqueue_email" as any, {
-      queue_name: "transactional_emails",
-      payload: {
-        message_id: messageId,
+    await sendLovableEmail(
+      {
         to,
         from: `${SITE_NAME} <noreply@${EMAIL_FROM_DOMAIN}>`,
         sender_domain: EMAIL_SENDER_DOMAIN,
@@ -349,22 +318,33 @@ async function dispatchEmailRow(row: any, rendered: string, subject: string): Pr
         purpose: "transactional",
         label,
         idempotency_key: messageId,
-        unsubscribe_token: unsubscribeToken,
-        queued_at: new Date().toISOString(),
       },
+      { apiKey, sendUrl: process.env["LOVABLE_SEND_URL"] }
+    );
+
+    const { error: logError } = await supabaseAdmin.from("email_send_log").insert({
+      message_id: messageId, template_name: label,
+      recipient_email: to, status: "sent",
     });
-    if (error) {
-      await supabaseAdmin.from("email_send_log").insert({
-        message_id: messageId, template_name: label,
-        recipient_email: to, status: "failed", error_message: error.message,
-      });
-      return { ok: false, error_message: error.message, duration_ms: Date.now() - started };
-    }
+    if (logError) console.error("Failed to log sent email", { code: logError.code, message: logError.message });
+
     return { ok: true, duration_ms: Date.now() - started };
   } catch (e: any) {
-    return { ok: false, error_message: e?.message || String(e), duration_ms: Date.now() - started };
+    const suppressed =
+      e instanceof EmailAPIError && e.code === "recipient_suppressed";
+    const errorMessage = suppressed ? "email_suppressed" : (e?.message || String(e));
+    if (to) {
+      const { error: logError } = await supabaseAdmin.from("email_send_log").insert({
+        message_id: messageId, template_name: label, recipient_email: to,
+        status: suppressed ? "suppressed" : "failed",
+        error_message: errorMessage.slice(0, 1000),
+      });
+      if (logError) console.error("Failed to log email outcome", { code: logError.code, message: logError.message });
+    }
+    return { ok: false, error_message: errorMessage, duration_ms: Date.now() - started };
   }
 }
+
 
 /**
  * Process pending queue items. Returns number of processed rows.

@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Logo } from "@/components/Logo";
+import { BrandLogo as Logo } from "@/components/Logo";
 
 type AuthDetails = {
   client?: { name?: string; client_id?: string };
