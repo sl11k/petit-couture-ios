@@ -138,6 +138,7 @@ import { Route as AdminCmsPagesIndexRouteImport } from './routes/admin.cms-pages
 import { Route as AdminCampaignsIndexRouteImport } from './routes/admin.campaigns.index'
 import { Route as AdminAuditIndexRouteImport } from './routes/admin.audit.index'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as ApiV1ProductsRouteImport } from './routes/api.v1.products'
 import { Route as ApiV1OrdersRouteImport } from './routes/api.v1.orders'
 import { Route as ApiV1InventoryRouteImport } from './routes/api.v1.inventory'
@@ -825,6 +826,11 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
+  id: '/lovable/email/events',
+  path: '/lovable/email/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiV1ProductsRoute = ApiV1ProductsRouteImport.update({
   id: '/api/v1/products',
   path: '/api/v1/products',
@@ -1156,6 +1162,7 @@ export interface FileRoutesByFullPath {
   '/api/v1/inventory': typeof ApiV1InventoryRoute
   '/api/v1/orders': typeof ApiV1OrdersRoute
   '/api/v1/products': typeof ApiV1ProductsRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/audit/': typeof AdminAuditIndexRoute
   '/admin/campaigns/': typeof AdminCampaignsIndexRoute
@@ -1310,6 +1317,7 @@ export interface FileRoutesByTo {
   '/api/v1/inventory': typeof ApiV1InventoryRoute
   '/api/v1/orders': typeof ApiV1OrdersRoute
   '/api/v1/products': typeof ApiV1ProductsRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/audit': typeof AdminAuditIndexRoute
   '/admin/campaigns': typeof AdminCampaignsIndexRoute
@@ -1478,6 +1486,7 @@ export interface FileRoutesById {
   '/api/v1/inventory': typeof ApiV1InventoryRoute
   '/api/v1/orders': typeof ApiV1OrdersRoute
   '/api/v1/products': typeof ApiV1ProductsRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/audit/': typeof AdminAuditIndexRoute
   '/admin/campaigns/': typeof AdminCampaignsIndexRoute
@@ -1647,6 +1656,7 @@ export interface FileRouteTypes {
     | '/api/v1/inventory'
     | '/api/v1/orders'
     | '/api/v1/products'
+    | '/lovable/email/events'
     | '/lovable/email/suppression'
     | '/admin/audit/'
     | '/admin/campaigns/'
@@ -1801,6 +1811,7 @@ export interface FileRouteTypes {
     | '/api/v1/inventory'
     | '/api/v1/orders'
     | '/api/v1/products'
+    | '/lovable/email/events'
     | '/lovable/email/suppression'
     | '/admin/audit'
     | '/admin/campaigns'
@@ -1968,6 +1979,7 @@ export interface FileRouteTypes {
     | '/api/v1/inventory'
     | '/api/v1/orders'
     | '/api/v1/products'
+    | '/lovable/email/events'
     | '/lovable/email/suppression'
     | '/admin/audit/'
     | '/admin/campaigns/'
@@ -2039,6 +2051,7 @@ export interface RootRouteChildren {
   ApiV1InventoryRoute: typeof ApiV1InventoryRoute
   ApiV1OrdersRoute: typeof ApiV1OrdersRoute
   ApiV1ProductsRoute: typeof ApiV1ProductsRoute
+  LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicCronNotifProcessRoute: typeof ApiPublicCronNotifProcessRoute
   ApiPublicCronNotifyDelaysRoute: typeof ApiPublicCronNotifyDelaysRoute
@@ -2957,6 +2970,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/events': {
+      id: '/lovable/email/events'
+      path: '/lovable/email/events'
+      fullPath: '/lovable/email/events'
+      preLoaderRoute: typeof LovableEmailEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/v1/products': {
       id: '/api/v1/products'
       path: '/api/v1/products'
@@ -3643,6 +3663,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiV1InventoryRoute: ApiV1InventoryRoute,
   ApiV1OrdersRoute: ApiV1OrdersRoute,
   ApiV1ProductsRoute: ApiV1ProductsRoute,
+  LovableEmailEventsRoute: LovableEmailEventsRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicCronNotifProcessRoute: ApiPublicCronNotifProcessRoute,
   ApiPublicCronNotifyDelaysRoute: ApiPublicCronNotifyDelaysRoute,
