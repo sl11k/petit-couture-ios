@@ -166,6 +166,8 @@ import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicOtoWebhookRouteImport } from './routes/api.public.oto.webhook'
 import { Route as ApiPublicCronReconcileStripeRouteImport } from './routes/api.public.cron.reconcile-stripe'
 import { Route as ApiPublicCronReconcileDeferredPaymentsRouteImport } from './routes/api.public.cron.reconcile-deferred-payments'
@@ -967,6 +969,16 @@ const LovableEmailQueueProcessRoute =
     path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicOtoWebhookRoute = ApiPublicOtoWebhookRouteImport.update({
   id: '/api/public/oto/webhook',
   path: '/api/public/oto/webhook',
@@ -1163,6 +1175,8 @@ export interface FileRoutesByFullPath {
   '/api/public/cron/reconcile-deferred-payments': typeof ApiPublicCronReconcileDeferredPaymentsRoute
   '/api/public/cron/reconcile-stripe': typeof ApiPublicCronReconcileStripeRoute
   '/api/public/oto/webhook': typeof ApiPublicOtoWebhookRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -1315,6 +1329,8 @@ export interface FileRoutesByTo {
   '/api/public/cron/reconcile-deferred-payments': typeof ApiPublicCronReconcileDeferredPaymentsRoute
   '/api/public/cron/reconcile-stripe': typeof ApiPublicCronReconcileStripeRoute
   '/api/public/oto/webhook': typeof ApiPublicOtoWebhookRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -1481,6 +1497,8 @@ export interface FileRoutesById {
   '/api/public/cron/reconcile-deferred-payments': typeof ApiPublicCronReconcileDeferredPaymentsRoute
   '/api/public/cron/reconcile-stripe': typeof ApiPublicCronReconcileStripeRoute
   '/api/public/oto/webhook': typeof ApiPublicOtoWebhookRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -1648,6 +1666,8 @@ export interface FileRouteTypes {
     | '/api/public/cron/reconcile-deferred-payments'
     | '/api/public/cron/reconcile-stripe'
     | '/api/public/oto/webhook'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -1800,6 +1820,8 @@ export interface FileRouteTypes {
     | '/api/public/cron/reconcile-deferred-payments'
     | '/api/public/cron/reconcile-stripe'
     | '/api/public/oto/webhook'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -1965,6 +1987,8 @@ export interface FileRouteTypes {
     | '/api/public/cron/reconcile-deferred-payments'
     | '/api/public/cron/reconcile-stripe'
     | '/api/public/oto/webhook'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -2021,6 +2045,8 @@ export interface RootRouteChildren {
   ApiPublicCronReconcileDeferredPaymentsRoute: typeof ApiPublicCronReconcileDeferredPaymentsRoute
   ApiPublicCronReconcileStripeRoute: typeof ApiPublicCronReconcileStripeRoute
   ApiPublicOtoWebhookRoute: typeof ApiPublicOtoWebhookRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
   LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
@@ -3127,6 +3153,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/oto/webhook': {
       id: '/api/public/oto/webhook'
       path: '/api/public/oto/webhook'
@@ -3610,6 +3650,8 @@ const rootRouteChildren: RootRouteChildren = {
     ApiPublicCronReconcileDeferredPaymentsRoute,
   ApiPublicCronReconcileStripeRoute: ApiPublicCronReconcileStripeRoute,
   ApiPublicOtoWebhookRoute: ApiPublicOtoWebhookRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
   LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
