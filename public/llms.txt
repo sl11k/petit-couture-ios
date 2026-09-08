@@ -1,0 +1,21 @@
+# Le Petit Paradis
+
+> بوتيك أزياء أطفال فاخرة في السعودية — فساتين، أحذية، وهدايا للرضّع والبنات والأولاد، مع توصيل داخل المملكة ودول الخليج.
+> Le Petit Paradis is a luxury children's fashion boutique in Saudi Arabia, offering dresses, shoes and gifts for babies, girls and boys, with delivery across the GCC.
+
+## Pages
+
+- [الرئيسية / Home](/): Featured collections and new arrivals.
+- [بحث / Search](/search): Search the full catalog.
+- [قصتنا / Our Story](/our-story): About the boutique and its story.
+- [الشحن والتوصيل / Shipping](/shipping): Delivery options, times and fees.
+- [الأسئلة الشائعة / Help](/help): Frequently asked questions and support.
+- [تواصل معنا / Contact](/contact): Ways to reach the boutique.
+- [تتبع الطلب / Track order](/track-order): Check an order's delivery status.
+- [الخصوصية / Privacy](/privacy): Privacy policy.
+
+## Optional
+
+- [الفساتين / Dresses](/category/dresses): Girls' dresses collection.
+- [الأحذية / Shoes](/category/shoes): Children's shoes collection.
+- [الهدايا / Gifts](/category/gifts): Gift sets for newborns and children.
