@@ -19,6 +19,7 @@ import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as OurStoryRouteImport } from './routes/our-story'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -123,6 +124,7 @@ import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAbandonedRouteImport } from './routes/admin.abandoned'
 import { Route as AdminAbTestsRouteImport } from './routes/admin.ab-tests'
 import { Route as AccountPrivacyRouteImport } from './routes/account.privacy'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AdminWebhooksIndexRouteImport } from './routes/admin.webhooks.index'
 import { Route as AdminSupportIndexRouteImport } from './routes/admin.support.index'
 import { Route as AdminProductsIndexRouteImport } from './routes/admin.products.index'
@@ -160,6 +162,7 @@ import { Route as AdminCmsPagesIdRouteImport } from './routes/admin.cms-pages.$i
 import { Route as AdminCampaignsIdRouteImport } from './routes/admin.campaigns.$id'
 import { Route as AdminAuditIdRouteImport } from './routes/admin.audit.$id'
 import { Route as AccountReturnsNewRouteImport } from './routes/account.returns.new'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
@@ -218,6 +221,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const OurStoryRoute = OurStoryRouteImport.update({
   id: '/our-story',
   path: '/our-story',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -744,6 +752,12 @@ const AccountPrivacyRoute = AccountPrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => AccountRoute,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminWebhooksIndexRoute = AdminWebhooksIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -930,6 +944,11 @@ const AccountReturnsNewRoute = AccountReturnsNewRouteImport.update({
   path: '/returns/new',
   getParentRoute: () => AccountRoute,
 } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailTransactionalSendRoute =
   LovableEmailTransactionalSendRouteImport.update({
     id: '/lovable/email/transactional/send',
@@ -993,6 +1012,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/our-story': typeof OurStoryRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -1003,6 +1023,7 @@ export interface FileRoutesByFullPath {
   '/track-order': typeof TrackOrderRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRouteWithChildren
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/account/privacy': typeof AccountPrivacyRoute
   '/admin/ab-tests': typeof AdminAbTestsRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
@@ -1098,6 +1119,7 @@ export interface FileRoutesByFullPath {
   '/track/$token': typeof TrackTokenRoute
   '/wishlist/share': typeof WishlistShareRoute
   '/admin/': typeof AdminIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/account/returns/new': typeof AccountReturnsNewRoute
   '/admin/audit/$id': typeof AdminAuditIdRoute
   '/admin/campaigns/$id': typeof AdminCampaignsIdRoute
@@ -1154,6 +1176,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/our-story': typeof OurStoryRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -1164,6 +1187,7 @@ export interface FileRoutesByTo {
   '/track-order': typeof TrackOrderRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRouteWithChildren
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/account/privacy': typeof AccountPrivacyRoute
   '/admin/ab-tests': typeof AdminAbTestsRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
@@ -1247,6 +1271,7 @@ export interface FileRoutesByTo {
   '/track/$token': typeof TrackTokenRoute
   '/wishlist/share': typeof WishlistShareRoute
   '/admin': typeof AdminIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/account/returns/new': typeof AccountReturnsNewRoute
   '/admin/audit/$id': typeof AdminAuditIdRoute
   '/admin/campaigns/$id': typeof AdminCampaignsIdRoute
@@ -1305,6 +1330,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/our-story': typeof OurStoryRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -1315,6 +1341,7 @@ export interface FileRoutesById {
   '/track-order': typeof TrackOrderRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRouteWithChildren
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/account/privacy': typeof AccountPrivacyRoute
   '/admin/ab-tests': typeof AdminAbTestsRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
@@ -1410,6 +1437,7 @@ export interface FileRoutesById {
   '/track/$token': typeof TrackTokenRoute
   '/wishlist/share': typeof WishlistShareRoute
   '/admin/': typeof AdminIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/account/returns/new': typeof AccountReturnsNewRoute
   '/admin/audit/$id': typeof AdminAuditIdRoute
   '/admin/campaigns/$id': typeof AdminCampaignsIdRoute
@@ -1469,6 +1497,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/help'
     | '/login'
+    | '/mcp'
     | '/our-story'
     | '/privacy'
     | '/reset-password'
@@ -1479,6 +1508,7 @@ export interface FileRouteTypes {
     | '/track-order'
     | '/unsubscribe'
     | '/wishlist'
+    | '/.well-known/oauth-protected-resource'
     | '/account/privacy'
     | '/admin/ab-tests'
     | '/admin/abandoned'
@@ -1574,6 +1604,7 @@ export interface FileRouteTypes {
     | '/track/$token'
     | '/wishlist/share'
     | '/admin/'
+    | '/.lovable/oauth/consent'
     | '/account/returns/new'
     | '/admin/audit/$id'
     | '/admin/campaigns/$id'
@@ -1630,6 +1661,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/help'
     | '/login'
+    | '/mcp'
     | '/our-story'
     | '/privacy'
     | '/reset-password'
@@ -1640,6 +1672,7 @@ export interface FileRouteTypes {
     | '/track-order'
     | '/unsubscribe'
     | '/wishlist'
+    | '/.well-known/oauth-protected-resource'
     | '/account/privacy'
     | '/admin/ab-tests'
     | '/admin/abandoned'
@@ -1723,6 +1756,7 @@ export interface FileRouteTypes {
     | '/track/$token'
     | '/wishlist/share'
     | '/admin'
+    | '/.lovable/oauth/consent'
     | '/account/returns/new'
     | '/admin/audit/$id'
     | '/admin/campaigns/$id'
@@ -1780,6 +1814,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/help'
     | '/login'
+    | '/mcp'
     | '/our-story'
     | '/privacy'
     | '/reset-password'
@@ -1790,6 +1825,7 @@ export interface FileRouteTypes {
     | '/track-order'
     | '/unsubscribe'
     | '/wishlist'
+    | '/.well-known/oauth-protected-resource'
     | '/account/privacy'
     | '/admin/ab-tests'
     | '/admin/abandoned'
@@ -1885,6 +1921,7 @@ export interface FileRouteTypes {
     | '/track/$token'
     | '/wishlist/share'
     | '/admin/'
+    | '/.lovable/oauth/consent'
     | '/account/returns/new'
     | '/admin/audit/$id'
     | '/admin/campaigns/$id'
@@ -1943,6 +1980,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   HelpRoute: typeof HelpRoute
   LoginRoute: typeof LoginRoute
+  McpRoute: typeof McpRoute
   OurStoryRoute: typeof OurStoryRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -1953,6 +1991,7 @@ export interface RootRouteChildren {
   TrackOrderRoute: typeof TrackOrderRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   WishlistRoute: typeof WishlistRouteWithChildren
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   CategorySlugRoute: typeof CategorySlugRoute
   CollectionSlugRoute: typeof CollectionSlugRoute
   DebugAnalyticsRoute: typeof DebugAnalyticsRoute
@@ -1965,6 +2004,7 @@ export interface RootRouteChildren {
   RecoverTokenRoute: typeof RecoverTokenRoute
   SupportNewRoute: typeof SupportNewRoute
   TrackTokenRoute: typeof TrackTokenRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicGeoRoute: typeof ApiPublicGeoRoute
   ApiPublicPaymentWebhookRoute: typeof ApiPublicPaymentWebhookRoute
   ApiPublicShippingWebhookRoute: typeof ApiPublicShippingWebhookRoute
@@ -2056,6 +2096,13 @@ declare module '@tanstack/react-router' {
       path: '/our-story'
       fullPath: '/our-story'
       preLoaderRoute: typeof OurStoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -2786,6 +2833,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountPrivacyRouteImport
       parentRoute: typeof AccountRoute
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/webhooks/': {
       id: '/admin/webhooks/'
       path: '/'
@@ -3044,6 +3098,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/account/returns/new'
       preLoaderRoute: typeof AccountReturnsNewRouteImport
       parentRoute: typeof AccountRoute
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/lovable/email/transactional/send': {
       id: '/lovable/email/transactional/send'
@@ -3506,6 +3567,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   HelpRoute: HelpRoute,
   LoginRoute: LoginRoute,
+  McpRoute: McpRoute,
   OurStoryRoute: OurStoryRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
@@ -3516,6 +3578,8 @@ const rootRouteChildren: RootRouteChildren = {
   TrackOrderRoute: TrackOrderRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   WishlistRoute: WishlistRouteWithChildren,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   CategorySlugRoute: CategorySlugRoute,
   CollectionSlugRoute: CollectionSlugRoute,
   DebugAnalyticsRoute: DebugAnalyticsRoute,
@@ -3528,6 +3592,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecoverTokenRoute: RecoverTokenRoute,
   SupportNewRoute: SupportNewRoute,
   TrackTokenRoute: TrackTokenRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicGeoRoute: ApiPublicGeoRoute,
   ApiPublicPaymentWebhookRoute: ApiPublicPaymentWebhookRoute,
   ApiPublicShippingWebhookRoute: ApiPublicShippingWebhookRoute,
