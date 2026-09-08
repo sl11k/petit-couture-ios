@@ -1,0 +1,1 @@
+ALTER FUNCTION public.track_cart(text, jsonb, numeric, text, text, text, boolean, text) SET search_path = public;

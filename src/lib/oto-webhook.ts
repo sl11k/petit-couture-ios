@@ -65,6 +65,13 @@ export type NormalizedOtoPayload =
   | { kind: "unknown"; raw: Record<string, unknown> };
 
 const str = (v: unknown): string | undefined => (v == null ? undefined : String(v));
+const firstStr = (payload: Record<string, unknown>, keys: string[]): string | undefined => {
+  for (const key of keys) {
+    const value = str(payload[key]);
+    if (value && value.trim()) return value;
+  }
+  return undefined;
+};
 
 export function detectOtoKind(payload: Record<string, unknown>): OtoWebhookKind {
   if (payload.errorCode != null || payload.errorMessage != null) return "shipmentError";
@@ -84,10 +91,10 @@ export function normalizeOtoPayload(payload: Record<string, unknown>): Normalize
       status: String(payload.status ?? ""),
       dcStatus: str(payload.dcStatus),
       note: str(payload.note),
-      trackingNumber: str(payload.trackingNumber),
-      dcTrackingNumber: str(payload.dcTrackingNumber),
-      trackingUrl: str(payload.trackingUrl),
-      printAWBURL: str(payload.printAWBURL),
+      trackingNumber: firstStr(payload, ["trackingNumber", "tracking_number", "shipmentId", "shipmentNumber", "awb", "awbNumber", "waybillNumber"]),
+      dcTrackingNumber: firstStr(payload, ["dcTrackingNumber", "dc_tracking_number"]),
+      trackingUrl: firstStr(payload, ["trackingUrl", "tracking_url", "trackingLink", "tracking_link", "trackUrl", "track_url"]),
+      printAWBURL: firstStr(payload, ["printAWBURL", "printAwbUrl", "print_awb_url", "awbUrl", "awb_url", "labelUrl", "label_url"]),
       deliveryCompany: str(payload.deliveryCompany),
       driverName: str(payload.driverName),
       driverPhone: str(payload.driverPhone),
@@ -177,13 +184,14 @@ export function mapOtoStatus(otoStatus: string | undefined | null): InternalShip
   if (s.includes("outfordelivery")) return "out_for_delivery";
   if (s.includes("intransit") || s.includes("transit")) return "in_transit";
   if (s.includes("pickedup") || s === "pickup") return "picked_up";
-  if (s.includes("processing") || s.includes("shipmentprocessing") || s.includes("created"))
+  if (s.includes("processing") || s.includes("shipmentprocessing") || s.includes("created") || s.includes("assignedtowarehouse") || s === "new")
     return "processing";
   if (s.includes("returned") || s.includes("return")) return "returned";
   if (
     s.includes("cancel") ||
     s.includes("cancelled") ||
-    s.includes("canceled")
+    s.includes("canceled") ||
+    s.includes("cancelled")
   )
     return "cancelled";
   if (

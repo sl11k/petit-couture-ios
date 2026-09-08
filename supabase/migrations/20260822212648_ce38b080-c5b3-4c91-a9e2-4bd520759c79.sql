@@ -1,0 +1,1 @@
+ALTER FUNCTION public.recover_abandoned_carts(integer) SET search_path = public;

@@ -1,0 +1,1 @@
+ALTER FUNCTION public.bump_ticket_on_message() SET search_path = public;

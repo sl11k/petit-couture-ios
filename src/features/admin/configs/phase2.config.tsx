@@ -123,6 +123,39 @@ export const invoicesConfig: AdminPageConfig = {
   actions: { export: true },
 };
 
+// Real values written by the payment layer (Stripe / Tabby / Tamara / COD).
+const PAYMENT_STATUS_LABELS: Record<string, { ar: string; en: string }> = {
+  pending: { ar: "بانتظار الدفع", en: "Pending" },
+  authorized: { ar: "محجوز", en: "Authorized" },
+  captured: { ar: "مدفوع", en: "Paid" },
+  succeeded: { ar: "مدفوع", en: "Paid" },
+  paid: { ar: "مدفوع", en: "Paid" },
+  refunded: { ar: "مسترد", en: "Refunded" },
+  partially_refunded: { ar: "مسترد جزئياً", en: "Partially refunded" },
+  failed: { ar: "فشل", en: "Failed" },
+  cancelled: { ar: "ملغي", en: "Cancelled" },
+  expired: { ar: "منتهي", en: "Expired" },
+};
+
+const PAYMENT_GATEWAY_LABELS: Record<string, { ar: string; en: string }> = {
+  stripe: { ar: "بطاقة (Stripe)", en: "Card (Stripe)" },
+  tabby: { ar: "تابي", en: "Tabby" },
+  tamara: { ar: "تمارا", en: "Tamara" },
+  cod: { ar: "الدفع عند الاستلام", en: "Cash on delivery" },
+  bank_transfer: { ar: "تحويل بنكي", en: "Bank transfer" },
+  apple_pay: { ar: "Apple Pay", en: "Apple Pay" },
+};
+
+const isAr = () =>
+  typeof document !== "undefined" && document.documentElement.lang === "ar";
+
+const localize = (map: Record<string, { ar: string; en: string }>, value: any) => {
+  const key = String(value ?? "").toLowerCase();
+  const entry = map[key];
+  if (!entry) return value ? String(value) : "—";
+  return isAr() ? entry.ar : entry.en;
+};
+
 export const paymentsConfig: AdminPageConfig = {
   title: { ar: "المدفوعات", en: "Payments" },
   table: "payment_transactions",
@@ -131,8 +164,32 @@ export const paymentsConfig: AdminPageConfig = {
     { key: "order_number", label: { ar: "رقم الطلب", en: "Order #" } },
     { key: "customer_name", label: { ar: "العميل", en: "Customer" }, hideOnMobile: true },
     { key: "amount", label: { ar: "المبلغ", en: "Amount" }, type: "currency" },
-    { key: "gateway", label: { ar: "البوابة", en: "Gateway" }, hideOnMobile: true },
-    { key: "status", label: { ar: "الحالة", en: "Status" }, type: "badge" },
+    {
+      key: "gateway",
+      label: { ar: "البوابة", en: "Gateway" },
+      hideOnMobile: true,
+      render: (v) => localize(PAYMENT_GATEWAY_LABELS, v),
+    },
+    {
+      key: "status",
+      label: { ar: "الحالة", en: "Status" },
+      render: (v) => {
+        const key = String(v ?? "").toLowerCase();
+        const tone =
+          key === "captured" || key === "succeeded" || key === "paid"
+            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+            : key === "failed" || key === "cancelled" || key === "expired"
+              ? "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300"
+              : key === "refunded" || key === "partially_refunded"
+                ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300"
+                : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300";
+        return (
+          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${tone}`}>
+            {localize(PAYMENT_STATUS_LABELS, v)}
+          </span>
+        );
+      },
+    },
     { key: "card_brand", label: { ar: "البطاقة", en: "Card" }, hideOnMobile: true },
     { key: "created_at", label: { ar: "التاريخ", en: "Date" }, type: "datetime", hideOnMobile: true },
   ],
@@ -141,25 +198,28 @@ export const paymentsConfig: AdminPageConfig = {
     {
       key: "status", type: "select", label: { ar: "الحالة", en: "Status" },
       options: [
-        { value: "pending", label: { ar: "معلق", en: "Pending" } },
-        { value: "succeeded", label: { ar: "ناجح", en: "Succeeded" } },
+        { value: "captured", label: { ar: "مدفوع", en: "Paid" } },
+        { value: "authorized", label: { ar: "محجوز", en: "Authorized" } },
+        { value: "pending", label: { ar: "بانتظار الدفع", en: "Pending" } },
         { value: "failed", label: { ar: "فشل", en: "Failed" } },
         { value: "refunded", label: { ar: "مسترد", en: "Refunded" } },
+        { value: "partially_refunded", label: { ar: "مسترد جزئياً", en: "Partially refunded" } },
       ],
     },
     {
       key: "gateway", type: "select", label: { ar: "البوابة", en: "Gateway" },
       options: [
-        { value: "stripe", label: { ar: "Stripe", en: "Stripe" } },
-        { value: "tap", label: { ar: "Tap", en: "Tap" } },
-        { value: "moyasar", label: { ar: "Moyasar", en: "Moyasar" } },
-        { value: "hyperpay", label: { ar: "HyperPay", en: "HyperPay" } },
-        { value: "cod", label: { ar: "الدفع عند الاستلام", en: "COD" } },
+        { value: "stripe", label: { ar: "بطاقة (Stripe)", en: "Card (Stripe)" } },
+        { value: "tabby", label: { ar: "تابي", en: "Tabby" } },
+        { value: "tamara", label: { ar: "تمارا", en: "Tamara" } },
+        { value: "cod", label: { ar: "الدفع عند الاستلام", en: "Cash on delivery" } },
+        { value: "bank_transfer", label: { ar: "تحويل بنكي", en: "Bank transfer" } },
       ],
     },
   ],
   actions: { export: true },
 };
+
 
 export const shippingConfig: AdminPageConfig = {
   title: { ar: "شركات الشحن", en: "Shipping carriers" },
@@ -234,6 +294,12 @@ couponsConfig.form = [
   { key: "expires_at", label: { ar: "ينتهي في", en: "Expires at" }, type: "datetime" },
   { key: "first_order_only", label: { ar: "أول طلب فقط", en: "First order only" }, type: "boolean" },
   { key: "is_active", label: { ar: "نشط", en: "Active" }, type: "boolean", defaultValue: true },
+  { key: "exclude_discounted_products", label: { ar: "استثناء المخفض", en: "Exclude discounted" }, type: "boolean" },
+  { key: "excluded_product_ids", label: { ar: "استثناء منتجات", en: "Exclude products" }, type: "lookup", lookup: { table: "products", multiple: true, labelColumns: ["name_ar", "name_en"] } },
+  { key: "included_product_ids", label: { ar: "منتجات معينة فقط", en: "Specific products only" }, type: "lookup", lookup: { table: "products", multiple: true, labelColumns: ["name_ar", "name_en"] } },
+  { key: "included_category_ids", label: { ar: "فئات معينة فقط", en: "Specific categories only" }, type: "lookup", lookup: { table: "categories", multiple: true, labelColumns: ["name_ar", "name_en"] } },
+  { key: "allowed_user_ids", label: { ar: "مستخدمين محددين", en: "Specific users" }, type: "lookup", lookup: { table: "profiles", multiple: true, labelColumns: ["full_name", "email"] } },
+
 ];
 
 returnsConfig.actions = { ...returnsConfig.actions, edit: true };

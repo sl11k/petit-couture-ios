@@ -1,0 +1,1 @@
+ALTER FUNCTION public.abandoned_carts_notify() SET search_path = public;

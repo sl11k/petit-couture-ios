@@ -21,7 +21,7 @@ export type FilterDef =
 export type FormFieldType =
   | "text" | "textarea" | "number" | "select" | "boolean" | "date" | "datetime"
   | "image" | "video" | "gallery" | "url" | "email" | "tel" | "color" | "json"
-  | "videoGallery" | "warehouseStock"
+  | "videoGallery" | "warehouseStock" | "stringArray"
   | "lookup"
   | "link"
   | "productVariants"
@@ -91,11 +91,14 @@ export type AdminPageConfig<T = any> = {
   columns: ColumnDef<T>[];
   filters?: FilterDef[];
   form?: FormFieldDef[];
-  actions?: { create?: boolean; edit?: boolean; delete?: boolean; export?: boolean };
+  actions?: { create?: boolean; edit?: boolean; delete?: boolean; export?: boolean; bulkDelete?: boolean };
   rowActions?: RowAction<T>[];
   select?: string;
+  fallbackSelect?: string;
   rowHref?: (row: T) => string;
   enrichRows?: (rows: T[]) => Promise<T[]> | T[];
+  /** Apply extra Supabase query modifiers (e.g. .eq / .or / .not) to the list query. */
+  applyQuery?: (query: any) => any;
 };
 
 export type DetailFieldType =
@@ -140,7 +143,9 @@ export type AdminDetailConfig<T = any> = {
   title: (row: T) => Bilingual | string;
   description?: (row: T) => Bilingual | string;
   select?: string;
+  enrichRow?: (row: T) => Promise<T> | T;
   sections: DetailSectionDef<T>[];
   related?: RelatedTableDef<T>[];
   editForm?: FormFieldDef[];
+  actions?: RowAction<T>[];
 };

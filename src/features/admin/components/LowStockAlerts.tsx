@@ -27,18 +27,33 @@ export function LowStockAlerts() {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("products")
-      .select("id,sku,name_ar,name_en,image_url,stock,low_stock_threshold")
-      .eq("is_active", true)
-      .order("stock", { ascending: true })
-      .limit(50);
-    const filtered = (data ?? []).filter(
-      (p: any) => Number(p.stock) <= Number(p.low_stock_threshold ?? 5),
-    ) as Row[];
+    const [prodsRes, varsRes] = await Promise.all([
+      supabase
+        .from("products")
+        .select("id,sku,name_ar,name_en,image_url,stock,low_stock_threshold")
+        .eq("is_active", true)
+        .limit(5000),
+      supabase
+        .from("product_variants")
+        .select("product_id,stock,is_active")
+        .eq("is_active", true),
+    ]);
+    // When a product has variants, total variant stock is the source of truth.
+    const varsByProduct = new Map<string, number>();
+    for (const v of (varsRes.data ?? []) as any[]) {
+      varsByProduct.set(v.product_id, (varsByProduct.get(v.product_id) ?? 0) + Number(v.stock ?? 0));
+    }
+    const filtered = ((prodsRes.data ?? []) as any[])
+      .map((p) => {
+        const effective = varsByProduct.has(p.id) ? varsByProduct.get(p.id) ?? 0 : Number(p.stock ?? 0);
+        return { ...p, stock: effective } as Row;
+      })
+      .filter((p) => Number(p.stock) <= Number(p.low_stock_threshold ?? 5))
+      .sort((a, b) => Number(a.stock) - Number(b.stock));
     setRows(filtered.slice(0, 8));
     setLoading(false);
   };
+
 
   useEffect(() => { load(); }, []);
 

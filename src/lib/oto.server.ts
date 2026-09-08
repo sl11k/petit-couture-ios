@@ -17,6 +17,25 @@ const asNumber = (value: unknown, fallback = 0) => {
   return Number.isFinite(n) ? n : fallback;
 };
 const roundMoney = (value: unknown) => Number(asNumber(value, 0).toFixed(2));
+const numericId = (value: unknown) => {
+  const text = clean(value);
+  return text && /^\d+$/.test(text) ? text : undefined;
+};
+const otoDateTime = (date = new Date()) => {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
+export function getOtoOrderNumber(orderNumber: string) {
+  const prefix = clean(process.env.OTO_ORDER_PREFIX);
+  if (!prefix || orderNumber.startsWith(prefix)) return orderNumber;
+  return `${prefix}${orderNumber}`;
+}
+
+export function stripOtoOrderPrefix(orderNumber: string) {
+  const prefix = clean(process.env.OTO_ORDER_PREFIX);
+  return prefix && orderNumber.startsWith(prefix) ? orderNumber.slice(prefix.length) : orderNumber;
+}
 
 function normalizeCountry(value: unknown) {
   const raw = clean(value)?.toUpperCase();
@@ -55,7 +74,9 @@ export async function getOtoAccessToken(): Promise<string> {
     res = await fetch(`${OTO_BASE}/refreshToken`, {
       method: "POST",
       headers: { Accept: "application/json", "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token: refresh }),
+      // OTO API v2 uses snake_case `refresh_token` (confirmed by probe).
+      // camelCase is included for forward-compat and is ignored if unused.
+      body: JSON.stringify({ refresh_token: refresh, refreshToken: refresh }),
     });
   } else if (clientId && clientSecret) {
     res = await fetch(`${OTO_BASE}/auth`, {
@@ -116,6 +137,9 @@ export async function otoFetch(path: string, init: RequestInit = {}, opts: { ide
   if (!res.ok) {
     throw new Error(`OTO ${path} failed: ${res.status} ${JSON.stringify(redactOtoBody(json || text)).slice(0, 300)}`);
   }
+  if (json && typeof json === "object" && json.success === false) {
+    throw new Error(`OTO ${path} failed: ${JSON.stringify(redactOtoBody(json)).slice(0, 300)}`);
+  }
   return json;
 }
 
@@ -127,7 +151,10 @@ async function otoFetchFirst(paths: string[], init: RequestInit, idempotencyKey:
     } catch (e: any) {
       lastError = e;
       const message = String(e?.message || "");
-      if (!message.includes("404") && !message.includes("405") && !message.includes("Cannot POST")) {
+      // Fall through on "endpoint not available for this tenant" responses:
+      // 404/405 (missing), 403 (tenant lacks entitlement — e.g. salesChannel accounts
+      // don't get /orders, they must use /createOrder).
+      if (!/\b(404|403|405)\b/.test(message) && !message.includes("Cannot POST")) {
         throw e;
       }
     }
@@ -177,6 +204,15 @@ export type OtoDeliveryOption = {
   needToVerifyCrDocStatus?: boolean;
   pickupDropOff?: string | null;
   raw: JsonRecord;
+};
+
+type OtoCreateOrderOptions = {
+  createShipment?: boolean;
+};
+
+type OtoShipmentCreationOptions = {
+  force?: boolean;
+  waitOnThrottle?: boolean;
 };
 
 function senderInformationFromEnv() {
@@ -261,7 +297,85 @@ function buildCustomer(input: OtoCreateOrderInput) {
   return Object.fromEntries(Object.entries(customer).filter(([, v]) => v != null));
 }
 
-export async function buildOtoOrderPayload(input: OtoCreateOrderInput, deliveryOptionId?: string | null) {
+function isOtoDuplicateOrderError(error: any) {
+  const message = String(error?.message || error || "").toLowerCase();
+  return /already|exist|duplicate|oto1009|oto1008/.test(message);
+}
+
+function isOtoInvalidOrderError(error: any) {
+  const message = String(error?.message || error || "").toLowerCase();
+  return /invalid or missing order id|orderid cannot be found|order id.*not found|oto1001/.test(message);
+}
+
+function firstStringDeep(value: any, keys: RegExp[]): string | undefined {
+  const seen = new Set<any>();
+  const visit = (node: any): string | undefined => {
+    if (!node || typeof node !== "object" || seen.has(node)) return undefined;
+    seen.add(node);
+    if (Array.isArray(node)) {
+      for (const item of node) {
+        const found = visit(item);
+        if (found) return found;
+      }
+      return undefined;
+    }
+    for (const [key, raw] of Object.entries(node)) {
+      if (keys.some((pattern) => pattern.test(key))) {
+        const text = clean(raw);
+        if (text) return text;
+      }
+    }
+    for (const raw of Object.values(node)) {
+      const found = visit(raw);
+      if (found) return found;
+    }
+    return undefined;
+  };
+  return visit(value);
+}
+
+export function extractOtoShipmentDetails(...responses: any[]) {
+  const trackingNumber =
+    firstStringDeep(responses, [/^tracking_?number$/i, /^dc_?tracking_?number$/i]) ||
+    firstStringDeep(responses, [/^awb$/i, /^awb_?number$/i, /^waybill_?number$/i, /^air_?waybill_?number$/i]) ||
+    firstStringDeep(responses, [/^shipment_?number$/i, /^shipment_?id$/i]);
+  const trackingUrl = firstStringDeep(responses, [
+    /^tracking_?url$/i,
+    /^tracking_?link$/i,
+    /^track_?url$/i,
+    /^track_?link$/i,
+  ]);
+  const awbUrl = firstStringDeep(responses, [
+    /^print_?awb_?url$/i,
+    /^awb_?url$/i,
+    /^label_?url$/i,
+    /^label_?link$/i,
+  ]);
+  return { trackingNumber, trackingUrl, awbUrl };
+}
+
+function getOtoRetryDelayMs(error: any) {
+  const message = String(error?.message || error || "");
+  const minuteMatch = message.match(/wait\s+for\s+(\d+)\s+minute/i);
+  if (minuteMatch) return Number(minuteMatch[1]) * 60_000 + 1_500;
+  const secondMatch = message.match(/wait\s+for\s+(\d+)\s+second/i);
+  if (secondMatch) return Number(secondMatch[1]) * 1_000 + 1_500;
+  if (/OTO1105|request again/i.test(message)) return 61_500;
+  return null;
+}
+
+async function retryOnceAfterOtoThrottle<T>(error: any, action: () => Promise<T>, enabled: boolean) {
+  const retryDelayMs = getOtoRetryDelayMs(error);
+  if (!enabled || !retryDelayMs) throw error;
+  await sleep(Math.min(retryDelayMs, 65_000));
+  return action();
+}
+
+export async function buildOtoOrderPayload(
+  input: OtoCreateOrderInput,
+  deliveryOptionId?: string | null,
+  options: OtoCreateOrderOptions = {},
+) {
   if (!clean(input.customerName) || !clean(input.customerPhone)) {
     throw new Error("OTO requires customer name and mobile");
   }
@@ -270,16 +384,27 @@ export async function buildOtoOrderPayload(input: OtoCreateOrderInput, deliveryO
   const senderInformation = senderInformationFromEnv();
   const pickupLocationCode = senderInformation ? undefined : await resolvePickupLocationCode();
   const packageWeight = Math.max(asNumber(input.weight, 1), 0.1);
+  const otoOrderNumber = getOtoOrderNumber(input.orderNumber);
+  const itemDescription =
+    input.items
+      ?.map((it) => `${it.name}${it.quantity > 1 ? ` x${it.quantity}` : ""}`)
+      .filter(Boolean)
+      .slice(0, 6)
+      .join(", ") || "Order items";
 
   const payload: JsonRecord = {
-    orderId: input.orderNumber,
+    orderId: otoOrderNumber,
     ref1: input.orderId,
-    createShipment: false,
+    createShipment: Boolean(options.createShipment),
     payment_method: input.codAmount && input.codAmount > 0 ? "cod" : "paid",
-    amount: roundMoney(input.totalValue),
+    // OTO's "amount" is the goods value (used for declared/insured value & display),
+    // shipping is separately billed by the carrier. Never include shipping here or
+    // OTO will show inflated order value (e.g. 4 SAR item shown as 24 with 20 shipping).
+    amount: roundMoney(input.subtotal ?? input.totalValue),
     amount_due: input.codAmount && input.codAmount > 0 ? roundMoney(input.codAmount) : 0,
     shippingAmount: roundMoney(input.shippingFee),
     subtotal: roundMoney(input.subtotal ?? input.totalValue),
+    totalAmount: roundMoney(input.totalValue),
     currency: (input.currency || "SAR").toUpperCase(),
     shippingNotes: clean(input.notes),
     packageCount: 1,
@@ -287,10 +412,11 @@ export async function buildOtoOrderPayload(input: OtoCreateOrderInput, deliveryO
     boxWidth: asNumber(process.env.OTO_DEFAULT_BOX_WIDTH_CM, 10) || 10,
     boxLength: asNumber(process.env.OTO_DEFAULT_BOX_LENGTH_CM, 10) || 10,
     boxHeight: asNumber(process.env.OTO_DEFAULT_BOX_HEIGHT_CM, 10) || 10,
-    orderDate: new Date().toISOString(),
+    orderDate: otoDateTime(),
+    item_description: itemDescription,
     customer: buildCustomer(input),
     items: (input.items ?? []).map((it) => ({
-      productId: clean(it.productId),
+      productId: numericId(it.productId),
       name: it.name,
       sku: clean(it.sku) || it.name.slice(0, 40),
       price: roundMoney(it.price),
@@ -315,15 +441,19 @@ export async function buildOtoOrderPayload(input: OtoCreateOrderInput, deliveryO
   return Object.fromEntries(Object.entries(payload).filter(([, v]) => v != null));
 }
 
-export async function otoCreateOrder(input: OtoCreateOrderInput, deliveryOptionId?: string | null) {
-  const payload = await buildOtoOrderPayload(input, deliveryOptionId);
+export async function otoCreateOrder(
+  input: OtoCreateOrderInput,
+  deliveryOptionId?: string | null,
+  options: OtoCreateOrderOptions = {},
+) {
+  const payload = await buildOtoOrderPayload(input, deliveryOptionId, options);
   return otoFetchFirst(
-    ["/orders", "/createOrder"],
+    ["/createOrder", "/orders"],
     {
       method: "POST",
       body: JSON.stringify(payload),
     },
-    `oto-create-order-${input.orderNumber}`,
+    `oto-create-order-${input.orderNumber}-${options.createShipment ? "shipment" : "order"}`,
   );
 }
 
@@ -369,11 +499,12 @@ function normalizeDeliveryOptions(resp: any): OtoDeliveryOption[] {
 }
 
 export async function otoGetDeliveryFeeOptions(orderNumber: string) {
+  const otoOrderNumber = getOtoOrderNumber(orderNumber);
   const resp = await otoFetchFirst(
-    [`/orders/${encodeURIComponent(orderNumber)}/delivery-fee`, "/getDeliveryFee"],
+    ["/getDeliveryFee", `/orders/${encodeURIComponent(otoOrderNumber)}/delivery-fee`],
     {
       method: "POST",
-      body: JSON.stringify({ orderId: orderNumber }),
+      body: JSON.stringify({ orderId: otoOrderNumber }),
     },
     `oto-delivery-fee-${orderNumber}`,
   );
@@ -411,28 +542,74 @@ function chooseDeliveryOption(options: OtoDeliveryOption[]) {
   return [...options].sort((a, b) => (a.price ?? Number.MAX_SAFE_INTEGER) - (b.price ?? Number.MAX_SAFE_INTEGER))[0];
 }
 
-export async function otoCreateShipment(orderNumber: string, deliveryOptionId: string) {
+export async function otoCreateShipment(orderNumber: string, deliveryOptionId?: string | null) {
+  const otoOrderNumber = getOtoOrderNumber(orderNumber);
+  const body: JsonRecord = { orderId: otoOrderNumber };
+  const optionId = clean(deliveryOptionId);
+  if (optionId) body.deliveryOptionId = optionId;
+
   return otoFetchFirst(
-    [`/orders/${encodeURIComponent(orderNumber)}/create-shipment`, "/createShipment"],
+    ["/createShipment", `/orders/${encodeURIComponent(otoOrderNumber)}/create-shipment`],
     {
       method: "POST",
-      body: JSON.stringify({ orderId: orderNumber, deliveryOptionId }),
+      body: JSON.stringify(body),
     },
-    `oto-create-shipment-${orderNumber}-${deliveryOptionId}`,
+    `oto-create-shipment-${orderNumber}-${optionId || "auto"}`,
   );
+}
+
+async function otoCreateShipmentWithRetry(orderNumber: string, deliveryOptionId?: string | null) {
+  let lastError: any;
+  for (const waitMs of [0, 2_000, 5_000, 10_000]) {
+    if (waitMs) await sleep(waitMs);
+    try {
+      return await otoCreateShipment(orderNumber, deliveryOptionId);
+    } catch (e: any) {
+      lastError = e;
+      if (!isOtoInvalidOrderError(e)) throw e;
+    }
+  }
+  throw lastError;
 }
 
 export async function otoGetOrderStatus(orderNumberOrOtoId: string) {
   return otoFetchFirst(
     [
-      `/orders/${encodeURIComponent(orderNumberOrOtoId)}/status`,
+      "/orderStatus",
       `/orderStatus?orderId=${encodeURIComponent(orderNumberOrOtoId)}`,
+      `/orders/${encodeURIComponent(orderNumberOrOtoId)}/status`,
     ],
     {
-      method: "GET",
+      method: "POST",
+      body: JSON.stringify({ orderId: orderNumberOrOtoId }),
     },
     `oto-order-status-${orderNumberOrOtoId}`,
   );
+}
+
+export async function otoPrintAwb(orderNumber: string) {
+  return otoFetchFirst(
+    [`/print/${encodeURIComponent(orderNumber)}`, `/orders/${encodeURIComponent(orderNumber)}/print`],
+    { method: "GET" },
+    `oto-print-awb-${orderNumber}`,
+  );
+}
+
+async function readOtoShipmentSnapshot(orderNumber: string) {
+  const otoOrderNumber = getOtoOrderNumber(orderNumber);
+  const status = await otoGetOrderStatus(otoOrderNumber).catch((e: any) => ({ statusError: e?.message || "OTO status failed" }));
+  const print = await otoPrintAwb(otoOrderNumber).catch((e: any) => ({ printError: e?.message || "OTO AWB is not ready" }));
+  return { status, print, ...extractOtoShipmentDetails(status, print) };
+}
+
+async function pollOtoShipmentSnapshot(orderNumber: string) {
+  let latest: any = null;
+  for (const waitMs of [0, 2_000, 5_000, 10_000]) {
+    if (waitMs) await sleep(waitMs);
+    latest = await readOtoShipmentSnapshot(orderNumber);
+    if (latest.trackingNumber || latest.trackingUrl || latest.awbUrl) return latest;
+  }
+  return latest;
 }
 
 async function loadOtoOrderInput(orderId: string): Promise<{ order: any; input?: OtoCreateOrderInput; error?: string }> {
@@ -444,6 +621,12 @@ async function loadOtoOrderInput(orderId: string): Promise<{ order: any; input?:
   if (error || !order) return { order: null, error: "Order not found" };
 
   const addr: any = order.shipping_address || {};
+  const shortAddressCode = clean(addr.shortAddressCode || addr.shortCode || addr.short_address_code);
+  const addressLine =
+    clean(addr.line1 || addr.street || addr.address || addr.address1) ||
+    [clean(addr.buildingNumber), clean(addr.street)].filter(Boolean).join(" ") ||
+    shortAddressCode ||
+    "";
   const itemsRes = await supabaseAdmin
     .from("order_items")
     .select("product_id,product_name,product_slug,sku,qty,unit_price,image_url")
@@ -473,11 +656,11 @@ async function loadOtoOrderInput(orderId: string): Promise<{ order: any; input?:
       customerEmail: order.customer_email,
       city: clean(addr.city || (order as any).shipping_city) || "Riyadh",
       country: normalizeCountry(addr.country_code || addr.country),
-      address1: clean(addr.line1 || addr.street || addr.address) || clean(addr.shortAddressCode) || "",
+      address1: addressLine,
       address2: clean(addr.line2 || addr.district),
       district: clean(addr.district),
       postcode: clean(addr.postcode || addr.postalCode || addr.zip),
-      shortAddressCode: clean(addr.shortAddressCode),
+      shortAddressCode,
       lat: addr.lat || order.shipping_lat || null,
       lon: addr.lon || addr.lng || order.shipping_lng || null,
       weight: Number((order as any).total_weight_kg || 1),
@@ -514,17 +697,28 @@ export async function getOtoDeliveryOptionsForOrder(orderId: string) {
   }
 }
 
+export function canCreateOtoShipmentForOrder(order: {
+  payment_status?: string | null;
+  payment_method?: string | null;
+}) {
+  const status = String(order.payment_status ?? "").toLowerCase();
+  const method = String(order.payment_method ?? "").toLowerCase();
+  if (status === "paid") return true;
+  return method === "bank_transfer" || method === "cod";
+}
+
 export async function createOtoShipmentForOrder(
   orderId: string,
   createdBy?: string | null,
   deliveryOptionId?: string | null,
-): Promise<{ ok: boolean; shipment?: any; otoResp?: any; options?: OtoDeliveryOption[]; error?: string }> {
+  options: OtoShipmentCreationOptions = {},
+): Promise<{ ok: boolean; shipment?: any; otoResp?: any; options?: OtoDeliveryOption[]; error?: string; pending?: boolean; reused?: boolean }> {
   const loaded = await loadOtoOrderInput(orderId);
   if (loaded.error || !loaded.order || !loaded.input) return { ok: false, error: loaded.error || "Order not found" };
   const { order, input } = loaded;
+  const force = Boolean(options.force);
 
-  const isCod = order.payment_method === "cod";
-  if (!isCod && order.payment_status !== "paid") {
+  if (!canCreateOtoShipmentForOrder(order)) {
     return { ok: false, error: "Shipment blocked until payment is confirmed" };
   }
 
@@ -536,25 +730,91 @@ export async function createOtoShipmentForOrder(
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (existing.data && existing.data.status !== "failed") {
+  const existingRawResponse = existing.data?.raw_response as any;
+  const existingDetails = extractOtoShipmentDetails(existingRawResponse);
+  const existingHasProviderShipment = Boolean(
+    existing.data?.tracking_number ||
+      existing.data?.awb_url ||
+      existingDetails.trackingNumber ||
+      existingDetails.trackingUrl ||
+      existingDetails.awbUrl,
+  );
+  if (existing.data && force && existing.data.status !== "failed" && !existingHasProviderShipment) {
+    const snapshot = await pollOtoShipmentSnapshot(input.orderNumber);
+    const snapshotDetails = extractOtoShipmentDetails(snapshot?.status, snapshot?.print);
+    if (snapshotDetails.trackingNumber || snapshotDetails.trackingUrl || snapshotDetails.awbUrl) {
+      const updateValues = {
+        status: "label_created",
+        tracking_number: snapshotDetails.trackingNumber || null,
+        tracking_url: snapshotDetails.trackingUrl || null,
+        awb_url: snapshotDetails.awbUrl || null,
+        raw_response: { ...(existingRawResponse || {}), status: snapshot?.status, printAwb: snapshot?.print },
+      };
+      const { data: syncedShipment } = await supabaseAdmin
+        .from("shipments")
+        .update(updateValues)
+        .eq("id", existing.data.id)
+        .select()
+        .single();
+      await (supabaseAdmin.from("orders") as any)
+        .update({
+          shipping_carrier: "oto",
+          tracking_number: snapshotDetails.trackingNumber || null,
+          tracking_url: snapshotDetails.trackingUrl || null,
+          shipping_status: "label_created",
+          oto_creation_error: null,
+        })
+        .eq("id", order.id);
+      return { ok: true, shipment: syncedShipment || { ...existing.data, ...updateValues }, otoResp: snapshot, reused: true };
+    }
+  }
+  if (existing.data && existing.data.status !== "failed" && (!force || existingHasProviderShipment)) {
+    const existingTracking = existing.data.tracking_number || existingDetails.trackingNumber || null;
+    const existingTrackingUrl = existing.data.tracking_url || existingDetails.trackingUrl || null;
     await (supabaseAdmin.from("orders") as any)
       .update({
         shipping_carrier: "oto",
-        tracking_number: existing.data.tracking_number || null,
-        tracking_url: existing.data.tracking_url || null,
+        tracking_number: existingTracking,
+        tracking_url: existingTrackingUrl,
         shipping_status: existing.data.status,
         oto_creation_error: null,
       })
       .eq("id", order.id);
-    return { ok: true, shipment: existing.data };
+    if (existingTracking !== existing.data.tracking_number || existingTrackingUrl !== existing.data.tracking_url) {
+      await supabaseAdmin
+        .from("shipments")
+        .update({ tracking_number: existingTracking, tracking_url: existingTrackingUrl, awb_url: existing.data.awb_url || existingDetails.awbUrl || null })
+        .eq("id", existing.data.id);
+    }
+    return { ok: true, shipment: { ...existing.data, tracking_number: existingTracking, tracking_url: existingTrackingUrl }, reused: true };
   }
 
-  const { data: claimed, error: claimError } = await (supabaseAdmin as any).rpc(
+  let { data: claimed, error: claimError } = await (supabaseAdmin as any).rpc(
     "claim_oto_shipment_creation",
-    { _order_id: order.id },
+    { _order_id: order.id, _force: force },
   );
+  if (claimError && /function .*claim_oto_shipment_creation|schema cache|parameter|_force/i.test(claimError.message || "")) {
+    if (force) {
+      await (supabaseAdmin.from("orders") as any)
+        .update({ oto_creation_started_at: null, oto_creation_error: null })
+        .eq("id", order.id);
+    }
+    const fallback = await (supabaseAdmin as any).rpc(
+      "claim_oto_shipment_creation",
+      { _order_id: order.id },
+    );
+    claimed = fallback.data;
+    claimError = fallback.error;
+  }
   if (claimError) return { ok: false, error: `OTO claim failed: ${claimError.message}` };
-  if (!claimed) return { ok: true, shipment: existing.data ?? undefined };
+  if (!claimed) {
+    return {
+      ok: false,
+      pending: true,
+      shipment: existing.data ?? undefined,
+      error: "OTO shipment creation is already in progress. Try again in a minute if no shipment appears.",
+    };
+  }
 
   let createOrderResp: any;
   let feeResp: any = null;
@@ -562,33 +822,44 @@ export async function createOtoShipmentForOrder(
   let shipmentResp: any;
 
   try {
-    createOrderResp = await otoCreateOrder(input, deliveryOptionId);
-    const orderFees = await otoGetDeliveryFeeOptions(input.orderNumber);
-    feeResp = orderFees.raw;
-    option = deliveryOptionId
-      ? orderFees.options.find((o) => o.deliveryOptionId === deliveryOptionId) ||
-        ({ deliveryOptionId, name: "Selected OTO option", price: null, raw: {} } as OtoDeliveryOption)
-      : chooseDeliveryOption(orderFees.options);
+    const configuredOptionId = clean(deliveryOptionId) || clean(process.env.OTO_DEFAULT_DELIVERY_OPTION_ID);
+    if (configuredOptionId) {
+      option = {
+        deliveryOptionId: configuredOptionId,
+        name: "Configured OTO option",
+        price: null,
+        raw: {},
+      };
+    }
 
     if (!option) {
-      const addressFees = await otoCheckDeliveryFee({
-        destinationCity: input.city,
-        weight: input.weight,
-        codAmount: input.codAmount,
-        currency: input.currency,
-      });
-      feeResp = addressFees.raw;
-      option = deliveryOptionId
-        ? addressFees.options.find((o) => o.deliveryOptionId === deliveryOptionId) ||
-          ({ deliveryOptionId, name: "Selected OTO option", price: null, raw: {} } as OtoDeliveryOption)
-        : chooseDeliveryOption(addressFees.options);
+      try {
+        const addressFees = await otoCheckDeliveryFee({
+          destinationCity: input.city,
+          weight: input.weight,
+          codAmount: input.codAmount,
+          currency: input.currency,
+        });
+        feeResp = addressFees.raw;
+        option = chooseDeliveryOption(addressFees.options);
+      } catch (feeError: any) {
+        feeResp = { checkFeeError: feeError?.message || "OTO address fee lookup failed" };
+      }
     }
 
-    if (!option?.deliveryOptionId) {
-      throw new Error("OTO did not return any usable delivery option");
+    const createOrderWithShipment = () => otoCreateOrder(input, option?.deliveryOptionId, { createShipment: true });
+    try {
+      createOrderResp = await createOrderWithShipment();
+      shipmentResp = createOrderResp;
+    } catch (createError: any) {
+      if (isOtoDuplicateOrderError(createError)) {
+        createOrderResp = { reusedExistingOtoOrder: true, warning: createError?.message || "OTO order already exists" };
+        shipmentResp = await otoCreateShipmentWithRetry(input.orderNumber, option?.deliveryOptionId);
+      } else {
+        createOrderResp = await retryOnceAfterOtoThrottle(createError, createOrderWithShipment, Boolean(options.waitOnThrottle));
+        shipmentResp = createOrderResp;
+      }
     }
-
-    shipmentResp = await otoCreateShipment(input.orderNumber, option.deliveryOptionId);
   } catch (e: any) {
     const message = e?.message || "OTO request failed";
     await (supabaseAdmin.from("orders") as any)
@@ -597,32 +868,31 @@ export async function createOtoShipmentForOrder(
     return { ok: false, options: option ? [option] : undefined, error: message };
   }
 
-  const statusResp = await otoGetOrderStatus(String(shipmentResp?.otoId || input.orderNumber)).catch(() => null);
-  const mergedResp = { createOrder: createOrderResp, deliveryFee: feeResp, createShipment: shipmentResp, status: statusResp };
-  const trackingNumber: string | undefined =
-    statusResp?.trackingNumber ||
-    statusResp?.dcTrackingNumber ||
-    shipmentResp?.tracking_number ||
-    shipmentResp?.awb ||
-    shipmentResp?.otoId ||
-    createOrderResp?.otoId;
-  const trackingUrl: string | undefined =
-    statusResp?.trackingUrl ||
-    shipmentResp?.tracking_url ||
-    shipmentResp?.trackingLink ||
-    shipmentResp?.label_url;
-  const awbUrl: string | undefined =
-    statusResp?.printAWBURL || shipmentResp?.label_url || shipmentResp?.awb_url;
+  const snapshot = await pollOtoShipmentSnapshot(input.orderNumber);
+  const mergedResp = {
+    createOrder: createOrderResp,
+    deliveryFee: feeResp,
+    createShipment: shipmentResp,
+    status: snapshot?.status ?? null,
+    printAwb: snapshot?.print ?? null,
+  };
+  const extracted = extractOtoShipmentDetails(shipmentResp, createOrderResp, snapshot?.status, snapshot?.print);
+  const trackingNumber = extracted.trackingNumber;
+  const trackingUrl = extracted.trackingUrl;
+  const awbUrl = extracted.awbUrl;
 
   const addr: any = order.shipping_address || {};
+  const finalTrackingNumber = trackingNumber || existing.data?.tracking_number || order.tracking_number || null;
+  const finalTrackingUrl = trackingUrl || existing.data?.tracking_url || order.tracking_url || null;
+  const finalAwbUrl = awbUrl || existing.data?.awb_url || null;
   const shipmentValues = {
     order_id: order.id,
     order_number: order.order_number,
     carrier_code: "oto",
-    status: trackingNumber || awbUrl ? "label_created" : "processing",
-    tracking_number: trackingNumber ? String(trackingNumber) : null,
-    tracking_url: trackingUrl || null,
-    awb_url: awbUrl || null,
+    status: finalTrackingNumber || finalAwbUrl ? "label_created" : "processing",
+    tracking_number: finalTrackingNumber ? String(finalTrackingNumber) : null,
+    tracking_url: finalTrackingUrl || null,
+    awb_url: finalAwbUrl || null,
     customer_name: order.customer_name,
     customer_phone: order.customer_phone,
     customer_email: order.customer_email,
@@ -636,8 +906,8 @@ export async function createOtoShipmentForOrder(
       height: asNumber(process.env.OTO_DEFAULT_BOX_HEIGHT_CM, 10) || 10,
       unit: "cm",
     },
-    declared_value: Number(order.total),
-    cod_amount: isCod ? Number(order.total) : 0,
+    declared_value: Number(order.subtotal ?? order.total),
+    cod_amount: Number(input.codAmount || 0),
     shipping_fee: Number(option?.price ?? order.shipping_fee ?? 0),
     raw_response: mergedResp,
     metadata: {
@@ -665,8 +935,8 @@ export async function createOtoShipmentForOrder(
   const { error: orderUpdateError } = await (supabaseAdmin.from("orders") as any)
     .update({
       shipping_carrier: "oto",
-      tracking_number: trackingNumber ? String(trackingNumber) : null,
-      tracking_url: trackingUrl || null,
+      tracking_number: finalTrackingNumber ? String(finalTrackingNumber) : null,
+      tracking_url: finalTrackingUrl || null,
       shipping_status: shipmentValues.status,
       oto_creation_error: null,
     })

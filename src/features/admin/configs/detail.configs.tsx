@@ -1,4 +1,7 @@
 import type { AdminDetailConfig, FormFieldDef } from "../types";
+import { MessageCircle } from "lucide-react";
+import { toast } from "sonner";
+import { notifyCouponUsers } from "@/lib/coupons.functions";
 
 // ----- Coupons -----
 const couponForm: FormFieldDef[] = [
@@ -18,6 +21,11 @@ const couponForm: FormFieldDef[] = [
   { key: "first_order_only", label: { ar: "أول طلب فقط", en: "First order only" }, type: "boolean" },
   { key: "starts_at", label: { ar: "يبدأ", en: "Starts at" }, type: "datetime" },
   { key: "expires_at", label: { ar: "ينتهي", en: "Expires at" }, type: "datetime" },
+  { key: "exclude_discounted_products", label: { ar: "استثناء المخفض", en: "Exclude discounted" }, type: "boolean" },
+  { key: "excluded_product_ids", label: { ar: "استثناء منتجات", en: "Exclude products" }, type: "lookup", lookup: { table: "products", multiple: true, labelColumns: ["name_ar", "name_en"] } },
+  { key: "included_product_ids", label: { ar: "منتجات معينة فقط", en: "Specific products" }, type: "lookup", lookup: { table: "products", multiple: true, labelColumns: ["name_ar", "name_en"] } },
+  { key: "included_category_ids", label: { ar: "فئات معينة فقط (الخصم يطبّق على هذه الفئات فقط)", en: "Specific categories only (discount applies only to these categories)" }, type: "lookup", lookup: { table: "categories", multiple: true, labelColumns: ["name_ar", "name_en"] } },
+  { key: "allowed_user_ids", label: { ar: "إيميلات مستخدمين محددين (كل إيميل في سطر)", en: "Specific user emails (one per line)" }, type: "stringArray" },
 ];
 
 export const couponDetailConfig: AdminDetailConfig = {
@@ -52,6 +60,15 @@ export const couponDetailConfig: AdminDetailConfig = {
       ],
     },
     {
+      title: { ar: "الاستثناءات والتخصيص", en: "Exclusions & Assignment" },
+      fields: [
+        { key: "exclude_discounted_products", label: { ar: "استثناء المنتجات المخفضة", en: "Exclude discounted" }, type: "boolean" },
+        { key: "excluded_product_ids", label: { ar: "منتجات مستثناة", en: "Excluded products" } },
+        { key: "included_product_ids", label: { ar: "منتجات معينة فقط", en: "Specific products" } },
+        { key: "allowed_user_ids", label: { ar: "مستخدمين محددين", en: "Specific users" } },
+      ],
+    },
+    {
       title: { ar: "إحصاءات", en: "Stats" },
       sidebar: true,
       columns: 1,
@@ -62,6 +79,60 @@ export const couponDetailConfig: AdminDetailConfig = {
       ],
     },
   ],
+  actions: [
+    {
+      key: "notify_assigned_wa",
+      label: { ar: "إشعار بالمخصّصين (واتساب)", en: "Notify assigned via WhatsApp" },
+      icon: <MessageCircle className="h-4 w-4" />,
+      onClick: async (row) => {
+        if (!row.allowed_user_ids || row.allowed_user_ids.length === 0) {
+          toast.error(
+            window.location.pathname.includes("/ar") 
+              ? "لا يوجد مستخدمين مخصصين لهذا الكوبون" 
+              : "No specific users assigned to this coupon"
+          );
+          return;
+        }
+        
+        const isAr = window.location.pathname.includes("/ar");
+        const promptMsg = isAr ? `مرحباً، لقد حصلت على كود خصم خاص بك: ${row.code}` : `Hi, you received a special discount code: ${row.code}`;
+        const msg = window.prompt(
+          isAr ? "أدخل نص رسالة الواتساب:" : "Enter WhatsApp message:",
+          promptMsg
+        );
+        if (!msg) return;
+        
+        const toastId = toast.loading(isAr ? "جاري الإرسال..." : "Sending...");
+        try {
+          const res = await notifyCouponUsers({ data: { coupon_id: row.id, message: msg } });
+          if (res.ok) {
+            toast.success(isAr ? `تم الإرسال إلى ${res.count} عملاء بنجاح` : `Sent to ${res.count} customers successfully`, { id: toastId });
+          } else {
+            toast.error(res.error || "Unknown error", { id: toastId });
+          }
+        } catch (err: any) {
+          toast.error(err.message || "Failed to send", { id: toastId });
+        }
+      }
+    }
+  ],
+  related: [
+    {
+      title: { ar: "الطلبات المستخدمة لهذا الكوبون", en: "Orders using this coupon" },
+      table: "orders",
+      foreignKey: "coupon_id",
+      orderBy: { column: "created_at", ascending: false },
+      columns: [
+        { key: "order_number", label: { ar: "رقم الطلب", en: "Order #" } },
+        { key: "customer_name", label: { ar: "العميل", en: "Customer" } },
+        { key: "customer_phone", label: { ar: "الهاتف", en: "Phone" }, hideOnMobile: true },
+        { key: "total", label: { ar: "الإجمالي", en: "Total" }, type: "currency" },
+        { key: "status", label: { ar: "الحالة", en: "Status" }, type: "badge" },
+        { key: "created_at", label: { ar: "التاريخ", en: "Date" }, type: "datetime" },
+      ],
+      rowHref: (r) => `/admin/orders/${r.id}`,
+    }
+  ]
 };
 
 // ----- Marketing Campaigns -----

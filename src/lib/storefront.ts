@@ -5,6 +5,17 @@ import { getCategoryProductIds } from "@/lib/productCategories";
 export type Banner = {
   id: string;
   image_url: string;
+  image_url_tablet: string | null;
+  image_url_desktop: string | null;
+  object_position: string | null;
+  object_fit: string | null;
+  image_scale: number | null;
+  image_offset_x: number | null;
+  image_offset_y: number | null;
+  height_mobile: number | null;
+  height_tablet: number | null;
+  height_desktop: number | null;
+  overlay_opacity: number | null;
   title_ar: string | null;
   title_en: string | null;
   subtitle_ar: string | null;
@@ -68,7 +79,12 @@ export async function fetchBanners(activeOnly = true): Promise<Banner[]> {
   if (activeOnly) q = q.eq("is_active", true);
   const { data, error } = await q;
   if (error) throw error;
-  return (data ?? []) as Banner[];
+  return (data ?? []).map((row: any) => ({
+    ...row,
+    image_scale: row.image_scale ?? 1,
+    image_offset_x: row.image_offset_x ?? 0,
+    image_offset_y: row.image_offset_y ?? 0,
+  })) as Banner[];
 }
 
 export async function fetchFeaturedCategories(activeOnly = true): Promise<FeaturedCategory[]> {

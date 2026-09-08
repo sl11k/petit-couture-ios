@@ -3,7 +3,6 @@ import { buildMeta } from "@/lib/seo";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
-  Building2,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -29,11 +28,14 @@ import { trackServerEvent, getCurrentSessionId } from "@/lib/serverAnalytics";
 import { supabase } from "@/integrations/supabase/client";
 import { placeOrder } from "@/lib/placeOrder.functions";
 import { validateCoupon } from "@/lib/coupons.functions";
+import { pixelTrack, setPixelUser } from "@/lib/pixels";
 import {
   getAvailableShippingCountries,
   resolveShippingRates,
   type ResolvedRate,
 } from "@/lib/shipping";
+import { getCanonicalProductPrice } from "@/lib/pricing";
+import { dialCodeFor, toInternationalPhone, phonePlaceholderFor } from "@/lib/countryDialCodes";
 import type { CurrencyCode } from "@/i18n/currencies";
 
 // Map only loads on the client when entering step 2.
@@ -54,8 +56,9 @@ const phoneRegex = /^\+?[0-9][0-9\s().-]{5,23}$/;
 
 type Step = 1 | 2 | 3 | 4;
 type PayMethod = "card" | "apple_pay" | "tabby" | "tamara";
+const MIN_CARD_TOTAL_SAR = 3;
 
-const buildOptionId = (option: ResolvedRate) => `${option.carrier_id}:${option.rate_id}`;
+const buildOptionId = (option: ResolvedRate) => String(option.rate_id || option.carrier_code || "delivery");
 
 function CheckoutPage() {
   const router = useRouter();
@@ -70,6 +73,19 @@ function CheckoutPage() {
 
   const bagEmpty = bag.items.length === 0;
 
+  const checkoutFired = useRef(false);
+  useEffect(() => {
+    if (!bagEmpty && !checkoutFired.current) {
+      checkoutFired.current = true;
+      pixelTrack("InitiateCheckout", {
+        value: bag.subtotal,
+        currency: bag.currency,
+        quantity: bag.count,
+        contents: bag.items.map(i => ({ id: i.id || i.slug, quantity: i.qty, price: i.price }))
+      });
+    }
+  }, [bagEmpty, bag.subtotal, bag.currency, bag.count, bag.items]);
+
   // ───── Form state (single source of truth across steps) ─────
   const [step, setStep] = useState<Step>(1);
   const [contact, setContact] = useState({
@@ -78,7 +94,22 @@ function CheckoutPage() {
     phone: address?.phone ?? "",
     createAccount: false,
   });
+  // Prefill the email from the signed-in account when the saved address has none.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase.auth.getSession();
+      const authEmail = data.session?.user?.email;
+      if (!cancelled && authEmail) {
+        setContact((c) => (c.email.trim() ? c : { ...c, email: authEmail }));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [countryCode, setCountryCode] = useState(address?.countryCode ?? "");
+
   const [taxRate, setTaxRate] = useState<number>(0);
   const [loc, setLoc] = useState<{
     lat?: number;
@@ -106,7 +137,20 @@ function CheckoutPage() {
     [],
   );
   const [payment, setPayment] = useState<PayMethod>("card");
-  const [agree, setAgree] = useState(false);
+
+  // AddPaymentInfo: fires once the shopper picks a payment method and moves to review.
+  const paymentInfoFired = useRef(false);
+  useEffect(() => {
+    if (bagEmpty || step < 4 || paymentInfoFired.current) return;
+    paymentInfoFired.current = true;
+    pixelTrack("AddPaymentInfo", {
+      value: bag.subtotal,
+      currency: bag.currency,
+      quantity: bag.count,
+      content_name: payment,
+      contents: bag.items.map((i) => ({ id: i.id || i.slug, quantity: i.qty, price: i.price })),
+    });
+  }, [step, bagEmpty, bag.subtotal, bag.currency, bag.count, bag.items, payment]);
   const [placing, setPlacing] = useState(false);
   const [orderWeightKg, setOrderWeightKg] = useState<number>(1);
   const placedRef = useRef(false);
@@ -122,11 +166,11 @@ function CheckoutPage() {
         const uniqueSlugs = Array.from(new Set(bag.items.map((item) => item.slug)));
         const { data: products } = await supabase
           .from("products")
-          .select("slug, weight")
+          .select("slug, price, weight")
           .in("slug", uniqueSlugs)
           .eq("is_active", true);
-        const productWeights = new Map<string, number>(
-          (products ?? []).map((product: any) => [String(product.slug), Number(product.weight) || 0]),
+        const productBySlug = new Map<string, any>(
+          (products ?? []).map((product: any) => [String(product.slug), product]),
         );
 
         const variantIds = bag.items
@@ -135,16 +179,25 @@ function CheckoutPage() {
         const { data: variants } = variantIds.length
           ? await supabase
               .from("product_variants")
-              .select("id, weight")
+              .select("id, price, price_override, weight")
               .in("id", variantIds)
           : { data: [] as any[] };
-        const variantWeights = new Map<string, number>(
-          (variants ?? []).map((variant: any) => [String(variant.id), Number(variant.weight) || 0]),
+        const variantById = new Map<string, any>(
+          (variants ?? []).map((variant: any) => [String(variant.id), variant]),
         );
 
         const totalWeight = bag.items.reduce((sum, item) => {
-          const variantWeight = item.variantId ? variantWeights.get(item.variantId) || 0 : 0;
-          const productWeight = productWeights.get(item.slug) || 0;
+          const variant = item.variantId ? variantById.get(item.variantId) : null;
+          const product = productBySlug.get(item.slug);
+          const catalogPrice = getCanonicalProductPrice(
+            product?.price,
+            variant?.price_override ?? variant?.price,
+          );
+          if (Number.isFinite(catalogPrice) && Math.abs(catalogPrice - item.price) > 0.01) {
+            bag.updatePrice(item.id, catalogPrice);
+          }
+          const variantWeight = Number(variant?.weight) || 0;
+          const productWeight = Number(product?.weight) || 0;
           const itemWeight = variantWeight > 0 ? variantWeight : productWeight > 0 ? productWeight : 1;
           return sum + itemWeight * item.qty;
         }, 0);
@@ -157,11 +210,16 @@ function CheckoutPage() {
     return () => {
       active = false;
     };
-  }, [bag.items]);
+  }, [bag]);
 
   // Coupon state
   const [couponInput, setCouponInput] = useState("");
-  const [coupon, setCoupon] = useState<{ code: string; discount: number } | null>(null);
+  const [coupon, setCoupon] = useState<{
+    code: string;
+    discount: number;
+    discount_type: string;
+    discount_value: number;
+  } | null>(null);
   const [couponBusy, setCouponBusy] = useState(false);
   const [couponError, setCouponError] = useState<string | null>(null);
 
@@ -310,12 +368,19 @@ function CheckoutPage() {
 
   const pricing = useMemo(() => {
     const subtotal = bag.subtotal;
-    const shipping_fee = shipping.fee;
+    // Only add shipping fee in step 3 (shipping/payment page), not in steps 1-2
+    const shipping_fee = step >= 3 ? shipping.fee : 0;
     const tax = Math.round(subtotal * taxRate * 100) / 100;
-    const discount = coupon ? Math.min(coupon.discount, subtotal) : 0;
+    const couponDiscount = coupon?.discount_type === "free_shipping"
+      ? shipping_fee
+      : (coupon?.discount ?? 0);
+    const discount = coupon ? Math.min(couponDiscount, subtotal + shipping_fee) : 0;
     const total = Math.max(0, Math.round((subtotal + shipping_fee + tax - discount) * 100) / 100);
     return { subtotal, shipping_fee, tax, discount, total };
-  }, [bag.subtotal, shipping.fee, coupon, taxRate]);
+  }, [bag.subtotal, shipping.fee, coupon, taxRate, step]);
+
+  // Remove minimum card payment restriction - allow card payments for any amount
+  const cardPaymentDisabled = false;
 
   // Re-validate coupon when subtotal/email changes (silent; drops if no longer valid).
   useEffect(() => {
@@ -326,13 +391,24 @@ function CheckoutPage() {
         const res = await validateCoupon({
           data: {
             code: coupon.code,
-            subtotal: bag.subtotal,
+            cart_items: bag.items.map((it) => ({
+              slug: it.slug,
+              variant_id: it.variantId ?? null,
+              price: it.price,
+              qty: it.qty,
+              is_discounted: false,
+            })),
             user_id: null,
             customer_email: contact.email || null,
           },
         });
         if (cancelled) return;
-        if (res.ok) setCoupon({ code: res.code, discount: res.discount_amount });
+        if (res.ok) setCoupon({
+          code: res.code,
+          discount: res.discount_amount,
+          discount_type: res.discount_type,
+          discount_value: res.discount_value,
+        });
         else {
           setCoupon(null);
           setCouponError(isRTL ? res.message_ar : res.message_en);
@@ -357,13 +433,24 @@ function CheckoutPage() {
       const res = await validateCoupon({
         data: {
           code,
-          subtotal: bag.subtotal,
+          cart_items: bag.items.map((it) => ({
+            slug: it.slug,
+            variant_id: it.variantId ?? null,
+            price: it.price,
+            qty: it.qty,
+            is_discounted: false,
+          })),
           user_id: auth.user?.id ?? null,
           customer_email: contact.email || auth.user?.email || null,
         },
       });
       if (res.ok) {
-        setCoupon({ code: res.code, discount: res.discount_amount });
+        setCoupon({
+          code: res.code,
+          discount: res.discount_amount,
+          discount_type: res.discount_type,
+          discount_value: res.discount_value,
+        });
         toast.success(isRTL ? "تم تطبيق الكوبون" : "Coupon applied");
       } else {
         setCoupon(null);
@@ -375,6 +462,25 @@ function CheckoutPage() {
       setCouponBusy(false);
     }
   };
+
+  // Auto-apply a recovery coupon arriving from the abandoned-cart WhatsApp link
+  // (/recover/<token> redirects to /checkout?coupon=CODE).
+  const autoCouponRef = useRef(false);
+  useEffect(() => {
+    if (autoCouponRef.current || bagEmpty) return;
+    if (typeof window === "undefined") return;
+    const code = new URLSearchParams(window.location.search).get("coupon");
+    if (!code) return;
+    autoCouponRef.current = true;
+    setCouponInput(code);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bagEmpty]);
+
+  useEffect(() => {
+    if (!autoCouponRef.current || coupon || couponBusy || !couponInput || bagEmpty) return;
+    void applyCoupon();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [couponInput, bagEmpty]);
 
   const removeCoupon = () => {
     setCoupon(null);
@@ -396,7 +502,8 @@ function CheckoutPage() {
     if (step >= 2) {
       if (!countryCode) e.country = isRTL ? "اختر دولة التوصيل" : "Select delivery country";
       if (!loc.city) e.city = isRTL ? "المدينة مطلوبة" : "City required";
-      if (!loc.street && !loc.geoAddress)
+      const hasPin = loc.lat != null && loc.lng != null;
+      if (!loc.street?.trim() && !loc.geoAddress?.trim() && !hasPin)
         e.location = isRTL
           ? "أدخل العنوان أو حدده على الخريطة"
           : "Enter an address or set it on the map";
@@ -405,18 +512,26 @@ function CheckoutPage() {
       if (!shippingId || !selectedShippingOption)
         e.shipping = isRTL ? "الشحن غير متوفر لهذه المنطقة" : "Shipping not available for this region";
     }
-    if (step === 4 && !agree) {
-      e.agree = isRTL ? "يجب الموافقة على الشروط" : "Please accept the terms";
-    }
     return e;
-  }, [step, contact, loc, countryCode, shippingId, selectedShippingOption, agree, isRTL]);
+  }, [step, contact, loc, countryCode, shippingId, selectedShippingOption, isRTL]);
+
+  // Errors are only *shown* once a field has been touched, so a pristine empty
+  // form does not greet the shopper with red "invalid email" text.
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (field: string) => setTouched((t) => (t[field] ? t : { ...t, [field]: true }));
+  const shownErrs = useMemo(() => {
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(errs)) if (touched[k]) out[k] = v;
+    return out;
+  }, [errs, touched]);
 
   const canProceed = (s: Step) => {
-    if (s === 1) return !errs.fullName && !errs.email && !errs.phone;
-    if (s === 2) return !errs.country && !errs.location && !errs.city;
+    if (s === 1) return !errs.fullName && !errs.email && !errs.phone && !errs.country;
+    if (s === 2) return !errs.location && !errs.city;
     if (s === 3) return !errs.shipping;
-    return !errs.agree;
+    return true;
   };
+
 
   // ───── Begin checkout analytics + abandoned cart snapshot ─────
   const beganRef = useRef(false);
@@ -437,26 +552,57 @@ function CheckoutPage() {
     void (async () => {
       try {
         const { data: auth } = await supabase.auth.getUser();
-        await db.from("abandoned_carts").upsert(
-          {
-            session_id,
-            user_id: auth.user?.id ?? null,
-            email: auth.user?.email ?? contact.email ?? null,
-            items: bag.items,
-            subtotal: pricing.subtotal,
-            currency: bag.currency,
-            reached_checkout: true,
-            converted: false,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "session_id" },
-        );
+        await (db as any).rpc("track_cart", {
+          _session_id: session_id,
+          _items: bag.items,
+          _subtotal: pricing.subtotal,
+          _currency: bag.currency,
+          _email: auth.user?.email ?? contact.email ?? null,
+          _reached_checkout: true,
+          _stage: "checkout",
+        });
       } catch {
         /* ignore */
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bagEmpty]);
+
+  // Keep contact details on the cart snapshot so the 15-minute abandoned-cart
+  // WhatsApp reminder has a phone number / email to reach the customer on.
+  const contactSyncRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (bagEmpty) return;
+    const email = contact.email.trim();
+    const phone = contact.phone.trim() ? toInternationalPhone(contact.phone, countryCode) : "";
+    if (!email && !phone) return;
+    // Feed Meta advanced matching / Conversions API with the shopper identity.
+    setPixelUser({ email, phone, city: loc.city ?? null, country: countryCode || null });
+
+    if (contactSyncRef.current) clearTimeout(contactSyncRef.current);
+    contactSyncRef.current = setTimeout(() => {
+      void (async () => {
+        try {
+          await (db as any).rpc("track_cart", {
+            _session_id: getCurrentSessionId(),
+            _items: bag.items,
+            _subtotal: pricing.subtotal,
+            _currency: bag.currency,
+            _email: email || null,
+            _phone: phone || null,
+            _reached_checkout: true,
+            _stage: "checkout",
+          });
+        } catch {
+          /* ignore */
+        }
+      })();
+    }, 1200);
+    return () => {
+      if (contactSyncRef.current) clearTimeout(contactSyncRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contact.email, contact.phone, countryCode, bagEmpty]);
 
   // ───── Step navigation ─────
   const next = () => {
@@ -469,7 +615,7 @@ function CheckoutPage() {
     save({
       fullName: contact.fullName.trim(),
       email: contact.email.trim(),
-      phone: contact.phone.replace(/[\s-]/g, ""),
+      phone: toInternationalPhone(contact.phone, countryCode),
       countryCode: countryCode,
       countryName: availableCountries.find((country) => country.code === countryCode)?.label ?? countryCode,
       city: loc.city ?? "",
@@ -497,17 +643,47 @@ function CheckoutPage() {
   // ───── Place order ─────
   const onPlaceOrder = async () => {
     if (bagEmpty || placing || placedRef.current) return;
-    if (!canProceed(4)) {
-      toast.error(errs.agree ?? (isRTL ? "أكمل البيانات" : "Complete the form"));
+    if (!paymentInfoFired.current) {
+      paymentInfoFired.current = true;
+      pixelTrack("AddPaymentInfo", {
+        value: bag.subtotal,
+        currency: bag.currency,
+        quantity: bag.count,
+        contents: bag.items.map((i) => ({ id: i.id || i.slug, quantity: i.qty, price: i.price })),
+      });
+    }
+    // Re-validate every step before placing (a restored address or skipped step
+    // could otherwise send an empty/invalid email to the server).
+    setTouched((t) => ({ ...t, fullName: true, email: true, phone: true, country: true, city: true, location: true, shipping: true }));
+    if (errs.fullName || errs.email || errs.phone) {
+      toast.error(errs.fullName || errs.email || errs.phone);
+      setStep(1);
+      if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
+    if (errs.city || errs.location || errs.country) {
+      toast.error(errs.city || errs.location || errs.country);
+      setStep(2);
+      if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (errs.shipping) {
+      toast.error(errs.shipping);
+      setStep(3);
+      return;
+    }
+    if (!canProceed(4)) {
+      toast.error(isRTL ? "أكمل البيانات" : "Complete the form");
+      return;
+    }
+
     setPlacing(true);
     try {
       const { data: auth } = await supabase.auth.getSession();
       const fullAddress: Address = {
         fullName: contact.fullName.trim(),
         email: contact.email.trim(),
-        phone: contact.phone.replace(/[\s-]/g, ""),
+        phone: toInternationalPhone(contact.phone, countryCode),
         countryCode: countryCode,
         countryName: availableCountries.find((country) => country.code === countryCode)?.label ?? countryCode,
         city: loc.city ?? "",
@@ -626,6 +802,15 @@ function CheckoutPage() {
       // Stripe: card and Apple Pay go through the hosted Stripe Checkout page.
       // Apple Pay is surfaced by Stripe automatically when the domain/device supports it.
       if (payment === "card" || payment === "apple_pay") {
+        if (cardPaymentDisabled) {
+          toast.error(
+            isRTL
+              ? `الحد الأدنى للدفع بالبطاقة أو Apple Pay هو ${fmt(MIN_CARD_TOTAL_SAR)} ر.س تقريبًا.`
+              : `The minimum total for card or Apple Pay is about ${MIN_CARD_TOTAL_SAR.toFixed(2)} SAR.`,
+          );
+          setPlacing(false);
+          return;
+        }
         try {
           const { createStripeCheckout } = await import("@/lib/stripe.functions");
           const result = await createStripeCheckout({
@@ -665,7 +850,13 @@ function CheckoutPage() {
     } catch (e) {
       console.error(e);
       const message = e instanceof Error ? e.message : "";
-      toast.error(message || (isRTL ? "تعذّر إنشاء الطلب" : "Could not place order"));
+      toast.error(
+        message.startsWith("INSUFFICIENT_STOCK") || message.startsWith("OUT_OF_STOCK")
+          ? isRTL
+            ? "الكمية المطلوبة غير متوفرة حاليًا. عدّل السلة ثم حاول مرة أخرى."
+            : "Requested quantity is no longer available. Update your bag and try again."
+          : message || (isRTL ? "تعذّر إنشاء الطلب" : "Could not place order"),
+      );
     } finally {
       setPlacing(false);
     }
@@ -754,39 +945,75 @@ function CheckoutPage() {
               <Field
                 icon={<User className="h-4 w-4" />}
                 label={isRTL ? "الاسم الكامل" : "Full name"}
-                error={errs.fullName}
+                error={shownErrs.fullName}
               >
                 <input
-                  className={fieldClass(!!errs.fullName)}
+                  className={fieldClass(!!shownErrs.fullName)}
                   value={contact.fullName}
+                  onBlur={() => touch("fullName")}
                   onChange={(e) => setContact({ ...contact, fullName: e.target.value })}
                   placeholder={isRTL ? "مثال: ليلى المنصور" : "e.g. Layla Al-Mansour"}
                   autoComplete="name"
                 />
               </Field>
               <Field
+                icon={<Globe2 className="h-4 w-4" />}
+                label={isRTL ? "الدولة" : "Country"}
+                error={shownErrs.country}
+              >
+                <select
+                  className={fieldClass(!!shownErrs.country)}
+                  value={countryCode}
+                  onChange={(e) => changeCountry(e.target.value)}
+                >
+                  {availableCountries.length > 0 ? (
+                    availableCountries.map((country) => (
+                      <option key={country.code} value={country.code}>
+                        {country.label} (+{dialCodeFor(country.code)})
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>
+                      {isRTL ? "لا توجد دول مفعلة للشحن حالياً" : "No shipping countries are enabled yet"}
+                    </option>
+                  )}
+                </select>
+              </Field>
+              <Field
                 icon={<Phone className="h-4 w-4" />}
                 label={isRTL ? "رقم الجوال" : "Mobile number"}
-                error={errs.phone}
+                error={shownErrs.phone}
               >
-                <input
-                  className={fieldClass(!!errs.phone)}
-                  value={contact.phone}
-                  onChange={(e) => setContact({ ...contact, phone: e.target.value })}
-                  placeholder="05XXXXXXXX"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  dir="ltr"
-                />
+                <div className="flex items-stretch gap-2" dir="ltr">
+                  <span className="inline-flex items-center rounded-md border border-input bg-muted px-3 text-sm font-medium text-foreground/80 min-w-[64px] justify-center">
+                    +{dialCodeFor(countryCode) || "—"}
+                  </span>
+                  <input
+                    className={fieldClass(!!shownErrs.phone) + " flex-1"}
+                    value={contact.phone}
+                  onBlur={() => touch("phone")}
+                    onChange={(e) => setContact({ ...contact, phone: e.target.value })}
+                    placeholder={phonePlaceholderFor(countryCode)}
+                    inputMode="tel"
+                    autoComplete="tel"
+                    dir="ltr"
+                  />
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground" dir={isRTL ? "rtl" : "ltr"}>
+                  {isRTL
+                    ? `سنضيف كود الدولة تلقائياً (+${dialCodeFor(countryCode) || "—"})`
+                    : `Country code will be added automatically (+${dialCodeFor(countryCode) || "—"})`}
+                </p>
               </Field>
               <Field
                 icon={<Mail className="h-4 w-4" />}
                 label={isRTL ? "البريد الإلكتروني" : "Email"}
-                error={errs.email}
+                error={shownErrs.email}
               >
                 <input
-                  className={fieldClass(!!errs.email)}
+                  className={fieldClass(!!shownErrs.email)}
                   value={contact.email}
+                  onBlur={() => touch("email")}
                   onChange={(e) => setContact({ ...contact, email: e.target.value })}
                   placeholder="you@example.com"
                   inputMode="email"
@@ -834,23 +1061,6 @@ function CheckoutPage() {
                 </p>
               </div>
 
-              <Field
-                icon={<Globe2 className="h-4 w-4" />}
-                label={isRTL ? "دولة التوصيل" : "Delivery country"}
-                error={errs.country}
-              >
-                <select
-                  className={fieldClass(!!errs.country)}
-                  value={countryCode}
-                  onChange={(e) => changeCountry(e.target.value)}
-                >
-                  {availableCountries.map((country) => (
-                    <option key={country.code} value={country.code}>
-                      {country.label}
-                    </option>
-                  ))}
-                </select>
-              </Field>
 
               <Suspense
                 fallback={
@@ -863,14 +1073,28 @@ function CheckoutPage() {
                   isRTL={isRTL}
                   supportedCountries={availableCountries.map((country) => country.code)}
                   value={loc.lat != null && loc.lng != null ? { lat: loc.lat, lng: loc.lng } : null}
-                  onChange={(r) => setLoc((p) => ({ ...p, ...r }))}
+                  onChange={(r) =>
+                    setLoc((p) => ({
+                      ...p,
+                      lat: r.lat,
+                      lng: r.lng,
+                      city: r.city || p.city,
+                      district: r.district || p.district,
+                      street: r.street || p.street,
+                      postalCode: r.postalCode || p.postalCode,
+                      geoAddress:
+                        r.address ??
+                        p.geoAddress ??
+                        `${r.lat.toFixed(5)}, ${r.lng.toFixed(5)}`,
+                    }))
+                  }
                 />
               </Suspense>
 
               <div className="grid grid-cols-2 gap-3">
-                <Field label={isRTL ? "المدينة" : "City"} error={errs.city}>
+                <Field label={isRTL ? "المدينة" : "City"} error={shownErrs.city}>
                   <input
-                    className={fieldClass(!!errs.city)}
+                    className={fieldClass(!!shownErrs.city)}
                     value={loc.city ?? ""}
                     onChange={(e) => setLoc({ ...loc, city: e.target.value })}
                     placeholder={isRTL ? "الرياض" : "Riyadh"}
@@ -1045,6 +1269,7 @@ function CheckoutPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <PayOption
                     active={payment === "card"}
+                    disabled={cardPaymentDisabled}
                     onClick={() => setPayment("card")}
                     icon={<CreditCard className="h-4 w-4" />}
                     label={isRTL ? "بطاقة ائتمان" : "Credit card"}
@@ -1052,6 +1277,7 @@ function CheckoutPage() {
                   />
                   <PayOption
                     active={payment === "apple_pay"}
+                    disabled={cardPaymentDisabled}
                     onClick={() => setPayment("apple_pay")}
                     icon={<Apple className="h-4 w-4" />}
                     label="Apple Pay"
@@ -1229,7 +1455,9 @@ function CheckoutPage() {
                         {coupon.code}
                       </span>
                       <span className="text-[11.5px] text-muted-foreground">
-                        −{fmt(coupon.discount)} {isRTL ? "ر.س" : "SAR"}
+                        {coupon.discount_type === "free_shipping"
+                          ? (isRTL ? "شحن مجاني" : "Free shipping")
+                          : `−${fmt(pricing.discount)} ${isRTL ? "ر.س" : "SAR"}`}
                       </span>
                     </div>
                     <button
@@ -1291,11 +1519,15 @@ function CheckoutPage() {
                 <Row
                   label={isRTL ? "الشحن" : "Shipping"}
                   value={
-                    pricing.shipping_fee === 0
+                    step < 3
                       ? isRTL
-                        ? "مجاني"
-                        : "FREE"
-                      : `${fmt(pricing.shipping_fee)} ${isRTL ? "ر.س" : "SAR"}`
+                        ? "سيُحسب لاحقًا"
+                        : "Calculated later"
+                      : pricing.shipping_fee === 0
+                        ? isRTL
+                          ? "مجاني"
+                          : "FREE"
+                        : `${fmt(pricing.shipping_fee)} ${isRTL ? "ر.س" : "SAR"}`
                   }
                 />
                 <Row
@@ -1345,20 +1577,6 @@ function CheckoutPage() {
                 </p>
               )}
 
-              {/* Terms */}
-              <label className="flex items-start gap-3 p-3 rounded-[14px] bg-cream-warm/40 border border-border cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="mt-0.5 h-4 w-4 accent-foreground"
-                  checked={agree}
-                  onChange={(e) => setAgree(e.target.checked)}
-                />
-                <span className="text-[12px] text-foreground/80 leading-snug">
-                  {isRTL
-                    ? "أوافق على الشروط والأحكام وسياسة الإرجاع والاستبدال"
-                    : "I agree to the terms & conditions and the return policy"}
-                </span>
-              </label>
 
               <div className="flex items-center justify-center gap-4 text-[10.5px] tracking-luxury text-muted-foreground pt-2">
                 <span className="inline-flex items-center gap-1">
@@ -1368,10 +1586,6 @@ function CheckoutPage() {
                 <span className="inline-flex items-center gap-1">
                   <Lock className="h-3.5 w-3.5" />
                   {isRTL ? "بيانات مشفّرة" : "ENCRYPTED"}
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <Building2 className="h-3.5 w-3.5" />
-                  {isRTL ? "ضمان رسمي" : "WARRANTY"}
                 </span>
               </div>
             </section>
@@ -1393,7 +1607,7 @@ function CheckoutPage() {
             )}
             <button
               type="button"
-              disabled={placing || (step === 4 && !agree)}
+              disabled={placing}
               onClick={step < 4 ? next : onPlaceOrder}
               className={[
                 "w-full h-[54px] rounded-[16px] font-medium tracking-soft text-[14px] transition flex items-center justify-center gap-2",
@@ -1454,12 +1668,14 @@ function Field({
 
 function PayOption({
   active,
+  disabled = false,
   onClick,
   icon,
   label,
   sub,
 }: {
   active: boolean;
+  disabled?: boolean;
   onClick: () => void;
   icon: React.ReactNode;
   label: string;
@@ -1468,10 +1684,15 @@ function PayOption({
   return (
     <button
       type="button"
+      disabled={disabled}
       onClick={onClick}
       className={[
         "p-3 rounded-[14px] border text-start transition relative",
-        active ? "border-gold bg-gold/5 shadow-sm" : "border-border bg-cream-warm/30",
+        disabled
+          ? "cursor-not-allowed border-border/70 bg-muted/40 opacity-60"
+          : active
+            ? "border-gold bg-gold/5 shadow-sm"
+            : "border-border bg-cream-warm/30",
       ].join(" ")}
     >
       {active && <Check className="absolute top-2 end-2 h-3.5 w-3.5 text-gold" />}

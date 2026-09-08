@@ -8,6 +8,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { buildMeta, breadcrumbJsonLd, collectionJsonLd, canonical } from "@/lib/seo";
 import { usePriceFormatter } from "@/state/CurrencyContext";
 import { useWishlist } from "@/state/WishlistContext";
+import { normalizeInternalHref } from "@/lib/links";
 
 type SortMode = "manual" | "newest" | "best_sellers" | "price_asc" | "price_desc";
 
@@ -161,7 +162,7 @@ function CollectionView() {
             <h1 className="font-serif text-2xl sm:text-4xl">{page.title}</h1>
             {page.subtitle && <p className="mt-2 text-sm sm:text-base max-w-xl">{page.subtitle}</p>}
             {page.cta_text && page.cta_url && (
-              <a href={page.cta_url} className="mt-4 inline-block w-fit">
+              <a href={normalizeInternalHref(page.cta_url) || "#"} className="mt-4 inline-block w-fit">
                 <Button size="lg" className="h-12 px-8">{page.cta_text}</Button>
               </a>
             )}
@@ -214,7 +215,7 @@ function ProductCard({ p, ar }: { p: Product; ar: boolean }) {
   const wished = wishlist.has(wishId);
   return (
     <div className="group relative">
-      <a href={p.slug ? `/product/${p.slug}` : "#"} className="block">
+      <a href={normalizeInternalHref(p.slug ? `/product/${p.slug}` : "#") || "#"} className="block">
         {p.image_url ? (
           <LazyImage
             src={p.image_url}

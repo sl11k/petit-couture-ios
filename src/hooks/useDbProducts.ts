@@ -30,6 +30,10 @@ type DbRow = {
   shipping_policy_en?: string | null;
   return_policy_ar?: string | null;
   return_policy_en?: string | null;
+  materials_ar?: string | null;
+  materials_en?: string | null;
+  care_ar?: string | null;
+  care_en?: string | null;
   price: number | null;
   compare_at_price: number | null;
   currency: string | null;
@@ -111,6 +115,20 @@ function mergeRowOntoBase(slug: string, row: DbRow | null, lang: "ar" | "en"): M
     row.return_policy_en ||
     row.return_policy_ar ||
     base.returnPolicy;
+  const splitLines = (v: string | null | undefined): string[] =>
+    (v ?? "")
+      .split(/\r?\n|•|·|,|;/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  const materialsRaw =
+    (lang === "ar" ? row.materials_ar : row.materials_en) ||
+    row.materials_en ||
+    row.materials_ar ||
+    "";
+  const careRaw =
+    (lang === "ar" ? row.care_ar : row.care_en) || row.care_en || row.care_ar || "";
+  const materialsList = splitLines(materialsRaw);
+  const careList = splitLines(careRaw);
 
   const imgs = arr<string>(row.images).filter(Boolean);
   // Combine main image_url with images[]; dedupe to avoid showing the same picture twice.
@@ -146,9 +164,10 @@ function mergeRowOntoBase(slug: string, row: DbRow | null, lang: "ar" | "en"): M
     name,
     brand: row.brand ?? base.brand,
     sku: row.sku ?? base.sku,
-    price: row.price != null ? Number(row.price) : base.price,
+    // Always use DB price when row exists - never fall back to base.price for DB products
+    price: row.price != null ? Number(row.price) : 0,
     compareAtPrice:
-      row.compare_at_price != null ? Number(row.compare_at_price) : base.compareAtPrice,
+      row.compare_at_price != null ? Number(row.compare_at_price) : undefined,
     currency: row.currency ?? base.currency,
     shortDescription,
     description,
@@ -164,6 +183,8 @@ function mergeRowOntoBase(slug: string, row: DbRow | null, lang: "ar" | "en"): M
     deliveryEstimate,
     shippingPolicy,
     returnPolicy,
+    materials: materialsList.length ? materialsList : base.materials,
+    careInstructions: careList.length ? careList : base.careInstructions,
     __fromDb: true,
   };
 }

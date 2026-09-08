@@ -4,6 +4,8 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { loadCheckoutOrder, recordPaymentSession } from "@/lib/payment-gateway.server";
 import { assertOrderTotals, money } from "@/lib/payment-validation";
+import { convertPegged, isConvertibleCurrency, parseRequiredCurrency } from "@/lib/tabby-currency";
+import { resolveTabbyAccount } from "@/lib/tabby-accounts.server";
 
 const TABBY_API = "https://api.tabby.ai/api/v2/checkout";
 const InputSchema = z.object({
@@ -12,57 +14,38 @@ const InputSchema = z.object({
   lang: z.enum(["ar", "en"]).default("ar"),
 });
 
-async function getTabbySecret() {
-  if (process.env.TABBY_SECRET_KEY) return process.env.TABBY_SECRET_KEY;
-
-  const { data } = await supabaseAdmin
-    .from("integrations")
-    .select("api_key, api_secret, config")
-    .eq("category", "payment")
-    .eq("provider", "tabby")
-    .eq("enabled", true)
-    .maybeSingle();
-
-  const config = (data?.config && typeof data.config === "object" ? data.config : {}) as Record<
-    string,
-    unknown
-  >;
-  const candidates = [
-    data?.api_secret,
-    config.secret_key,
-    config.tabby_secret_key,
-    config.api_secret,
-    data?.api_key,
-  ].map((value) => String(value || "").trim());
-
-  return candidates.find(Boolean) || null;
-}
-
-async function getTabbyMerchantCode(currency: string) {
-  if (process.env.TABBY_MERCHANT_CODE) return process.env.TABBY_MERCHANT_CODE;
-
-  const { data } = await supabaseAdmin
-    .from("integrations")
-    .select("config")
-    .eq("category", "payment")
-    .eq("provider", "tabby")
-    .eq("enabled", true)
-    .maybeSingle();
-  const config = (data?.config && typeof data.config === "object" ? data.config : {}) as Record<
-    string,
-    unknown
-  >;
-  const configured = String(config.merchant_code || config.tabby_merchant_code || "").trim();
-  if (configured) return configured;
-
-  const merchantCodes: Record<string, string> = {
-    SAR: "sa",
-    AED: "ae",
-    KWD: "kw",
-    BHD: "bh",
-    QAR: "qa",
-  };
-  return merchantCodes[currency] || null;
+/** Remember the settlement currency Tabby demanded so later orders skip the retry. */
+async function rememberTabbyCurrency(accountKey: string, currency: string) {
+  try {
+    const { data } = await supabaseAdmin
+      .from("integrations")
+      .select("id, config")
+      .eq("category", "payment")
+      .eq("provider", "tabby")
+      .maybeSingle();
+    if (!data?.id) return;
+    const config = (data.config && typeof data.config === "object" ? data.config : {}) as Record<
+      string,
+      unknown
+    >;
+    const accounts = (config.accounts && typeof config.accounts === "object"
+      ? config.accounts
+      : {}) as Record<string, Record<string, unknown>>;
+    await supabaseAdmin
+      .from("integrations")
+      .update({
+        config: {
+          ...config,
+          accounts: {
+            ...accounts,
+            [accountKey]: { ...(accounts[accountKey] ?? {}), currency },
+          },
+        } as never,
+      })
+      .eq("id", data.id);
+  } catch (error) {
+    console.error("[tabby] could not persist settlement currency", error);
+  }
 }
 
 function storefrontOrigin() {
@@ -77,9 +60,6 @@ function storefrontOrigin() {
 export const createTabbyCheckout = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }) => {
-    const secret = await getTabbySecret();
-    if (!secret) throw new Error("TABBY_SECRET_KEY is not configured");
-
     const order = await loadCheckoutOrder(data.order_id, data.session_id, "tabby");
     const { data: items, error: itemsError } = await supabaseAdmin
       .from("order_items")
@@ -90,92 +70,184 @@ export const createTabbyCheckout = createServerFn({ method: "POST" })
 
     assertOrderTotals(items, order);
 
+    // Pick the Tabby merchant account (KSA or UAE) that matches this order.
+    const account = await resolveTabbyAccount(order);
+    const secret = account.secret;
+
     const address = (order.shipping_address as Record<string, unknown>) || {};
     const phone = String(order.customer_phone || address.phone || "").replace(/\s/g, "");
-    const currency = String(order.currency || "SAR").toUpperCase();
-    const merchantCode = await getTabbyMerchantCode(currency);
-    if (!merchantCode) throw new Error(`Tabby does not support currency ${currency}`);
+    const orderCurrency = String(order.currency || "SAR").toUpperCase();
+    const merchantCode = account.merchantCode;
+    const preferredCurrency = account.currency || orderCurrency;
     const origin = storefrontOrigin();
 
-    const payload = {
-      payment: {
-        amount: money(order.total).toFixed(2),
-        currency,
-        description: `Order ${order.order_number}`,
-        buyer: {
-          phone,
-          email: order.customer_email,
-          name: order.customer_name,
+    const buildPayload = (currency: string) => {
+      const to = currency.toUpperCase();
+      const convert = (value: unknown) => convertPegged(money(value || 0), orderCurrency, to);
+
+      const convertedItems = items.map((item) => ({
+        title: item.product_name,
+        description: item.product_name,
+        quantity: item.qty,
+        unit_price: convert(item.unit_price).toFixed(2),
+        discount_amount: "0.00",
+        reference_id: item.product_slug,
+        image_url: item.image_url || undefined,
+        category: item.brand || "general",
+      }));
+
+      // Keep Tabby's internal arithmetic exact: the payment amount is rebuilt
+      // from the converted line items instead of converting the total on its own
+      // (independent rounding of both sides can drift by a fils).
+      const itemsSubtotal =
+        Math.round(
+          convertedItems.reduce(
+            (sum, item) => sum + Number(item.unit_price) * Number(item.quantity),
+            0,
+          ) * 100,
+        ) / 100;
+      const shipping = convert(order.shipping_fee);
+      const tax = convert(order.tax);
+      const discount = convert(order.discount_amount);
+      const amount = Math.round((itemsSubtotal + shipping + tax - discount) * 100) / 100;
+
+      return {
+        amount,
+        payload: {
+          payment: {
+            amount: amount.toFixed(2),
+            currency: to,
+            description: `Order ${order.order_number}`,
+            buyer: {
+              phone,
+              email: order.customer_email,
+              name: order.customer_name,
+            },
+            shipping_address: {
+              city: String(address.city || ""),
+              address: String(address.street || address.geoAddress || address.city || "—"),
+              zip: String(address.postalCode || ""),
+            },
+            order: {
+              tax_amount: tax.toFixed(2),
+              shipping_amount: shipping.toFixed(2),
+              discount_amount: discount.toFixed(2),
+              updated_at: new Date().toISOString(),
+              reference_id: order.order_number,
+              items: convertedItems,
+            },
+            buyer_history: {
+              registered_since: order.created_at,
+              loyalty_level: 0,
+            },
+            order_history: [],
+            meta: {
+              order_id: order.id,
+              order_currency: orderCurrency,
+              order_total: money(order.total).toFixed(2),
+            },
+          },
+          lang: data.lang,
+          merchant_code: merchantCode,
+          merchant_urls: {
+            success: `${origin}/order-confirmation/${encodeURIComponent(order.order_number)}?tabby=success`,
+            cancel: `${origin}/checkout?tabby=cancel`,
+            failure: `${origin}/checkout?tabby=failure`,
+          },
         },
-        shipping_address: {
-          city: String(address.city || ""),
-          address: String(address.street || address.geoAddress || address.city || "—"),
-          zip: String(address.postalCode || ""),
-        },
-        order: {
-          tax_amount: money(order.tax || 0).toFixed(2),
-          shipping_amount: money(order.shipping_fee || 0).toFixed(2),
-          discount_amount: money(order.discount_amount || 0).toFixed(2),
-          updated_at: new Date().toISOString(),
-          reference_id: order.order_number,
-          items: items.map((item) => ({
-            title: item.product_name,
-            description: item.product_name,
-            quantity: item.qty,
-            unit_price: money(item.unit_price).toFixed(2),
-            discount_amount: "0.00",
-            reference_id: item.product_slug,
-            image_url: item.image_url || undefined,
-            category: item.brand || "general",
-          })),
-        },
-        buyer_history: {
-          registered_since: order.created_at,
-          loyalty_level: 0,
-        },
-        order_history: [],
-        meta: { order_id: order.id },
-      },
-      lang: data.lang,
-      merchant_code: merchantCode,
-      merchant_urls: {
-        success: `${origin}/order-confirmation/${encodeURIComponent(order.order_number)}?tabby=success`,
-        cancel: `${origin}/checkout?tabby=cancel`,
-        failure: `${origin}/checkout?tabby=failure`,
-      },
+      };
     };
 
-    const response = await fetch(TABBY_API, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${secret}` },
-      body: JSON.stringify(payload),
-    });
-    const result = await response.json().catch(() => ({}));
+    const send = async (currency: string) => {
+      if (!isConvertibleCurrency(currency)) {
+        throw new Error(`Tabby currency ${currency} is not supported by this store`);
+      }
+      const { payload, amount } = buildPayload(currency);
+      const response = await fetch(TABBY_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${secret}` },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json().catch(() => ({}));
+      return { response, result, amount, currency: currency.toUpperCase() };
+    };
+
+    let attempt = await send(preferredCurrency);
+
+    // Tabby rejects an unsupported settlement currency with an explicit message
+    // naming the required one — retry once in that currency and remember it.
+    if (!attempt.response.ok) {
+      const required = parseRequiredCurrency(attempt.result);
+      if (required && required !== attempt.currency) {
+        attempt = await send(required);
+        if (attempt.response.ok) void rememberTabbyCurrency(account.key, required);
+      }
+    }
+
+    const { response, result } = attempt;
     if (!response.ok) {
       console.error("Tabby checkout failed", response.status, result);
-      throw new Error(result?.error || result?.errorType || `Tabby error ${response.status}`);
+      throw new Error(
+        result?.error || result?.errorType || `Tabby error ${response.status}`,
+      );
     }
 
     const configuration =
       result?.configuration?.available_products?.installments?.[0] ||
       result?.configuration?.available_products?.pay_later?.[0];
     if (result?.status !== "created" || !configuration?.web_url) {
+      // Tabby returns products as an object keyed by product type (not an array).
+      const products = (result?.configuration?.products ?? {}) as Record<string, any>;
+      const rejection = String(
+        products.installments?.rejection_reason ||
+          products.pay_later?.rejection_reason ||
+          products.installments?.[0]?.rejection_reason ||
+          "not_available",
+      );
+      console.warn("[tabby] rejected", {
+        order: order.order_number,
+        account: account.key,
+        currency: attempt.currency,
+        status: result?.status,
+        rejection,
+      });
+      const ar = data.lang === "ar";
+      const messages: Record<string, { ar: string; en: string }> = {
+        not_available: {
+          ar: "تابي رفض هذه العملية لهذا الحساب (رقم الجوال/البريد) حاليًا. جرّب طريقة دفع أخرى أو تواصل مع تابي.",
+          en: "Tabby declined this purchase for this customer. Please use another payment method or contact Tabby.",
+        },
+        order_amount_too_high: {
+          ar: "قيمة الطلب أعلى من الحد المسموح به في تابي حاليًا. قلّل قيمة السلة أو اختر طريقة دفع أخرى.",
+          en: "The order amount exceeds your current Tabby limit. Reduce the cart total or use another payment method.",
+        },
+        order_amount_too_low: {
+          ar: "قيمة الطلب أقل من الحد الأدنى المسموح به في تابي. أضف منتجات أخرى أو اختر طريقة دفع أخرى.",
+          en: "The order amount is below Tabby's minimum. Add more items or use another payment method.",
+        },
+      };
+      const copy = messages[rejection] ?? messages.not_available;
       return {
         ok: false as const,
-        rejection:
-          result?.configuration?.products?.installments?.[0]?.rejection_reason || "not_available",
-        message:
-          data.lang === "ar"
-            ? "تابي غير متاح لهذا الطلب حاليًا. يرجى اختيار طريقة دفع أخرى."
-            : "Tabby is not available for this order. Please choose another payment method.",
+        rejection,
+        message: ar ? copy.ar : copy.en,
       };
     }
+
 
     const transactionId = await recordPaymentSession({
       order,
       gateway: "tabby",
       gatewayReference: String(result.id || "") || null,
-      rawResponse: result,
+      rawResponse: {
+        ...result,
+        settlement: {
+          currency: attempt.currency,
+          amount: attempt.amount,
+          account: account.key,
+          merchant_code: merchantCode,
+        },
+      },
     });
     const { error: updateError } = await supabaseAdmin
       .from("orders")

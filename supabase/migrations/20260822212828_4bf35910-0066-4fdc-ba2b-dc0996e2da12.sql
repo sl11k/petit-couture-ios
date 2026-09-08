@@ -1,0 +1,1 @@
+ALTER FUNCTION public.enforce_single_default_address() SET search_path = public;

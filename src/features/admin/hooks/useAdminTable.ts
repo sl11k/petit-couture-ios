@@ -8,14 +8,52 @@ export function useAdminTable<T extends Record<string, any>>(config: AdminPageCo
   const [error, setError] = useState<string | null>(null);
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
 
-  const reload = async () => {
-    setLoading(true);
-    setError(null);
-    let q = supabase.from(config.table as any).select(config.select ?? "*").limit(500);
+  // Fetch EVERY row for the table by paging through the Data API (which caps a
+  // single response at 1000 rows). Previously capped at 500, which silently hid
+  // records on every admin list page.
+  const PAGE = 1000;
+  const MAX_ROWS = 20000;
+
+  const buildQuery = (select: string) => {
+    let q = supabase.from(config.table as any).select(select);
     if (config.orderBy) {
       q = q.order(config.orderBy.column, { ascending: config.orderBy.ascending ?? false });
     }
-    const { data, error: err } = await q;
+    if (config.applyQuery) {
+      try { q = config.applyQuery(q); } catch (e) { console.warn("applyQuery failed", e); }
+    }
+    return q;
+  };
+
+  const loadRows = async (select: string): Promise<{ data: any[] | null; error: any }> => {
+    const all: any[] = [];
+    for (let from = 0; from < MAX_ROWS; from += PAGE) {
+      const { data, error } = await buildQuery(select).range(from, from + PAGE - 1);
+      if (error) return { data: null, error };
+      const chunk = data ?? [];
+      all.push(...chunk);
+      if (chunk.length < PAGE) break;
+    }
+    return { data: all, error: null };
+  };
+
+
+  const reload = async () => {
+    setLoading(true);
+    setError(null);
+    let { data, error: err } = await loadRows(config.select ?? "*");
+    if (err && config.fallbackSelect) {
+      const fallback = await loadRows(config.fallbackSelect);
+      data = fallback.data;
+      err = fallback.error;
+      if (!err) {
+        console.warn("Admin table fallback select used", {
+          table: config.table,
+          select: config.select,
+          fallbackSelect: config.fallbackSelect,
+        });
+      }
+    }
     if (err) setError(err.message);
     let next = (data ?? []) as unknown as T[];
     if (config.enrichRows && next.length > 0) {

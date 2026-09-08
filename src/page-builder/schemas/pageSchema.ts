@@ -360,6 +360,7 @@ export type BannerSection = {
     subtitle_en?: string;
     button?: ButtonContent;
     height?: "sm" | "md" | "lg" | "xl";
+    customHeight?: number;
     overlay?: number;
     alignment?: "left" | "center" | "right";
     verticalAlignment?: "top" | "center" | "bottom";
@@ -367,6 +368,12 @@ export type BannerSection = {
     textColor?: string;
     titleStyle?: TextStyleSettings;
     subtitleStyle?: TextStyleSettings;
+    imageFit?: "cover" | "contain" | "fill";
+    focalX?: number; // 0-100
+    focalY?: number; // 0-100
+    imageScale?: number; // 0.5-3
+    imageOffsetX?: number; // -100 to 100 (percent)
+    imageOffsetY?: number;
   };
   settings?: CommonSectionSettings;
 };

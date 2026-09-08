@@ -1,0 +1,1 @@
+UPDATE public.abandoned_carts SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;

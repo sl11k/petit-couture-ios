@@ -19,6 +19,7 @@ import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as OurStoryRouteImport } from './routes/our-story'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -30,7 +31,9 @@ import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as WishlistShareRouteImport } from './routes/wishlist.share'
+import { Route as TrackTokenRouteImport } from './routes/track.$token'
 import { Route as SupportNewRouteImport } from './routes/support.new'
+import { Route as RecoverTokenRouteImport } from './routes/recover.$token'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 import { Route as PageSlugRouteImport } from './routes/page.$slug'
 import { Route as OrderConfirmationOrderNumberRouteImport } from './routes/order-confirmation.$orderNumber'
@@ -68,20 +71,33 @@ import { Route as AdminProductRelationsRouteImport } from './routes/admin.produc
 import { Route as AdminProductOffersRouteImport } from './routes/admin.product-offers'
 import { Route as AdminPrivacyRouteImport } from './routes/admin.privacy'
 import { Route as AdminPopularPicksRouteImport } from './routes/admin.popular-picks'
+import { Route as AdminPixelsRouteImport } from './routes/admin.pixels'
 import { Route as AdminPermissionsRouteImport } from './routes/admin.permissions'
 import { Route as AdminPerformanceRouteImport } from './routes/admin.performance'
 import { Route as AdminPaymentsRouteImport } from './routes/admin.payments'
 import { Route as AdminOtoRouteImport } from './routes/admin.oto'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
+import { Route as AdminNotificationsCenterRouteImport } from './routes/admin.notifications-center'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminNotificationTemplatesRouteImport } from './routes/admin.notification-templates'
 import { Route as AdminNotificationRulesRouteImport } from './routes/admin.notification-rules'
+import { Route as AdminNotifWasenderRouteImport } from './routes/admin.notif-wasender'
+import { Route as AdminNotifTemplatesRouteImport } from './routes/admin.notif-templates'
+import { Route as AdminNotifQueueRouteImport } from './routes/admin.notif-queue'
+import { Route as AdminNotifProvidersRouteImport } from './routes/admin.notif-providers'
+import { Route as AdminNotifLogsRouteImport } from './routes/admin.notif-logs'
+import { Route as AdminNotifEventsRouteImport } from './routes/admin.notif-events'
+import { Route as AdminNotifBroadcastRouteImport } from './routes/admin.notif-broadcast'
+import { Route as AdminNotifAnalyticsRouteImport } from './routes/admin.notif-analytics'
+import { Route as AdminNotifAdminsRouteImport } from './routes/admin.notif-admins'
 import { Route as AdminMetricsRouteImport } from './routes/admin.metrics'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
+import { Route as AdminMarketingOutreachRouteImport } from './routes/admin.marketing-outreach'
 import { Route as AdminLoyaltyTransactionsRouteImport } from './routes/admin.loyalty-transactions'
 import { Route as AdminLoyaltyRouteImport } from './routes/admin.loyalty'
 import { Route as AdminLandingPagesRouteImport } from './routes/admin.landing-pages'
 import { Route as AdminInvoicesRouteImport } from './routes/admin.invoices'
+import { Route as AdminInventoryLedgerRouteImport } from './routes/admin.inventory-ledger'
 import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
 import { Route as AdminIntegrationsRouteImport } from './routes/admin.integrations'
 import { Route as AdminIncompleteRouteImport } from './routes/admin.incomplete'
@@ -107,6 +123,7 @@ import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAbandonedRouteImport } from './routes/admin.abandoned'
 import { Route as AdminAbTestsRouteImport } from './routes/admin.ab-tests'
 import { Route as AccountPrivacyRouteImport } from './routes/account.privacy'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AdminWebhooksIndexRouteImport } from './routes/admin.webhooks.index'
 import { Route as AdminSupportIndexRouteImport } from './routes/admin.support.index'
 import { Route as AdminProductsIndexRouteImport } from './routes/admin.products.index'
@@ -119,6 +136,7 @@ import { Route as AdminCouponsIndexRouteImport } from './routes/admin.coupons.in
 import { Route as AdminCmsPagesIndexRouteImport } from './routes/admin.cms-pages.index'
 import { Route as AdminCampaignsIndexRouteImport } from './routes/admin.campaigns.index'
 import { Route as AdminAuditIndexRouteImport } from './routes/admin.audit.index'
+import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as ApiV1ProductsRouteImport } from './routes/api.v1.products'
 import { Route as ApiV1OrdersRouteImport } from './routes/api.v1.orders'
 import { Route as ApiV1InventoryRouteImport } from './routes/api.v1.inventory'
@@ -128,6 +146,7 @@ import { Route as ApiPublicTabbyWebhookRouteImport } from './routes/api.public.t
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe-webhook'
 import { Route as ApiPublicShippingWebhookRouteImport } from './routes/api.public.shipping-webhook'
 import { Route as ApiPublicPaymentWebhookRouteImport } from './routes/api.public.payment-webhook'
+import { Route as ApiPublicGeoRouteImport } from './routes/api/public/geo'
 import { Route as AdminWebhooksIdRouteImport } from './routes/admin.webhooks.$id'
 import { Route as AdminWarehousesIdRouteImport } from './routes/admin.warehouses.$id'
 import { Route as AdminSupportIdRouteImport } from './routes/admin.support.$id'
@@ -142,8 +161,15 @@ import { Route as AdminCmsPagesIdRouteImport } from './routes/admin.cms-pages.$i
 import { Route as AdminCampaignsIdRouteImport } from './routes/admin.campaigns.$id'
 import { Route as AdminAuditIdRouteImport } from './routes/admin.audit.$id'
 import { Route as AccountReturnsNewRouteImport } from './routes/account.returns.new'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicOtoWebhookRouteImport } from './routes/api.public.oto.webhook'
+import { Route as ApiPublicCronReconcileStripeRouteImport } from './routes/api.public.cron.reconcile-stripe'
+import { Route as ApiPublicCronReconcileDeferredPaymentsRouteImport } from './routes/api.public.cron.reconcile-deferred-payments'
 import { Route as ApiPublicCronNotifyDelaysRouteImport } from './routes/api/public/cron.notify-delays'
+import { Route as ApiPublicCronNotifProcessRouteImport } from './routes/api.public.cron.notif-process'
 import { Route as AdminProductsIdVariantsRouteImport } from './routes/admin.products.$id.variants'
 
 const WishlistRoute = WishlistRouteImport.update({
@@ -194,6 +220,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const OurStoryRoute = OurStoryRouteImport.update({
   id: '/our-story',
   path: '/our-story',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -251,9 +282,19 @@ const WishlistShareRoute = WishlistShareRouteImport.update({
   path: '/share',
   getParentRoute: () => WishlistRoute,
 } as any)
+const TrackTokenRoute = TrackTokenRouteImport.update({
+  id: '/track/$token',
+  path: '/track/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SupportNewRoute = SupportNewRouteImport.update({
   id: '/support/new',
   path: '/support/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecoverTokenRoute = RecoverTokenRouteImport.update({
+  id: '/recover/$token',
+  path: '/recover/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProductSlugRoute = ProductSlugRouteImport.update({
@@ -442,6 +483,11 @@ const AdminPopularPicksRoute = AdminPopularPicksRouteImport.update({
   path: '/popular-picks',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPixelsRoute = AdminPixelsRouteImport.update({
+  id: '/pixels',
+  path: '/pixels',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPermissionsRoute = AdminPermissionsRouteImport.update({
   id: '/permissions',
   path: '/permissions',
@@ -467,6 +513,12 @@ const AdminOrdersRoute = AdminOrdersRouteImport.update({
   path: '/orders',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminNotificationsCenterRoute =
+  AdminNotificationsCenterRouteImport.update({
+    id: '/notifications-center',
+    path: '/notifications-center',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
@@ -483,6 +535,51 @@ const AdminNotificationRulesRoute = AdminNotificationRulesRouteImport.update({
   path: '/notification-rules',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminNotifWasenderRoute = AdminNotifWasenderRouteImport.update({
+  id: '/notif-wasender',
+  path: '/notif-wasender',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotifTemplatesRoute = AdminNotifTemplatesRouteImport.update({
+  id: '/notif-templates',
+  path: '/notif-templates',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotifQueueRoute = AdminNotifQueueRouteImport.update({
+  id: '/notif-queue',
+  path: '/notif-queue',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotifProvidersRoute = AdminNotifProvidersRouteImport.update({
+  id: '/notif-providers',
+  path: '/notif-providers',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotifLogsRoute = AdminNotifLogsRouteImport.update({
+  id: '/notif-logs',
+  path: '/notif-logs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotifEventsRoute = AdminNotifEventsRouteImport.update({
+  id: '/notif-events',
+  path: '/notif-events',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotifBroadcastRoute = AdminNotifBroadcastRouteImport.update({
+  id: '/notif-broadcast',
+  path: '/notif-broadcast',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotifAnalyticsRoute = AdminNotifAnalyticsRouteImport.update({
+  id: '/notif-analytics',
+  path: '/notif-analytics',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotifAdminsRoute = AdminNotifAdminsRouteImport.update({
+  id: '/notif-admins',
+  path: '/notif-admins',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminMetricsRoute = AdminMetricsRouteImport.update({
   id: '/metrics',
   path: '/metrics',
@@ -491,6 +588,11 @@ const AdminMetricsRoute = AdminMetricsRouteImport.update({
 const AdminMessagesRoute = AdminMessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMarketingOutreachRoute = AdminMarketingOutreachRouteImport.update({
+  id: '/marketing-outreach',
+  path: '/marketing-outreach',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminLoyaltyTransactionsRoute =
@@ -512,6 +614,11 @@ const AdminLandingPagesRoute = AdminLandingPagesRouteImport.update({
 const AdminInvoicesRoute = AdminInvoicesRouteImport.update({
   id: '/invoices',
   path: '/invoices',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminInventoryLedgerRoute = AdminInventoryLedgerRouteImport.update({
+  id: '/inventory-ledger',
+  path: '/inventory-ledger',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminInventoryRoute = AdminInventoryRouteImport.update({
@@ -639,6 +746,12 @@ const AccountPrivacyRoute = AccountPrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => AccountRoute,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminWebhooksIndexRoute = AdminWebhooksIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -699,6 +812,11 @@ const AdminAuditIndexRoute = AdminAuditIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminAuditRoute,
 } as any)
+const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
+  id: '/lovable/email/events',
+  path: '/lovable/email/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiV1ProductsRoute = ApiV1ProductsRouteImport.update({
   id: '/api/v1/products',
   path: '/api/v1/products',
@@ -743,6 +861,11 @@ const ApiPublicShippingWebhookRoute =
 const ApiPublicPaymentWebhookRoute = ApiPublicPaymentWebhookRouteImport.update({
   id: '/api/public/payment-webhook',
   path: '/api/public/payment-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicGeoRoute = ApiPublicGeoRouteImport.update({
+  id: '/api/public/geo',
+  path: '/api/public/geo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminWebhooksIdRoute = AdminWebhooksIdRouteImport.update({
@@ -815,15 +938,54 @@ const AccountReturnsNewRoute = AccountReturnsNewRouteImport.update({
   path: '/returns/new',
   getParentRoute: () => AccountRoute,
 } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicOtoWebhookRoute = ApiPublicOtoWebhookRouteImport.update({
   id: '/api/public/oto/webhook',
   path: '/api/public/oto/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCronReconcileStripeRoute =
+  ApiPublicCronReconcileStripeRouteImport.update({
+    id: '/api/public/cron/reconcile-stripe',
+    path: '/api/public/cron/reconcile-stripe',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicCronReconcileDeferredPaymentsRoute =
+  ApiPublicCronReconcileDeferredPaymentsRouteImport.update({
+    id: '/api/public/cron/reconcile-deferred-payments',
+    path: '/api/public/cron/reconcile-deferred-payments',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCronNotifyDelaysRoute =
   ApiPublicCronNotifyDelaysRouteImport.update({
     id: '/api/public/cron/notify-delays',
     path: '/api/public/cron/notify-delays',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicCronNotifProcessRoute =
+  ApiPublicCronNotifProcessRouteImport.update({
+    id: '/api/public/cron/notif-process',
+    path: '/api/public/cron/notif-process',
     getParentRoute: () => rootRouteImport,
   } as any)
 const AdminProductsIdVariantsRoute = AdminProductsIdVariantsRouteImport.update({
@@ -842,6 +1004,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/our-story': typeof OurStoryRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -852,6 +1015,7 @@ export interface FileRoutesByFullPath {
   '/track-order': typeof TrackOrderRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRouteWithChildren
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/account/privacy': typeof AccountPrivacyRoute
   '/admin/ab-tests': typeof AdminAbTestsRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
@@ -877,20 +1041,33 @@ export interface FileRoutesByFullPath {
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRouteWithChildren
   '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/inventory-ledger': typeof AdminInventoryLedgerRoute
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/landing-pages': typeof AdminLandingPagesRouteWithChildren
   '/admin/loyalty': typeof AdminLoyaltyRoute
   '/admin/loyalty-transactions': typeof AdminLoyaltyTransactionsRoute
+  '/admin/marketing-outreach': typeof AdminMarketingOutreachRoute
   '/admin/messages': typeof AdminMessagesRouteWithChildren
   '/admin/metrics': typeof AdminMetricsRoute
+  '/admin/notif-admins': typeof AdminNotifAdminsRoute
+  '/admin/notif-analytics': typeof AdminNotifAnalyticsRoute
+  '/admin/notif-broadcast': typeof AdminNotifBroadcastRoute
+  '/admin/notif-events': typeof AdminNotifEventsRoute
+  '/admin/notif-logs': typeof AdminNotifLogsRoute
+  '/admin/notif-providers': typeof AdminNotifProvidersRoute
+  '/admin/notif-queue': typeof AdminNotifQueueRoute
+  '/admin/notif-templates': typeof AdminNotifTemplatesRoute
+  '/admin/notif-wasender': typeof AdminNotifWasenderRoute
   '/admin/notification-rules': typeof AdminNotificationRulesRoute
   '/admin/notification-templates': typeof AdminNotificationTemplatesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/notifications-center': typeof AdminNotificationsCenterRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/oto': typeof AdminOtoRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/permissions': typeof AdminPermissionsRoute
+  '/admin/pixels': typeof AdminPixelsRoute
   '/admin/popular-picks': typeof AdminPopularPicksRoute
   '/admin/privacy': typeof AdminPrivacyRoute
   '/admin/product-offers': typeof AdminProductOffersRoute
@@ -928,9 +1105,12 @@ export interface FileRoutesByFullPath {
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/page/$slug': typeof PageSlugRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/recover/$token': typeof RecoverTokenRoute
   '/support/new': typeof SupportNewRoute
+  '/track/$token': typeof TrackTokenRoute
   '/wishlist/share': typeof WishlistShareRoute
   '/admin/': typeof AdminIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/account/returns/new': typeof AccountReturnsNewRoute
   '/admin/audit/$id': typeof AdminAuditIdRoute
   '/admin/campaigns/$id': typeof AdminCampaignsIdRoute
@@ -945,6 +1125,7 @@ export interface FileRoutesByFullPath {
   '/admin/support/$id': typeof AdminSupportIdRoute
   '/admin/warehouses/$id': typeof AdminWarehousesIdRoute
   '/admin/webhooks/$id': typeof AdminWebhooksIdRoute
+  '/api/public/geo': typeof ApiPublicGeoRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -954,6 +1135,7 @@ export interface FileRoutesByFullPath {
   '/api/v1/inventory': typeof ApiV1InventoryRoute
   '/api/v1/orders': typeof ApiV1OrdersRoute
   '/api/v1/products': typeof ApiV1ProductsRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin/audit/': typeof AdminAuditIndexRoute
   '/admin/campaigns/': typeof AdminCampaignsIndexRoute
   '/admin/cms-pages/': typeof AdminCmsPagesIndexRoute
@@ -967,8 +1149,14 @@ export interface FileRoutesByFullPath {
   '/admin/support/': typeof AdminSupportIndexRoute
   '/admin/webhooks/': typeof AdminWebhooksIndexRoute
   '/admin/products/$id/variants': typeof AdminProductsIdVariantsRoute
+  '/api/public/cron/notif-process': typeof ApiPublicCronNotifProcessRoute
   '/api/public/cron/notify-delays': typeof ApiPublicCronNotifyDelaysRoute
+  '/api/public/cron/reconcile-deferred-payments': typeof ApiPublicCronReconcileDeferredPaymentsRoute
+  '/api/public/cron/reconcile-stripe': typeof ApiPublicCronReconcileStripeRoute
   '/api/public/oto/webhook': typeof ApiPublicOtoWebhookRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -979,6 +1167,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/our-story': typeof OurStoryRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -989,6 +1178,7 @@ export interface FileRoutesByTo {
   '/track-order': typeof TrackOrderRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRouteWithChildren
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/account/privacy': typeof AccountPrivacyRoute
   '/admin/ab-tests': typeof AdminAbTestsRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
@@ -1008,17 +1198,30 @@ export interface FileRoutesByTo {
   '/admin/incoming-webhooks': typeof AdminIncomingWebhooksRoute
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/inventory-ledger': typeof AdminInventoryLedgerRoute
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/loyalty': typeof AdminLoyaltyRoute
   '/admin/loyalty-transactions': typeof AdminLoyaltyTransactionsRoute
+  '/admin/marketing-outreach': typeof AdminMarketingOutreachRoute
   '/admin/metrics': typeof AdminMetricsRoute
+  '/admin/notif-admins': typeof AdminNotifAdminsRoute
+  '/admin/notif-analytics': typeof AdminNotifAnalyticsRoute
+  '/admin/notif-broadcast': typeof AdminNotifBroadcastRoute
+  '/admin/notif-events': typeof AdminNotifEventsRoute
+  '/admin/notif-logs': typeof AdminNotifLogsRoute
+  '/admin/notif-providers': typeof AdminNotifProvidersRoute
+  '/admin/notif-queue': typeof AdminNotifQueueRoute
+  '/admin/notif-templates': typeof AdminNotifTemplatesRoute
+  '/admin/notif-wasender': typeof AdminNotifWasenderRoute
   '/admin/notification-rules': typeof AdminNotificationRulesRoute
   '/admin/notification-templates': typeof AdminNotificationTemplatesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/notifications-center': typeof AdminNotificationsCenterRoute
   '/admin/oto': typeof AdminOtoRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/permissions': typeof AdminPermissionsRoute
+  '/admin/pixels': typeof AdminPixelsRoute
   '/admin/popular-picks': typeof AdminPopularPicksRoute
   '/admin/privacy': typeof AdminPrivacyRoute
   '/admin/product-offers': typeof AdminProductOffersRoute
@@ -1053,9 +1256,12 @@ export interface FileRoutesByTo {
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/page/$slug': typeof PageSlugRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/recover/$token': typeof RecoverTokenRoute
   '/support/new': typeof SupportNewRoute
+  '/track/$token': typeof TrackTokenRoute
   '/wishlist/share': typeof WishlistShareRoute
   '/admin': typeof AdminIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/account/returns/new': typeof AccountReturnsNewRoute
   '/admin/audit/$id': typeof AdminAuditIdRoute
   '/admin/campaigns/$id': typeof AdminCampaignsIdRoute
@@ -1070,6 +1276,7 @@ export interface FileRoutesByTo {
   '/admin/support/$id': typeof AdminSupportIdRoute
   '/admin/warehouses/$id': typeof AdminWarehousesIdRoute
   '/admin/webhooks/$id': typeof AdminWebhooksIdRoute
+  '/api/public/geo': typeof ApiPublicGeoRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -1079,6 +1286,7 @@ export interface FileRoutesByTo {
   '/api/v1/inventory': typeof ApiV1InventoryRoute
   '/api/v1/orders': typeof ApiV1OrdersRoute
   '/api/v1/products': typeof ApiV1ProductsRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin/audit': typeof AdminAuditIndexRoute
   '/admin/campaigns': typeof AdminCampaignsIndexRoute
   '/admin/cms-pages': typeof AdminCmsPagesIndexRoute
@@ -1092,8 +1300,14 @@ export interface FileRoutesByTo {
   '/admin/support': typeof AdminSupportIndexRoute
   '/admin/webhooks': typeof AdminWebhooksIndexRoute
   '/admin/products/$id/variants': typeof AdminProductsIdVariantsRoute
+  '/api/public/cron/notif-process': typeof ApiPublicCronNotifProcessRoute
   '/api/public/cron/notify-delays': typeof ApiPublicCronNotifyDelaysRoute
+  '/api/public/cron/reconcile-deferred-payments': typeof ApiPublicCronReconcileDeferredPaymentsRoute
+  '/api/public/cron/reconcile-stripe': typeof ApiPublicCronReconcileStripeRoute
   '/api/public/oto/webhook': typeof ApiPublicOtoWebhookRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -1106,6 +1320,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/our-story': typeof OurStoryRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -1116,6 +1331,7 @@ export interface FileRoutesById {
   '/track-order': typeof TrackOrderRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRouteWithChildren
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/account/privacy': typeof AccountPrivacyRoute
   '/admin/ab-tests': typeof AdminAbTestsRoute
   '/admin/abandoned': typeof AdminAbandonedRoute
@@ -1141,20 +1357,33 @@ export interface FileRoutesById {
   '/admin/incomplete': typeof AdminIncompleteRoute
   '/admin/integrations': typeof AdminIntegrationsRouteWithChildren
   '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/inventory-ledger': typeof AdminInventoryLedgerRoute
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/landing-pages': typeof AdminLandingPagesRouteWithChildren
   '/admin/loyalty': typeof AdminLoyaltyRoute
   '/admin/loyalty-transactions': typeof AdminLoyaltyTransactionsRoute
+  '/admin/marketing-outreach': typeof AdminMarketingOutreachRoute
   '/admin/messages': typeof AdminMessagesRouteWithChildren
   '/admin/metrics': typeof AdminMetricsRoute
+  '/admin/notif-admins': typeof AdminNotifAdminsRoute
+  '/admin/notif-analytics': typeof AdminNotifAnalyticsRoute
+  '/admin/notif-broadcast': typeof AdminNotifBroadcastRoute
+  '/admin/notif-events': typeof AdminNotifEventsRoute
+  '/admin/notif-logs': typeof AdminNotifLogsRoute
+  '/admin/notif-providers': typeof AdminNotifProvidersRoute
+  '/admin/notif-queue': typeof AdminNotifQueueRoute
+  '/admin/notif-templates': typeof AdminNotifTemplatesRoute
+  '/admin/notif-wasender': typeof AdminNotifWasenderRoute
   '/admin/notification-rules': typeof AdminNotificationRulesRoute
   '/admin/notification-templates': typeof AdminNotificationTemplatesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/notifications-center': typeof AdminNotificationsCenterRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/oto': typeof AdminOtoRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/permissions': typeof AdminPermissionsRoute
+  '/admin/pixels': typeof AdminPixelsRoute
   '/admin/popular-picks': typeof AdminPopularPicksRoute
   '/admin/privacy': typeof AdminPrivacyRoute
   '/admin/product-offers': typeof AdminProductOffersRoute
@@ -1192,9 +1421,12 @@ export interface FileRoutesById {
   '/order-confirmation/$orderNumber': typeof OrderConfirmationOrderNumberRoute
   '/page/$slug': typeof PageSlugRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/recover/$token': typeof RecoverTokenRoute
   '/support/new': typeof SupportNewRoute
+  '/track/$token': typeof TrackTokenRoute
   '/wishlist/share': typeof WishlistShareRoute
   '/admin/': typeof AdminIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/account/returns/new': typeof AccountReturnsNewRoute
   '/admin/audit/$id': typeof AdminAuditIdRoute
   '/admin/campaigns/$id': typeof AdminCampaignsIdRoute
@@ -1209,6 +1441,7 @@ export interface FileRoutesById {
   '/admin/support/$id': typeof AdminSupportIdRoute
   '/admin/warehouses/$id': typeof AdminWarehousesIdRoute
   '/admin/webhooks/$id': typeof AdminWebhooksIdRoute
+  '/api/public/geo': typeof ApiPublicGeoRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -1218,6 +1451,7 @@ export interface FileRoutesById {
   '/api/v1/inventory': typeof ApiV1InventoryRoute
   '/api/v1/orders': typeof ApiV1OrdersRoute
   '/api/v1/products': typeof ApiV1ProductsRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin/audit/': typeof AdminAuditIndexRoute
   '/admin/campaigns/': typeof AdminCampaignsIndexRoute
   '/admin/cms-pages/': typeof AdminCmsPagesIndexRoute
@@ -1231,8 +1465,14 @@ export interface FileRoutesById {
   '/admin/support/': typeof AdminSupportIndexRoute
   '/admin/webhooks/': typeof AdminWebhooksIndexRoute
   '/admin/products/$id/variants': typeof AdminProductsIdVariantsRoute
+  '/api/public/cron/notif-process': typeof ApiPublicCronNotifProcessRoute
   '/api/public/cron/notify-delays': typeof ApiPublicCronNotifyDelaysRoute
+  '/api/public/cron/reconcile-deferred-payments': typeof ApiPublicCronReconcileDeferredPaymentsRoute
+  '/api/public/cron/reconcile-stripe': typeof ApiPublicCronReconcileStripeRoute
   '/api/public/oto/webhook': typeof ApiPublicOtoWebhookRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1246,6 +1486,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/help'
     | '/login'
+    | '/mcp'
     | '/our-story'
     | '/privacy'
     | '/reset-password'
@@ -1256,6 +1497,7 @@ export interface FileRouteTypes {
     | '/track-order'
     | '/unsubscribe'
     | '/wishlist'
+    | '/.well-known/oauth-protected-resource'
     | '/account/privacy'
     | '/admin/ab-tests'
     | '/admin/abandoned'
@@ -1281,20 +1523,33 @@ export interface FileRouteTypes {
     | '/admin/incomplete'
     | '/admin/integrations'
     | '/admin/inventory'
+    | '/admin/inventory-ledger'
     | '/admin/invoices'
     | '/admin/landing-pages'
     | '/admin/loyalty'
     | '/admin/loyalty-transactions'
+    | '/admin/marketing-outreach'
     | '/admin/messages'
     | '/admin/metrics'
+    | '/admin/notif-admins'
+    | '/admin/notif-analytics'
+    | '/admin/notif-broadcast'
+    | '/admin/notif-events'
+    | '/admin/notif-logs'
+    | '/admin/notif-providers'
+    | '/admin/notif-queue'
+    | '/admin/notif-templates'
+    | '/admin/notif-wasender'
     | '/admin/notification-rules'
     | '/admin/notification-templates'
     | '/admin/notifications'
+    | '/admin/notifications-center'
     | '/admin/orders'
     | '/admin/oto'
     | '/admin/payments'
     | '/admin/performance'
     | '/admin/permissions'
+    | '/admin/pixels'
     | '/admin/popular-picks'
     | '/admin/privacy'
     | '/admin/product-offers'
@@ -1332,9 +1587,12 @@ export interface FileRouteTypes {
     | '/order-confirmation/$orderNumber'
     | '/page/$slug'
     | '/product/$slug'
+    | '/recover/$token'
     | '/support/new'
+    | '/track/$token'
     | '/wishlist/share'
     | '/admin/'
+    | '/.lovable/oauth/consent'
     | '/account/returns/new'
     | '/admin/audit/$id'
     | '/admin/campaigns/$id'
@@ -1349,6 +1607,7 @@ export interface FileRouteTypes {
     | '/admin/support/$id'
     | '/admin/warehouses/$id'
     | '/admin/webhooks/$id'
+    | '/api/public/geo'
     | '/api/public/payment-webhook'
     | '/api/public/shipping-webhook'
     | '/api/public/stripe-webhook'
@@ -1358,6 +1617,7 @@ export interface FileRouteTypes {
     | '/api/v1/inventory'
     | '/api/v1/orders'
     | '/api/v1/products'
+    | '/lovable/email/events'
     | '/admin/audit/'
     | '/admin/campaigns/'
     | '/admin/cms-pages/'
@@ -1371,8 +1631,14 @@ export interface FileRouteTypes {
     | '/admin/support/'
     | '/admin/webhooks/'
     | '/admin/products/$id/variants'
+    | '/api/public/cron/notif-process'
     | '/api/public/cron/notify-delays'
+    | '/api/public/cron/reconcile-deferred-payments'
+    | '/api/public/cron/reconcile-stripe'
     | '/api/public/oto/webhook'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
+    | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1383,6 +1649,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/help'
     | '/login'
+    | '/mcp'
     | '/our-story'
     | '/privacy'
     | '/reset-password'
@@ -1393,6 +1660,7 @@ export interface FileRouteTypes {
     | '/track-order'
     | '/unsubscribe'
     | '/wishlist'
+    | '/.well-known/oauth-protected-resource'
     | '/account/privacy'
     | '/admin/ab-tests'
     | '/admin/abandoned'
@@ -1412,17 +1680,30 @@ export interface FileRouteTypes {
     | '/admin/incoming-webhooks'
     | '/admin/incomplete'
     | '/admin/inventory'
+    | '/admin/inventory-ledger'
     | '/admin/invoices'
     | '/admin/loyalty'
     | '/admin/loyalty-transactions'
+    | '/admin/marketing-outreach'
     | '/admin/metrics'
+    | '/admin/notif-admins'
+    | '/admin/notif-analytics'
+    | '/admin/notif-broadcast'
+    | '/admin/notif-events'
+    | '/admin/notif-logs'
+    | '/admin/notif-providers'
+    | '/admin/notif-queue'
+    | '/admin/notif-templates'
+    | '/admin/notif-wasender'
     | '/admin/notification-rules'
     | '/admin/notification-templates'
     | '/admin/notifications'
+    | '/admin/notifications-center'
     | '/admin/oto'
     | '/admin/payments'
     | '/admin/performance'
     | '/admin/permissions'
+    | '/admin/pixels'
     | '/admin/popular-picks'
     | '/admin/privacy'
     | '/admin/product-offers'
@@ -1457,9 +1738,12 @@ export interface FileRouteTypes {
     | '/order-confirmation/$orderNumber'
     | '/page/$slug'
     | '/product/$slug'
+    | '/recover/$token'
     | '/support/new'
+    | '/track/$token'
     | '/wishlist/share'
     | '/admin'
+    | '/.lovable/oauth/consent'
     | '/account/returns/new'
     | '/admin/audit/$id'
     | '/admin/campaigns/$id'
@@ -1474,6 +1758,7 @@ export interface FileRouteTypes {
     | '/admin/support/$id'
     | '/admin/warehouses/$id'
     | '/admin/webhooks/$id'
+    | '/api/public/geo'
     | '/api/public/payment-webhook'
     | '/api/public/shipping-webhook'
     | '/api/public/stripe-webhook'
@@ -1483,6 +1768,7 @@ export interface FileRouteTypes {
     | '/api/v1/inventory'
     | '/api/v1/orders'
     | '/api/v1/products'
+    | '/lovable/email/events'
     | '/admin/audit'
     | '/admin/campaigns'
     | '/admin/cms-pages'
@@ -1496,8 +1782,14 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/webhooks'
     | '/admin/products/$id/variants'
+    | '/api/public/cron/notif-process'
     | '/api/public/cron/notify-delays'
+    | '/api/public/cron/reconcile-deferred-payments'
+    | '/api/public/cron/reconcile-stripe'
     | '/api/public/oto/webhook'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
+    | '/lovable/email/transactional/preview'
   id:
     | '__root__'
     | '/'
@@ -1509,6 +1801,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/help'
     | '/login'
+    | '/mcp'
     | '/our-story'
     | '/privacy'
     | '/reset-password'
@@ -1519,6 +1812,7 @@ export interface FileRouteTypes {
     | '/track-order'
     | '/unsubscribe'
     | '/wishlist'
+    | '/.well-known/oauth-protected-resource'
     | '/account/privacy'
     | '/admin/ab-tests'
     | '/admin/abandoned'
@@ -1544,20 +1838,33 @@ export interface FileRouteTypes {
     | '/admin/incomplete'
     | '/admin/integrations'
     | '/admin/inventory'
+    | '/admin/inventory-ledger'
     | '/admin/invoices'
     | '/admin/landing-pages'
     | '/admin/loyalty'
     | '/admin/loyalty-transactions'
+    | '/admin/marketing-outreach'
     | '/admin/messages'
     | '/admin/metrics'
+    | '/admin/notif-admins'
+    | '/admin/notif-analytics'
+    | '/admin/notif-broadcast'
+    | '/admin/notif-events'
+    | '/admin/notif-logs'
+    | '/admin/notif-providers'
+    | '/admin/notif-queue'
+    | '/admin/notif-templates'
+    | '/admin/notif-wasender'
     | '/admin/notification-rules'
     | '/admin/notification-templates'
     | '/admin/notifications'
+    | '/admin/notifications-center'
     | '/admin/orders'
     | '/admin/oto'
     | '/admin/payments'
     | '/admin/performance'
     | '/admin/permissions'
+    | '/admin/pixels'
     | '/admin/popular-picks'
     | '/admin/privacy'
     | '/admin/product-offers'
@@ -1595,9 +1902,12 @@ export interface FileRouteTypes {
     | '/order-confirmation/$orderNumber'
     | '/page/$slug'
     | '/product/$slug'
+    | '/recover/$token'
     | '/support/new'
+    | '/track/$token'
     | '/wishlist/share'
     | '/admin/'
+    | '/.lovable/oauth/consent'
     | '/account/returns/new'
     | '/admin/audit/$id'
     | '/admin/campaigns/$id'
@@ -1612,6 +1922,7 @@ export interface FileRouteTypes {
     | '/admin/support/$id'
     | '/admin/warehouses/$id'
     | '/admin/webhooks/$id'
+    | '/api/public/geo'
     | '/api/public/payment-webhook'
     | '/api/public/shipping-webhook'
     | '/api/public/stripe-webhook'
@@ -1621,6 +1932,7 @@ export interface FileRouteTypes {
     | '/api/v1/inventory'
     | '/api/v1/orders'
     | '/api/v1/products'
+    | '/lovable/email/events'
     | '/admin/audit/'
     | '/admin/campaigns/'
     | '/admin/cms-pages/'
@@ -1634,8 +1946,14 @@ export interface FileRouteTypes {
     | '/admin/support/'
     | '/admin/webhooks/'
     | '/admin/products/$id/variants'
+    | '/api/public/cron/notif-process'
     | '/api/public/cron/notify-delays'
+    | '/api/public/cron/reconcile-deferred-payments'
+    | '/api/public/cron/reconcile-stripe'
     | '/api/public/oto/webhook'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
+    | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1648,6 +1966,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   HelpRoute: typeof HelpRoute
   LoginRoute: typeof LoginRoute
+  McpRoute: typeof McpRoute
   OurStoryRoute: typeof OurStoryRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -1658,6 +1977,7 @@ export interface RootRouteChildren {
   TrackOrderRoute: typeof TrackOrderRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   WishlistRoute: typeof WishlistRouteWithChildren
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   CategorySlugRoute: typeof CategorySlugRoute
   CollectionSlugRoute: typeof CollectionSlugRoute
   DebugAnalyticsRoute: typeof DebugAnalyticsRoute
@@ -1666,7 +1986,11 @@ export interface RootRouteChildren {
   OrderConfirmationOrderNumberRoute: typeof OrderConfirmationOrderNumberRoute
   PageSlugRoute: typeof PageSlugRoute
   ProductSlugRoute: typeof ProductSlugRoute
+  RecoverTokenRoute: typeof RecoverTokenRoute
   SupportNewRoute: typeof SupportNewRoute
+  TrackTokenRoute: typeof TrackTokenRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
+  ApiPublicGeoRoute: typeof ApiPublicGeoRoute
   ApiPublicPaymentWebhookRoute: typeof ApiPublicPaymentWebhookRoute
   ApiPublicShippingWebhookRoute: typeof ApiPublicShippingWebhookRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
@@ -1676,8 +2000,15 @@ export interface RootRouteChildren {
   ApiV1InventoryRoute: typeof ApiV1InventoryRoute
   ApiV1OrdersRoute: typeof ApiV1OrdersRoute
   ApiV1ProductsRoute: typeof ApiV1ProductsRoute
+  LovableEmailEventsRoute: typeof LovableEmailEventsRoute
+  ApiPublicCronNotifProcessRoute: typeof ApiPublicCronNotifProcessRoute
   ApiPublicCronNotifyDelaysRoute: typeof ApiPublicCronNotifyDelaysRoute
+  ApiPublicCronReconcileDeferredPaymentsRoute: typeof ApiPublicCronReconcileDeferredPaymentsRoute
+  ApiPublicCronReconcileStripeRoute: typeof ApiPublicCronReconcileStripeRoute
   ApiPublicOtoWebhookRoute: typeof ApiPublicOtoWebhookRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1750,6 +2081,13 @@ declare module '@tanstack/react-router' {
       path: '/our-story'
       fullPath: '/our-story'
       preLoaderRoute: typeof OurStoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -1829,11 +2167,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WishlistShareRouteImport
       parentRoute: typeof WishlistRoute
     }
+    '/track/$token': {
+      id: '/track/$token'
+      path: '/track/$token'
+      fullPath: '/track/$token'
+      preLoaderRoute: typeof TrackTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/support/new': {
       id: '/support/new'
       path: '/support/new'
       fullPath: '/support/new'
       preLoaderRoute: typeof SupportNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recover/$token': {
+      id: '/recover/$token'
+      path: '/recover/$token'
+      fullPath: '/recover/$token'
+      preLoaderRoute: typeof RecoverTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/product/$slug': {
@@ -2095,6 +2447,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPopularPicksRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/pixels': {
+      id: '/admin/pixels'
+      path: '/pixels'
+      fullPath: '/admin/pixels'
+      preLoaderRoute: typeof AdminPixelsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/permissions': {
       id: '/admin/permissions'
       path: '/permissions'
@@ -2130,6 +2489,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOrdersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/notifications-center': {
+      id: '/admin/notifications-center'
+      path: '/notifications-center'
+      fullPath: '/admin/notifications-center'
+      preLoaderRoute: typeof AdminNotificationsCenterRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/notifications': {
       id: '/admin/notifications'
       path: '/notifications'
@@ -2151,6 +2517,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminNotificationRulesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/notif-wasender': {
+      id: '/admin/notif-wasender'
+      path: '/notif-wasender'
+      fullPath: '/admin/notif-wasender'
+      preLoaderRoute: typeof AdminNotifWasenderRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notif-templates': {
+      id: '/admin/notif-templates'
+      path: '/notif-templates'
+      fullPath: '/admin/notif-templates'
+      preLoaderRoute: typeof AdminNotifTemplatesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notif-queue': {
+      id: '/admin/notif-queue'
+      path: '/notif-queue'
+      fullPath: '/admin/notif-queue'
+      preLoaderRoute: typeof AdminNotifQueueRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notif-providers': {
+      id: '/admin/notif-providers'
+      path: '/notif-providers'
+      fullPath: '/admin/notif-providers'
+      preLoaderRoute: typeof AdminNotifProvidersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notif-logs': {
+      id: '/admin/notif-logs'
+      path: '/notif-logs'
+      fullPath: '/admin/notif-logs'
+      preLoaderRoute: typeof AdminNotifLogsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notif-events': {
+      id: '/admin/notif-events'
+      path: '/notif-events'
+      fullPath: '/admin/notif-events'
+      preLoaderRoute: typeof AdminNotifEventsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notif-broadcast': {
+      id: '/admin/notif-broadcast'
+      path: '/notif-broadcast'
+      fullPath: '/admin/notif-broadcast'
+      preLoaderRoute: typeof AdminNotifBroadcastRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notif-analytics': {
+      id: '/admin/notif-analytics'
+      path: '/notif-analytics'
+      fullPath: '/admin/notif-analytics'
+      preLoaderRoute: typeof AdminNotifAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notif-admins': {
+      id: '/admin/notif-admins'
+      path: '/notif-admins'
+      fullPath: '/admin/notif-admins'
+      preLoaderRoute: typeof AdminNotifAdminsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/metrics': {
       id: '/admin/metrics'
       path: '/metrics'
@@ -2163,6 +2592,13 @@ declare module '@tanstack/react-router' {
       path: '/messages'
       fullPath: '/admin/messages'
       preLoaderRoute: typeof AdminMessagesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/marketing-outreach': {
+      id: '/admin/marketing-outreach'
+      path: '/marketing-outreach'
+      fullPath: '/admin/marketing-outreach'
+      preLoaderRoute: typeof AdminMarketingOutreachRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/loyalty-transactions': {
@@ -2191,6 +2627,13 @@ declare module '@tanstack/react-router' {
       path: '/invoices'
       fullPath: '/admin/invoices'
       preLoaderRoute: typeof AdminInvoicesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/inventory-ledger': {
+      id: '/admin/inventory-ledger'
+      path: '/inventory-ledger'
+      fullPath: '/admin/inventory-ledger'
+      preLoaderRoute: typeof AdminInventoryLedgerRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/inventory': {
@@ -2368,6 +2811,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountPrivacyRouteImport
       parentRoute: typeof AccountRoute
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/webhooks/': {
       id: '/admin/webhooks/'
       path: '/'
@@ -2452,6 +2902,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAuditIndexRouteImport
       parentRoute: typeof AdminAuditRoute
     }
+    '/lovable/email/events': {
+      id: '/lovable/email/events'
+      path: '/lovable/email/events'
+      fullPath: '/lovable/email/events'
+      preLoaderRoute: typeof LovableEmailEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/v1/products': {
       id: '/api/v1/products'
       path: '/api/v1/products'
@@ -2513,6 +2970,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/payment-webhook'
       fullPath: '/api/public/payment-webhook'
       preLoaderRoute: typeof ApiPublicPaymentWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/geo': {
+      id: '/api/public/geo'
+      path: '/api/public/geo'
+      fullPath: '/api/public/geo'
+      preLoaderRoute: typeof ApiPublicGeoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/webhooks/$id': {
@@ -2613,6 +3077,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountReturnsNewRouteImport
       parentRoute: typeof AccountRoute
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/oto/webhook': {
       id: '/api/public/oto/webhook'
       path: '/api/public/oto/webhook'
@@ -2620,11 +3112,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicOtoWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/reconcile-stripe': {
+      id: '/api/public/cron/reconcile-stripe'
+      path: '/api/public/cron/reconcile-stripe'
+      fullPath: '/api/public/cron/reconcile-stripe'
+      preLoaderRoute: typeof ApiPublicCronReconcileStripeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/cron/reconcile-deferred-payments': {
+      id: '/api/public/cron/reconcile-deferred-payments'
+      path: '/api/public/cron/reconcile-deferred-payments'
+      fullPath: '/api/public/cron/reconcile-deferred-payments'
+      preLoaderRoute: typeof ApiPublicCronReconcileDeferredPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/notify-delays': {
       id: '/api/public/cron/notify-delays'
       path: '/api/public/cron/notify-delays'
       fullPath: '/api/public/cron/notify-delays'
       preLoaderRoute: typeof ApiPublicCronNotifyDelaysRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/cron/notif-process': {
+      id: '/api/public/cron/notif-process'
+      path: '/api/public/cron/notif-process'
+      fullPath: '/api/public/cron/notif-process'
+      preLoaderRoute: typeof ApiPublicCronNotifProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/products/$id/variants': {
@@ -2865,20 +3378,33 @@ interface AdminRouteChildren {
   AdminIncompleteRoute: typeof AdminIncompleteRoute
   AdminIntegrationsRoute: typeof AdminIntegrationsRouteWithChildren
   AdminInventoryRoute: typeof AdminInventoryRoute
+  AdminInventoryLedgerRoute: typeof AdminInventoryLedgerRoute
   AdminInvoicesRoute: typeof AdminInvoicesRoute
   AdminLandingPagesRoute: typeof AdminLandingPagesRouteWithChildren
   AdminLoyaltyRoute: typeof AdminLoyaltyRoute
   AdminLoyaltyTransactionsRoute: typeof AdminLoyaltyTransactionsRoute
+  AdminMarketingOutreachRoute: typeof AdminMarketingOutreachRoute
   AdminMessagesRoute: typeof AdminMessagesRouteWithChildren
   AdminMetricsRoute: typeof AdminMetricsRoute
+  AdminNotifAdminsRoute: typeof AdminNotifAdminsRoute
+  AdminNotifAnalyticsRoute: typeof AdminNotifAnalyticsRoute
+  AdminNotifBroadcastRoute: typeof AdminNotifBroadcastRoute
+  AdminNotifEventsRoute: typeof AdminNotifEventsRoute
+  AdminNotifLogsRoute: typeof AdminNotifLogsRoute
+  AdminNotifProvidersRoute: typeof AdminNotifProvidersRoute
+  AdminNotifQueueRoute: typeof AdminNotifQueueRoute
+  AdminNotifTemplatesRoute: typeof AdminNotifTemplatesRoute
+  AdminNotifWasenderRoute: typeof AdminNotifWasenderRoute
   AdminNotificationRulesRoute: typeof AdminNotificationRulesRoute
   AdminNotificationTemplatesRoute: typeof AdminNotificationTemplatesRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
+  AdminNotificationsCenterRoute: typeof AdminNotificationsCenterRoute
   AdminOrdersRoute: typeof AdminOrdersRouteWithChildren
   AdminOtoRoute: typeof AdminOtoRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
   AdminPerformanceRoute: typeof AdminPerformanceRoute
   AdminPermissionsRoute: typeof AdminPermissionsRoute
+  AdminPixelsRoute: typeof AdminPixelsRoute
   AdminPopularPicksRoute: typeof AdminPopularPicksRoute
   AdminPrivacyRoute: typeof AdminPrivacyRoute
   AdminProductOffersRoute: typeof AdminProductOffersRoute
@@ -2936,20 +3462,33 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminIncompleteRoute: AdminIncompleteRoute,
   AdminIntegrationsRoute: AdminIntegrationsRouteWithChildren,
   AdminInventoryRoute: AdminInventoryRoute,
+  AdminInventoryLedgerRoute: AdminInventoryLedgerRoute,
   AdminInvoicesRoute: AdminInvoicesRoute,
   AdminLandingPagesRoute: AdminLandingPagesRouteWithChildren,
   AdminLoyaltyRoute: AdminLoyaltyRoute,
   AdminLoyaltyTransactionsRoute: AdminLoyaltyTransactionsRoute,
+  AdminMarketingOutreachRoute: AdminMarketingOutreachRoute,
   AdminMessagesRoute: AdminMessagesRouteWithChildren,
   AdminMetricsRoute: AdminMetricsRoute,
+  AdminNotifAdminsRoute: AdminNotifAdminsRoute,
+  AdminNotifAnalyticsRoute: AdminNotifAnalyticsRoute,
+  AdminNotifBroadcastRoute: AdminNotifBroadcastRoute,
+  AdminNotifEventsRoute: AdminNotifEventsRoute,
+  AdminNotifLogsRoute: AdminNotifLogsRoute,
+  AdminNotifProvidersRoute: AdminNotifProvidersRoute,
+  AdminNotifQueueRoute: AdminNotifQueueRoute,
+  AdminNotifTemplatesRoute: AdminNotifTemplatesRoute,
+  AdminNotifWasenderRoute: AdminNotifWasenderRoute,
   AdminNotificationRulesRoute: AdminNotificationRulesRoute,
   AdminNotificationTemplatesRoute: AdminNotificationTemplatesRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
+  AdminNotificationsCenterRoute: AdminNotificationsCenterRoute,
   AdminOrdersRoute: AdminOrdersRouteWithChildren,
   AdminOtoRoute: AdminOtoRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
   AdminPerformanceRoute: AdminPerformanceRoute,
   AdminPermissionsRoute: AdminPermissionsRoute,
+  AdminPixelsRoute: AdminPixelsRoute,
   AdminPopularPicksRoute: AdminPopularPicksRoute,
   AdminPrivacyRoute: AdminPrivacyRoute,
   AdminProductOffersRoute: AdminProductOffersRoute,
@@ -3006,6 +3545,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   HelpRoute: HelpRoute,
   LoginRoute: LoginRoute,
+  McpRoute: McpRoute,
   OurStoryRoute: OurStoryRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
@@ -3016,6 +3556,8 @@ const rootRouteChildren: RootRouteChildren = {
   TrackOrderRoute: TrackOrderRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   WishlistRoute: WishlistRouteWithChildren,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   CategorySlugRoute: CategorySlugRoute,
   CollectionSlugRoute: CollectionSlugRoute,
   DebugAnalyticsRoute: DebugAnalyticsRoute,
@@ -3024,7 +3566,11 @@ const rootRouteChildren: RootRouteChildren = {
   OrderConfirmationOrderNumberRoute: OrderConfirmationOrderNumberRoute,
   PageSlugRoute: PageSlugRoute,
   ProductSlugRoute: ProductSlugRoute,
+  RecoverTokenRoute: RecoverTokenRoute,
   SupportNewRoute: SupportNewRoute,
+  TrackTokenRoute: TrackTokenRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
+  ApiPublicGeoRoute: ApiPublicGeoRoute,
   ApiPublicPaymentWebhookRoute: ApiPublicPaymentWebhookRoute,
   ApiPublicShippingWebhookRoute: ApiPublicShippingWebhookRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
@@ -3034,18 +3580,27 @@ const rootRouteChildren: RootRouteChildren = {
   ApiV1InventoryRoute: ApiV1InventoryRoute,
   ApiV1OrdersRoute: ApiV1OrdersRoute,
   ApiV1ProductsRoute: ApiV1ProductsRoute,
+  LovableEmailEventsRoute: LovableEmailEventsRoute,
+  ApiPublicCronNotifProcessRoute: ApiPublicCronNotifProcessRoute,
   ApiPublicCronNotifyDelaysRoute: ApiPublicCronNotifyDelaysRoute,
+  ApiPublicCronReconcileDeferredPaymentsRoute:
+    ApiPublicCronReconcileDeferredPaymentsRoute,
+  ApiPublicCronReconcileStripeRoute: ApiPublicCronReconcileStripeRoute,
   ApiPublicOtoWebhookRoute: ApiPublicOtoWebhookRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
+import type { startInstance } from './start.ts'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }

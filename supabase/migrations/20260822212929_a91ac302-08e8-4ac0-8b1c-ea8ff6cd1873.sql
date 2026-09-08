@@ -1,0 +1,1 @@
+ALTER FUNCTION public.notify_inventory_low_stock() SET search_path = public;

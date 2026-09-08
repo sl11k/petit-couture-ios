@@ -1,24 +1,44 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { timingSafeEqual } from "node:crypto";
 import {
+  amountsMatch,
   completeGatewayPayment,
   failGatewayPayment,
   loadGatewayOrder,
   logPaymentWebhook,
+  money,
   refundGatewayPayment,
   updatePaymentWebhookLog,
 } from "@/lib/payment-gateway.server";
+import { convertPegged } from "@/lib/tabby-currency";
+import { listTabbyAccounts, tabbyAccountsForOrder } from "@/lib/tabby-accounts.server";
 
-function validSignature(body: string, signature: string, secret: string) {
+/**
+ * Every configured Tabby account (KSA + UAE) registers its own webhook, so a
+ * request is authentic when its static signature matches ANY of them.
+ */
+async function webhookSecrets() {
+  const accounts = await listTabbyAccounts();
+  const secrets = accounts.map((a) => a.webhookSecret || "").filter(Boolean);
+  const globals = [
+    String(process.env.TABBY_WEBHOOK_SECRET || "").trim(),
+    String(process.env.TABBY_SA_WEBHOOK_SECRET || "").trim(),
+    String(process.env.TABBY_AE_WEBHOOK_SECRET || "").trim(),
+    String(process.env.PAYMENT_WEBHOOK_SECRET || "").trim(),
+  ].filter(Boolean);
+  return Array.from(new Set([...secrets, ...globals]));
+}
+
+function matches(signature: string, secret: string) {
   try {
-    const expected = createHmac("sha256", secret).update(body).digest("hex");
     const received = Buffer.from(signature, "utf8");
-    const wanted = Buffer.from(expected, "utf8");
+    const wanted = Buffer.from(secret, "utf8");
     return received.length === wanted.length && timingSafeEqual(received, wanted);
   } catch {
     return false;
   }
 }
+
 
 export const Route = createFileRoute("/api/public/tabby-webhook")({
   server: {
@@ -31,11 +51,14 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
           request.headers.get("x-real-ip") ||
           request.headers.get("x-forwarded-for") ||
           "";
-        const secret = process.env.TABBY_WEBHOOK_SECRET;
-        if (!secret) {
-          console.error("[tabby-webhook] TABBY_WEBHOOK_SECRET is not configured");
+        // Tabby echoes the static x-hook-signature value configured when the
+        // webhook is registered; it is not an HMAC of the request body.
+        const secrets = await webhookSecrets();
+        if (!secrets.length) {
+          console.error("[tabby-webhook] no Tabby secret configured");
           return new Response("Webhook is not configured", { status: 503 });
         }
+
 
         let payload: Record<string, unknown>;
         try {
@@ -53,7 +76,7 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
           return new Response("Bad JSON", { status: 400 });
         }
 
-        const signatureValid = validSignature(body, signature, secret);
+        const signatureValid = secrets.some((s) => matches(signature, s));
         const status = String(payload.status || "").toLowerCase();
         const logId = await logPaymentWebhook({
           gateway: "tabby",
@@ -77,34 +100,49 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
         }
 
         try {
-          const order = await loadGatewayOrder({
-            orderNumber,
-            gateway: "tabby",
-            amount: payload.amount,
-            currency: payload.currency,
-          });
+          // The Tabby merchant account settles in its own currency (AED), while
+          // the order is stored in the store currency (SAR). Validate the amount
+          // after converting with the same fixed peg used at checkout.
+          const order = await loadGatewayOrder({ orderNumber, gateway: "tabby" });
+          const settlementCurrency = String(payload.currency || order.currency).toUpperCase();
+          const expectedAmount = convertPegged(
+            money(order.total),
+            String(order.currency).toUpperCase(),
+            settlementCurrency,
+          );
+          if (payload.amount !== undefined && !amountsMatch(expectedAmount, payload.amount)) {
+            throw new Error("Payment amount mismatch");
+          }
           let transactionId: string | null = null;
 
           if (status === "authorized") {
             let capture: unknown = { skipped: "order_already_paid" };
             if (order.payment_status !== "paid") {
-              const apiKey = process.env.TABBY_SECRET_KEY;
-              if (!apiKey) throw new Error("TABBY_SECRET_KEY is not configured");
-              const captureResponse = await fetch(
-                `https://api.tabby.ai/api/v1/payments/${encodeURIComponent(paymentId)}/captures`,
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${apiKey}`,
+              // Capture with the account that actually owns this payment
+              // (KSA and UAE merchants have separate secret keys), falling back
+              // to the other account when the first one rejects the credentials.
+              const candidates = await tabbyAccountsForOrder(order);
+              if (!candidates.length) throw new Error("No Tabby account is configured");
+              let captureResponse: Response | null = null;
+              for (const candidate of candidates) {
+                captureResponse = await fetch(
+                  `https://api.tabby.ai/api/v1/payments/${encodeURIComponent(paymentId)}/captures`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${candidate.secret}`,
+                    },
+                    body: JSON.stringify({ amount: expectedAmount.toFixed(2) }),
                   },
-                  body: JSON.stringify({ amount: Number(order.total).toFixed(2) }),
-                },
-              );
-              capture = await captureResponse.json().catch(() => ({}));
-              if (!captureResponse.ok) {
+                );
+                capture = await captureResponse.json().catch(() => ({}));
+                if (captureResponse.ok || ![401, 403, 404].includes(captureResponse.status)) break;
+              }
+
+              if (!captureResponse || !captureResponse.ok) {
                 throw new Error(
-                  `Tabby capture failed (${captureResponse.status}): ${JSON.stringify(capture).slice(0, 300)}`,
+                  `Tabby capture failed (${captureResponse?.status ?? 0}): ${JSON.stringify(capture).slice(0, 300)}`,
                 );
               }
             }
@@ -140,12 +178,6 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
             });
           } else if (status !== "created") {
             throw new Error(`Unsupported Tabby status: ${status || "empty"}`);
-          }
-
-          if (["authorized", "closed"].includes(status)) {
-            const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
-            const shipment = await createOtoShipmentForOrder(order.id, null);
-            if (!shipment.ok) throw new Error(`OTO creation failed: ${shipment.error}`);
           }
 
           await updatePaymentWebhookLog(logId, {

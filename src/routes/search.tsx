@@ -15,6 +15,7 @@ import {
   spellSuggest,
   type SortKey,
 } from "@/lib/search";
+import { pixelTrack } from "@/lib/pixels";
 
 const searchSchema = z.object({
   q: fallback(z.string(), "").default(""),
@@ -115,6 +116,9 @@ function SearchPage() {
       setTotal(res.total);
       setLoading(false);
       logSearch(filters.q ?? "", res.items.length);
+      if (filters.q) {
+        pixelTrack("Search", { search_string: filters.q });
+      }
       if (res.items.length === 0 && filters.q) {
         const s = await spellSuggest(filters.q);
         if (!cancelled) setDidYouMean(s);

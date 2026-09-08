@@ -6,6 +6,8 @@ import { loadCheckoutOrder, recordPaymentSession } from "@/lib/payment-gateway.s
 import { assertOrderTotals, money } from "@/lib/payment-validation";
 
 const STRIPE_CHECKOUT_SESSIONS_API = "https://api.stripe.com/v1/checkout/sessions";
+const STRIPE_COUPONS_API = "https://api.stripe.com/v1/coupons";
+const MIN_CARD_TOTAL_SAR = 3;
 
 const InputSchema = z.object({
   order_id: z.string().uuid(),
@@ -24,8 +26,8 @@ function storefrontOrigin() {
 }
 
 async function getStripeSecret() {
-  if (process.env.STRIPE_SECRET_KEY) return process.env.STRIPE_SECRET_KEY;
-
+  // Prefer an explicitly configured Stripe secret in the DB so site owners
+  // can rotate keys without redeploying. Fall back to `process.env.STRIPE_SECRET_KEY`.
   const { data } = await supabaseAdmin
     .from("integrations")
     .select("api_key, api_secret, config")
@@ -43,9 +45,15 @@ async function getStripeSecret() {
     config.secret_key,
     config.stripe_secret_key,
     data?.api_key,
+    process.env.STRIPE_SECRET_KEY,
   ].map((value) => String(value || "").trim());
 
-  return candidates.find((value) => value.startsWith("sk_")) || null;
+  // Accept both sk_ (live) and sk_test_ (test) keys
+  const found = candidates.find((value) => value.startsWith("sk_")) || null;
+  if (found) return found;
+  // Helpful debug hint when no key found.
+  console.error("Stripe secret not found in integrations table or STRIPE_SECRET_KEY env var. Candidates checked:", candidates.map(c => c ? `${c.substring(0, 8)}...` : 'null'));
+  return null;
 }
 
 function appendLineItem(params: URLSearchParams, index: number, item: Record<string, unknown>) {
@@ -66,6 +74,51 @@ function appendLineItem(params: URLSearchParams, index: number, item: Record<str
   }
 }
 
+function appendAdjustmentLineItem(
+  params: URLSearchParams,
+  index: number,
+  input: { name: string; amount: unknown; currency: string },
+) {
+  const amount = Math.round(money(input.amount) * 100);
+  if (amount <= 0) return false;
+  params.set(`line_items[${index}][quantity]`, "1");
+  params.set(`line_items[${index}][price_data][currency]`, input.currency.toLowerCase());
+  params.set(`line_items[${index}][price_data][unit_amount]`, String(amount));
+  params.set(`line_items[${index}][price_data][product_data][name]`, input.name.slice(0, 120));
+  return true;
+}
+
+async function createStripeDiscountCoupon(input: {
+  secret: string;
+  orderId: string;
+  amount: unknown;
+  currency: string;
+}) {
+  const amountOff = Math.round(money(input.amount) * 100);
+  if (amountOff <= 0) return null;
+  const params = new URLSearchParams();
+  params.set("amount_off", String(amountOff));
+  params.set("currency", input.currency.toLowerCase());
+  params.set("duration", "once");
+  params.set("name", "Order discount");
+
+  const response = await fetch(STRIPE_COUPONS_API, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${input.secret}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Idempotency-Key": `coupon:${input.orderId}:${amountOff}`,
+    },
+    body: params,
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = result?.error?.message || `Stripe coupon error ${response.status}`;
+    throw new Error(message);
+  }
+  return result?.id ? String(result.id) : null;
+}
+
 export const createStripeCheckout = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }) => {
@@ -81,6 +134,16 @@ export const createStripeCheckout = createServerFn({ method: "POST" })
     if (!items?.length) throw new Error("Order has no items");
 
     assertOrderTotals(items, order);
+
+    if (money(order.total) < MIN_CARD_TOTAL_SAR) {
+      return {
+        ok: false as const,
+        message:
+          data.lang === "ar"
+            ? `الحد الأدنى للدفع بالبطاقة أو Apple Pay هو ${MIN_CARD_TOTAL_SAR.toFixed(2)} ر.س تقريبًا. اختر وسيلة دفع أخرى أو زد قيمة الطلب.`
+            : `The minimum total for card or Apple Pay is about ${MIN_CARD_TOTAL_SAR.toFixed(2)} SAR. Please choose another payment method or increase the order total.`,
+      };
+    }
 
     const origin = storefrontOrigin();
     const currency = String(order.currency || "SAR").toLowerCase();
@@ -100,20 +163,57 @@ export const createStripeCheckout = createServerFn({ method: "POST" })
     params.set("payment_intent_data[metadata][order_id]", order.id);
     params.set("payment_intent_data[metadata][order_number]", order.order_number);
 
-    items.forEach((item, index) => appendLineItem(params, index, { ...item, currency }));
+    let lineIndex = 0;
+    items.forEach((item) => {
+      appendLineItem(params, lineIndex, { ...item, currency });
+      lineIndex += 1;
+    });
+    if (
+      appendAdjustmentLineItem(params, lineIndex, {
+        name: data.lang === "ar" ? "الشحن" : "Shipping",
+        amount: order.shipping_fee || 0,
+        currency,
+      })
+    ) {
+      lineIndex += 1;
+    }
+    if (
+      appendAdjustmentLineItem(params, lineIndex, {
+        name: data.lang === "ar" ? "ضريبة القيمة المضافة" : "VAT",
+        amount: order.tax || 0,
+        currency,
+      })
+    ) {
+      lineIndex += 1;
+    }
+
+    const couponId = await createStripeDiscountCoupon({
+      secret,
+      orderId: order.id,
+      amount: order.discount_amount || 0,
+      currency,
+    });
+    if (couponId) params.set("discounts[0][coupon]", couponId);
 
     const response = await fetch(STRIPE_CHECKOUT_SESSIONS_API, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${secret}`,
         "Content-Type": "application/x-www-form-urlencoded",
+        "Idempotency-Key": `checkout:${order.id}`,
       },
       body: params,
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) {
       console.error("Stripe checkout failed", response.status, result);
-      const message = result?.error?.message || `Stripe error ${response.status}`;
+      const rawMessage = String(result?.error?.message || "");
+      const message =
+        /at least 200 fils/i.test(rawMessage) || /total amount must convert to at least/i.test(rawMessage)
+          ? data.lang === "ar"
+            ? `الحد الأدنى للدفع بالبطاقة أو Apple Pay هو ${MIN_CARD_TOTAL_SAR.toFixed(2)} ر.س تقريبًا. اختر وسيلة دفع أخرى أو زد قيمة الطلب.`
+            : `The minimum total for card or Apple Pay is about ${MIN_CARD_TOTAL_SAR.toFixed(2)} SAR. Please choose another payment method or increase the order total.`
+          : rawMessage || `Stripe error ${response.status}`;
       return {
         ok: false as const,
         message:
@@ -159,5 +259,185 @@ export const createStripeCheckout = createServerFn({ method: "POST" })
       ok: true as const,
       session_id: sessionId,
       checkout_url: checkoutUrl,
+    };
+  });
+
+
+const STRIPE_REFUNDS_API = "https://api.stripe.com/v1/refunds";
+
+const RefundSchema = z.object({
+  transaction_id: z.string().uuid(),
+  amount: z.number().min(0.01).optional(),
+  reason: z.enum(["duplicate", "fraudulent", "requested_by_customer", "expired_uncaptured_charge"]).optional(),
+});
+
+export const createStripeRefund = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => RefundSchema.parse(input))
+  .handler(async ({ data }) => {
+    const secret = await getStripeSecret();
+    if (!secret) throw new Error("STRIPE_SECRET_KEY is not configured");
+
+    // Get the transaction to find the charge/payment intent
+    const { data: transaction, error: transactionError } = await supabaseAdmin
+      .from("payment_transactions")
+      .select("*")
+      .eq("id", data.transaction_id)
+      .maybeSingle();
+
+    if (transactionError || !transaction) {
+      throw new Error("Transaction not found");
+    }
+
+    if (transaction.gateway !== "stripe") {
+      throw new Error("This transaction is not from Stripe");
+    }
+
+    if (transaction.status !== "captured") {
+      throw new Error("Can only refund captured transactions");
+    }
+
+    let paymentIntent = transaction.gateway_reference as string | null;
+    const sessionOrChargeId = transaction.gateway_transaction_id as string | null;
+    if (!paymentIntent && !sessionOrChargeId) {
+      throw new Error("Transaction is missing Stripe payment reference");
+    }
+
+    // Legacy fallback: some transactions only stored the Checkout Session id.
+    // Retrieve the session to resolve its payment_intent.
+    if (!paymentIntent && sessionOrChargeId && sessionOrChargeId.startsWith("cs_")) {
+      const sessionRes = await fetch(
+        `https://api.stripe.com/v1/checkout/sessions/${sessionOrChargeId}`,
+        { headers: { Authorization: `Bearer ${secret}` } },
+      );
+      const sessionJson = await sessionRes.json().catch(() => ({}));
+      if (sessionRes.ok && typeof sessionJson?.payment_intent === "string") {
+        paymentIntent = sessionJson.payment_intent as string;
+        // Persist for future refunds.
+        await supabaseAdmin
+          .from("payment_transactions")
+          .update({ gateway_reference: paymentIntent })
+          .eq("id", transaction.id);
+      }
+    }
+
+    const refundAmount = data.amount
+      ? Math.round(data.amount * 100)
+      : Math.round(Number(transaction.amount) * 100);
+
+    const params = new URLSearchParams();
+    if (paymentIntent && paymentIntent.startsWith("pi_")) {
+      params.set("payment_intent", paymentIntent);
+    } else if (sessionOrChargeId && sessionOrChargeId.startsWith("ch_")) {
+      params.set("charge", sessionOrChargeId);
+    } else if (paymentIntent) {
+      params.set("payment_intent", paymentIntent);
+    } else {
+      throw new Error(
+        "Stripe refund needs a payment_intent (pi_...) or charge id (ch_...); transaction has neither",
+      );
+    }
+
+    params.set("amount", String(refundAmount));
+    if (data.reason) params.set("reason", data.reason);
+    params.set("metadata[order_id]", transaction.order_id || "");
+    params.set("metadata[order_number]", transaction.order_number || "");
+    params.set("metadata[transaction_id]", transaction.id);
+
+    const response = await fetch(STRIPE_REFUNDS_API, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${secret}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Idempotency-Key": `refund:${transaction.id}:${refundAmount}`,
+      },
+      body: params,
+    });
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const message = result?.error?.message || `Stripe refund error ${response.status}`;
+      throw new Error(message);
+    }
+
+    const refundId = result?.id as string | undefined;
+    if (!refundId) throw new Error("Stripe did not return a refund ID");
+
+    // Idempotent: webhook may race us. Upsert-style: skip if it already exists.
+    const { data: existingRefund } = await supabaseAdmin
+      .from("payment_transactions")
+      .select("id")
+      .eq("gateway", "stripe")
+      .eq("gateway_transaction_id", refundId)
+      .maybeSingle();
+
+    let refundTxId: string;
+    if (existingRefund?.id) {
+      refundTxId = existingRefund.id;
+    } else {
+      const { data: refundTransaction, error: refundError } = await supabaseAdmin
+        .from("payment_transactions")
+        .insert({
+          order_id: transaction.order_id,
+          order_number: transaction.order_number,
+          amount: refundAmount / 100,
+          currency: transaction.currency,
+          gateway: "stripe",
+          gateway_reference: paymentIntent,
+          gateway_transaction_id: refundId,
+          idempotency_key: `stripe:refund:${refundId}`,
+          status: "refunded",
+          raw_response: result as never,
+          webhook_verified: false,
+          metadata: {
+            parent_transaction_id: transaction.id,
+            refund_reason: data.reason || "admin_refund",
+          } as never,
+        })
+        .select("id")
+        .single();
+
+      if (refundError || !refundTransaction) {
+        throw new Error(`Could not create refund transaction: ${refundError?.message}`);
+      }
+      refundTxId = refundTransaction.id;
+    }
+
+    // Recompute total refunded from DB (avoids double-counting).
+    const { data: refunds } = await supabaseAdmin
+      .from("payment_transactions")
+      .select("amount")
+      .eq("order_id", transaction.order_id || "")
+      .eq("status", "refunded");
+    const totalRefunded = (refunds ?? []).reduce((s, t) => s + Number(t.amount || 0), 0);
+
+    const { data: orderRow } = await supabaseAdmin
+      .from("orders")
+      .select("total, captured_amount")
+      .eq("id", transaction.order_id || "")
+      .maybeSingle();
+    const baseAmount = Number(orderRow?.captured_amount ?? orderRow?.total ?? 0);
+    const isFull = baseAmount > 0 && totalRefunded + 0.01 >= baseAmount;
+
+    const orderUpdate: Record<string, unknown> = {
+      refunded_amount: totalRefunded,
+      payment_status: isFull ? "refunded" : "partially_refunded",
+      last_transaction_id: refundTxId,
+    };
+    if (isFull) orderUpdate.status = "refunded";
+
+    const { error: orderError } = await supabaseAdmin
+      .from("orders")
+      .update(orderUpdate as never)
+      .eq("id", transaction.order_id || "");
+    if (orderError) {
+      console.error(`[stripe-refund] Could not update order refund amount: ${orderError.message}`);
+    }
+
+
+    return {
+      ok: true as const,
+      refund_id: refundId,
+      amount: refundAmount / 100,
+      transaction_id: refundTxId,
     };
   });

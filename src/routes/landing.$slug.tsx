@@ -5,6 +5,7 @@ import { devValidateJsonLd } from "@/lib/seoValidate";
 import { Button } from "@/components/ui/button";
 import { LazyImage } from "@/components/LazyImage";
 import { categories, productsByCategory, type Product } from "@/data/categories";
+import { normalizeInternalHref } from "@/lib/links";
 
 type LandingItem = {
   name: string; url: string; image: string; price: number;
@@ -120,7 +121,7 @@ export const Route = createFileRoute("/landing/$slug")({
       .maybeSingle();
     if (!page) throw notFound();
     // Map landing_pages row → Campaign shape so the component renders unchanged
-    const ctaHref = (page as any).cta_url || "/";
+    const ctaHref = normalizeInternalHref((page as any).cta_url) || "/";
     return {
       campaign: {
         slug: (page as any).slug,

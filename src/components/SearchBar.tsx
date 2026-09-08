@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Search, X, Loader2 } from "lucide-react";
 import { autocomplete, spellSuggest, recordSearchClick, type SuggestionItem } from "@/lib/search";
+import { productImg } from "@/lib/productImage";
+import { pixelTrack } from "@/lib/pixels";
 
 interface Props {
   isRTL?: boolean;
@@ -46,6 +48,7 @@ export function SearchBar({ isRTL = true, placeholder, autoFocus, onClose }: Pro
     if (!text) return;
     setOpen(false);
     onClose?.();
+    pixelTrack("Search", { search_string: text });
     navigate({ to: "/search", search: { q: text } as any });
   }
 
@@ -112,7 +115,7 @@ export function SearchBar({ isRTL = true, placeholder, autoFocus, onClose }: Pro
                     className="w-full flex items-center gap-3 p-3 hover:bg-muted/60 text-start"
                   >
                     {it.image_url ? (
-                      <img src={it.image_url} alt="" className="h-10 w-10 rounded object-cover bg-muted" />
+                      <img src={productImg(it.image_url, "thumb")} alt="" loading="lazy" decoding="async" className="h-10 w-10 rounded object-cover bg-muted" />
                     ) : (
                       <div className="h-10 w-10 rounded bg-muted flex items-center justify-center text-xs text-muted-foreground">
                         {it.kind === "category" ? (isRTL ? "قسم" : "Cat") : "🛍"}

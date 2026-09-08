@@ -4,12 +4,16 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
-import { trackServerEvent } from "@/lib/serverAnalytics";
+import { trackServerEvent, getCurrentSessionId } from "@/lib/serverAnalytics";
+import { pixelTrack } from "@/lib/pixels";
+import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_KEY = "maisonnet:bag:v1";
+
 
 export type BagItem = {
   id: string;
@@ -25,6 +29,7 @@ export type BagItem = {
   sku?: string;
   variantId?: string;
   variantLabel?: string;
+  stockLimit?: number;
 };
 
 type AddInput = Omit<BagItem, "id" | "qty"> & { qty?: number };
@@ -33,7 +38,7 @@ type Ctx = {
   items: BagItem[];
   add: (input: AddInput) => void;
   remove: (id: string) => void;
-  setQty: (id: string, qty: number) => void;
+  setQty: (id: string, qty: number, stockLimit?: number | null) => void;
   updatePrice: (id: string, price: number) => void;
   clear: () => void;
   count: number;
@@ -45,6 +50,18 @@ const BagContext = createContext<Ctx | null>(null);
 
 function makeId(slug: string, size: string, color: string, variantId?: string) {
   return variantId ? `${slug}::v::${variantId}` : `${slug}::${size}::${color}`;
+}
+
+function normalizeStockLimit(stockLimit?: number | null) {
+  if (stockLimit === null || stockLimit === undefined) return undefined;
+  const limit = Math.floor(Number(stockLimit));
+  return Number.isFinite(limit) && limit >= 0 ? limit : undefined;
+}
+
+function clampToStock(qty: number, stockLimit?: number) {
+  const cleanQty = Math.max(0, Math.floor(Number(qty) || 0));
+  if (stockLimit === undefined) return cleanQty;
+  return Math.min(cleanQty, stockLimit);
 }
 
 function readInitial(): BagItem[] {
@@ -93,15 +110,73 @@ export function BagProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
+  // Snapshot the cart into abandoned_carts whenever it changes (debounced).
+  // Guests and signed-in users alike get captured, so the Abandoned page
+  // reflects real drop-offs — not just users who reached checkout.
+  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    syncTimerRef.current = setTimeout(async () => {
+      try {
+        const session_id = getCurrentSessionId();
+        if (!session_id || session_id === "ssr") return;
+        const { data: auth } = await supabase.auth.getUser();
+        const subtotal = items.reduce((s, i) => s + i.qty * i.price, 0);
+
+        if (items.length === 0) {
+          // Empty cart: leave prior snapshots alone (they represent past drop-offs).
+          return;
+        }
+
+        await (supabase as any).rpc("track_cart", {
+          _session_id: session_id,
+          _items: items.map((i) => ({
+            slug: i.slug,
+            name: i.name,
+            brand: i.brand,
+            image: i.image,
+            price: i.price,
+            qty: i.qty,
+            size: i.size,
+            color: i.color,
+            sku: i.sku ?? null,
+            variant_id: i.variantId ?? null,
+            variant_label: i.variantLabel ?? null,
+          })),
+          _subtotal: subtotal,
+          _currency: items[0]?.currency ?? "SAR",
+          _email: auth.user?.email ?? null,
+          _reached_checkout: false,
+          _stage: "cart",
+        });
+
+      } catch {
+        /* best effort */
+      }
+    }, 1500);
+    return () => {
+      if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    };
+  }, [items]);
+
   const add = useCallback((input: AddInput) => {
+
     const id = makeId(input.slug, input.size, input.color, input.variantId);
-    const qty = input.qty ?? 1;
+    const limit = normalizeStockLimit(input.stockLimit);
+    const qty = clampToStock(input.qty ?? 1, limit);
+    if (qty <= 0) return;
     setItems((prev) => {
       const existing = prev.find((p) => p.id === id);
       if (existing) {
-        return prev.map((p) => (p.id === id ? { ...p, qty: p.qty + qty } : p));
+        const nextLimit = limit ?? normalizeStockLimit(existing.stockLimit);
+        return prev.map((p) =>
+          p.id === id
+            ? { ...p, ...input, id, stockLimit: nextLimit, qty: clampToStock(p.qty + qty, nextLimit) }
+            : p,
+        );
       }
-      return [...prev, { ...input, qty, id }];
+      return [...prev, { ...input, stockLimit: limit, qty, id }];
     });
     void trackServerEvent("add_to_cart", {
       slug: input.slug,
@@ -111,6 +186,14 @@ export function BagProvider({ children }: { children: ReactNode }) {
       size: input.size,
       color: input.color,
     });
+    pixelTrack("AddToCart", {
+      content_name: input.name,
+      content_id: input.slug,
+      value: input.price * qty,
+      currency: input.currency || "SAR",
+      quantity: qty,
+      contents: [{ id: input.slug, quantity: qty, price: input.price }]
+    });
   }, []);
 
   const remove = useCallback(
@@ -118,11 +201,15 @@ export function BagProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  const setQty = useCallback((id: string, qty: number) => {
+  const setQty = useCallback((id: string, qty: number, stockLimit?: number | null) => {
     setItems((prev) =>
       qty <= 0
         ? prev.filter((p) => p.id !== id)
-        : prev.map((p) => (p.id === id ? { ...p, qty } : p)),
+        : prev.map((p) => {
+            if (p.id !== id) return p;
+            const nextLimit = normalizeStockLimit(stockLimit) ?? normalizeStockLimit(p.stockLimit);
+            return { ...p, stockLimit: nextLimit, qty: clampToStock(qty, nextLimit) };
+          }),
     );
   }, []);
 

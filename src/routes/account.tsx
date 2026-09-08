@@ -367,23 +367,39 @@ function OrdersPanel() {
 
   return (
     <div className="space-y-2">
-      {rows.map((o) => (
-        <Link
-          key={o.id}
-          to="/order-confirmation/$orderNumber"
-          params={{ orderNumber: o.order_number }}
-          className="block rounded-[18px] border border-border bg-cream-warm/30 px-4 py-3 active:scale-[0.99] transition"
-        >
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-[12px] text-foreground">{o.order_number}</span>
-            <span className="text-[11px] tracking-luxury text-gold-deep uppercase">{o.status}</span>
+      {rows.map((o) => {
+        const canReturn = ["delivered", "shipped", "completed"].includes(String(o.status).toLowerCase());
+        return (
+          <div key={o.id} className="rounded-[18px] border border-border bg-cream-warm/30 px-4 py-3">
+            <Link
+              to="/order-confirmation/$orderNumber"
+              params={{ orderNumber: o.order_number }}
+              className="block active:scale-[0.99] transition"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[12px] text-foreground">{o.order_number}</span>
+                <span className="text-[11px] tracking-luxury text-gold-deep uppercase">{o.status}</span>
+              </div>
+              <div className="mt-1 flex items-center justify-between text-[12px] text-muted-foreground">
+                <span>{new Date(o.created_at).toLocaleDateString(isRTL ? "ar-SA" : "en-US")}</span>
+                <span className="text-foreground font-medium">{Number(o.total).toFixed(2)} {o.currency}</span>
+              </div>
+            </Link>
+            {canReturn && (
+              <div className="mt-2 pt-2 border-t border-border/60 flex justify-end">
+                <Link
+                  to="/account/returns/new"
+                  search={{ order: o.id }}
+                  className="inline-flex items-center gap-1 text-[11px] tracking-luxury text-gold-deep uppercase hover:opacity-80"
+                >
+                  <RotateCcw className="h-[12px] w-[12px]" strokeWidth={1.6} />
+                  {isRTL ? "طلب استرجاع" : "Request return"}
+                </Link>
+              </div>
+            )}
           </div>
-          <div className="mt-1 flex items-center justify-between text-[12px] text-muted-foreground">
-            <span>{new Date(o.created_at).toLocaleDateString(isRTL ? "ar-SA" : "en-US")}</span>
-            <span className="text-foreground font-medium">{Number(o.total).toFixed(2)} {o.currency}</span>
-          </div>
-        </Link>
-      ))}
+        );
+      })}
     </div>
   );
 }

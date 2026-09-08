@@ -1,0 +1,1 @@
+ALTER FUNCTION public.orders_emit_events() SET search_path = public;

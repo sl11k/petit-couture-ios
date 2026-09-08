@@ -1,0 +1,1 @@
+ALTER FUNCTION public.log_live_override_change() SET search_path = public;

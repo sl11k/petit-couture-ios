@@ -1,0 +1,1 @@
+ALTER FUNCTION public.reviews_notify() SET search_path = public;

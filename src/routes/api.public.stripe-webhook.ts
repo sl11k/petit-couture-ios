@@ -76,6 +76,19 @@ export const Route = createFileRoute("/api/public/stripe-webhook")({
             return json({ ok: true });
           }
 
+          if (
+            event.type === "charge.refunded" ||
+            event.type === "refund.created" ||
+            event.type === "refund.updated"
+          ) {
+            const result = await handleStripeRefund(object, event);
+            await markWebhookLog(logId, {
+              processed: true,
+              related_transaction_id: result.transactionId,
+            });
+            return json({ ok: true });
+          }
+
           await markWebhookLog(logId, { processed: true });
           return json({ ok: true, ignored: true });
         } catch (err) {
@@ -163,22 +176,24 @@ async function completeStripeCheckout(object: Record<string, unknown>, event: St
   if (String(order.currency).toUpperCase() !== currency)
     throw new Error("Stripe currency mismatch");
 
+  const paymentIntent = typeof object.payment_intent === "string" ? object.payment_intent : null;
+
   const transactionId = await findOrCreateStripeTransaction({
     orderId: order.id,
     orderNumber,
     sessionId,
+    paymentIntent,
     amount,
     currency,
-    status: "captured",
+    // The atomic database finalizer changes this to captured only after the
+    // order, stock, and coupon updates all succeed.
+    status: "processing",
     event,
   });
 
   const { error: completeError } = await (
     supabaseAdmin as unknown as {
-      rpc: (
-        name: string,
-        args: Record<string, unknown>,
-      ) => Promise<{ data: unknown; error: { message: string } | null }>;
+      rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
     }
   ).rpc("complete_async_payment", {
     _order_id: order.id,
@@ -188,19 +203,7 @@ async function completeStripeCheckout(object: Record<string, unknown>, event: St
     _amount: amount,
     _currency: currency,
   });
-  if (completeError) {
-    throw new Error(`Could not finalize Stripe payment safely: ${completeError.message}`);
-  }
-
-  const { error } = await supabaseAdmin
-    .from("orders")
-    .update({
-      payment_gateway: "stripe",
-      last_transaction_id: transactionId,
-      captured_amount: amount,
-    })
-    .eq("id", order.id);
-  if (error) throw new Error(`Could not mark Stripe order as paid: ${error.message}`);
+  if (completeError) throw new Error(`Could not finalize Stripe payment safely: ${completeError.message}`);
 
   try {
     const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
@@ -209,7 +212,6 @@ async function completeStripeCheckout(object: Record<string, unknown>, event: St
   } catch (err) {
     console.error("[stripe-webhook] OTO auto-create threw:", err);
   }
-
   return { transactionId };
 }
 
@@ -263,13 +265,173 @@ async function failStripeCheckout(object: Record<string, unknown>, event: Stripe
   return { transactionId };
 }
 
+async function handleStripeRefund(object: Record<string, unknown>, event: StripeEvent) {
+  // For refund.* events, `object` is a Refund { id: re_..., charge, payment_intent, amount }
+  // For charge.refunded, `object` is a Charge { id: ch_..., payment_intent, amount_refunded, refunds }
+  const isChargeEvent = event.type === "charge.refunded";
+  const paymentIntent =
+    typeof object.payment_intent === "string" ? object.payment_intent : null;
+  const chargeId = isChargeEvent
+    ? String(object.id || "")
+    : typeof object.charge === "string"
+      ? object.charge
+      : null;
+
+  // Refund identity: for refund.* it's the refund id; for charge.refunded pick latest refund from expanded list, else use charge id + amount.
+  let refundId = "";
+  let amountRefundedThisEvent = 0;
+  const currency = String(object.currency || "SAR").toUpperCase();
+
+  if (isChargeEvent) {
+    const refunds = (object.refunds as { data?: Array<Record<string, unknown>> } | undefined)?.data;
+    const latest = refunds && refunds.length ? refunds[refunds.length - 1] : null;
+    if (latest) {
+      refundId = String(latest.id || "");
+      amountRefundedThisEvent = Number(latest.amount ?? 0) / 100;
+    } else {
+      refundId = `${chargeId}:${Number(object.amount_refunded ?? 0)}`;
+      amountRefundedThisEvent = Number(object.amount_refunded ?? 0) / 100;
+    }
+  } else {
+    refundId = String(object.id || "");
+    amountRefundedThisEvent = Number(object.amount ?? 0) / 100;
+  }
+
+  if (!refundId || amountRefundedThisEvent <= 0) {
+    return { transactionId: null };
+  }
+
+  // Locate the captured transaction. Match by payment_intent (stored in gateway_reference)
+  // or, as a fallback, by charge id stored on some older transactions.
+  let transaction: {
+    id: string;
+    order_id: string | null;
+    order_number: string | null;
+    currency: string | null;
+  } | null = null;
+
+  if (paymentIntent) {
+    const { data } = await supabaseAdmin
+      .from("payment_transactions")
+      .select("id, order_id, order_number, currency")
+      .eq("gateway", "stripe")
+      .eq("status", "captured")
+      .eq("gateway_reference", paymentIntent)
+      .maybeSingle();
+    transaction = data ?? null;
+  }
+  if (!transaction && chargeId) {
+    const { data } = await supabaseAdmin
+      .from("payment_transactions")
+      .select("id, order_id, order_number, currency")
+      .eq("gateway", "stripe")
+      .eq("status", "captured")
+      .eq("gateway_reference", chargeId)
+      .maybeSingle();
+    transaction = data ?? null;
+  }
+  if (!transaction && paymentIntent) {
+    // Fallback: order carries payment_intent in metadata via last_transaction; try a broader search via raw_response.
+    const { data } = await supabaseAdmin
+      .from("payment_transactions")
+      .select("id, order_id, order_number, currency, raw_response")
+      .eq("gateway", "stripe")
+      .eq("status", "captured")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    const match = (data ?? []).find((t) => {
+      const raw = t.raw_response as { data?: { object?: { payment_intent?: unknown } } } | null;
+      return raw?.data?.object?.payment_intent === paymentIntent;
+    });
+    if (match) transaction = match;
+  }
+
+  if (!transaction) {
+    console.log(
+      `[stripe-webhook] No captured transaction found for refund pi=${paymentIntent} ch=${chargeId}`,
+    );
+    return { transactionId: null };
+  }
+
+  // Idempotency: skip if this refund id was already inserted.
+  const { data: existingRefund } = await supabaseAdmin
+    .from("payment_transactions")
+    .select("id")
+    .eq("gateway", "stripe")
+    .eq("gateway_transaction_id", refundId)
+    .maybeSingle();
+  if (existingRefund) {
+    return { transactionId: existingRefund.id };
+  }
+
+  const { data: refundTransaction, error: refundError } = await supabaseAdmin
+    .from("payment_transactions")
+    .insert({
+      order_id: transaction.order_id,
+      order_number: transaction.order_number,
+      amount: amountRefundedThisEvent,
+      currency,
+      gateway: "stripe",
+      gateway_reference: paymentIntent,
+      gateway_transaction_id: refundId,
+      idempotency_key: `stripe:refund:${refundId}`,
+      status: "refunded",
+      raw_response: event as never,
+      webhook_verified: true,
+      metadata: {
+        parent_transaction_id: transaction.id,
+        refund_reason: "stripe_webhook",
+        charge_id: chargeId,
+      } as never,
+    })
+    .select("id")
+    .single();
+
+  if (refundError || !refundTransaction) {
+    throw new Error(`Could not create refund transaction: ${refundError?.message}`);
+  }
+
+  await recomputeOrderRefundedAmount(transaction.order_id, refundTransaction.id);
+  return { transactionId: refundTransaction.id };
+}
+
+async function recomputeOrderRefundedAmount(orderId: string | null, lastTxId: string | null) {
+  if (!orderId) return;
+  const { data: refunds } = await supabaseAdmin
+    .from("payment_transactions")
+    .select("amount")
+    .eq("order_id", orderId)
+    .eq("status", "refunded");
+  const totalRefunded = (refunds ?? []).reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+  const { data: order } = await supabaseAdmin
+    .from("orders")
+    .select("total, captured_amount")
+    .eq("id", orderId)
+    .maybeSingle();
+
+  const baseAmount = Number(order?.captured_amount ?? order?.total ?? 0);
+  const isFull = baseAmount > 0 && totalRefunded + 0.01 >= baseAmount;
+
+  const update: Record<string, unknown> = {
+    refunded_amount: totalRefunded,
+    payment_status: isFull ? "refunded" : "partially_refunded",
+  };
+  if (isFull) update.status = "refunded";
+  if (lastTxId) update.last_transaction_id = lastTxId;
+
+  const { error } = await supabaseAdmin.from("orders").update(update as never).eq("id", orderId);
+  if (error) console.error(`[stripe-webhook] recomputeOrderRefundedAmount: ${error.message}`);
+}
+
 async function findOrCreateStripeTransaction(input: {
   orderId: string;
   orderNumber: string;
   sessionId: string;
+  paymentIntent?: string | null;
   amount: number;
   currency: string;
-  status: "captured" | "failed";
+    status: "processing" | "failed";
   event: StripeEvent;
 }) {
   const { data: existing } = await supabaseAdmin
@@ -284,9 +446,10 @@ async function findOrCreateStripeTransaction(input: {
     raw_response: input.event as never,
     webhook_verified: true,
     updated_at: new Date().toISOString(),
-    ...(input.status === "captured"
-      ? { captured_at: new Date().toISOString() }
-      : { failed_at: new Date().toISOString(), error_message: input.event.type }),
+    ...(input.paymentIntent ? { gateway_reference: input.paymentIntent } : {}),
+    ...(input.status === "failed"
+      ? { failed_at: new Date().toISOString(), error_message: input.event.type }
+      : {}),
   };
 
   if (existing?.id) {
@@ -315,6 +478,7 @@ async function findOrCreateStripeTransaction(input: {
   if (error || !data) throw new Error(`Could not create Stripe transaction: ${error?.message}`);
   return data.id;
 }
+
 
 async function logStripeWebhook(input: {
   eventType?: string;

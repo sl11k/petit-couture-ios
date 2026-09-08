@@ -174,7 +174,7 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
 
           // Validate amount matches (security check)
           if (payload.amount && orderId) {
-            const { data: order } = await supabaseAdmin
+              const { data: order } = await supabaseAdmin
               .from("orders")
               .select("total, currency")
               .eq("id", orderId)
@@ -194,8 +194,12 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
 
           // Update transaction
           const status = mapStatus(payload.status, payload.event_type);
+          const transactionStatus =
+            orderId && (status === "captured" || status === "paid") ? "processing" : status;
           const update: any = {
-            status,
+            // A successful payment remains recoverable until the atomic
+            // finalizer commits both the order and transaction together.
+            status: transactionStatus,
             webhook_verified: true,
             updated_at: new Date().toISOString(),
             raw_response: payload.raw || payload,
@@ -208,8 +212,6 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
           }
           if (payload.card_last4) update.card_last4 = payload.card_last4;
           if (payload.card_brand) update.card_brand = payload.card_brand;
-          if (status === "captured" || status === "paid")
-            update.captured_at = new Date().toISOString();
           if (status === "failed") update.failed_at = new Date().toISOString();
           if (status === "authorized") update.authorized_at = new Date().toISOString();
 
@@ -219,16 +221,26 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
           if (orderId && (status === "captured" || status === "paid")) {
             const { data: updated } = await supabaseAdmin
               .from("orders")
-              .update({
-                payment_status: "paid",
-                status: "processing",
-                payment_gateway: payload.gateway,
-                last_transaction_id: txnId,
-                captured_amount: payload.amount,
-              })
+              .select("id, order_number, user_id, customer_name, customer_phone, customer_email, total, currency, payment_method")
               .eq("id", orderId)
-              .select("id, user_id")
               .maybeSingle();
+
+            if (!updated) throw new Error("Order not found");
+
+            const { error: completeErr } = await (supabaseAdmin as any).rpc("complete_async_payment", {
+              _order_id: updated.id,
+              _gateway: payload.gateway,
+              _gateway_transaction_id: payload.transaction_id,
+              _transaction_id: txnId,
+              _amount: payload.amount,
+              _currency: payload.currency,
+            });
+            if (completeErr) throw new Error(completeErr.message);
+
+            await supabaseAdmin
+              .from("orders")
+              .update({ payment_gateway: payload.gateway })
+              .eq("id", updated.id);
 
             // Trigger OTO shipment now that payment is confirmed (idempotent).
             if (updated?.id) {
@@ -239,8 +251,11 @@ export const Route = createFileRoute("/api/public/payment-webhook")({
               } catch (e: any) {
                 console.error("[payment-webhook] OTO auto-create threw:", e?.message || e);
               }
+              // Notifications are emitted by the payment-status database trigger
+              // so paid-order WhatsApp messages have a single source of truth.
             }
           } else if (orderId && status === "failed") {
+
             await supabaseAdmin
               .from("orders")
               .update({

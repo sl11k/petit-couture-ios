@@ -18,6 +18,7 @@ type PaymentOrder = {
   customer_email: string;
   customer_name: string;
   customer_phone: string;
+  user_id: string | null;
   subtotal: number;
   shipping_fee: number;
   tax: number;
@@ -45,9 +46,12 @@ export async function loadCheckoutOrder(
 
   if (error || !order) throw new Error("Order not found");
   if (order.payment_method !== gateway) throw new Error("Payment method mismatch");
-  if (order.payment_status === "paid") throw new Error("Order is already paid");
-  if (["cancelled", "refunded"].includes(String(order.status))) {
-    throw new Error("Order can no longer be paid");
+  if (order.payment_status === "paid") throw new Error("ORDER_ALREADY_PAID");
+  if (["cancelled", "refunded", "failed"].includes(String(order.status))) {
+    throw new Error("ORDER_NOT_PAYABLE");
+  }
+  if (["refunded", "expired", "failed"].includes(String(order.payment_status))) {
+    throw new Error("ORDER_NOT_PAYABLE");
   }
 
   // Guest checkout ownership is bound to the high-entropy browser session that
@@ -162,7 +166,7 @@ export async function loadGatewayOrder(input: {
   const { data: order, error } = await supabaseAdmin
     .from("orders")
     .select(
-      "id, order_number, payment_method, payment_status, idempotency_key, total, currency, customer_email, customer_name",
+      "id, order_number, user_id, payment_method, payment_status, idempotency_key, total, currency, customer_email, customer_name",
     )
     .eq("order_number", input.orderNumber)
     .single();
@@ -188,7 +192,9 @@ export async function completeGatewayPayment(input: {
 }) {
   const transactionId = await findOrCreateEventTransaction({
     ...input,
-    status: "captured",
+    // Keep the row recoverable until the atomic database finalizer marks both
+    // the transaction and order as paid in the same commit.
+    status: "processing",
   });
 
   const { data, error } = await (
@@ -208,17 +214,12 @@ export async function completeGatewayPayment(input: {
   });
   if (error) throw new Error(`Could not finalize paid order: ${error.message}`);
 
-  const { error: transactionError } = await supabaseAdmin
-    .from("payment_transactions")
-    .update({
-      status: "captured",
-      captured_at: new Date().toISOString(),
-      webhook_verified: true,
-      raw_response: asJson(input.rawResponse),
-    })
-    .eq("id", transactionId);
-  if (transactionError) {
-    throw new Error(`Could not update captured transaction: ${transactionError.message}`);
+  try {
+    const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
+    const shipment = await createOtoShipmentForOrder(input.order.id, input.order.user_id ?? null);
+    if (!shipment.ok) console.error(`[${input.gateway}-webhook] OTO auto-create failed:`, shipment.error);
+  } catch (error) {
+    console.error(`[${input.gateway}-webhook] OTO auto-create threw:`, error);
   }
 
   return { transactionId, newlyFinalized: data === true };

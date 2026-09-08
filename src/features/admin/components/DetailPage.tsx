@@ -9,6 +9,7 @@ import type {
   DetailSectionDef,
   RelatedTableDef,
   ColumnDef,
+  RowAction,
 } from "../types";
 import { PageHeader } from "./PageHeader";
 import { StatusBadge } from "./StatusBadge";
@@ -45,10 +46,26 @@ function formatValue(value: any, type: DetailFieldDef["type"], lang: string): Re
     case "json":
       return <FriendlyDataView value={value} />;
     case "address": {
-      if (typeof value !== "object") return String(value);
-      const parts = [value.line1, value.line2, value.city, value.region, value.country, value.postal_code]
-        .filter(Boolean);
-      return <span className="whitespace-pre-wrap text-sm">{parts.join("، ")}</span>;
+      if (typeof value !== "object" || !value) return String(value);
+      
+      const v = value as any;
+      const building = v.buildingNumber ? `${ar ? "مبنى" : "Bldg"} ${v.buildingNumber}` : "";
+      const addNo = v.additionalNumber ? `${ar ? "رقم إضافي" : "Add#"} ${v.additionalNumber}` : "";
+      const zip = v.postalCode ? `${ar ? "الرمز البريدي" : "ZIP"} ${v.postalCode}` : "";
+      
+      const parts = [
+        v.geoAddress,
+        v.street,
+        v.district,
+        v.city,
+        v.countryName || v.countryCode,
+        building,
+        addNo,
+        zip,
+        v.shortCode,
+      ].filter(Boolean);
+
+      return <span className="whitespace-pre-wrap text-sm leading-relaxed block max-w-md">{parts.join(ar ? "، " : ", ")}</span>;
     }
     default:
       return String(value);
@@ -181,8 +198,18 @@ export function DetailPage<T extends Record<string, any>>({
   useEffect(() => {
     setLoading(true);
     supabase.from(config.table as any).select(config.select ?? "*").eq("id", id).maybeSingle()
-      .then(({ data }) => { setRow(data as T | null); setLoading(false); });
-  }, [config.table, id, reloadKey]);
+      .then(async ({ data }) => {
+        const baseRow = data as T | null;
+        let enriched = baseRow;
+        try {
+          enriched = baseRow && config.enrichRow ? await config.enrichRow(baseRow) : baseRow;
+        } catch {
+          enriched = baseRow;
+        }
+        setRow(enriched as T | null);
+        setLoading(false);
+      });
+  }, [config.table, id, reloadKey, config.enrichRow]);
 
   const Arrow = ar ? ArrowRight : ArrowLeft;
   const sidebarSections = useMemo(() => config.sections.filter((s) => s.sidebar), [config.sections]);
@@ -219,14 +246,32 @@ export function DetailPage<T extends Record<string, any>>({
         title={title as any}
         description={description as any}
         actions={
-          config.editForm && (
-            <button
-              onClick={() => setEditing(true)}
-              className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              <Pencil className="h-3 w-3" /> {ar ? "تعديل" : "Edit"}
-            </button>
-          )
+          <div className="flex items-center gap-2">
+            {config.actions?.map((action) => (
+              <button
+                key={action.key}
+                onClick={async () => {
+                  await action.onClick?.(row);
+                  setReloadKey((k) => k + 1);
+                }}
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium ${
+                  action.variant === "danger"
+                    ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    : "bg-primary text-primary-foreground hover:bg-primary/90"
+                }`}
+              >
+                {action.icon} {ar ? action.label.ar : action.label.en}
+              </button>
+            ))}
+            {config.editForm && (
+              <button
+                onClick={() => setEditing(true)}
+                className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+              >
+                <Pencil className="h-3 w-3" /> {ar ? "تعديل" : "Edit"}
+              </button>
+            )}
+          </div>
         }
       />
 

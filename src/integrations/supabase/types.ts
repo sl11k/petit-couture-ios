@@ -592,6 +592,104 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_audience_members: {
+        Row: {
+          audience_id: string
+          consent_at: string | null
+          consent_source: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          last_order_at: string | null
+          orders_count: number
+          phone: string | null
+          total_spent: number
+          user_id: string | null
+        }
+        Insert: {
+          audience_id: string
+          consent_at?: string | null
+          consent_source?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          last_order_at?: string | null
+          orders_count?: number
+          phone?: string | null
+          total_spent?: number
+          user_id?: string | null
+        }
+        Update: {
+          audience_id?: string
+          consent_at?: string | null
+          consent_source?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          last_order_at?: string | null
+          orders_count?: number
+          phone?: string | null
+          total_spent?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_audience_members_audience_id_fkey"
+            columns: ["audience_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_audiences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_audiences: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          filters: Json
+          id: string
+          last_generated_at: string | null
+          member_count: number
+          name: string
+          provider: string | null
+          provider_list_id: string | null
+          synced_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          filters?: Json
+          id?: string
+          last_generated_at?: string | null
+          member_count?: number
+          name: string
+          provider?: string | null
+          provider_list_id?: string | null
+          synced_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          filters?: Json
+          id?: string
+          last_generated_at?: string | null
+          member_count?: number
+          name?: string
+          provider?: string | null
+          provider_list_id?: string | null
+          synced_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       campaign_events: {
         Row: {
           campaign_id: string
@@ -626,6 +724,83 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_requests: {
+        Row: {
+          audience_id: string | null
+          channel: string
+          coupon_code: string | null
+          created_at: string
+          email_body: string | null
+          email_subject: string | null
+          id: string
+          objective: string | null
+          provider: string | null
+          provider_campaign_id: string | null
+          rejection_reason: string | null
+          requested_by: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          scheduled_at: string | null
+          sent_at: string | null
+          sent_count: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audience_id?: string | null
+          channel?: string
+          coupon_code?: string | null
+          created_at?: string
+          email_body?: string | null
+          email_subject?: string | null
+          id?: string
+          objective?: string | null
+          provider?: string | null
+          provider_campaign_id?: string | null
+          rejection_reason?: string | null
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audience_id?: string | null
+          channel?: string
+          coupon_code?: string | null
+          created_at?: string
+          email_body?: string | null
+          email_subject?: string | null
+          id?: string
+          objective?: string | null
+          provider?: string | null
+          provider_campaign_id?: string | null
+          rejection_reason?: string | null
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_requests_audience_id_fkey"
+            columns: ["audience_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_audiences"
             referencedColumns: ["id"]
           },
         ]
@@ -1096,6 +1271,7 @@ export type Database = {
           discount_total: number
           discount_type: string
           discount_value: number
+          exclude_discounted_products: boolean | null
           excluded_product_ids: Json
           expires_at: string | null
           first_order_only: boolean
@@ -1129,6 +1305,7 @@ export type Database = {
           discount_total?: number
           discount_type?: string
           discount_value?: number
+          exclude_discounted_products?: boolean | null
           excluded_product_ids?: Json
           expires_at?: string | null
           first_order_only?: boolean
@@ -1162,6 +1339,7 @@ export type Database = {
           discount_total?: number
           discount_type?: string
           discount_value?: number
+          exclude_discounted_products?: boolean | null
           excluded_product_ids?: Json
           expires_at?: string | null
           first_order_only?: boolean
@@ -1366,6 +1544,93 @@ export type Database = {
           requested_at?: string
           status?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      email_send_log: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          message_id: string | null
+          metadata: Json | null
+          recipient_email: string
+          status: string
+          template_name: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_id?: string | null
+          metadata?: Json | null
+          recipient_email: string
+          status: string
+          template_name: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_id?: string | null
+          metadata?: Json | null
+          recipient_email?: string
+          status?: string
+          template_name?: string
+        }
+        Relationships: []
+      }
+      email_send_state: {
+        Row: {
+          auth_email_ttl_minutes: number
+          batch_size: number
+          id: number
+          retry_after_until: string | null
+          send_delay_ms: number
+          transactional_email_ttl_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          auth_email_ttl_minutes?: number
+          batch_size?: number
+          id?: number
+          retry_after_until?: string | null
+          send_delay_ms?: number
+          transactional_email_ttl_minutes?: number
+          updated_at?: string
+        }
+        Update: {
+          auth_email_ttl_minutes?: number
+          batch_size?: number
+          id?: number
+          retry_after_until?: string | null
+          send_delay_ms?: number
+          transactional_email_ttl_minutes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_unsubscribe_tokens: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          token?: string
+          used_at?: string | null
         }
         Relationships: []
       }
@@ -1817,6 +2082,78 @@ export type Database = {
           phone?: string | null
           product_id?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      inventory_ledger: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          delta: number
+          id: string
+          movement_type: string
+          notes: string | null
+          order_id: string | null
+          order_item_id: string | null
+          order_number: string | null
+          order_status: string | null
+          payment_event: string | null
+          payment_status: string | null
+          product_id: string | null
+          product_name: string | null
+          qty: number
+          sku: string | null
+          source: string
+          stock_after: number | null
+          stock_before: number | null
+          variant_id: string | null
+          warehouse_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          delta: number
+          id?: string
+          movement_type: string
+          notes?: string | null
+          order_id?: string | null
+          order_item_id?: string | null
+          order_number?: string | null
+          order_status?: string | null
+          payment_event?: string | null
+          payment_status?: string | null
+          product_id?: string | null
+          product_name?: string | null
+          qty: number
+          sku?: string | null
+          source?: string
+          stock_after?: number | null
+          stock_before?: number | null
+          variant_id?: string | null
+          warehouse_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          delta?: number
+          id?: string
+          movement_type?: string
+          notes?: string | null
+          order_id?: string | null
+          order_item_id?: string | null
+          order_number?: string | null
+          order_status?: string | null
+          payment_event?: string | null
+          payment_status?: string | null
+          product_id?: string | null
+          product_name?: string | null
+          qty?: number
+          sku?: string | null
+          source?: string
+          stock_after?: number | null
+          stock_before?: number | null
+          variant_id?: string | null
+          warehouse_id?: string | null
         }
         Relationships: []
       }
@@ -2508,6 +2845,621 @@ export type Database = {
         }
         Relationships: []
       }
+      notif_admin_recipients: {
+        Row: {
+          created_at: string
+          email: string | null
+          events: string[]
+          id: string
+          is_enabled: boolean
+          label: string | null
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          events?: string[]
+          id?: string
+          is_enabled?: boolean
+          label?: string | null
+          phone: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          events?: string[]
+          id?: string
+          is_enabled?: boolean
+          label?: string | null
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notif_analytics_daily: {
+        Row: {
+          avg_duration_ms: number
+          created_at: string
+          day: string
+          event_code: string
+          failed_count: number
+          id: string
+          provider_id: string | null
+          sent_count: number
+          updated_at: string
+        }
+        Insert: {
+          avg_duration_ms?: number
+          created_at?: string
+          day: string
+          event_code: string
+          failed_count?: number
+          id?: string
+          provider_id?: string | null
+          sent_count?: number
+          updated_at?: string
+        }
+        Update: {
+          avg_duration_ms?: number
+          created_at?: string
+          day?: string
+          event_code?: string
+          failed_count?: number
+          id?: string
+          provider_id?: string | null
+          sent_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notif_analytics_daily_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "notif_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notif_broadcast_jobs: {
+        Row: {
+          audience_filter: Json
+          channel: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          failed_count: number
+          id: string
+          name: string
+          scheduled_at: string | null
+          sent_count: number
+          started_at: string | null
+          status: string
+          template_body: string
+          total_recipients: number
+          updated_at: string
+        }
+        Insert: {
+          audience_filter?: Json
+          channel?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          failed_count?: number
+          id?: string
+          name: string
+          scheduled_at?: string | null
+          sent_count?: number
+          started_at?: string | null
+          status?: string
+          template_body: string
+          total_recipients?: number
+          updated_at?: string
+        }
+        Update: {
+          audience_filter?: Json
+          channel?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          failed_count?: number
+          id?: string
+          name?: string
+          scheduled_at?: string | null
+          sent_count?: number
+          started_at?: string | null
+          status?: string
+          template_body?: string
+          total_recipients?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notif_delivery_logs: {
+        Row: {
+          attempt: number
+          audience: string | null
+          channel: string | null
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          event_code: string | null
+          http_status: number | null
+          id: string
+          ip_address: string | null
+          provider_id: string | null
+          queue_id: string | null
+          recipient_phone: string | null
+          request_snapshot: Json | null
+          response_snapshot: Json | null
+          status: string
+          triggered_by: string | null
+          triggered_by_email: string | null
+        }
+        Insert: {
+          attempt?: number
+          audience?: string | null
+          channel?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          event_code?: string | null
+          http_status?: number | null
+          id?: string
+          ip_address?: string | null
+          provider_id?: string | null
+          queue_id?: string | null
+          recipient_phone?: string | null
+          request_snapshot?: Json | null
+          response_snapshot?: Json | null
+          status: string
+          triggered_by?: string | null
+          triggered_by_email?: string | null
+        }
+        Update: {
+          attempt?: number
+          audience?: string | null
+          channel?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          event_code?: string | null
+          http_status?: number | null
+          id?: string
+          ip_address?: string | null
+          provider_id?: string | null
+          queue_id?: string | null
+          recipient_phone?: string | null
+          request_snapshot?: Json | null
+          response_snapshot?: Json | null
+          status?: string
+          triggered_by?: string | null
+          triggered_by_email?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notif_delivery_logs_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "notif_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notif_delivery_logs_queue_id_fkey"
+            columns: ["queue_id"]
+            isOneToOne: false
+            referencedRelation: "notif_queue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notif_event_types: {
+        Row: {
+          audience: string
+          category: string
+          code: string
+          conditions: Json
+          created_at: string
+          delay_seconds: number
+          description: string | null
+          duplicate_window_seconds: number
+          id: string
+          is_enabled: boolean
+          name_ar: string
+          name_en: string
+          priority: number
+          respect_working_hours: boolean
+          supported_variables: string[]
+          updated_at: string
+        }
+        Insert: {
+          audience?: string
+          category?: string
+          code: string
+          conditions?: Json
+          created_at?: string
+          delay_seconds?: number
+          description?: string | null
+          duplicate_window_seconds?: number
+          id?: string
+          is_enabled?: boolean
+          name_ar: string
+          name_en: string
+          priority?: number
+          respect_working_hours?: boolean
+          supported_variables?: string[]
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          category?: string
+          code?: string
+          conditions?: Json
+          created_at?: string
+          delay_seconds?: number
+          description?: string | null
+          duplicate_window_seconds?: number
+          id?: string
+          is_enabled?: boolean
+          name_ar?: string
+          name_en?: string
+          priority?: number
+          respect_working_hours?: boolean
+          supported_variables?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notif_provider_credentials: {
+        Row: {
+          api_key_encrypted: string | null
+          api_url: string | null
+          created_at: string
+          extra: Json
+          id: string
+          instance_id: string | null
+          phone_number_id: string | null
+          provider_id: string
+          retry_attempts: number
+          retry_delay_ms: number
+          session_name: string | null
+          ssl_verify: boolean
+          timeout_ms: number
+          updated_at: string
+          webhook_secret_encrypted: string | null
+        }
+        Insert: {
+          api_key_encrypted?: string | null
+          api_url?: string | null
+          created_at?: string
+          extra?: Json
+          id?: string
+          instance_id?: string | null
+          phone_number_id?: string | null
+          provider_id: string
+          retry_attempts?: number
+          retry_delay_ms?: number
+          session_name?: string | null
+          ssl_verify?: boolean
+          timeout_ms?: number
+          updated_at?: string
+          webhook_secret_encrypted?: string | null
+        }
+        Update: {
+          api_key_encrypted?: string | null
+          api_url?: string | null
+          created_at?: string
+          extra?: Json
+          id?: string
+          instance_id?: string | null
+          phone_number_id?: string | null
+          provider_id?: string
+          retry_attempts?: number
+          retry_delay_ms?: number
+          session_name?: string | null
+          ssl_verify?: boolean
+          timeout_ms?: number
+          updated_at?: string
+          webhook_secret_encrypted?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notif_provider_credentials_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: true
+            referencedRelation: "notif_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notif_provider_health: {
+        Row: {
+          avg_response_ms: number | null
+          checked_at: string
+          id: string
+          instance_status: string | null
+          last_error: string | null
+          last_failure_at: string | null
+          last_success_at: string | null
+          provider_id: string
+          session_status: string | null
+          status: string
+        }
+        Insert: {
+          avg_response_ms?: number | null
+          checked_at?: string
+          id?: string
+          instance_status?: string | null
+          last_error?: string | null
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          provider_id: string
+          session_status?: string | null
+          status?: string
+        }
+        Update: {
+          avg_response_ms?: number | null
+          checked_at?: string
+          id?: string
+          instance_status?: string | null
+          last_error?: string | null
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          provider_id?: string
+          session_status?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notif_provider_health_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: true
+            referencedRelation: "notif_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notif_providers: {
+        Row: {
+          capabilities: Json
+          channel: string
+          code: string
+          config_schema: Json
+          created_at: string
+          id: string
+          is_default: boolean
+          is_enabled: boolean
+          name: string
+          notes: string | null
+          priority: number
+          updated_at: string
+          version: string | null
+        }
+        Insert: {
+          capabilities?: Json
+          channel?: string
+          code: string
+          config_schema?: Json
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          is_enabled?: boolean
+          name: string
+          notes?: string | null
+          priority?: number
+          updated_at?: string
+          version?: string | null
+        }
+        Update: {
+          capabilities?: Json
+          channel?: string
+          code?: string
+          config_schema?: Json
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          is_enabled?: boolean
+          name?: string
+          notes?: string | null
+          priority?: number
+          updated_at?: string
+          version?: string | null
+        }
+        Relationships: []
+      }
+      notif_queue: {
+        Row: {
+          attempts: number
+          audience: string
+          channel: string
+          created_at: string
+          dedupe_key: string | null
+          event_code: string
+          id: string
+          language: string
+          last_error: string | null
+          locked_at: string | null
+          locked_by: string | null
+          max_attempts: number
+          payload: Json
+          priority: number
+          provider_id: string | null
+          recipient_email: string | null
+          recipient_phone: string | null
+          recipient_user_id: string | null
+          related_entity: string | null
+          related_entity_id: string | null
+          rendered_body: string | null
+          scheduled_at: string
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          audience?: string
+          channel?: string
+          created_at?: string
+          dedupe_key?: string | null
+          event_code: string
+          id?: string
+          language?: string
+          last_error?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          max_attempts?: number
+          payload?: Json
+          priority?: number
+          provider_id?: string | null
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          recipient_user_id?: string | null
+          related_entity?: string | null
+          related_entity_id?: string | null
+          rendered_body?: string | null
+          scheduled_at?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          audience?: string
+          channel?: string
+          created_at?: string
+          dedupe_key?: string | null
+          event_code?: string
+          id?: string
+          language?: string
+          last_error?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          max_attempts?: number
+          payload?: Json
+          priority?: number
+          provider_id?: string | null
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          recipient_user_id?: string | null
+          related_entity?: string | null
+          related_entity_id?: string | null
+          rendered_body?: string | null
+          scheduled_at?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notif_queue_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "notif_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notif_template_versions: {
+        Row: {
+          body: string
+          changed_by: string | null
+          changed_by_email: string | null
+          created_at: string
+          id: string
+          subject: string | null
+          template_id: string
+          variables_used: string[]
+          version: number
+        }
+        Insert: {
+          body: string
+          changed_by?: string | null
+          changed_by_email?: string | null
+          created_at?: string
+          id?: string
+          subject?: string | null
+          template_id: string
+          variables_used?: string[]
+          version: number
+        }
+        Update: {
+          body?: string
+          changed_by?: string | null
+          changed_by_email?: string | null
+          created_at?: string
+          id?: string
+          subject?: string | null
+          template_id?: string
+          variables_used?: string[]
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notif_template_versions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "notif_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notif_templates: {
+        Row: {
+          audience: string
+          body: string
+          channel: string
+          created_at: string
+          event_code: string
+          id: string
+          is_default: boolean
+          is_enabled: boolean
+          language: string
+          subject: string | null
+          updated_at: string
+          variables_used: string[]
+          version: number
+        }
+        Insert: {
+          audience?: string
+          body: string
+          channel?: string
+          created_at?: string
+          event_code: string
+          id?: string
+          is_default?: boolean
+          is_enabled?: boolean
+          language?: string
+          subject?: string | null
+          updated_at?: string
+          variables_used?: string[]
+          version?: number
+        }
+        Update: {
+          audience?: string
+          body?: string
+          channel?: string
+          created_at?: string
+          event_code?: string
+          id?: string
+          is_default?: boolean
+          is_enabled?: boolean
+          language?: string
+          subject?: string | null
+          updated_at?: string
+          variables_used?: string[]
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notif_templates_event_code_fkey"
+            columns: ["event_code"]
+            isOneToOne: false
+            referencedRelation: "notif_event_types"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       notification_log: {
         Row: {
           attempts: number
@@ -2732,6 +3684,7 @@ export type Database = {
           product_slug: string
           qty: number
           size: string | null
+          sku: string | null
           unit_price: number
           variant_id: string | null
           warehouse_id: string | null
@@ -2749,6 +3702,7 @@ export type Database = {
           product_slug: string
           qty: number
           size?: string | null
+          sku?: string | null
           unit_price: number
           variant_id?: string | null
           warehouse_id?: string | null
@@ -2766,6 +3720,7 @@ export type Database = {
           product_slug?: string
           qty?: number
           size?: string | null
+          sku?: string | null
           unit_price?: number
           variant_id?: string | null
           warehouse_id?: string | null
@@ -2857,10 +3812,12 @@ export type Database = {
           status: Database["public"]["Enums"]["order_status"]
           stock_released_at: string | null
           stock_reserved: boolean
+          stock_reserved_at: string | null
           subtotal: number
           tax: number
           total: number
           tracking_number: string | null
+          tracking_token: string | null
           tracking_url: string | null
           updated_at: string
           user_id: string | null
@@ -2913,10 +3870,12 @@ export type Database = {
           status?: Database["public"]["Enums"]["order_status"]
           stock_released_at?: string | null
           stock_reserved?: boolean
+          stock_reserved_at?: string | null
           subtotal?: number
           tax?: number
           total?: number
           tracking_number?: string | null
+          tracking_token?: string | null
           tracking_url?: string | null
           updated_at?: string
           user_id?: string | null
@@ -2969,10 +3928,12 @@ export type Database = {
           status?: Database["public"]["Enums"]["order_status"]
           stock_released_at?: string | null
           stock_reserved?: boolean
+          stock_reserved_at?: string | null
           subtotal?: number
           tax?: number
           total?: number
           tracking_number?: string | null
+          tracking_token?: string | null
           tracking_url?: string | null
           updated_at?: string
           user_id?: string | null
@@ -3976,6 +4937,8 @@ export type Database = {
           attachments: Json | null
           barcode: string | null
           brand: string | null
+          care_ar: string | null
+          care_en: string | null
           category_id: string | null
           colors: Json
           compare_at_price: number | null
@@ -3995,6 +4958,8 @@ export type Database = {
           images: Json
           is_active: boolean
           low_stock_threshold: number | null
+          materials_ar: string | null
+          materials_en: string | null
           meta_description: string | null
           meta_title: string | null
           name_ar: string
@@ -4034,6 +4999,8 @@ export type Database = {
           attachments?: Json | null
           barcode?: string | null
           brand?: string | null
+          care_ar?: string | null
+          care_en?: string | null
           category_id?: string | null
           colors?: Json
           compare_at_price?: number | null
@@ -4053,6 +5020,8 @@ export type Database = {
           images?: Json
           is_active?: boolean
           low_stock_threshold?: number | null
+          materials_ar?: string | null
+          materials_en?: string | null
           meta_description?: string | null
           meta_title?: string | null
           name_ar: string
@@ -4092,6 +5061,8 @@ export type Database = {
           attachments?: Json | null
           barcode?: string | null
           brand?: string | null
+          care_ar?: string | null
+          care_en?: string | null
           category_id?: string | null
           colors?: Json
           compare_at_price?: number | null
@@ -4111,6 +5082,8 @@ export type Database = {
           images?: Json
           is_active?: boolean
           low_stock_threshold?: number | null
+          materials_ar?: string | null
+          materials_en?: string | null
           meta_description?: string | null
           meta_title?: string | null
           name_ar?: string
@@ -5768,9 +6741,17 @@ export type Database = {
           cta_url: string | null
           eyebrow_ar: string | null
           eyebrow_en: string | null
+          height_desktop: number | null
+          height_mobile: number | null
+          height_tablet: number | null
           id: string
           image_url: string
+          image_url_desktop: string | null
+          image_url_tablet: string | null
           is_active: boolean
+          object_fit: string
+          object_position: string
+          overlay_opacity: number | null
           sort_order: number
           subtitle_ar: string | null
           subtitle_en: string | null
@@ -5785,9 +6766,17 @@ export type Database = {
           cta_url?: string | null
           eyebrow_ar?: string | null
           eyebrow_en?: string | null
+          height_desktop?: number | null
+          height_mobile?: number | null
+          height_tablet?: number | null
           id?: string
           image_url: string
+          image_url_desktop?: string | null
+          image_url_tablet?: string | null
           is_active?: boolean
+          object_fit?: string
+          object_position?: string
+          overlay_opacity?: number | null
           sort_order?: number
           subtitle_ar?: string | null
           subtitle_en?: string | null
@@ -5802,9 +6791,17 @@ export type Database = {
           cta_url?: string | null
           eyebrow_ar?: string | null
           eyebrow_en?: string | null
+          height_desktop?: number | null
+          height_mobile?: number | null
+          height_tablet?: number | null
           id?: string
           image_url?: string
+          image_url_desktop?: string | null
+          image_url_tablet?: string | null
           is_active?: boolean
+          object_fit?: string
+          object_position?: string
+          overlay_opacity?: number | null
           sort_order?: number
           subtitle_ar?: string | null
           subtitle_en?: string | null
@@ -6046,6 +7043,30 @@ export type Database = {
         }
         Relationships: []
       }
+      suppressed_emails: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          metadata: Json | null
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          metadata?: Json | null
+          reason: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          metadata?: Json | null
+          reason?: string
+        }
+        Relationships: []
+      }
       theme_customizations: {
         Row: {
           config: Json
@@ -6070,6 +7091,45 @@ export type Database = {
           scope?: string
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      tracking_pixels: {
+        Row: {
+          created_at: string
+          custom_script: string | null
+          enabled: boolean
+          id: string
+          label: string | null
+          pixel_id: string | null
+          placement: string
+          provider: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          custom_script?: string | null
+          enabled?: boolean
+          id?: string
+          label?: string | null
+          pixel_id?: string | null
+          placement?: string
+          provider: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          custom_script?: string | null
+          enabled?: boolean
+          id?: string
+          label?: string | null
+          pixel_id?: string | null
+          placement?: string
+          provider?: string
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -6393,6 +7453,22 @@ export type Database = {
       }
     }
     Views: {
+      admin_customers: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          has_account: boolean | null
+          id: string | null
+          last_order_at: string | null
+          orders_count: number | null
+          paid_orders_count: number | null
+          phone: string | null
+          total_spent: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       product_options_public: {
         Row: {
           color_hex: string | null
@@ -6760,7 +7836,7 @@ export type Database = {
         }[]
       }
       claim_oto_shipment_creation: {
-        Args: { _order_id: string }
+        Args: { _force?: boolean; _order_id: string }
         Returns: boolean
       }
       complete_async_payment: {
@@ -6774,9 +7850,36 @@ export type Database = {
         }
         Returns: boolean
       }
+      current_unit_stock: {
+        Args: { _product_id: string; _variant_id: string }
+        Returns: number
+      }
+      delete_email: {
+        Args: { message_id: number; queue_name: string }
+        Returns: boolean
+      }
+      email_queue_dispatch: { Args: never; Returns: undefined }
       emit_webhook_event: {
         Args: { _event_type: string; _payload: Json }
         Returns: string
+      }
+      enqueue_email: {
+        Args: { payload: Json; queue_name: string }
+        Returns: number
+      }
+      enqueue_notification: {
+        Args: {
+          _audience: string
+          _email?: string
+          _event_code: string
+          _language?: string
+          _payload?: Json
+          _phone?: string
+          _related_entity?: string
+          _related_entity_id?: string
+          _user_id?: string
+        }
+        Returns: undefined
       }
       fail_async_payment: {
         Args: {
@@ -6797,6 +7900,11 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_ops_metrics_v1: {
+        Args: { _from: string; _to: string }
+        Returns: Json
+      }
+      get_order_tracking: { Args: { _token: string }; Returns: Json }
       get_product_variants_with_stock: {
         Args: { _product_id: string }
         Returns: {
@@ -6823,6 +7931,11 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_site_analytics_v1: {
+        Args: { host_domain?: string; since: string }
+        Returns: Json
+      }
+      get_store_analytics_data_v1: { Args: { since: string }; Returns: Json }
       get_user_emails: {
         Args: { _ids: string[] }
         Returns: {
@@ -6857,6 +7970,10 @@ export type Database = {
         Args: { _product_id: string }
         Returns: undefined
       }
+      lock_order_stock_units: {
+        Args: { _order_id: string }
+        Returns: undefined
+      }
       log_audit_event: {
         Args: {
           _action: string
@@ -6870,9 +7987,39 @@ export type Database = {
         }
         Returns: string
       }
+      log_inventory_movement: {
+        Args: {
+          _delta: number
+          _movement_type: string
+          _notes?: string
+          _order_id: string
+          _order_item_id: string
+          _payment_event?: string
+          _product_id: string
+          _qty: number
+          _stock_after: number
+          _stock_before: number
+          _variant_id: string
+          _warehouse_id: string
+        }
+        Returns: undefined
+      }
       mask_email: { Args: { _email: string }; Returns: string }
       mask_phone: { Args: { _phone: string }; Returns: string }
+      move_to_dlq: {
+        Args: {
+          dlq_name: string
+          message_id: number
+          payload: Json
+          source_queue: string
+        }
+        Returns: number
+      }
       next_invoice_number: { Args: { _prefix?: string }; Returns: string }
+      notif_template_render: {
+        Args: { _body: string; _payload: Json }
+        Returns: string
+      }
       notify_shipping_delays: {
         Args: {
           _intransit_threshold_days?: number
@@ -6896,9 +8043,27 @@ export type Database = {
         }
         Returns: string
       }
+      purge_telemetry_logs: { Args: never; Returns: undefined }
+      read_email_batch: {
+        Args: { batch_size: number; queue_name: string; vt: number }
+        Returns: {
+          message: Json
+          msg_id: number
+          read_ct: number
+        }[]
+      }
       reassign_order_item_warehouse: {
         Args: { _item_id: string; _new_warehouse: string }
         Returns: undefined
+      }
+      record_order_coupon_redemption: {
+        Args: { _order_id: string }
+        Returns: undefined
+      }
+      recover_abandoned_carts: { Args: { _minutes?: number }; Returns: number }
+      recovery_recently_contacted: {
+        Args: { _days?: number; _email: string; _phone: string }
+        Returns: boolean
       }
       redeem_unsubscribe_token: {
         Args: { _token: string }
@@ -6952,6 +8117,23 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      track_cart: {
+        Args: {
+          _currency?: string
+          _email?: string
+          _items: Json
+          _phone?: string
+          _reached_checkout?: boolean
+          _session_id: string
+          _stage?: string
+          _subtotal: number
+        }
+        Returns: undefined
+      }
+      tracking_status_label: {
+        Args: { _lang?: string; _status: string }
+        Returns: string
+      }
       transfer_inventory: {
         Args: {
           _from_warehouse: string
@@ -6965,9 +8147,9 @@ export type Database = {
       unaccent: { Args: { "": string }; Returns: string }
       validate_coupon: {
         Args: {
+          _cart_items: Json
           _code: string
           _customer_email?: string
-          _subtotal: number
           _user_id?: string
         }
         Returns: {
@@ -7035,12 +8217,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -7064,11 +8246,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -7089,11 +8271,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -7114,11 +8296,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -7131,11 +8313,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

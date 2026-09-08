@@ -6,6 +6,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { resolveShippingRates } from "@/lib/shipping";
+import { getCanonicalProductPrice } from "@/lib/pricing";
 
 const ItemSchema = z.object({
   slug: z.string().min(1).max(255),
@@ -36,13 +37,22 @@ const AddressSchema = z
   })
   .passthrough();
 
+export const paymentMethodSchema = z.enum([
+  "cod",
+  "card",
+  "apple_pay",
+  "tabby",
+  "tamara",
+  "bank_transfer",
+]);
+
 const InputSchema = z.object({
   session_id: z.string().min(1).max(128),
   auth_token: z.string().min(20).max(4096).nullable().optional(),
   items: z.array(ItemSchema).min(1).max(100),
   address: AddressSchema,
   currency: z.string().min(3).max(8),
-  payment_method: z.enum(["card", "apple_pay", "tabby", "tamara"]).default("card"),
+  payment_method: paymentMethodSchema.default("card"),
   coupon_code: z.string().min(1).max(64).nullable().optional(),
   pricing: z.object({
     shipping_method: z.string().min(1).max(64),
@@ -108,7 +118,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     const slugs = [...new Set(data.items.map((item) => item.slug))];
     const { data: products, error: productsError } = await supabaseAdmin
       .from("products")
-      .select("id, slug, name_ar, name_en, brand, image_url, price, currency, is_active, weight")
+      .select("id, slug, name_ar, name_en, brand, image_url, price, compare_at_price, currency, is_active, weight, stock")
       .in("slug", slugs)
       .eq("is_active", true);
     if (productsError) throw new Error(`Catalog validation failed: ${productsError.message}`);
@@ -119,13 +129,21 @@ export const placeOrder = createServerFn({ method: "POST" })
     const productBySlug = new Map(products.map((product) => [product.slug, product]));
     const { data: variants, error: variantsError } = await supabaseAdmin
       .from("product_variants")
-      .select("id, product_id, sku, price, price_override, is_active, weight")
+      .select("id, product_id, sku, size, attributes, price, price_override, compare_at_price, is_active, weight, stock")
       .in(
         "product_id",
         products.map((product) => product.id),
       )
       .eq("is_active", true);
     if (variantsError) throw new Error(`Variant validation failed: ${variantsError.message}`);
+
+    // Aggregate requested qty per (product, variant) so multiple lines of the same
+    // variant don't slip past a per-line check.
+    const requestedQty = new Map<string, number>();
+    for (const it of data.items) {
+      const key = `${it.slug}::${it.variant_id ?? it.sku ?? ""}`;
+      requestedQty.set(key, (requestedQty.get(key) ?? 0) + it.qty);
+    }
 
     const pricedItems = data.items.map((item) => {
       const product = productBySlug.get(item.slug);
@@ -136,15 +154,50 @@ export const placeOrder = createServerFn({ method: "POST" })
       const productVariants = (variants || []).filter(
         (candidate) => candidate.product_id === product.id,
       );
-      const variant = productVariants.find(
-        (candidate) =>
-          (item.variant_id && candidate.id === item.variant_id) ||
-          (!item.variant_id && item.sku && candidate.sku === item.sku),
-      );
-      if (productVariants.length > 0 && !variant) {
+      const norm = (v: unknown) => String(v ?? "").trim().toLowerCase();
+      // Match order: explicit variant id -> sku -> selected size label.
+      let variant =
+        (item.variant_id
+          ? productVariants.find((c) => c.id === item.variant_id)
+          : undefined) ??
+        (item.sku
+          ? productVariants.find((c) => norm(c.sku) === norm(item.sku))
+          : undefined);
+      if (!variant && (item as any).size) {
+        const wanted = norm((item as any).size);
+        variant = productVariants.find((c: any) => {
+          const attrs = c.attributes ?? {};
+          return (
+            norm(c.size) === wanted ||
+            norm(attrs.size_en) === wanted ||
+            norm(attrs.size_ar) === wanted
+          );
+        });
+      }
+      // Only hard-fail when the client explicitly requested a variant id that no
+      // longer exists. Otherwise fall back to product-level stock and price so a
+      // legacy cart line never blocks checkout.
+      if (!variant && item.variant_id && productVariants.length > 0) {
         throw new Error(`Variant unavailable for ${item.slug}`);
       }
-      const unitPrice = Number(variant?.price_override ?? variant?.price ?? product.price);
+
+
+      // Stock validation: variant stock wins when present, else product stock.
+      const key = `${item.slug}::${item.variant_id ?? item.sku ?? ""}`;
+      const requested = requestedQty.get(key) ?? item.qty;
+      const available = variant
+        ? Number(variant.stock ?? 0)
+        : Number(product.stock ?? 0);
+      if (!Number.isFinite(available) || available <= 0) {
+        throw new Error(`OUT_OF_STOCK:${item.name || item.slug}`);
+      }
+      if (requested > available) {
+        throw new Error(
+          `INSUFFICIENT_STOCK:${item.name || item.slug}:${available}`,
+        );
+      }
+
+      const unitPrice = getCanonicalProductPrice(product.price, variant?.price_override ?? variant?.price);
       if (!Number.isFinite(unitPrice) || unitPrice < 0) throw new Error("Invalid catalog price");
       return {
         ...item,
@@ -157,6 +210,7 @@ export const placeOrder = createServerFn({ method: "POST" })
         price: Math.round(unitPrice * 100) / 100,
       };
     });
+
 
     const subtotal =
       Math.round(pricedItems.reduce((sum, item) => sum + item.price * item.qty, 0) * 100) / 100;
@@ -217,16 +271,30 @@ export const placeOrder = createServerFn({ method: "POST" })
     const tax = Math.round(subtotal * taxRate * 100) / 100;
 
     const cartHash = await hashCart(data, verifiedUserId);
-    const idempotencyKey = `${data.session_id}:${cartHash}`;
+    let idempotencyKey = `${data.session_id}:${cartHash}`;
 
     // ── Re-validate coupon server-side and recompute total. Never trust client.
     let discount_amount = 0;
     let coupon_id: string | null = null;
     let coupon_code: string | null = null;
     if (data.coupon_code) {
+      const dbCartItems = pricedItems.map((it) => {
+        const product = productBySlug.get(it.slug);
+        const variant = it.variant_id
+          ? (variants || []).find((candidate) => candidate.id === it.variant_id)
+          : null;
+        const compareAt = Number(variant?.compare_at_price ?? product?.compare_at_price ?? 0);
+        return {
+          product_id: it.product_id,
+          price: it.price,
+          qty: it.qty,
+          is_discounted: compareAt > 0 && it.price < compareAt,
+        };
+      });
+
       const { data: rows, error: cErr } = await (supabaseAdmin as any).rpc("validate_coupon", {
         _code: data.coupon_code,
-        _subtotal: subtotal,
+        _cart_items: dbCartItems,
         _user_id: verifiedUserId,
         _customer_email: data.address.email,
       });
@@ -235,7 +303,10 @@ export const placeOrder = createServerFn({ method: "POST" })
       if (!row || !row.valid) {
         throw new Error(`Coupon invalid: ${row?.reason ?? "unknown"}`);
       }
-      discount_amount = Math.min(Number(row.discount_amount) || 0, subtotal);
+      const rawDiscount = row.discount_type === "free_shipping"
+        ? shipping_fee
+        : Number(row.discount_amount) || 0;
+      discount_amount = Math.min(rawDiscount, subtotal + shipping_fee);
       coupon_id = row.coupon_id;
       coupon_code = row.code;
     }
@@ -247,12 +318,22 @@ export const placeOrder = createServerFn({ method: "POST" })
     // 1. If an order with this key already exists, return it (idempotent replay).
     const existing = await supabaseAdmin
       .from("orders")
-      .select("id, order_number, status, total, currency")
+      .select("id, order_number, status, payment_status, total, currency")
       .eq("idempotency_key", idempotencyKey)
       .maybeSingle();
 
     if (existing.data) {
-      return { order: existing.data, duplicate: true as const };
+      const exStatus = String(existing.data.status || "");
+      const exPay = String(existing.data.payment_status || "");
+      const isReplayable =
+        exStatus === "pending" &&
+        (exPay === "unpaid" || exPay === "pending" || exPay === "pending_review" || exPay === "");
+      if (isReplayable) {
+        return { order: existing.data, duplicate: true as const };
+      }
+      // Any terminal / paid / refunded / cancelled / expired order must not
+      // block a fresh purchase — mint a new idempotency key.
+      idempotencyKey = `${idempotencyKey}_retry_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     }
 
     // 2. Insert the order. Unique index on idempotency_key guarantees that
@@ -278,6 +359,13 @@ export const placeOrder = createServerFn({ method: "POST" })
         shipping_lat: (data.address as any).lat ?? null,
         shipping_lng: (data.address as any).lng ?? null,
         notes: (data.address as any).notes ?? null,
+        // Unpaid orders hold stock for 15 minutes only; a cron job then
+        // releases the reserved units back to inventory and cancels the order.
+        expires_at: ["card", "apple_pay", "tabby", "tamara", "bank_transfer"].includes(
+          data.payment_method,
+        )
+          ? new Date(Date.now() + 15 * 60 * 1000).toISOString()
+          : null,
       })
       .select("id, order_number, status, total, currency")
       .single();
@@ -334,21 +422,36 @@ export const placeOrder = createServerFn({ method: "POST" })
     //  - Hosted/deferred methods reserve only until their webhook confirms payment.
     //    The payment webhook later calls finalize_order_stock on confirmation,
     //    or release_order_inventory on cancel/expiry.
+    //
+    // Reservation/finalization is BEST-EFFORT. Many products track stock only
+    // via `products.stock` and don't have per-warehouse inventory rows yet.
+    // Failing the whole checkout because a warehouse row is missing would lose
+    // real sales — log the error, keep the order, and let the admin / payment
+    // webhook reconcile inventory. Async payment methods finalize on webhook
+    // confirmation anyway, so a failed reserve here is not user-visible.
     const asyncPayment = ["card", "apple_pay", "tabby", "tamara"].includes(data.payment_method);
     const rpcName = asyncPayment ? "reserve_order_inventory" : "finalize_order_stock";
     try {
       const { error: stockErr } = await (supabaseAdmin as any).rpc(rpcName, {
         _order_id: order.id,
       });
-      if (stockErr) throw stockErr;
+      if (stockErr) {
+        await supabaseAdmin.from("order_items").delete().eq("order_id", order.id);
+        await supabaseAdmin.from("orders").delete().eq("id", order.id);
+        throw new Error(stockErr.message || "Insufficient stock");
+      }
     } catch (error) {
+      await supabaseAdmin.from("order_items").delete().eq("order_id", order.id);
       await supabaseAdmin.from("orders").delete().eq("id", order.id);
-      const message = error instanceof Error ? error.message : "Inventory allocation failed";
-      throw new Error(`Could not allocate inventory: ${message}`);
+      const rawMessage = error instanceof Error ? error.message : String(error);
+      if (/stock|مخزون|quantity|available/i.test(rawMessage)) {
+        throw new Error("INSUFFICIENT_STOCK:cart");
+      }
+      throw new Error(rawMessage);
     }
 
     // 3c. Record coupon redemption + bump used_count (best-effort).
-    if (coupon_id) {
+    if (coupon_id && !asyncPayment) {
       try {
         await supabaseAdmin.from("coupon_redemptions").insert({
           coupon_id,
@@ -377,14 +480,29 @@ export const placeOrder = createServerFn({ method: "POST" })
       }
     }
 
-    // 4. Mark abandoned cart converted (best-effort).
-    await supabaseAdmin
-      .from("abandoned_carts")
-      .update({ converted: true, updated_at: new Date().toISOString() })
-      .eq("session_id", data.session_id);
+    // 4. Keep the cart incomplete until payment is verified. The database
+    // payment-status trigger marks its order snapshot converted after capture.
 
-    // 5. Auto-create OTO shipment ONLY after payment is confirmed.
-    //    Hosted/deferred methods wait until the payment webhook marks
-    //    payment_status='paid', then the webhook triggers OTO idempotently.
+    // 5. Auto-create OTO shipment.
+    //    For COD / bank_transfer we trigger immediately (no upstream webhook will fire).
+    //    Hosted/card methods wait until the payment webhook marks payment_status='paid'
+    //    and then that webhook triggers OTO idempotently.
+    if (data.payment_method === "cod" || data.payment_method === "bank_transfer") {
+      try {
+        const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
+        // Await the best-effort call so the worker cannot finish before OTO receives it.
+        // The helper persists provider errors on orders.oto_creation_error and never blocks checkout.
+        const otoResult = await createOtoShipmentForOrder(order.id, verifiedUserId ?? null);
+        if (!otoResult.ok) console.warn("[placeOrder] OTO auto-create failed:", otoResult.error);
+      } catch (e: any) {
+        console.warn("[placeOrder] OTO module load failed:", e?.message || e);
+      }
+    }
+
+    // 6. No order/admin WhatsApp at placement time. Notifications are emitted
+    //    only after payment is confirmed by the payment finalization flow.
+
+
+
     return { order, duplicate: false as const };
   });

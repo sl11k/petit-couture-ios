@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { buildMeta } from "@/lib/seo";
+import { productImg, productSrcSet } from "@/lib/productImage";
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
@@ -50,6 +51,7 @@ function BagPage() {
   const [confirmClear, setConfirmClear] = useState(false);
   const [sharePayload, setSharePayload] = useState<ShareSheetPayload | null>(null);
   const [taxRate, setTaxRate] = useState<number>(0);
+  const [stockByItemId, setStockByItemId] = useState<Record<string, number>>({});
 
   // Load global tax rate from admin settings (public_site_settings view)
   useEffect(() => {
@@ -77,18 +79,70 @@ function BagPage() {
     useMemo(() => bag.items.map((i) => i.slug), [bag.items]),
   );
 
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      if (!bag.items.length) {
+        setStockByItemId({});
+        return;
+      }
+      try {
+        const { supabase: db } = await import("@/integrations/supabase/client");
+        const slugs = Array.from(new Set(bag.items.map((item) => item.slug)));
+        const { data: products } = await db
+          .from("products")
+          .select("id, slug, stock")
+          .in("slug", slugs)
+          .eq("is_active", true);
+        const productBySlug = new Map((products ?? []).map((product: any) => [String(product.slug), product]));
+        const productIds = (products ?? []).map((product: any) => product.id).filter(Boolean);
+        const { data: variants } = productIds.length
+          ? await db
+              .from("product_variants")
+              .select("id, product_id, sku, stock, is_active")
+              .in("product_id", productIds)
+              .eq("is_active", true)
+          : { data: [] as any[] };
+        const variantsById = new Map((variants ?? []).map((variant: any) => [String(variant.id), variant]));
+        const variantsByProductSku = new Map<string, any>();
+        for (const variant of variants ?? []) {
+          if (variant.sku) variantsByProductSku.set(`${variant.product_id}::${variant.sku}`, variant);
+        }
+        const next: Record<string, number> = {};
+        for (const item of bag.items) {
+          const product = productBySlug.get(item.slug) as any;
+          const variant = item.variantId
+            ? variantsById.get(item.variantId)
+            : item.sku && product?.id
+              ? variantsByProductSku.get(`${product.id}::${item.sku}`)
+              : null;
+          const stock = variant ? Number(variant.stock ?? 0) : Number(product?.stock ?? item.stockLimit ?? 0);
+          if (Number.isFinite(stock)) next[item.id] = Math.max(0, Math.floor(stock));
+        }
+        if (active) setStockByItemId(next);
+      } catch {
+        if (active) setStockByItemId({});
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [bag.items]);
+
   // Compute item meta (stock, price-changed) from product source
   const itemsMeta = useMemo(() => {
     return bag.items.map((it) => {
       const product = bagProductsBySlug[it.slug] ?? getProductForCategory(it.slug);
       const currentPrice = product.price;
       const priceChanged = currentPrice !== it.price;
-      const stock = product.stock;
+      const stock = stockByItemId[it.id] ?? it.stockLimit ?? product.stock;
       const overStock = it.qty > stock;
       const lowStock = stock > 0 && stock <= 5;
       return { it, product, currentPrice, priceChanged, stock, overStock, lowStock };
     });
-  }, [bag.items, bagProductsBySlug]);
+  }, [bag.items, bagProductsBySlug, stockByItemId]);
+
+  const hasStockIssues = itemsMeta.some(({ stock, overStock }) => stock <= 0 || overStock);
 
   // Coupons are validated server-side at /checkout (validate_coupon RPC).
   // We intentionally do NOT show fake/client-side discounts in the bag to
@@ -227,7 +281,7 @@ function BagPage() {
                         className="h-[112px] w-[92px] overflow-hidden rounded-[16px] bg-pastel-peach shrink-0"
                       >
                         <img
-                          src={it.image}
+                          src={productImg(it.image, "small")} srcSet={productSrcSet(it.image, "small")}
                           alt={it.name}
                           loading="lazy"
                           className="w-full h-full object-cover"
@@ -256,7 +310,7 @@ function BagPage() {
                           <div className="inline-flex items-center rounded-xl border border-border bg-background">
                             <button
                               aria-label={ar ? "إنقاص" : "Decrease"}
-                              onClick={() => bag.setQty(it.id, it.qty - 1)}
+                              onClick={() => bag.setQty(it.id, it.qty - 1, stock)}
                               className="h-8 w-8 grid place-items-center text-foreground/70 active:scale-95"
                             >
                               <Minus className="h-[14px] w-[14px]" strokeWidth={1.6} />
@@ -268,7 +322,7 @@ function BagPage() {
                               aria-label={ar ? "زيادة" : "Increase"}
                               onClick={() => {
                                 if (it.qty + 1 > stock) return;
-                                bag.setQty(it.id, it.qty + 1);
+                                bag.setQty(it.id, it.qty + 1, stock);
                               }}
                               disabled={it.qty >= stock}
                               className="h-8 w-8 grid place-items-center text-foreground/70 disabled:opacity-30 active:scale-95"
@@ -395,7 +449,7 @@ function BagPage() {
                       >
                         <div className="aspect-[4/5] rounded-[14px] overflow-hidden bg-pastel-peach">
                           <img
-                            src={p.images[0]}
+                            src={productImg(p.images[0], "small")} srcSet={productSrcSet(p.images[0], "small")}
                             alt={p.category}
                             className="w-full h-full object-cover"
                             loading="lazy"
@@ -435,7 +489,8 @@ function BagPage() {
             <div className="px-5 pt-4 pb-6">
               <button
                 onClick={() => navigate({ to: "/checkout" })}
-                className="w-full h-[56px] rounded-xl bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft"
+                disabled={hasStockIssues}
+                className="w-full h-[56px] rounded-xl bg-foreground text-background text-[14px] font-medium tracking-soft active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-soft disabled:opacity-45 disabled:active:scale-100"
               >
                 <Lock className="h-[15px] w-[15px]" strokeWidth={1.7} />
                 {tt.checkout}

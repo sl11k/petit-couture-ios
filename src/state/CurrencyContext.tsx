@@ -118,11 +118,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
             (typeof j?.country === "string" && j.country?.length === 2 ? j.country : undefined);
           if (country) {
             const byCountry: Record<string, CurrencyCode> = {
-              SA: "SAR", AE: "AED", KW: "KWD", BH: "BHD", QA: "QAR", OM: "OMR",
-              EG: "EGP", JO: "JOD", TR: "TRY", IN: "INR", PK: "PKR",
-              US: "USD", GB: "GBP", CA: "CAD", AU: "AUD", JP: "JPY", CN: "CNY",
-              FR: "EUR", DE: "EUR", IT: "EUR", ES: "EUR", NL: "EUR", IE: "EUR",
-              PT: "EUR", BE: "EUR", AT: "EUR", FI: "EUR", GR: "EUR",
+              SA: "SAR", AE: "AED", KW: "KWD", BH: "BHD", QA: "QAR",
             };
             const mapped = byCountry[country.toUpperCase()];
             if (mapped && !readStoredCurrency()) {

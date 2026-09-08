@@ -176,6 +176,7 @@ export const abandonedConfig: AdminPageConfig = {
   title: { ar: "السلال المتروكة", en: "Abandoned Carts" },
   table: "abandoned_carts",
   orderBy: { column: "updated_at", ascending: false },
+  applyQuery: (query) => query.eq("converted", false),
   columns: [
     { key: "updated_at", label: { ar: "آخر نشاط", en: "Last activity" }, type: "datetime" },
     { key: "email", label: { ar: "البريد", en: "Email" } },
@@ -211,6 +212,7 @@ export const incompleteConfig: AdminPageConfig = {
   description: { ar: "وصلت لمرحلة الدفع ولم تكتمل", en: "Reached checkout but didn't convert" },
   table: "abandoned_carts",
   orderBy: { column: "updated_at", ascending: false },
+  applyQuery: (query) => query.eq("converted", false).eq("reached_checkout", true),
   columns: [
     { key: "updated_at", label: { ar: "آخر نشاط", en: "Last activity" }, type: "datetime" },
     { key: "email", label: { ar: "البريد", en: "Email" } },
@@ -290,7 +292,35 @@ landingPagesConfig.form = [
 
 storefrontConfig.actions = { ...storefrontConfig.actions, create: true, edit: true, delete: true };
 storefrontConfig.form = [
-  { key: "image_url", label: { ar: "صورة البانر/الشريحة", en: "Banner / slide image" }, type: "image", required: true, bucket: "banner-media", folder: "storefront" },
+  { key: "image_url", label: { ar: "صورة الجوال (Mobile)", en: "Mobile image" }, type: "image", required: true, bucket: "banner-media", folder: "storefront",
+},
+  { key: "image_url_tablet", label: { ar: "صورة التابلت (اختياري)", en: "Tablet image (optional)" }, type: "image", bucket: "banner-media", folder: "storefront" },
+  { key: "image_url_desktop", label: { ar: "صورة الديسكتوب (اختياري)", en: "Desktop image (optional)" }, type: "image", bucket: "banner-media", folder: "storefront" },
+  { key: "object_fit", label: { ar: "طريقة العرض", en: "Image fit" }, type: "select", defaultValue: "cover",
+    options: [
+      { value: "cover", label: { ar: "ملء الإطار (قد يتم قص أطراف الصورة)", en: "Cover (crop to fill)" } },
+      { value: "contain", label: { ar: "احتواء الصورة كاملة (بدون قص)", en: "Contain (show whole image)" } },
+    ] },
+  { key: "object_position", label: { ar: "موضع الصورة (Focal)", en: "Image position (Focal point)" }, type: "select", defaultValue: "center center",
+
+    options: [
+      { value: "center center", label: { ar: "الوسط", en: "Center" } },
+      { value: "center top", label: { ar: "الأعلى", en: "Top" } },
+      { value: "center bottom", label: { ar: "الأسفل", en: "Bottom" } },
+      { value: "left center", label: { ar: "اليسار", en: "Left" } },
+      { value: "right center", label: { ar: "اليمين", en: "Right" } },
+      { value: "left top", label: { ar: "أعلى اليسار", en: "Top-left" } },
+      { value: "right top", label: { ar: "أعلى اليمين", en: "Top-right" } },
+      { value: "left bottom", label: { ar: "أسفل اليسار", en: "Bottom-left" } },
+      { value: "right bottom", label: { ar: "أسفل اليمين", en: "Bottom-right" } },
+    ] },
+  { key: "image_scale", label: { ar: "حجم الصورة (1-2)", en: "Image scale (1-2)" }, type: "number", min: 1, max: 2, step: 0.1, defaultValue: 1, helpText: { ar: "تكبير الصورة (1 = الحجم الطبيعي)", en: "Zoom image (1 = normal size)" } },
+  { key: "image_offset_x", label: { ar: "إزاحة أفقية (-50 إلى 50%)", en: "Horizontal offset (-50 to 50%)" }, type: "number", min: -50, max: 50, defaultValue: 0, helpText: { ar: "تحريك الصورة يمين/يسار", en: "Move image left/right" } },
+  { key: "image_offset_y", label: { ar: "إزاحة رأسية (-50 إلى 50%)", en: "Vertical offset (-50 to 50%)" }, type: "number", min: -50, max: 50, defaultValue: 0, helpText: { ar: "تحريك الصورة أعلى/أسفل", en: "Move image up/down" } },
+  { key: "height_mobile", label: { ar: "ارتفاع الجوال (px)", en: "Mobile height (px)" }, type: "number", min: 120, max: 1200, defaultValue: 440 },
+  { key: "height_tablet", label: { ar: "ارتفاع التابلت (px)", en: "Tablet height (px)" }, type: "number", min: 120, max: 1400, defaultValue: 520 },
+  { key: "height_desktop", label: { ar: "ارتفاع الديسكتوب (px)", en: "Desktop height (px)" }, type: "number", min: 120, max: 1600, defaultValue: 640 },
+  { key: "overlay_opacity", label: { ar: "شفافية التعتيم (0-100)", en: "Overlay opacity (0-100)" }, type: "number", min: 0, max: 100, defaultValue: 45 },
   { key: "title_ar", label: { ar: "العنوان (AR)", en: "Title (AR)" }, type: "text" },
   { key: "title_en", label: { ar: "العنوان (EN)", en: "Title (EN)" }, type: "text" },
   { key: "subtitle_ar", label: { ar: "العنوان الفرعي (AR)", en: "Subtitle (AR)" }, type: "text" },

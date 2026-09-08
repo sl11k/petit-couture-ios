@@ -118,15 +118,14 @@ CREATE POLICY "Admins manage methods" ON public.payment_method_configs
 
 -- Seed default payment methods
 INSERT INTO public.payment_method_configs (method_key, display_name_ar, display_name_en, is_enabled, gateway, icon, display_order) VALUES
-  ('cod', 'الدفع عند الاستلام', 'Cash on Delivery', true, 'manual', '💵', 1),
-  ('bank_transfer', 'تحويل بنكي', 'Bank Transfer', true, 'manual', '🏦', 2),
-  ('payment_link', 'رابط دفع يدوي', 'Manual Payment Link', true, 'manual', '🔗', 3),
-  ('card', 'بطاقات ائتمانية', 'Credit/Debit Cards', false, null, '💳', 4),
-  ('mada', 'مدى', 'Mada', false, null, '💳', 5),
-  ('apple_pay', 'Apple Pay', 'Apple Pay', false, null, '', 6),
-  ('stc_pay', 'STC Pay', 'STC Pay', false, null, '📱', 7),
-  ('tabby', 'تابي - قسّمها على 4', 'Tabby - Split in 4', false, null, '🟢', 8),
-  ('tamara', 'تمارا - اشتر الآن وادفع لاحقًا', 'Tamara - BNPL', false, null, '🟣', 9);
+  ('bank_transfer', 'تحويل بنكي', 'Bank Transfer', true, 'manual', '🏦', 1),
+  ('payment_link', 'رابط دفع يدوي', 'Manual Payment Link', true, 'manual', '🔗', 2),
+  ('card', 'بطاقات ائتمانية', 'Credit/Debit Cards', false, null, '💳', 3),
+  ('mada', 'مدى', 'Mada', false, null, '💳', 4),
+  ('apple_pay', 'Apple Pay', 'Apple Pay', false, null, '', 5),
+  ('stc_pay', 'STC Pay', 'STC Pay', false, null, '📱', 6),
+  ('tabby', 'تابي - قسّمها على 4', 'Tabby - Split in 4', false, null, '🟢', 7),
+  ('tamara', 'تمارا - اشتر الآن وادفع لاحقًا', 'Tamara - BNPL', false, null, '🟣', 8);
 
 -- Webhook logs (for security audit)
 CREATE TABLE public.payment_webhooks_log (

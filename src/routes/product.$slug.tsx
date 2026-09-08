@@ -14,8 +14,6 @@ import {
   X,
   Plus,
   Minus,
-  ShieldCheck,
-  CreditCard,
   Package,
   MessageCircle,
   Bell,
@@ -38,15 +36,18 @@ import { useWishlist } from "@/state/WishlistContext";
 import { useBag } from "@/state/BagContext";
 import { usePriceFormatter } from "@/state/CurrencyContext";
 import { trackEvent } from "@/lib/analytics";
+import { pixelTrack } from "@/lib/pixels";
 import { ShareSheet, type ShareSheetPayload } from "@/components/ShareSheet";
 
 import { VariantsPicker } from "@/components/product/VariantsPicker";
 import { ProductOptionsPicker } from "@/components/product/ProductOptionsPicker";
 
 import { buildMeta, productJsonLd, breadcrumbJsonLd, canonical } from "@/lib/seo";
+import { productImg, productSrcSet } from "@/lib/productImage";
 import { devValidateJsonLd } from "@/lib/seoValidate";
 import { supabase } from "@/integrations/supabase/client";
 import { CONTACT_WHATSAPP_NUMBER } from "@/lib/contactInfo";
+import { getCanonicalProductPrice } from "@/lib/pricing";
 
 export const Route = createFileRoute("/product/$slug")({
   loader: async ({ params }) => {
@@ -135,7 +136,7 @@ export const Route = createFileRoute("/product/$slug")({
   component: ProductDetails,
 });
 
-type TabKey = "description" | "specs" | "care" | "shipping";
+type TabKey = "description" | "care" | "shipping";
 
 function ProductDetails() {
   const { slug } = Route.useParams();
@@ -145,11 +146,16 @@ function ProductDetails() {
   const { reviews: dbReviews, bundles: dbBundles, offers: dbOffers } = useProductExtras(slug);
   const { isRTL, lang } = useLanguage();
   const ar = isRTL;
+  const validSizes = useMemo(
+    () => (product.sizes || []).filter((s) => s && String(s).trim()),
+    [product.sizes],
+  );
 
   const [activeImg, setActiveImg] = useState(0);
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [activeOptions, setActiveOptions] = useState<Record<string, any>>({});
-  const [size, setSize] = useState<string>(product.sizes[2] ?? product.sizes[0] ?? "");
+  const initialSize = validSizes[0] ?? "";
+  const [size, setSize] = useState<string>(initialSize);
   const [color, setColor] = useState<string>(product.colors[0]?.name ?? "");
 
   const displayImages = useMemo(() => {
@@ -162,31 +168,53 @@ function ProductDetails() {
     if (activeImage) setActiveImg(0);
   }, [activeImage]);
 
+  const viewFiredFor = useRef<string | null>(null);
+  useEffect(() => {
+    // Fire ViewContent once per product (avoid duplicate events on re-render)
+    const key = productId ?? product.slug ?? product.name;
+    // Wait until real product data is resolved (avoid an empty ViewContent).
+    if (!productId || !product.name) return;
+    if (!key || viewFiredFor.current === key) return;
+    viewFiredFor.current = key;
+    const pName = product.name;
+    const pPrice = getCanonicalProductPrice(product.price);
+    pixelTrack("ViewContent", {
+      content_name: pName,
+      content_id: productId ?? undefined,
+      value: pPrice,
+      currency: "SAR",
+      contents: [{ id: productId ?? "", quantity: 1, price: pPrice }]
+    });
+  }, [productId, ar, product]);
+
   // Re-sync selection if the loaded product no longer contains the picks.
   useEffect(() => {
-    if (size && !product.sizes.includes(size)) {
-      setSize(product.sizes[2] ?? product.sizes[0] ?? "");
+    if (size && !validSizes.includes(size)) {
+      setSize(validSizes[0] ?? "");
     }
     if (color && !product.colors.some((c) => c.name === color)) {
       setColor(product.colors[0]?.name ?? "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product.sizes.join("|"), product.colors.map((c) => c.name).join("|")]);
+  }, [validSizes.join("|"), product.colors.map((c) => c.name).join("|")]);
 
   // Once per-size stock loads, avoid landing on a sold-out size: switch to the
   // first size that's actually available.
   useEffect(() => {
-    if (!product.sizes.length) return;
+    if (!validSizes.length) {
+      if (size) setSize("");
+      return;
+    }
     const isSold = (s: string) => {
       const v = sizeVariantBySize[s];
       return !!v && v.stock <= 0;
     };
     if (!size || isSold(size)) {
-      const firstAvailable = product.sizes.find((s) => !isSold(s));
+      const firstAvailable = validSizes.find((s) => !isSold(s));
       if (firstAvailable && firstAvailable !== size) setSize(firstAvailable);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [Object.keys(sizeVariantBySize).join("|"), product.sizes.join("|")]);
+  }, [Object.keys(sizeVariantBySize).join("|"), validSizes.join("|")]);
   const sizeLabel = (rawSize: string) => {
     const variant = sizeVariantBySize[rawSize];
     if (!variant) return rawSize;
@@ -305,9 +333,11 @@ function ProductDetails() {
     [product.upsells, selectedUpsells],
   );
   const giftWrapFee = giftWrap ? 35 : 0;
-  // Per-size SKU/price/stock (when the product uses the Sizes & SKUs editor).
+  // Only require size selection if product has actual non-empty size values
+  const requiresSize = validSizes.length > 0;
+  // Per-size SKU/stock (when the product uses the Sizes & SKUs editor).
   const selectedSizeVariant = sizeVariantBySize[size];
-  const effectivePrice = selectedSizeVariant?.price ?? product.price;
+  const effectivePrice = getCanonicalProductPrice(product.price, selectedSizeVariant?.price);
   const maxQty = selectedSizeVariant ? Math.max(1, selectedSizeVariant.stock) : product.stock || 99;
   const lineTotal = effectivePrice * qty + upsellsTotal + giftWrapFee;
 
@@ -322,7 +352,7 @@ function ProductDetails() {
 
   const addToBag = () => {
     if (isOOS || isComingSoon) return;
-    if (!size) {
+    if (requiresSize && !size) {
       toast.error(ar ? "اختر المقاس أولاً" : "Please select a size");
       return;
     }
@@ -339,7 +369,9 @@ function ProductDetails() {
       image: product.images[0],
       size,
       color,
+      qty,
       sku: selectedSizeVariant?.sku ?? product.sku ?? undefined,
+      stockLimit: maxQty,
     });
     toast.success(ar ? "تمت الإضافة إلى السلة" : "Added to bag", {
       action: {
@@ -351,7 +383,7 @@ function ProductDetails() {
 
   const buyNow = () => {
     if (isOOS || isComingSoon) return;
-    if (!size) {
+    if (requiresSize && !size) {
       toast.error(ar ? "اختر المقاس أولاً" : "Please select a size");
       return;
     }
@@ -368,7 +400,9 @@ function ProductDetails() {
       image: product.images[0],
       size,
       color,
+      qty,
       sku: selectedSizeVariant?.sku ?? product.sku ?? undefined,
+      stockLimit: maxQty,
     });
     navigate({ to: "/checkout" });
   };
@@ -493,10 +527,7 @@ function ProductDetails() {
     cityCheck: ar ? "تحقق من التوصيل لمدينتك" : "Check delivery to your city",
     cityPlaceholder: ar ? "اكتب اسم المدينة" : "Enter city name",
     check: ar ? "تحقق" : "Check",
-    warranty: ar ? "الضمان" : "Warranty",
     returnPolicy: ar ? "سياسة الإرجاع" : "Return policy",
-    securePayment: ar ? "دفع آمن 100%" : "100% Secure payment",
-    cod: ar ? "الدفع عند الاستلام متاح" : "Cash on delivery available",
     customerReviews: ar ? "تقييمات العملاء" : "Customer Reviews",
     allReviews: ar ? "الكل" : "All",
     verifiedPurchase: ar ? "مشترٍ موثّق" : "Verified purchase",
@@ -661,7 +692,9 @@ function ProductDetails() {
                     aria-label={`${i + 1} / ${displayImages.length}`}
                   >
                     <img
-                      src={src}
+                      src={productImg(src, "xlarge")}
+                      srcSet={productSrcSet(src, "xlarge")}
+                      sizes="(min-width: 640px) 500px, 100vw"
                       alt={`${product.name} — ${i + 1}`}
                       className="w-full h-full object-cover"
                       width={1024}
@@ -736,7 +769,7 @@ function ProductDetails() {
                   className={`h-[68px] w-[56px] shrink-0 overflow-hidden rounded-[14px] border transition active:scale-95 ${i === activeImg ? "border-gold ring-1 ring-gold/40" : "border-border opacity-80"}`}
                 >
                   <img
-                    src={src}
+                    src={productImg(src, "thumb")}
                     alt=""
                     loading="lazy"
                     decoding="async"
@@ -851,6 +884,7 @@ function ProductDetails() {
           </section>
 
           {/* Size */}
+          {requiresSize && (
           <section className="px-5 mt-7">
             <div className="flex items-center justify-between">
               <span
@@ -871,7 +905,7 @@ function ProductDetails() {
               aria-labelledby="pdp-size-label"
               className="mt-3 grid grid-cols-3 min-[380px]:grid-cols-4 gap-2"
             >
-              {product.sizes.map((s) => {
+              {validSizes.map((s) => {
                 const active = s === size;
                 const sv = sizeVariantBySize[s];
                 const soldOut = !!sv && sv.stock <= 0;
@@ -891,6 +925,7 @@ function ProductDetails() {
               })}
             </div>
           </section>
+          )}
 
           {/* Variants (sizes + colors as full DB variants when configured) */}
           {productId && (
@@ -998,7 +1033,7 @@ function ProductDetails() {
                         className="h-4 w-4 accent-foreground"
                       />
                       <img
-                        src={u.image}
+                        src={productImg(u.image, "thumb")}
                         alt={u.name}
                         width={56}
                         height={56}
@@ -1017,7 +1052,39 @@ function ProductDetails() {
             </section>
           )}
 
-          {/* Tabs: Description / Specs / Care / Shipping */}
+          {(product.deliveryEstimate || product.shippingPolicy || product.returnPolicy) && (
+            <section className="px-5 mt-6">
+              <div className="rounded-[14px] border border-border bg-card/40 divide-y divide-border">
+                {product.deliveryEstimate && (
+                  <div className="flex items-start gap-3 p-3">
+                    <Truck className="h-4 w-4 text-gold-deep mt-0.5 shrink-0" />
+                    <p className="text-[13px] text-foreground/85 whitespace-pre-line leading-[1.6]">
+                      {product.deliveryEstimate}
+                    </p>
+                  </div>
+                )}
+                {product.shippingPolicy && (
+                  <div className="flex items-start gap-3 p-3">
+                    <Package className="h-4 w-4 text-gold-deep mt-0.5 shrink-0" />
+                    <p className="text-[13px] text-foreground/85 whitespace-pre-line leading-[1.6]">
+                      {product.shippingPolicy}
+                    </p>
+                  </div>
+                )}
+                {product.returnPolicy && (
+                  <div className="flex items-start gap-3 p-3">
+                    <RotateCcw className="h-4 w-4 text-gold-deep mt-0.5 shrink-0" />
+                    <p className="text-[13px] text-foreground/85 whitespace-pre-line leading-[1.6]">
+                      {product.returnPolicy}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+
+          {/* Tabs: Description / Specs / Care */}
+
           <section className="px-5 mt-8">
             <div
               role="tablist"
@@ -1027,9 +1094,7 @@ function ProductDetails() {
               {(
                 [
                   ["description", t.description],
-                  ["specs", t.specs],
                   ["care", t.care],
-                  ["shipping", t.shipping],
                 ] as const
               ).map(([key, label]) => (
                 <button
@@ -1072,21 +1137,6 @@ function ProductDetails() {
                   </ul>
                 </div>
               )}
-              {tab === "specs" && (
-                <dl className="divide-y divide-border">
-                  {product.specs.map((sp) => (
-                    <div
-                      key={sp.label}
-                      className="flex flex-wrap justify-between gap-x-3 gap-y-1 py-2.5 text-[13.5px]"
-                    >
-                      <dt className="text-muted-foreground break-words">{sp.label}</dt>
-                      <dd className="text-foreground/85 font-medium break-words text-end">
-                        {sp.value}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              )}
               {tab === "care" && (
                 <div className="space-y-4">
                   <div>
@@ -1121,87 +1171,6 @@ function ProductDetails() {
                   </div>
                 </div>
               )}
-              {tab === "shipping" && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 text-[13.5px] text-foreground/80">
-                    <Truck className="h-[16px] w-[16px] text-gold-deep" />{" "}
-                    {product.deliveryEstimate || t.deliveryEstimate}
-                  </div>
-                  <div className="flex items-center gap-3 text-[13.5px] text-foreground/80">
-                    <Package className="h-[16px] w-[16px] text-gold-deep" />{" "}
-                    {product.shippingPolicy || t.freeShippingOver(500)}
-                  </div>
-                  <div className="flex items-center gap-3 text-[13.5px] text-foreground/80">
-                    <RotateCcw className="h-[16px] w-[16px] text-gold-deep" />{" "}
-                    {product.returnPolicy || t.returnPolicy}
-                  </div>
-                  <div className="mt-3 rounded-[14px] border border-border p-3">
-                    <p className="text-[12px] text-muted-foreground mb-2">{t.cityCheck}</p>
-                    <div className="flex flex-col min-[380px]:flex-row gap-2">
-                      <input
-                        value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                        placeholder={t.cityPlaceholder}
-                        className="min-w-0 flex-1 h-10 rounded-full border border-border bg-background px-4 text-[13px]"
-                      />
-                      <button className="h-10 px-4 rounded-xl bg-foreground text-background text-[12.5px]">
-                        {t.check}
-                      </button>
-                    </div>
-                    {city && (
-                      <p className="mt-2 text-[12px] text-emerald-700">
-                        {ar
-                          ? `التوصيل إلى ${city}: 2-4 أيام عمل`
-                          : `Delivery to ${city}: 2-4 business days`}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* Trust badges */}
-          <section className="px-5 mt-7">
-            <div className="rounded-[20px] border border-border bg-cream-warm/60 p-4 grid grid-cols-1 min-[380px]:grid-cols-2 gap-3">
-              <div className="flex items-start gap-2">
-                <ShieldCheck
-                  className="h-[18px] w-[18px] text-gold-deep shrink-0 mt-0.5"
-                  strokeWidth={1.5}
-                />
-                <div>
-                  <p className="text-[12px] font-medium text-foreground/85">{t.warranty}</p>
-                  <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
-                    {product.warranty}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <RotateCcw
-                  className="h-[18px] w-[18px] text-gold-deep shrink-0 mt-0.5"
-                  strokeWidth={1.5}
-                />
-                <div>
-                  <p className="text-[12px] font-medium text-foreground/85">{t.returnPolicy}</p>
-                  <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
-                    {product.returnPolicy || t.returnPolicy}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <CreditCard
-                  className="h-[18px] w-[18px] text-gold-deep shrink-0 mt-0.5"
-                  strokeWidth={1.5}
-                />
-                <p className="text-[12px] text-foreground/85">{t.securePayment}</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <Package
-                  className="h-[18px] w-[18px] text-gold-deep shrink-0 mt-0.5"
-                  strokeWidth={1.5}
-                />
-                <p className="text-[12px] text-foreground/85">{t.cod}</p>
-              </div>
             </div>
           </section>
 
@@ -1407,7 +1376,8 @@ function ProductDetails() {
                 >
                   <div className="aspect-[4/5] rounded-[16px] overflow-hidden bg-pastel-peach">
                     <img
-                      src={p.images[0]}
+                      src={productImg(p.images[0], "small")}
+                      srcSet={productSrcSet(p.images[0], "small")}
                       alt={p.name}
                       width={400}
                       height={500}
@@ -1502,7 +1472,7 @@ function ProductDetails() {
             <X className="h-5 w-5" />
           </button>
           <img
-            src={displayImages[activeImg]}
+            src={productImg(displayImages[activeImg], "xlarge")}
             alt={product.name}
             width={1280}
             height={1600}

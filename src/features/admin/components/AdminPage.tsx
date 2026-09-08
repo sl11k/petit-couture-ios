@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { AdminPageConfig } from "../types";
 import { useAdminTable } from "../hooks/useAdminTable";
@@ -21,8 +21,45 @@ export function AdminPage<T extends Record<string, any>>({ config }: { config: A
   const canCreate = hasForm && config.actions?.create !== false;
   const canEdit = hasForm && config.actions?.edit !== false;
   const canDelete = !!config.actions?.delete;
+  const canBulkDelete = !!config.actions?.bulkDelete;
 
   const [dialog, setDialog] = useState<{ mode: "create" | "edit"; row?: T } | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const visibleIds = useMemo(() => rows.map((r: any) => String(r.id)), [rows]);
+  const selectedCount = useMemo(
+    () => visibleIds.filter((id) => selectedIds.has(id)).length,
+    [visibleIds, selectedIds],
+  );
+
+  const toggleRow = (id: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id); else next.delete(id);
+      return next;
+    });
+  };
+  const toggleAll = (checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) visibleIds.forEach((id) => next.add(id));
+      else visibleIds.forEach((id) => next.delete(id));
+      return next;
+    });
+  };
+
+  const deleteSelected = async () => {
+    const ids = visibleIds.filter((id) => selectedIds.has(id));
+    if (ids.length === 0) return;
+    if (!confirm(ar ? `تأكيد حذف ${ids.length} عنصر؟` : `Delete ${ids.length} items?`)) return;
+    const { error: e } = await supabase.from(config.table as any).delete().in("id", ids);
+    if (e) toast.error(e.message);
+    else {
+      toast.success(ar ? `تم حذف ${ids.length} عنصر` : `Deleted ${ids.length} items`);
+      setSelectedIds(new Set());
+      reload();
+    }
+  };
 
   const rowActions = [
     ...(config.rowActions ?? []),
@@ -49,6 +86,7 @@ export function AdminPage<T extends Record<string, any>>({ config }: { config: A
         }]
       : []),
   ];
+
 
   return (
     <div>
@@ -86,6 +124,15 @@ export function AdminPage<T extends Record<string, any>>({ config }: { config: A
                 </button>
               </>
             )}
+            {canBulkDelete && selectedCount > 0 && (
+              <button
+                onClick={deleteSelected}
+                className="flex items-center gap-1.5 rounded-md bg-destructive px-3 py-1.5 text-xs font-medium text-destructive-foreground hover:bg-destructive/90"
+              >
+                <Trash2 className="h-3 w-3" />
+                {ar ? `حذف المحدد (${selectedCount})` : `Delete selected (${selectedCount})`}
+              </button>
+            )}
             {canCreate && (
               <button
                 onClick={() => setDialog({ mode: "create" })}
@@ -114,7 +161,12 @@ export function AdminPage<T extends Record<string, any>>({ config }: { config: A
         loading={loading}
         rowHref={config.rowHref}
         rowActions={rowActions.length > 0 ? rowActions : undefined}
+        selectable={canBulkDelete}
+        selectedIds={selectedIds}
+        onToggleRow={toggleRow}
+        onToggleAll={toggleAll}
       />
+
 
       {hasForm && dialog && (
         <FormDialog

@@ -1,0 +1,1 @@
+DELETE FROM public.abandoned_carts WHERE session_id = 'diagnostic-cart-track';

@@ -1,0 +1,1 @@
+ALTER FUNCTION public.profiles_emit_created() SET search_path = public;
