@@ -262,11 +262,8 @@ const EMAIL_LOGO_URL = "https://lppme.com/__l5e/assets-v1/cb66358e-ed5c-4c3b-80d
 const EMAIL_SENDER_DOMAIN = "notify.lppme.com";
 const EMAIL_FROM_DOMAIN = "lppme.com";
 
-function generateEmailToken(): string {
-  const bytes = new Uint8Array(32);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
+
+
 
 function textToHtml(text: string, language: string): string {
   const isRtl = language === "ar";
