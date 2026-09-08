@@ -9,7 +9,7 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "Remix of Petite Elegance App"
+const SITE_NAME = "le petit paradis"
 const SENDER_DOMAIN = "notify.lppme.com"
 const ROOT_DOMAIN = "lppme.com"
 const FROM_DOMAIN = "lppme.com"
