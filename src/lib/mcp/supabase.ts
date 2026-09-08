@@ -1,5 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
-import type { ToolContext } from "@lovable.dev/mcp-js";
+import type { ToolContext, ToolHandlerResult } from "@lovable.dev/mcp-js";
+
+type JsonValueInput = NonNullable<ToolHandlerResult["structuredContent"]>;
 
 type RuntimeGlobals = typeof globalThis & {
   Deno?: { env?: { get?: (name: string) => string | undefined } };
@@ -65,10 +67,13 @@ export function requireAuth(ctx: ToolContext) {
   return null;
 }
 
-export function jsonResult(data: unknown) {
+export function jsonResult(data: unknown): ToolHandlerResult {
+  // Round-trip through JSON so the payload is guaranteed to be plain JSON values.
+  const plain = JSON.parse(JSON.stringify(data ?? null)) as JsonValueInput;
+  const structured = (Array.isArray(plain) ? { items: plain } : plain) as JsonValueInput;
   return {
-    content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
-    structuredContent: (Array.isArray(data) ? { items: data } : (data as Record<string, unknown>)) ?? {},
+    content: [{ type: "text", text: JSON.stringify(plain, null, 2) }],
+    structuredContent: structured,
   };
 }
 
