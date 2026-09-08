@@ -1,5 +1,7 @@
 // Server-only notification engine. Enqueues, renders, dispatches, logs.
+import { EmailAPIError, sendLovableEmail } from "@lovable.dev/email-js";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
 import { decryptSecret } from "./crypto.server";
 import { getProvider } from "./providers";
 import type { ProviderCredentials } from "./providers/types";
