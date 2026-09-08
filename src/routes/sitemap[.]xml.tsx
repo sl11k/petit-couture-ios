@@ -11,8 +11,6 @@ export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
-        const today = new Date().toISOString().slice(0, 10);
-
         const staticPages: Entry[] = [
           { path: "/", changefreq: "daily", priority: 1.0 },
           { path: "/search", changefreq: "weekly", priority: 0.7 },
@@ -110,7 +108,6 @@ export const Route = createFileRoute("/sitemap.xml")({
               (u) =>
                 `  <url>\n` +
                 `    <loc>${SITE.url}${u.path}</loc>\n` +
-                `    <lastmod>${today}</lastmod>\n` +
                 `    <changefreq>${u.changefreq}</changefreq>\n` +
                 `    <priority>${u.priority.toFixed(1)}</priority>\n` +
                 `  </url>`,
