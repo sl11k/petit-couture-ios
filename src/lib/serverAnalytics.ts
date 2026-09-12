@@ -3,6 +3,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 const SESSION_KEY = "maisonnet:session_id:v1";
+const VISITOR_KEY = "maisonnet:visitor_id:v1";
 
 function getSessionId(): string {
   if (typeof window === "undefined") return "ssr";
@@ -84,6 +85,24 @@ async function getVisitCtx(): Promise<VisitCtx> {
   return ctxPromise;
 }
 
+function getVisitorId(): string {
+  if (typeof window === "undefined") return "ssr";
+  let id = window.localStorage.getItem(VISITOR_KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    window.localStorage.setItem(VISITOR_KEY, id);
+  }
+  return id;
+}
+
+function deviceType() {
+  if (typeof navigator === "undefined") return "unknown";
+  const ua = navigator.userAgent;
+  if (/ipad|tablet|playbook|silk/i.test(ua)) return "tablet";
+  if (/mobi|android|iphone|ipod/i.test(ua)) return "mobile";
+  return "desktop";
+}
+
 export async function trackServerEvent(
   eventName: string,
   metadata: Record<string, unknown> = {},
@@ -96,6 +115,16 @@ export async function trackServerEvent(
     const { data: auth } = await supabase.auth.getSession();
     const ctx = await getVisitCtx();
     const rawPath = path ?? (typeof window !== "undefined" ? window.location.pathname : null);
+    const enriched = {
+      ...ctx,
+      ...metadata,
+      visitor_id: getVisitorId(),
+      device: deviceType(),
+      language: typeof navigator !== "undefined" ? navigator.language : null,
+      screen_width: typeof screen !== "undefined" ? screen.width : null,
+      screen_height: typeof screen !== "undefined" ? screen.height : null,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    };
     await (supabase.from("analytics_events") as any).insert({
       session_id,
       user_id: auth.session?.user?.id ?? null,
@@ -103,7 +132,7 @@ export async function trackServerEvent(
       // Strip tracking query strings: they bloat storage and never get reported on.
       path: trim(rawPath ? rawPath.split("?")[0] : null, 200),
       referrer: trim(typeof document !== "undefined" ? document.referrer || null : null, 120),
-      metadata: { ...ctx, ...metadata },
+      metadata: enriched,
       user_agent: trim(typeof navigator !== "undefined" ? navigator.userAgent : null, 120),
     });
   } catch {
