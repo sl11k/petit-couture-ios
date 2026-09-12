@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { PageHeader } from "@/features/admin/components/PageHeader";
-import { ShoppingBag, DollarSign, Users, Package, TrendingUp, Activity, Eye, Clock, MousePointer2 } from "lucide-react";
+import { ShoppingBag, DollarSign, Users, Package, TrendingUp, Activity, Eye, Clock, MousePointer2, Download, Radio } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
 import { format, startOfDay, endOfDay, subDays, startOfMonth } from "date-fns";
 
@@ -21,6 +21,19 @@ function bounds(range: Range, from: string, to: string) {
   if (range === "custom") return [new Date(`${from}T00:00:00`), new Date(`${to}T23:59:59.999`)];
   const days = range === "24h" ? 1 : Number(range.replace("d", ""));
   return [new Date(now.getTime() - days * 86400000), now];
+}
+
+async function fetchAllEvents(fromIso: string, toIso: string) {
+  const all: any[] = [];
+  for (let offset = 0; ; offset += 1000) {
+    const { data, error } = await supabase.from("analytics_events")
+      .select("session_id,user_id,event_name,path,referrer,metadata,user_agent,created_at")
+      .gte("created_at", fromIso).lte("created_at", toIso).order("created_at").range(offset, offset + 999);
+    if (error) throw error;
+    all.push(...(data || []));
+    if (!data || data.length < 1000) break;
+  }
+  return all;
 }
 
 function StatCard({ label, value, sub, icon: Icon }: { label: string; value: string; sub?: string; icon: typeof ShoppingBag }) {
@@ -69,6 +82,9 @@ function AnalyticsPage() {
     topStatuses: [] as { status: string; count: number }[],
     paidOrders: 0,
     failedPayments: 0,
+    payments: [] as any[],
+    previousSessions: 0,
+    liveVisitors: 0,
   });
 
   useEffect(() => {
@@ -77,18 +93,20 @@ function AnalyticsPage() {
       const [start, finish] = bounds(range, from, to);
       const since = start.toISOString();
       const until = finish.toISOString();
-      const [ordersRes, sessionsRes, itemsRes, customersRes, paymentsRes] = await Promise.all([
+      const duration = finish.getTime() - start.getTime();
+      const prevStart = new Date(start.getTime() - duration - 1), prevEnd = new Date(start.getTime() - 1);
+      const [ordersRes, events, itemsRes, customersRes, paymentsRes, previousEvents] = await Promise.all([
         supabase.from("orders").select("total, status, payment_status, source, created_at").gte("created_at", since).lte("created_at", until),
-        supabase.from("analytics_events").select("session_id,event_name,path,referrer,metadata,user_agent,created_at").gte("created_at", since).lte("created_at", until).order("created_at").limit(10000),
+        fetchAllEvents(since, until),
         supabase.from("order_items").select("product_name, qty, orders!inner(created_at)").gte("orders.created_at", since).lte("orders.created_at", until),
         supabase.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", since).lte("created_at", until),
         supabase.from("payment_transactions").select("status,amount,gateway,created_at").gte("created_at", since).lte("created_at", until),
+        fetchAllEvents(prevStart.toISOString(), prevEnd.toISOString()),
       ]);
       const orders = ordersRes.data ?? [];
       const revenue = orders.reduce((s, o: any) => s + Number(o.total ?? 0), 0);
       const avgOrder = orders.length > 0 ? revenue / orders.length : 0;
-      const sessions = new Set((sessionsRes.data ?? []).map((s: any) => s.session_id).filter(Boolean)).size;
-      const events = sessionsRes.data ?? [];
+      const sessions = new Set(events.map((s: any) => s.session_id).filter(Boolean)).size;
       const pageViews = events.filter((e: any) => e.event_name === "page_view").length;
       const visitors = new Set(events.map((e: any) => e.metadata?.visitor_id || e.user_id || e.session_id).filter(Boolean)).size;
       const sessionMap = new Map<string, any[]>();
@@ -128,6 +146,9 @@ function AnalyticsPage() {
         events,
         paidOrders: orders.filter((o: any) => ["paid", "captured"].includes(o.payment_status)).length,
         failedPayments: (paymentsRes.data ?? []).filter((p: any) => p.status === "failed").length,
+        payments: paymentsRes.data ?? [],
+        previousSessions: new Set(previousEvents.map((e: any) => e.session_id).filter(Boolean)).size,
+        liveVisitors: new Set(events.filter((e: any) => Date.now() - new Date(e.created_at).getTime() <= 120000).map((e: any) => e.metadata?.visitor_id || e.session_id)).size,
         topProducts,
         topStatuses,
       });
@@ -158,8 +179,19 @@ function AnalyticsPage() {
       if (campaign) campaigns.set(campaign, (campaigns.get(campaign) || 0) + 1);
     }
     const top = (m: Map<string, number>) => Array.from(m, ([name, value]) => ({ name, value })).sort((a,b)=>b.value-a.value).slice(0,10);
-    return { series: Array.from(buckets.values()).map(b=>({ label:b.label, visitors:b.visitors.size, views:b.views })).sort((a,b)=>a.label.localeCompare(b.label)), sources:top(sources), pages:top(pages), devices:top(devices), countries:top(countries), campaigns:top(campaigns), events:top(events) };
-  }, [stats.events, range, from, to]);
+    const gateways = new Map<string, number>();
+    stats.payments.forEach((p:any)=>gateways.set(`${p.gateway} · ${p.status}`, (gateways.get(`${p.gateway} · ${p.status}`)||0)+1));
+    const funnelNames = ["page_view","view_content","add_to_cart","begin_checkout","add_payment_info","purchase"];
+    const funnel = funnelNames.map(name=>({name,value:events.get(name)||0}));
+    return { series: Array.from(buckets.values()).map(b=>({ label:b.label, visitors:b.visitors.size, views:b.views })).sort((a,b)=>a.label.localeCompare(b.label)), sources:top(sources), pages:top(pages), devices:top(devices), countries:top(countries), campaigns:top(campaigns), events:top(events), gateways:top(gateways), funnel };
+  }, [stats.events, stats.payments, range, from, to]);
+
+  const exportCsv = () => {
+    const rows = [["time","event","session","path","source","device","country"]];
+    stats.events.forEach((e:any)=>rows.push([e.created_at,e.event_name,e.session_id,e.path||"",e.referrer||"",e.metadata?.device||"",e.metadata?.country||e.metadata?.country_code||""]));
+    const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+    const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv"})); a.download=`analytics-${from}-${to}.csv`; a.click(); URL.revokeObjectURL(a.href);
+  };
 
   const fmt = (n: number) => n.toLocaleString(ar ? "ar" : "en", { maximumFractionDigits: 0 });
 
@@ -169,7 +201,8 @@ function AnalyticsPage() {
         title={{ ar: "التحليلات", en: "Analytics" }}
         description={{ ar: "بيانات حقيقية حسب الفترة — توقيت الرياض", en: "Real data by period — Riyadh time" }}
         actions={
-          <div className="flex gap-1 rounded-md border border-border bg-card p-0.5 text-xs">
+          <div className="flex flex-wrap gap-1 rounded-md border border-border bg-card p-0.5 text-xs">
+            <button onClick={exportCsv} className="flex items-center gap-1 rounded px-2.5 py-1 hover:bg-muted"><Download className="h-3 w-3"/>{ar?"تصدير":"Export"}</button>
             {(["today", "yesterday", "24h", "7d", "14d", "30d", "90d", "month"] as Range[]).map((r) => (
               <button
                 key={r}
@@ -202,6 +235,8 @@ function AnalyticsPage() {
         <StatCard label={ar ? "الجلسات" : "Sessions"} value={loading ? "…" : fmt(stats.sessions)} icon={Activity} />
         <StatCard label={ar ? "معدل التحويل" : "Conversion rate"} value={`${(stats.paidOrders / Math.max(stats.sessions,1) * 100).toFixed(2)}%`} icon={TrendingUp} />
         <StatCard label={ar ? "مدفوعات فاشلة" : "Failed payments"} value={fmt(stats.failedPayments)} icon={Activity} />
+        <StatCard label={ar ? "زوار الآن (دقيقتان)" : "Live visitors (2m)"} value={fmt(stats.liveVisitors)} icon={Radio} />
+        <StatCard label={ar ? "تغير الجلسات" : "Session change"} value={`${stats.previousSessions ? ((stats.sessions-stats.previousSessions)/stats.previousSessions*100).toFixed(1) : "0.0"}%`} icon={TrendingUp} />
       </div>
 
       <section className="mt-4 rounded-xl border border-border bg-card p-4">
@@ -213,6 +248,11 @@ function AnalyticsPage() {
         <Breakdown title={ar ? "مصادر الزيارات" : "Sources"} rows={details.sources}/>
         <Breakdown title={ar ? "أكثر الصفحات" : "Top pages"} rows={details.pages}/>
         <Breakdown title={ar ? "الأجهزة" : "Devices"} rows={details.devices}/>
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <Breakdown title={ar ? "مسار التحويل" : "Conversion funnel"} rows={details.funnel}/>
+        <Breakdown title={ar ? "بوابات وحالات الدفع" : "Payment gateways and statuses"} rows={details.gateways}/>
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
