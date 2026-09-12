@@ -241,6 +241,17 @@ export function Footer() {
             © {new Date().getFullYear()} {BRAND_NAME}.{" "}
             {ar ? "جميع الحقوق محفوظة." : "All rights reserved."}
           </span>
+          <span className="flex items-center gap-1">
+            {ar ? "صُنع بواسطة" : "made by"}{" "}
+            <a
+              href="https://trendify.sa"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:text-blue-400 transition font-medium"
+            >
+              trendify.sa
+            </a>
+          </span>
         </div>
       </div>
     </footer>
