@@ -3,15 +3,18 @@
 import { supabase } from "@/integrations/supabase/client";
 
 const SESSION_KEY = "maisonnet:session_id:v1";
+const SESSION_ACTIVITY_KEY = "maisonnet:session_active:v1";
 const VISITOR_KEY = "maisonnet:visitor_id:v1";
 
 function getSessionId(): string {
   if (typeof window === "undefined") return "ssr";
-  let id = window.localStorage.getItem(SESSION_KEY);
-  if (!id) {
+  let id = window.sessionStorage.getItem(SESSION_KEY);
+  const last = Number(window.sessionStorage.getItem(SESSION_ACTIVITY_KEY) || 0);
+  if (!id || Date.now() - last > 30 * 60 * 1000) {
     id = `s_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-    window.localStorage.setItem(SESSION_KEY, id);
+    window.sessionStorage.setItem(SESSION_KEY, id);
   }
+  window.sessionStorage.setItem(SESSION_ACTIVITY_KEY, String(Date.now()));
   return id;
 }
 
@@ -124,6 +127,11 @@ export async function trackServerEvent(
       screen_width: typeof screen !== "undefined" ? screen.width : null,
       screen_height: typeof screen !== "undefined" ? screen.height : null,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      utm_source: typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("utm_source") : null,
+      utm_medium: typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("utm_medium") : null,
+      utm_campaign: typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("utm_campaign") : null,
+      utm_content: typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("utm_content") : null,
+      utm_term: typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("utm_term") : null,
     };
     await (supabase.from("analytics_events") as any).insert({
       session_id,
