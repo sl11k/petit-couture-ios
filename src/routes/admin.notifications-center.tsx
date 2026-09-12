@@ -61,10 +61,12 @@ function NotificationsCenter() {
     ]);
     setStats({
       queue: {
-        pending: (q ?? []).filter((r: any) => r.status === "pending").length,
-        retry: (q ?? []).filter((r: any) => r.status === "retry").length,
-        failed: (q ?? []).filter((r: any) => r.status === "failed").length,
+        pending: (q ?? []).filter((r: any) => r.status === "queued").length,
+        retry: (q ?? []).filter((r: any) => r.status === "sending").length,
+        failed: (q ?? []).filter((r: any) => ["failed", "dead_letter"].includes(r.status)).length,
         sent: (q ?? []).filter((r: any) => r.status === "sent").length,
+        delivered: (q ?? []).filter((r: any) => r.status === "delivered").length,
+        read: (q ?? []).filter((r: any) => r.status === "read").length,
       },
       last24: {
         sent: (logs ?? []).filter((r: any) => r.status === "sent").length,
@@ -248,11 +250,13 @@ function NotificationsCenter() {
           </div>
 
           {/* Queue + last 24h */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
             <MetricCard icon={ClipboardList} label={ar ? "بانتظار" : "Pending"} value={stats.queue.pending} tone="warn" />
             <MetricCard icon={ClipboardList} label={ar ? "إعادة" : "Retrying"} value={stats.queue.retry} tone="warn" />
             <MetricCard icon={XCircle} label={ar ? "فشلت" : "Failed"} value={stats.queue.failed} tone="danger" />
             <MetricCard icon={CheckCircle2} label={ar ? "أُرسلت" : "Sent"} value={stats.queue.sent} tone="ok" />
+            <MetricCard icon={CheckCircle2} label={ar ? "تم التسليم" : "Delivered"} value={stats.queue.delivered} tone="ok" />
+            <MetricCard icon={CheckCircle2} label={ar ? "تمت القراءة" : "Read"} value={stats.queue.read} tone="ok" />
             <MetricCard icon={Send} label={ar ? "آخر 24س (نجح)" : "24h sent"} value={stats.last24.sent} tone="ok" />
             <MetricCard icon={Bell} label={ar ? "آخر 24س (فشل)" : "24h failed"} value={stats.last24.failed} tone="danger" />
           </div>
