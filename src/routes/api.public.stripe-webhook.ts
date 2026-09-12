@@ -64,11 +64,17 @@ export const Route = createFileRoute("/api/public/stripe-webhook")({
             return json({ ok: true });
           }
 
-          if (
-            event.type === "checkout.session.expired" ||
-            event.type === "payment_intent.payment_failed"
-          ) {
-            const result = await failStripeCheckout(object, event);
+          if (event.type === "checkout.session.expired") {
+            const result = await failStripeCheckout(object, event, "expired");
+            await markWebhookLog(logId, {
+              processed: true,
+              related_transaction_id: result.transactionId,
+            });
+            return json({ ok: true });
+          }
+
+          if (event.type === "payment_intent.payment_failed") {
+            const result = await failStripeCheckout(object, event, "failed");
             await markWebhookLog(logId, {
               processed: true,
               related_transaction_id: result.transactionId,
@@ -213,7 +219,11 @@ async function completeStripeCheckout(object: Record<string, unknown>, event: St
   return { transactionId };
 }
 
-async function failStripeCheckout(object: Record<string, unknown>, event: StripeEvent) {
+async function failStripeCheckout(
+  object: Record<string, unknown>,
+  event: StripeEvent,
+  outcome: "failed" | "expired",
+) {
   const sessionId = String(object.id || object.latest_charge || object.payment_intent || event.id);
   const orderNumber = orderNumberFromStripeObject(object);
   if (!orderNumber) return { transactionId: null };
@@ -231,7 +241,7 @@ async function failStripeCheckout(object: Record<string, unknown>, event: Stripe
     sessionId,
     amount: Number(order.total),
     currency: String(order.currency || "SAR").toUpperCase(),
-    status: "failed",
+    status: outcome,
     event,
   });
 
@@ -253,6 +263,7 @@ async function failStripeCheckout(object: Record<string, unknown>, event: Stripe
   await supabaseAdmin
     .from("orders")
     .update({
+      payment_status: outcome,
       payment_failure_reason: event.type,
       last_payment_attempt_at: new Date().toISOString(),
       payment_gateway: "stripe",
@@ -269,7 +280,7 @@ async function findOrCreateStripeTransaction(input: {
   sessionId: string;
   amount: number;
   currency: string;
-  status: "captured" | "failed";
+  status: "captured" | "failed" | "expired";
   event: StripeEvent;
 }) {
   const { data: existing } = await supabaseAdmin
@@ -285,8 +296,10 @@ async function findOrCreateStripeTransaction(input: {
     webhook_verified: true,
     updated_at: new Date().toISOString(),
     ...(input.status === "captured"
-      ? { captured_at: new Date().toISOString() }
-      : { failed_at: new Date().toISOString(), error_message: input.event.type }),
+      ? { captured_at: new Date().toISOString(), failed_at: null }
+      : input.status === "failed"
+        ? { failed_at: new Date().toISOString(), error_message: input.event.type }
+        : { failed_at: null, error_message: input.event.type }),
   };
 
   if (existing?.id) {

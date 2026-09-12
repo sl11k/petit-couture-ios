@@ -133,6 +133,20 @@ export const paymentsConfig: AdminPageConfig = {
     { key: "amount", label: { ar: "المبلغ", en: "Amount" }, type: "currency" },
     { key: "gateway", label: { ar: "البوابة", en: "Gateway" }, hideOnMobile: true },
     { key: "status", label: { ar: "الحالة", en: "Status" }, type: "badge" },
+    {
+      key: "error_message",
+      label: { ar: "السبب", en: "Reason" },
+      hideOnMobile: true,
+      render: (value) => {
+        const reasons: Record<string, { ar: string; en: string }> = {
+          "checkout.session.expired": { ar: "انتهت جلسة Stripe دون إكمال الدفع", en: "Stripe checkout session expired" },
+          tabby_expired: { ar: "انتهت جلسة تابي دون إكمال الدفع", en: "Tabby checkout expired" },
+          tamara_order_expired: { ar: "انتهت جلسة تمارا دون إكمال الدفع", en: "Tamara checkout expired" },
+        };
+        const reason = reasons[String(value || "")];
+        return <span className="text-xs text-muted-foreground">{reason ? reason.ar : value || "—"}</span>;
+      },
+    },
     { key: "card_brand", label: { ar: "البطاقة", en: "Card" }, hideOnMobile: true },
     { key: "created_at", label: { ar: "التاريخ", en: "Date" }, type: "datetime", hideOnMobile: true },
   ],
@@ -142,8 +156,9 @@ export const paymentsConfig: AdminPageConfig = {
       key: "status", type: "select", label: { ar: "الحالة", en: "Status" },
       options: [
         { value: "pending", label: { ar: "معلق", en: "Pending" } },
-        { value: "succeeded", label: { ar: "ناجح", en: "Succeeded" } },
+        { value: "captured", label: { ar: "مدفوع", en: "Paid" } },
         { value: "failed", label: { ar: "فشل", en: "Failed" } },
+        { value: "expired", label: { ar: "منتهي", en: "Expired" } },
         { value: "refunded", label: { ar: "مسترد", en: "Refunded" } },
       ],
     },
@@ -154,6 +169,8 @@ export const paymentsConfig: AdminPageConfig = {
         { value: "tap", label: { ar: "Tap", en: "Tap" } },
         { value: "moyasar", label: { ar: "Moyasar", en: "Moyasar" } },
         { value: "hyperpay", label: { ar: "HyperPay", en: "HyperPay" } },
+        { value: "tabby", label: { ar: "تابي", en: "Tabby" } },
+        { value: "tamara", label: { ar: "تمارا", en: "Tamara" } },
         { value: "cod", label: { ar: "الدفع عند الاستلام", en: "COD" } },
       ],
     },

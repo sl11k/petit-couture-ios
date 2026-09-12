@@ -3,6 +3,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import {
   amountsMatch,
   completeGatewayPayment,
+  expireGatewayPayment,
   failGatewayPayment,
   loadGatewayOrder,
   logPaymentWebhook,
@@ -197,6 +198,14 @@ export const Route = createFileRoute("/api/public/tamara-webhook")({
               rawResponse: { webhook: payload, order: remote },
             });
             transactionId = completed.transactionId;
+          } else if (["order_expired", "expired"].includes(eventType)) {
+            transactionId = await expireGatewayPayment({
+              order,
+              gateway: "tamara",
+              gatewayTransactionId: tamaraOrderId,
+              reason: `tamara_${eventType}`,
+              rawResponse: payload,
+            });
           } else if (
             [
               "order_declined",
@@ -205,8 +214,6 @@ export const Route = createFileRoute("/api/public/tamara-webhook")({
               "order_cancelled",
               "canceled",
               "cancelled",
-              "order_expired",
-              "expired",
             ].includes(eventType)
           ) {
             transactionId = await failGatewayPayment({

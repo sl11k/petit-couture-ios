@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import {
   completeGatewayPayment,
+  expireGatewayPayment,
   failGatewayPayment,
   loadGatewayOrder,
   logPaymentWebhook,
@@ -123,7 +124,15 @@ export const Route = createFileRoute("/api/public/tabby-webhook")({
               rawResponse: payload,
             });
             transactionId = completed.transactionId;
-          } else if (["rejected", "expired"].includes(status)) {
+          } else if (status === "expired") {
+            transactionId = await expireGatewayPayment({
+              order,
+              gateway: "tabby",
+              gatewayTransactionId: paymentId,
+              reason: "tabby_expired",
+              rawResponse: payload,
+            });
+          } else if (status === "rejected") {
             transactionId = await failGatewayPayment({
               order,
               gateway: "tabby",

@@ -266,6 +266,48 @@ export async function failGatewayPayment(input: {
   return transactionId;
 }
 
+/**
+ * Close an abandoned/expired hosted checkout without counting it as a payment
+ * failure. We still use the existing database RPC so reserved inventory is
+ * released exactly once, then correct the business status to `expired`.
+ */
+export async function expireGatewayPayment(input: {
+  order: PaymentOrder;
+  gateway: AsyncPaymentGateway;
+  gatewayTransactionId: string;
+  reason: string;
+  rawResponse: unknown;
+}) {
+  const transactionId = await failGatewayPayment(input);
+  const reason = input.reason.slice(0, 500);
+
+  const [{ error: transactionError }, { error: orderError }] = await Promise.all([
+    supabaseAdmin
+      .from("payment_transactions")
+      .update({
+        status: "expired",
+        failed_at: null,
+        error_message: reason,
+        raw_response: asJson(input.rawResponse),
+      })
+      .eq("id", transactionId),
+    supabaseAdmin
+      .from("orders")
+      .update({
+        payment_status: "expired",
+        payment_failure_reason: reason,
+      })
+      .eq("id", input.order.id)
+      .neq("payment_status", "paid"),
+  ]);
+
+  if (transactionError) {
+    throw new Error(`Could not mark expired transaction: ${transactionError.message}`);
+  }
+  if (orderError) throw new Error(`Could not mark expired order: ${orderError.message}`);
+  return transactionId;
+}
+
 export async function refundGatewayPayment(input: {
   order: PaymentOrder;
   gateway: AsyncPaymentGateway;
