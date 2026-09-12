@@ -7,7 +7,8 @@ const GRAPH_VERSION = "v23.0";
 function templateConfig(input: SendMessageInput) {
   const event = String(input.meta?.event_code || "").toUpperCase().replace(/[^A-Z0-9]+/g, "_");
   const language = input.language === "en" ? "en_US" : "ar";
-  const name = process.env[`WHATSAPP_META_TEMPLATE_${event}_${language === "ar" ? "AR" : "EN"}`];
+  const name = (input.meta?.template_name as string | undefined) ||
+    process.env[`WHATSAPP_META_TEMPLATE_${event}_${language === "ar" ? "AR" : "EN"}`];
   const values = Array.isArray(input.meta?.template_values) ? input.meta.template_values : [];
   return { name, language, values };
 }

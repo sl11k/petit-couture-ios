@@ -5,5 +5,5 @@
 - [x] Enforce E.164 validation, idempotency, lifecycle ordering, retries, and terminal failure
 - [x] Update admin statuses, filters, diagnostics, and manual-link labeling
 - [x] Add safe historical reclassification migration
-- [ ] Add automated tests and run typecheck/build
-- [ ] Document missing owner configuration without sending live messages
+- [x] Add automated tests and run typecheck/build
+- [x] Document missing owner configuration without sending live messages
