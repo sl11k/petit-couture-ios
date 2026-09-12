@@ -6,7 +6,6 @@ import {
   EMAIL_BRAND_NAME,
   EMAIL_FROM_DOMAIN,
   EMAIL_SENDER_DOMAIN,
-  wrapBrandedEmailHtml,
 } from './email-brand'
 
 // Server-only: reads LOVABLE_API_KEY. Never import from client components.
@@ -75,7 +74,7 @@ export async function sendTemplateEmail(
         from: `${EMAIL_BRAND_NAME} <noreply@${EMAIL_FROM_DOMAIN}>`,
         sender_domain: EMAIL_SENDER_DOMAIN,
         subject,
-        html: wrapBrandedEmailHtml(html),
+        html,
         text,
         purpose: 'transactional',
         label: templateName,
