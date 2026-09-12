@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { extractMetaStatuses, verifyMetaSignature } from "@/lib/notif/meta-webhook.server";
 
 export const Route = createFileRoute("/api/public/meta-whatsapp-webhook")({
@@ -22,6 +21,7 @@ export const Route = createFileRoute("/api/public/meta-whatsapp-webhook")({
         if (!valid) return new Response("Invalid signature", { status: 401 });
         let payload: unknown;
         try { payload = JSON.parse(rawBody); } catch { return new Response("Invalid JSON", { status: 400 }); }
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const statuses = extractMetaStatuses(payload);
         for (const status of statuses) {
           const { error } = await (supabaseAdmin.rpc as any)("apply_whatsapp_provider_status", {

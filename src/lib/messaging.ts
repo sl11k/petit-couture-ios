@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { renderTemplate } from "@/lib/notifications";
+import { normalizeWhatsAppPhone } from "@/lib/notif/phone";
 
 export type MessagingChannel = "whatsapp" | "sms";
 
@@ -19,7 +20,8 @@ export interface SendParams {
 }
 
 function normalizePhone(p: string) {
-  return p.replace(/[^\d+]/g, "");
+  const normalized = normalizeWhatsAppPhone(p);
+  return normalized.ok ? normalized.e164 : "";
 }
 
 /** Pick the best enabled provider for a channel by priority and budget. */
@@ -139,11 +141,11 @@ export async function sendMessage(params: SendParams) {
 
     const dispatch = await dispatchToProvider(provider, params.phone, body);
 
-    if (dispatch.ok) {
+    if (dispatch.ok && dispatch.providerMessageId) {
       await supabase.from("messaging_messages").update({
         status: "sent",
         provider_message_id: dispatch.providerMessageId,
-        delivered_at: new Date().toISOString(),
+        delivered_at: null,
       }).eq("id", msgRow!.id);
       await supabase.from("messaging_conversations").update({
         last_message_at: new Date().toISOString(),
@@ -173,11 +175,11 @@ async function dispatchToProvider(provider: any, phone: string, body: string): P
 
   switch (provider.provider_type) {
     case "wa_link": {
-      // Manual: open WhatsApp web link
+      // Explicitly manual: opening a composer is never an API send or delivery.
       if (typeof window !== "undefined") {
         const url = `https://wa.me/${cleanPhone.replace(/^\+/, "")}?text=${encodeURIComponent(body)}`;
         window.open(url, "_blank");
-        return { ok: true, providerMessageId: `wa_link_${Date.now()}` };
+        return { ok: false, error: "تم فتح رابط واتساب يدوياً؛ لم يتم إرسال رسالة عبر API" };
       }
       return { ok: false, error: "wa.me يتطلب فتح المتصفح" };
     }
