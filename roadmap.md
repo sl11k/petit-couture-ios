@@ -13,4 +13,4 @@
 - [x] Implement shared event identity, consent gating, enrichment, and idempotency
 - [x] Harden commerce payload validation, timeouts, and sanitized diagnostics
 - [x] Add automated tests and run typecheck/build without sending live events
-- [ ] Document event mapping and any remaining owner configuration
+- [x] Document event mapping and any remaining owner configuration
