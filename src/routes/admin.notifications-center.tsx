@@ -57,13 +57,14 @@ function NotificationsCenter() {
         .select("*")
         .eq("is_default", true)
         .maybeSingle(),
-      supabase.from("notif_provider_health").select("*").limit(1).maybeSingle(),
+      supabase.from("notif_provider_health").select("*").eq("provider_id", p?.id ?? "00000000-0000-0000-0000-000000000000").maybeSingle(),
     ]);
     setStats({
       queue: {
         pending: (q ?? []).filter((r: any) => r.status === "queued").length,
         retry: (q ?? []).filter((r: any) => r.status === "sending").length,
         failed: (q ?? []).filter((r: any) => ["failed", "dead_letter"].includes(r.status)).length,
+        unconfirmed: (q ?? []).filter((r: any) => r.status === "sent_unconfirmed").length,
         sent: (q ?? []).filter((r: any) => r.status === "sent").length,
         delivered: (q ?? []).filter((r: any) => r.status === "delivered").length,
         read: (q ?? []).filter((r: any) => r.status === "read").length,
@@ -250,10 +251,11 @@ function NotificationsCenter() {
           </div>
 
           {/* Queue + last 24h */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-9">
             <MetricCard icon={ClipboardList} label={ar ? "بانتظار" : "Pending"} value={stats.queue.pending} tone="warn" />
             <MetricCard icon={ClipboardList} label={ar ? "إعادة" : "Retrying"} value={stats.queue.retry} tone="warn" />
             <MetricCard icon={XCircle} label={ar ? "فشلت" : "Failed"} value={stats.queue.failed} tone="danger" />
+            <MetricCard icon={XCircle} label={ar ? "غير مؤكدة" : "Unconfirmed"} value={stats.queue.unconfirmed} tone="danger" />
             <MetricCard icon={CheckCircle2} label={ar ? "أُرسلت" : "Sent"} value={stats.queue.sent} tone="ok" />
             <MetricCard icon={CheckCircle2} label={ar ? "تم التسليم" : "Delivered"} value={stats.queue.delivered} tone="ok" />
             <MetricCard icon={CheckCircle2} label={ar ? "تمت القراءة" : "Read"} value={stats.queue.read} tone="ok" />

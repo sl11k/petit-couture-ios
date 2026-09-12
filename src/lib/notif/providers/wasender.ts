@@ -12,6 +12,21 @@ import { retryDisposition, sanitizeProviderError } from "../lifecycle";
 
 const DEFAULT_BASE = "https://wasenderapi.com";
 
+function providerRejected(json: any): { rejected: boolean; message?: string; code?: string } {
+  const message = String(json?.message ?? json?.error ?? json?.data?.message ?? "").trim();
+  const status = String(json?.data?.status ?? json?.status ?? "").toLowerCase();
+  const rejected =
+    json?.success === false ||
+    json?.status === false ||
+    ["disconnected", "not_connected", "failed", "error"].includes(status) ||
+    /not connected|disconnected|connect your session/i.test(message);
+  return {
+    rejected,
+    message: message || undefined,
+    code: String(json?.code ?? (rejected ? "provider_rejected" : "")) || undefined,
+  };
+}
+
 async function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return await Promise.race([
     p,
@@ -52,16 +67,20 @@ export const wasenderProvider: NotificationProvider = {
       let json: any = null;
       try { json = text ? JSON.parse(text) : null; } catch { /* keep as text */ }
       const duration = Date.now() - started;
-      if (!res.ok) {
+      const rejection = providerRejected(json);
+      if (!res.ok || rejection.rejected) {
+        const disconnected = /not connected|disconnected|connect your session/i.test(rejection.message ?? "");
         return {
           ok: false,
           http_status: res.status,
           duration_ms: duration,
           request_snapshot: requestSnapshot,
           response_snapshot: json ? { success: json.success, error: json.error, message: sanitizeProviderError(json.message) } : undefined,
-          error_code: String(json?.code ?? res.status),
-          error_message: sanitizeProviderError((json && (json.message || json.error)) || `HTTP ${res.status}`),
-          retryable: retryDisposition(res.status, String(json?.code ?? ""), json?.message).retry,
+          error_code: disconnected ? "provider_session_disconnected" : (rejection.code ?? String(res.status)),
+          error_message: sanitizeProviderError(rejection.message || `HTTP ${res.status}`),
+          retryable: disconnected
+            ? false
+            : retryDisposition(res.status, String(json?.code ?? ""), rejection.message).retry,
         };
       }
       const providerMessageId =
@@ -107,13 +126,18 @@ export const wasenderProvider: NotificationProvider = {
         creds.timeout_ms ?? 10000,
       );
       const json = await res.json().catch(() => null);
-      const ok = res.ok;
+      const rejection = providerRejected(json);
+      const sessionStatus = String(json?.data?.status ?? json?.status ?? (res.ok ? "unknown" : "unavailable"));
+      const connected = /^(connected|ready|authenticated|online)$/i.test(sessionStatus);
+      const ok = res.ok && !rejection.rejected && connected;
       return {
         ok,
-        session_status: json?.data?.status ?? json?.status ?? (ok ? "connected" : "unknown"),
+        session_status: sessionStatus,
         instance_status: json?.data?.instance ?? null,
         avg_response_ms: Date.now() - started,
-        error_message: ok ? undefined : `HTTP ${res.status}`,
+        error_message: ok
+          ? undefined
+          : sanitizeProviderError(rejection.message || (!connected ? `WhatsApp session is ${sessionStatus}` : `HTTP ${res.status}`)),
       };
     } catch (err: any) {
       return { ok: false, error_message: err?.message || "Health check failed" };
