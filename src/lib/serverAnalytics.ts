@@ -127,6 +127,7 @@ export async function trackServerEvent(
       screen_width: typeof screen !== "undefined" ? screen.width : null,
       screen_height: typeof screen !== "undefined" ? screen.height : null,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      hostname: typeof window !== "undefined" ? window.location.hostname.toLowerCase() : null,
       utm_source: typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("utm_source") : null,
       utm_medium: typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("utm_medium") : null,
       utm_campaign: typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("utm_campaign") : null,

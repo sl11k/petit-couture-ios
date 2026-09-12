@@ -12,6 +12,8 @@ export function AnalyticsTracker() {
   const enteredAt = useRef(Date.now());
 
   useEffect(() => {
+    const host = window.location.hostname.toLowerCase();
+    if (host === "lovable.dev" || host.endsWith(".lovable.dev") || host === "lovableproject.com" || host.endsWith(".lovableproject.com")) return;
     const fire = () => {
       const path = window.location.pathname + window.location.search;
       if (window.location.pathname.startsWith("/admin") || window.location.pathname.startsWith("/debug")) return;

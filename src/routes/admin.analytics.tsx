@@ -30,7 +30,10 @@ async function fetchAllEvents(fromIso: string, toIso: string) {
       .select("session_id,user_id,event_name,path,referrer,metadata,user_agent,created_at")
       .gte("created_at", fromIso).lte("created_at", toIso).order("created_at").range(offset, offset + 999);
     if (error) throw error;
-    all.push(...(data || []));
+    all.push(...(data || []).filter((event: any) => {
+      const haystack = `${event.referrer || ""} ${event.metadata?.host || ""} ${event.metadata?.hostname || ""}`.toLowerCase();
+      return !haystack.includes("lovableproject.com") && !haystack.includes("lovable.dev");
+    }));
     if (!data || data.length < 1000) break;
   }
   return all;
