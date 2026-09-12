@@ -1,17 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { PageHeader } from "@/features/admin/components/PageHeader";
-import { ShoppingBag, DollarSign, Users, Package, TrendingUp, Activity } from "lucide-react";
+import { ShoppingBag, DollarSign, Users, Package, TrendingUp, Activity, Eye, Clock, MousePointer2 } from "lucide-react";
+import { ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
+import { format, startOfDay, endOfDay, subDays, startOfMonth } from "date-fns";
 
 export const Route = createFileRoute("/admin/analytics")({
   component: AnalyticsPage,
 });
 
-type Range = "7d" | "30d" | "90d";
+type Range = "today" | "yesterday" | "24h" | "7d" | "14d" | "30d" | "90d" | "month" | "custom";
 
-const RANGE_DAYS: Record<Range, number> = { "7d": 7, "30d": 30, "90d": 90 };
+function bounds(range: Range, from: string, to: string) {
+  const now = new Date();
+  if (range === "today") return [startOfDay(now), endOfDay(now)];
+  if (range === "yesterday") { const d = subDays(now, 1); return [startOfDay(d), endOfDay(d)]; }
+  if (range === "month") return [startOfMonth(now), endOfDay(now)];
+  if (range === "custom") return [new Date(`${from}T00:00:00`), new Date(`${to}T23:59:59.999`)];
+  const days = range === "24h" ? 1 : Number(range.replace("d", ""));
+  return [new Date(now.getTime() - days * 86400000), now];
+}
 
 function StatCard({ label, value, sub, icon: Icon }: { label: string; value: string; sub?: string; icon: typeof ShoppingBag }) {
   return (
@@ -26,10 +36,23 @@ function StatCard({ label, value, sub, icon: Icon }: { label: string; value: str
   );
 }
 
+function Breakdown({ title, rows }: { title: string; rows: { name: string; value: number }[] }) {
+  const max = rows[0]?.value || 1;
+  return <section className="rounded-xl border border-border bg-card p-4">
+    <h2 className="mb-3 text-sm font-semibold">{title}</h2>
+    <div className="space-y-2">{rows.length ? rows.map(row => <div key={row.name}>
+      <div className="mb-1 flex justify-between gap-3 text-xs"><span className="truncate">{row.name}</span><strong>{row.value.toLocaleString()}</strong></div>
+      <div className="h-2 overflow-hidden rounded bg-muted"><div className="h-full rounded bg-primary/70" style={{width:`${row.value/max*100}%`}}/></div>
+    </div>) : <p className="py-6 text-center text-xs text-muted-foreground">No data</p>}</div>
+  </section>;
+}
+
 function AnalyticsPage() {
   const { lang } = useLanguage();
   const ar = lang === "ar";
-  const [range, setRange] = useState<Range>("30d");
+  const [range, setRange] = useState<Range>("7d");
+  const [from, setFrom] = useState(format(subDays(new Date(), 6), "yyyy-MM-dd"));
+  const [to, setTo] = useState(format(new Date(), "yyyy-MM-dd"));
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     revenue: 0,
@@ -37,24 +60,42 @@ function AnalyticsPage() {
     avgOrder: 0,
     customers: 0,
     sessions: 0,
+    visitors: 0,
+    pageViews: 0,
+    avgDuration: 0,
+    bounceRate: 0,
+    events: [] as any[],
     topProducts: [] as { name: string; qty: number }[],
     topStatuses: [] as { status: string; count: number }[],
+    paidOrders: 0,
+    failedPayments: 0,
   });
 
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const since = new Date(Date.now() - RANGE_DAYS[range] * 86400000).toISOString();
-      const [ordersRes, sessionsRes, itemsRes, customersRes] = await Promise.all([
-        supabase.from("orders").select("total, status, created_at").gte("created_at", since),
-        supabase.from("analytics_events").select("session_id").gte("created_at", since),
-        supabase.from("order_items").select("product_name, qty, orders!inner(created_at)").gte("orders.created_at", since),
-        supabase.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", since),
+      const [start, finish] = bounds(range, from, to);
+      const since = start.toISOString();
+      const until = finish.toISOString();
+      const [ordersRes, sessionsRes, itemsRes, customersRes, paymentsRes] = await Promise.all([
+        supabase.from("orders").select("total, status, payment_status, source, created_at").gte("created_at", since).lte("created_at", until),
+        supabase.from("analytics_events").select("session_id,event_name,path,referrer,metadata,user_agent,created_at").gte("created_at", since).lte("created_at", until).order("created_at").limit(10000),
+        supabase.from("order_items").select("product_name, qty, orders!inner(created_at)").gte("orders.created_at", since).lte("orders.created_at", until),
+        supabase.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", since).lte("created_at", until),
+        supabase.from("payment_transactions").select("status,amount,gateway,created_at").gte("created_at", since).lte("created_at", until),
       ]);
       const orders = ordersRes.data ?? [];
       const revenue = orders.reduce((s, o: any) => s + Number(o.total ?? 0), 0);
       const avgOrder = orders.length > 0 ? revenue / orders.length : 0;
       const sessions = new Set((sessionsRes.data ?? []).map((s: any) => s.session_id).filter(Boolean)).size;
+      const events = sessionsRes.data ?? [];
+      const pageViews = events.filter((e: any) => e.event_name === "page_view").length;
+      const visitors = new Set(events.map((e: any) => e.metadata?.visitor_id || e.user_id || e.session_id).filter(Boolean)).size;
+      const sessionMap = new Map<string, any[]>();
+      events.forEach((e: any) => sessionMap.set(e.session_id, [...(sessionMap.get(e.session_id) || []), e]));
+      const durations = Array.from(sessionMap.values()).map(xs => Math.max(0, new Date(xs[xs.length - 1].created_at).getTime() - new Date(xs[0].created_at).getTime()));
+      const avgDuration = durations.length ? durations.reduce((a, b) => a + b, 0) / durations.length : 0;
+      const bounced = Array.from(sessionMap.values()).filter(xs => xs.filter((e: any) => e.event_name === "page_view").length <= 1).length;
 
       // Top products
       const productMap = new Map<string, number>();
@@ -80,12 +121,45 @@ function AnalyticsPage() {
         avgOrder,
         customers: customersRes.count ?? 0,
         sessions,
+        visitors,
+        pageViews,
+        avgDuration,
+        bounceRate: sessions ? bounced / sessions * 100 : 0,
+        events,
+        paidOrders: orders.filter((o: any) => ["paid", "captured"].includes(o.payment_status)).length,
+        failedPayments: (paymentsRes.data ?? []).filter((p: any) => p.status === "failed").length,
         topProducts,
         topStatuses,
       });
       setLoading(false);
     })();
-  }, [range]);
+  }, [range, from, to]);
+
+  const details = useMemo(() => {
+    const singleDay = bounds(range, from, to)[1].getTime() - bounds(range, from, to)[0].getTime() <= 86400000;
+    const buckets = new Map<string, { label: string; visitors: Set<string>; views: number }>();
+    const sources = new Map<string, number>(), pages = new Map<string, number>(), devices = new Map<string, number>(), countries = new Map<string, number>(), campaigns = new Map<string, number>(), events = new Map<string, number>();
+    for (const e of stats.events) {
+      events.set(e.event_name, (events.get(e.event_name) || 0) + 1);
+      if (e.event_name !== "page_view") continue;
+      const d = new Date(e.created_at);
+      const key = singleDay ? format(d, "HH:00") : format(d, "MM-dd");
+      const b = buckets.get(key) || { label: key, visitors: new Set<string>(), views: 0 };
+      b.views++; b.visitors.add(e.metadata?.visitor_id || e.session_id); buckets.set(key, b);
+      pages.set(e.path || "/", (pages.get(e.path || "/") || 0) + 1);
+      let source = "Direct"; try { if (e.referrer) source = new URL(e.referrer).hostname.replace(/^www\./, ""); } catch { /* noop */ }
+      sources.set(source, (sources.get(source) || 0) + 1);
+      const device = e.metadata?.device || (/mobi|android|iphone/i.test(e.user_agent || "") ? "Mobile" : "Desktop");
+      devices.set(device, (devices.get(device) || 0) + 1);
+      const country = e.metadata?.country || e.metadata?.country_code;
+      if (country) countries.set(country, (countries.get(country) || 0) + 1);
+      let campaign = e.metadata?.utm_campaign;
+      if (!campaign && e.path?.includes("?")) { try { campaign = new URL(e.path, "https://lppme.com").searchParams.get("utm_campaign"); } catch { /* noop */ } }
+      if (campaign) campaigns.set(campaign, (campaigns.get(campaign) || 0) + 1);
+    }
+    const top = (m: Map<string, number>) => Array.from(m, ([name, value]) => ({ name, value })).sort((a,b)=>b.value-a.value).slice(0,10);
+    return { series: Array.from(buckets.values()).map(b=>({ label:b.label, visitors:b.visitors.size, views:b.views })).sort((a,b)=>a.label.localeCompare(b.label)), sources:top(sources), pages:top(pages), devices:top(devices), countries:top(countries), campaigns:top(campaigns), events:top(events) };
+  }, [stats.events, range, from, to]);
 
   const fmt = (n: number) => n.toLocaleString(ar ? "ar" : "en", { maximumFractionDigits: 0 });
 
@@ -93,29 +167,63 @@ function AnalyticsPage() {
     <div>
       <PageHeader
         title={{ ar: "التحليلات", en: "Analytics" }}
-        description={{ ar: `آخر ${RANGE_DAYS[range]} يوم`, en: `Last ${RANGE_DAYS[range]} days` }}
+        description={{ ar: "بيانات حقيقية حسب الفترة — توقيت الرياض", en: "Real data by period — Riyadh time" }}
         actions={
           <div className="flex gap-1 rounded-md border border-border bg-card p-0.5 text-xs">
-            {(["7d", "30d", "90d"] as Range[]).map((r) => (
+            {(["today", "yesterday", "24h", "7d", "14d", "30d", "90d", "month"] as Range[]).map((r) => (
               <button
                 key={r}
                 onClick={() => setRange(r)}
                 className={`rounded px-2.5 py-1 ${range === r ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
               >
-                {r}
+                {r === "today" ? (ar ? "اليوم" : "Today") : r === "yesterday" ? (ar ? "أمس" : "Yesterday") : r === "month" ? (ar ? "هذا الشهر" : "This month") : r}
               </button>
             ))}
           </div>
         }
       />
 
+      <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border bg-card p-3 text-xs">
+        <input type="date" value={from} onChange={e=>{setFrom(e.target.value);setRange("custom");}} className="rounded border bg-background px-2 py-1" />
+        <span>→</span>
+        <input type="date" value={to} onChange={e=>{setTo(e.target.value);setRange("custom");}} className="rounded border bg-background px-2 py-1" />
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <StatCard label={ar ? "الزوار" : "Visitors"} value={fmt(stats.visitors)} icon={Users} />
+        <StatCard label={ar ? "مشاهدات الصفحات" : "Page views"} value={fmt(stats.pageViews)} icon={Eye} />
+        <StatCard label={ar ? "مشاهدات/جلسة" : "Views/session"} value={(stats.pageViews / Math.max(stats.sessions,1)).toFixed(2)} icon={MousePointer2} />
+        <StatCard label={ar ? "متوسط مدة الجلسة" : "Avg session"} value={`${Math.floor(stats.avgDuration/60000)}m ${Math.floor(stats.avgDuration/1000)%60}s`} icon={Clock} />
+        <StatCard label={ar ? "معدل الارتداد" : "Bounce rate"} value={`${stats.bounceRate.toFixed(1)}%`} icon={Activity} />
         <StatCard label={ar ? "الإيرادات" : "Revenue"} value={`${fmt(stats.revenue)} ${ar ? "ر.س" : "SAR"}`} icon={DollarSign} />
         <StatCard label={ar ? "الطلبات" : "Orders"} value={loading ? "…" : fmt(stats.orders)} icon={ShoppingBag} />
         <StatCard label={ar ? "متوسط الطلب" : "Avg order"} value={`${fmt(stats.avgOrder)} ${ar ? "ر.س" : "SAR"}`} icon={TrendingUp} />
         <StatCard label={ar ? "عملاء جدد" : "New customers"} value={loading ? "…" : fmt(stats.customers)} icon={Users} />
         <StatCard label={ar ? "الجلسات" : "Sessions"} value={loading ? "…" : fmt(stats.sessions)} icon={Activity} />
+        <StatCard label={ar ? "معدل التحويل" : "Conversion rate"} value={`${(stats.paidOrders / Math.max(stats.sessions,1) * 100).toFixed(2)}%`} icon={TrendingUp} />
+        <StatCard label={ar ? "مدفوعات فاشلة" : "Failed payments"} value={fmt(stats.failedPayments)} icon={Activity} />
       </div>
+
+      <section className="mt-4 rounded-xl border border-border bg-card p-4">
+        <h2 className="mb-3 text-sm font-semibold">{ar ? "الزوار والمشاهدات عبر الزمن" : "Visitors and views over time"}</h2>
+        <ResponsiveContainer width="100%" height={300}><AreaChart data={details.series}><CartesianGrid strokeDasharray="3 3" opacity={0.2}/><XAxis dataKey="label" tick={{fontSize:10}}/><YAxis tick={{fontSize:10}}/><Tooltip/><Area type="monotone" dataKey="views" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.16}/><Area type="monotone" dataKey="visitors" stroke="#7c3aed" fill="#7c3aed" fillOpacity={0.08}/></AreaChart></ResponsiveContainer>
+      </section>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+        <Breakdown title={ar ? "مصادر الزيارات" : "Sources"} rows={details.sources}/>
+        <Breakdown title={ar ? "أكثر الصفحات" : "Top pages"} rows={details.pages}/>
+        <Breakdown title={ar ? "الأجهزة" : "Devices"} rows={details.devices}/>
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+        <Breakdown title={ar ? "الدول (عند توفرها)" : "Countries (when available)"} rows={details.countries}/>
+        <Breakdown title={ar ? "الحملات UTM" : "UTM campaigns"} rows={details.campaigns}/>
+        <Breakdown title={ar ? "الأحداث ومسار التحويل" : "Events and funnel"} rows={details.events}/>
+      </div>
+
+      <p className="mt-4 rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+        {ar ? "ملاحظة الدقة: الأرقام محسوبة من سجلات الزيارات والطلبات والمدفوعات الفعلية. الدولة والحملة لا تظهران إلا إذا سُجلتا فعلًا، وقياس المدة والارتداد يصبح أدق للزيارات الجديدة بعد هذا التحديث؛ لا يتم اختلاق بيانات تاريخية مفقودة." : "Accuracy note: metrics come from actual analytics, orders and payment records. Country and campaign appear only when captured. Duration and bounce accuracy improves for new visits after this release; missing historical data is never fabricated."}
+      </p>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <section className="rounded-xl border border-border bg-card p-4">
