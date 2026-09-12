@@ -37,7 +37,11 @@ export function brandedEmailHeaderHtml(): string {
 }
 
 export function wrapBrandedEmailHtml(content: string): string {
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>.email-logo-shell,.email-wordmark{background-color:#FFFFFF!important}.email-wordmark{border-radius:0!important}@media(prefers-color-scheme:dark){.email-logo-shell,.email-wordmark{background-color:#FFFFFF!important}}[data-ogsc] .email-logo-shell,[data-ogsb] .email-logo-shell,[data-ogsc] .email-wordmark,[data-ogsb] .email-wordmark{background-color:#FFFFFF!important}</style></head><body style="margin:0;padding:0;background-color:#FFFFFF;">${brandedEmailHeaderHtml()}${content}</body></html>`
+  const header = brandedEmailHeaderHtml()
+  if (/<body\b[^>]*>/i.test(content)) {
+    return content.replace(/<body\b[^>]*>/i, (bodyTag) => `${bodyTag}${header}`)
+  }
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>.email-logo-shell,.email-wordmark{background-color:#FFFFFF!important}.email-wordmark{border-radius:0!important}@media(prefers-color-scheme:dark){.email-logo-shell,.email-wordmark{background-color:#FFFFFF!important}}[data-ogsc] .email-logo-shell,[data-ogsb] .email-logo-shell,[data-ogsc] .email-wordmark,[data-ogsb] .email-wordmark{background-color:#FFFFFF!important}</style></head><body style="margin:0;padding:0;background-color:#FFFFFF;">${header}${content}</body></html>`
 }
 
 const logoShell = {
