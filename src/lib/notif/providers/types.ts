@@ -24,6 +24,8 @@ export interface SendMessageResult {
   request_snapshot?: any;
   response_snapshot?: any;
   error_message?: string;
+  error_code?: string;
+  retryable?: boolean;
 }
 
 export interface HealthCheckResult {

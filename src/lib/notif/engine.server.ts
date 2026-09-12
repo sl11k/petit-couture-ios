@@ -5,6 +5,8 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { decryptSecret } from "./crypto.server";
 import { getProvider } from "./providers";
 import type { ProviderCredentials } from "./providers/types";
+import { retryDelayMs, sanitizeProviderError } from "./lifecycle";
+import { normalizeWhatsAppPhone } from "./phone";
 import { renderTemplate } from "./template";
 import {
   EMAIL_BRAND_NAME,
@@ -175,6 +177,11 @@ async function loadDefaultProvider(channel: Channel = "whatsapp") {
     extra: (credsRow.extra as any) || {},
     timeout_ms: credsRow.timeout_ms ?? 15000,
   };
+  // Official Meta credentials are accepted only from server-side secrets.
+  if (provider.code === "meta_cloud") {
+    creds.api_key = process.env.WHATSAPP_META_ACCESS_TOKEN;
+    creds.phone_number_id = process.env.WHATSAPP_META_PHONE_NUMBER_ID;
+  }
   return { provider, creds };
 }
 
@@ -354,13 +361,13 @@ export async function processQueueBatch(limit = 20): Promise<{
   // WhatsApp: strict rate limit → 1 per run. Email + others: process up to `limit`.
   const { data: waRows } = await supabaseAdmin
     .from("notif_queue").select("*")
-    .in("status", ["pending", "retry"]).lte("scheduled_at", nowIso).is("locked_at", null)
+    .eq("status", "queued").lte("scheduled_at", nowIso).is("locked_at", null)
     .eq("channel", "whatsapp")
     .order("priority", { ascending: true }).order("scheduled_at", { ascending: true })
     .limit(1);
   const { data: otherRows } = await supabaseAdmin
     .from("notif_queue").select("*")
-    .in("status", ["pending", "retry"]).lte("scheduled_at", nowIso).is("locked_at", null)
+    .eq("status", "queued").lte("scheduled_at", nowIso).is("locked_at", null)
     .neq("channel", "whatsapp")
     .order("priority", { ascending: true }).order("scheduled_at", { ascending: true })
     .limit(Math.max(1, limit));
@@ -379,14 +386,14 @@ export async function processQueueBatch(limit = 20): Promise<{
 
     const { data: locked } = await supabaseAdmin
       .from("notif_queue")
-      .update({ locked_at: nowIso, locked_by: "worker", status: "processing" })
-      .eq("id", row.id).is("locked_at", null).select("id").maybeSingle();
+      .update({ locked_at: nowIso, locked_by: "worker", status: "sending" })
+      .eq("id", row.id).eq("status", "queued").is("locked_at", null).select("id").maybeSingle();
     if (!locked) continue;
 
     const template = await resolveTemplate(row.event_code, row.channel, row.audience, row.language);
     if (!template) {
       await supabaseAdmin.from("notif_queue").update({
-        status: "failed",
+         status: "dead_letter", terminal_at: nowIso, error_code: "template_missing",
         last_error: `No template for ${row.event_code}/${row.channel}/${row.audience}/${row.language}`,
         locked_at: null, updated_at: nowIso,
       }).eq("id", row.id);
@@ -397,8 +404,8 @@ export async function processQueueBatch(limit = 20): Promise<{
       ? renderTemplate(template.subject, (row.payload as any) || {})
       : "";
 
-    let result: { ok: boolean; error_message?: string; http_status?: number; duration_ms?: number;
-      request_snapshot?: any; response_snapshot?: any };
+    let result: { ok: boolean; provider_message_id?: string | null; error_code?: string; retryable?: boolean;
+      error_message?: string; http_status?: number; duration_ms?: number; request_snapshot?: any; response_snapshot?: any };
     let providerIdForLog: string | null = null;
 
     if (row.channel === "email") {
@@ -408,7 +415,7 @@ export async function processQueueBatch(limit = 20): Promise<{
       // WhatsApp / SMS via provider adapters
       if (!whatsappBundle) {
         await supabaseAdmin.from("notif_queue").update({
-          status: "failed", last_error: "No enabled provider configured",
+         status: "dead_letter", terminal_at: nowIso, error_code: "provider_not_configured", last_error: "No enabled provider configured",
           locked_at: null, updated_at: nowIso,
         }).eq("id", row.id);
         failed++; continue;
@@ -416,14 +423,21 @@ export async function processQueueBatch(limit = 20): Promise<{
       const provider = getProvider(whatsappBundle.provider.code);
       if (!provider) {
         await supabaseAdmin.from("notif_queue").update({
-          status: "failed", last_error: `Unknown provider adapter: ${whatsappBundle.provider.code}`,
+         status: "dead_letter", terminal_at: nowIso, error_code: "provider_adapter_missing", last_error: `Unknown provider adapter: ${whatsappBundle.provider.code}`,
           locked_at: null, updated_at: nowIso,
         }).eq("id", row.id);
         failed++; continue;
       }
-      result = await provider.send(whatsappBundle.creds, {
-        to: row.recipient_phone ?? "", body: rendered, language: row.language,
-      });
+      const phone = normalizeWhatsAppPhone(row.recipient_phone ?? "");
+      result = phone.ok
+        ? await provider.send(whatsappBundle.creds, {
+            to: phone.e164, body: rendered, language: row.language,
+            meta: {
+              event_code: row.event_code,
+              template_values: [(row.payload as any)?.order_number, (row.payload as any)?.order_total, (row.payload as any)?.currency].filter((v) => v != null),
+            },
+          })
+        : { ok: false, error_code: phone.error, error_message: phone.error, retryable: false };
       providerIdForLog = whatsappBundle.provider.id;
       waSentInBatch++;
     }
@@ -432,7 +446,12 @@ export async function processQueueBatch(limit = 20): Promise<{
       queue_id: row.id, provider_id: providerIdForLog,
       event_code: row.event_code, audience: row.audience, channel: row.channel,
       recipient_phone: row.recipient_phone,
-      status: result.ok ? "sent" : "failed",
+       status: result.ok ? "sent" : (result.retryable ? "failed" : "dead_letter"),
+       provider_message_id: result.provider_message_id ?? null,
+       accepted_at: result.ok ? nowIso : null,
+       failed_at: result.ok ? null : nowIso,
+       provider_status_at: nowIso,
+       error_code: result.error_code ?? null,
       http_status: result.http_status ?? null,
       duration_ms: result.duration_ms ?? null,
       request_snapshot: result.request_snapshot ?? null,
@@ -443,23 +462,26 @@ export async function processQueueBatch(limit = 20): Promise<{
 
     await bumpAnalytics(row.event_code, providerIdForLog, result.ok, result.duration_ms ?? null);
 
-    if (result.ok) {
+    if (result.ok && (row.channel !== "whatsapp" || result.provider_message_id)) {
       await supabaseAdmin.from("notif_queue").update({
         status: "sent", rendered_body: rendered, sent_at: nowIso,
+        provider_message_id: result.provider_message_id ?? null,
+        accepted_at: nowIso, provider_status_at: nowIso,
         attempts: (row.attempts ?? 0) + 1, last_error: null,
         locked_at: null, updated_at: nowIso,
       }).eq("id", row.id);
       sent++;
     } else {
       const nextAttempt = (row.attempts ?? 0) + 1;
-      const isTerminal = nextAttempt >= (row.max_attempts ?? 3);
-      const isRate = /account protection|rate limit|too many|429|5 seconds/i.test(result.error_message ?? "");
-      const backoffMinutes = isRate ? Math.min(30, 5 * nextAttempt) : Math.min(60, Math.pow(2, nextAttempt));
-      const nextRun = new Date(Date.now() + backoffMinutes * 60_000).toISOString();
+      const isTerminal = result.retryable === false || nextAttempt >= (row.max_attempts ?? 3);
+      const nextRun = new Date(Date.now() + retryDelayMs(nextAttempt)).toISOString();
       await supabaseAdmin.from("notif_queue").update({
-        status: isTerminal ? "failed" : "retry",
+        status: isTerminal ? "dead_letter" : "queued",
         rendered_body: rendered, attempts: nextAttempt,
-        last_error: result.error_message ?? "Unknown error",
+        last_error: sanitizeProviderError(result.error_message),
+        error_code: result.error_code ?? null,
+        failed_at: isTerminal ? nowIso : null,
+        terminal_at: isTerminal ? nowIso : null,
         scheduled_at: isTerminal ? row.scheduled_at : nextRun,
         locked_at: null, updated_at: nowIso,
       }).eq("id", row.id);
@@ -482,14 +504,20 @@ export async function sendTestMessage(
   if (!bundle) return { ok: false, error: "No enabled provider" };
   const provider = getProvider(bundle.provider.code);
   if (!provider) return { ok: false, error: `Unknown adapter: ${bundle.provider.code}` };
-  const res = await provider.send(bundle.creds, { to, body });
+  const normalized = normalizeWhatsAppPhone(to);
+  if (!normalized.ok) return { ok: false, error: normalized.error, provider: bundle.provider.code };
+  const res = await provider.send(bundle.creds, { to: normalized.e164, body, meta: { event_code: "custom.event" } });
   await supabaseAdmin.from("notif_delivery_logs").insert({
     provider_id: bundle.provider.id,
     event_code: "custom.event",
     audience: "admin",
     channel: "whatsapp",
     recipient_phone: to,
-    status: res.ok ? "sent" : "failed",
+    status: res.ok && res.provider_message_id ? "sent" : "dead_letter",
+    provider_message_id: res.provider_message_id ?? null,
+    accepted_at: res.ok && res.provider_message_id ? new Date().toISOString() : null,
+    provider_status_at: new Date().toISOString(),
+    error_code: res.error_code ?? null,
     http_status: res.http_status ?? null,
     duration_ms: res.duration_ms ?? null,
     request_snapshot: res.request_snapshot ?? null,
@@ -498,7 +526,7 @@ export async function sendTestMessage(
     attempt: 1,
   });
   return {
-    ok: res.ok,
+    ok: res.ok && !!res.provider_message_id,
     error: res.error_message,
     provider: bundle.provider.code,
     http_status: res.http_status,

@@ -149,9 +149,12 @@ export async function notify(params: NotifyParams) {
         // For customer in_app, the notification_log entry IS the in-app notification
         await markSent(logRow!.id);
       } else if (channel === "whatsapp") {
-        const wa = await sendWhatsApp(params.recipient_phone || "", body);
-        if (wa.ok) await markSent(logRow!.id);
-        else await markFailed(logRow!.id, wa.error || "WA failed");
+        await supabase.from("notification_log").update({
+          status: "manual_link",
+          sent_at: null,
+          error_message: "Manual WhatsApp action only; API delivery was not attempted",
+          metadata: { variables: params.variables || {}, delivery_mode: "manual_wa_link", provider_accepted: false },
+        }).eq("id", logRow!.id);
       } else if (channel === "sms") {
         // SMS provider not connected — mark pending_dispatch for now
         await supabase.from("notification_log").update({
@@ -212,20 +215,19 @@ function linkFor(entity?: string, entityId?: string): string | null {
 }
 
 /**
- * Open a WhatsApp deep-link in a new tab. Returns ok=true if window opens.
- * For automated server sending, integrate WhatsApp Business API later.
+ * Explicit manual action only. Opening this link never represents API acceptance.
  */
-export async function sendWhatsApp(phone: string, message: string): Promise<{ ok: boolean; error?: string }> {
-  if (!phone) return { ok: false, error: "Missing phone" };
+export async function openManualWhatsAppLink(phone: string, message: string): Promise<{ ok: boolean; manual: true; error?: string }> {
+  if (!phone) return { ok: false, manual: true, error: "Missing phone" };
   const cleanPhone = phone.replace(/[^\d]/g, "");
-  if (cleanPhone.length < 9) return { ok: false, error: "Invalid phone" };
+  if (cleanPhone.length < 9) return { ok: false, manual: true, error: "Invalid phone" };
   if (typeof window === "undefined") {
     // Server-side: just mark as pending dispatch (provider not connected)
-    return { ok: false, error: "WhatsApp Business API not connected" };
+    return { ok: false, manual: true, error: "Manual WhatsApp links require a browser" };
   }
   const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
   window.open(url, "_blank");
-  return { ok: true };
+  return { ok: true, manual: true };
 }
 
 /**

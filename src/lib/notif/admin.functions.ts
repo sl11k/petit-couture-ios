@@ -132,9 +132,17 @@ export const retryQueueItem = createServerFn({ method: "POST" })
     await supabaseAdmin
       .from("notif_queue")
       .update({
-        status: "pending",
+        status: "queued",
         attempts: 0,
         last_error: null,
+        error_code: null,
+        failed_at: null,
+        terminal_at: null,
+        provider_message_id: null,
+        accepted_at: null,
+        delivered_at: null,
+        read_at: null,
+        provider_status_at: null,
         locked_at: null,
         scheduled_at: new Date().toISOString(),
       })

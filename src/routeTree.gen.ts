@@ -146,6 +146,7 @@ import { Route as ApiPublicTabbyWebhookRouteImport } from './routes/api.public.t
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe-webhook'
 import { Route as ApiPublicShippingWebhookRouteImport } from './routes/api.public.shipping-webhook'
 import { Route as ApiPublicPaymentWebhookRouteImport } from './routes/api.public.payment-webhook'
+import { Route as ApiPublicMetaWhatsappWebhookRouteImport } from './routes/api.public.meta-whatsapp-webhook'
 import { Route as ApiPublicGeoRouteImport } from './routes/api/public/geo'
 import { Route as AdminWebhooksIdRouteImport } from './routes/admin.webhooks.$id'
 import { Route as AdminWarehousesIdRouteImport } from './routes/admin.warehouses.$id'
@@ -863,6 +864,12 @@ const ApiPublicPaymentWebhookRoute = ApiPublicPaymentWebhookRouteImport.update({
   path: '/api/public/payment-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMetaWhatsappWebhookRoute =
+  ApiPublicMetaWhatsappWebhookRouteImport.update({
+    id: '/api/public/meta-whatsapp-webhook',
+    path: '/api/public/meta-whatsapp-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicGeoRoute = ApiPublicGeoRouteImport.update({
   id: '/api/public/geo',
   path: '/api/public/geo',
@@ -1126,6 +1133,7 @@ export interface FileRoutesByFullPath {
   '/admin/warehouses/$id': typeof AdminWarehousesIdRoute
   '/admin/webhooks/$id': typeof AdminWebhooksIdRoute
   '/api/public/geo': typeof ApiPublicGeoRoute
+  '/api/public/meta-whatsapp-webhook': typeof ApiPublicMetaWhatsappWebhookRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -1277,6 +1285,7 @@ export interface FileRoutesByTo {
   '/admin/warehouses/$id': typeof AdminWarehousesIdRoute
   '/admin/webhooks/$id': typeof AdminWebhooksIdRoute
   '/api/public/geo': typeof ApiPublicGeoRoute
+  '/api/public/meta-whatsapp-webhook': typeof ApiPublicMetaWhatsappWebhookRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -1442,6 +1451,7 @@ export interface FileRoutesById {
   '/admin/warehouses/$id': typeof AdminWarehousesIdRoute
   '/admin/webhooks/$id': typeof AdminWebhooksIdRoute
   '/api/public/geo': typeof ApiPublicGeoRoute
+  '/api/public/meta-whatsapp-webhook': typeof ApiPublicMetaWhatsappWebhookRoute
   '/api/public/payment-webhook': typeof ApiPublicPaymentWebhookRoute
   '/api/public/shipping-webhook': typeof ApiPublicShippingWebhookRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -1608,6 +1618,7 @@ export interface FileRouteTypes {
     | '/admin/warehouses/$id'
     | '/admin/webhooks/$id'
     | '/api/public/geo'
+    | '/api/public/meta-whatsapp-webhook'
     | '/api/public/payment-webhook'
     | '/api/public/shipping-webhook'
     | '/api/public/stripe-webhook'
@@ -1759,6 +1770,7 @@ export interface FileRouteTypes {
     | '/admin/warehouses/$id'
     | '/admin/webhooks/$id'
     | '/api/public/geo'
+    | '/api/public/meta-whatsapp-webhook'
     | '/api/public/payment-webhook'
     | '/api/public/shipping-webhook'
     | '/api/public/stripe-webhook'
@@ -1923,6 +1935,7 @@ export interface FileRouteTypes {
     | '/admin/warehouses/$id'
     | '/admin/webhooks/$id'
     | '/api/public/geo'
+    | '/api/public/meta-whatsapp-webhook'
     | '/api/public/payment-webhook'
     | '/api/public/shipping-webhook'
     | '/api/public/stripe-webhook'
@@ -1991,6 +2004,7 @@ export interface RootRouteChildren {
   TrackTokenRoute: typeof TrackTokenRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicGeoRoute: typeof ApiPublicGeoRoute
+  ApiPublicMetaWhatsappWebhookRoute: typeof ApiPublicMetaWhatsappWebhookRoute
   ApiPublicPaymentWebhookRoute: typeof ApiPublicPaymentWebhookRoute
   ApiPublicShippingWebhookRoute: typeof ApiPublicShippingWebhookRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
@@ -2972,6 +2986,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/meta-whatsapp-webhook': {
+      id: '/api/public/meta-whatsapp-webhook'
+      path: '/api/public/meta-whatsapp-webhook'
+      fullPath: '/api/public/meta-whatsapp-webhook'
+      preLoaderRoute: typeof ApiPublicMetaWhatsappWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/geo': {
       id: '/api/public/geo'
       path: '/api/public/geo'
@@ -3571,6 +3592,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrackTokenRoute: TrackTokenRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicGeoRoute: ApiPublicGeoRoute,
+  ApiPublicMetaWhatsappWebhookRoute: ApiPublicMetaWhatsappWebhookRoute,
   ApiPublicPaymentWebhookRoute: ApiPublicPaymentWebhookRoute,
   ApiPublicShippingWebhookRoute: ApiPublicShippingWebhookRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,

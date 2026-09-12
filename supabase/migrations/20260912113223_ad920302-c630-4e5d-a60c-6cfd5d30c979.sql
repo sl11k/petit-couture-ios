@@ -1,0 +1,1 @@
+ALTER TABLE public.notif_queue ALTER COLUMN status SET DEFAULT 'queued';
