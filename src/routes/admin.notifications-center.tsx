@@ -57,7 +57,7 @@ function NotificationsCenter() {
         .select("*")
         .eq("is_default", true)
         .maybeSingle(),
-      supabase.from("notif_provider_health").select("*").eq("provider_id", p?.id ?? "00000000-0000-0000-0000-000000000000").maybeSingle(),
+      supabase.from("notif_provider_health").select("*"),
     ]);
     setStats({
       queue: {
@@ -75,7 +75,7 @@ function NotificationsCenter() {
       },
     });
     setProvider(p);
-    setHealth(h);
+    setHealth((h ?? []).find((row: any) => row.provider_id === p?.id) ?? null);
     setLoading(false);
   };
 
