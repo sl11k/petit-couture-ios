@@ -434,6 +434,7 @@ export async function processQueueBatch(limit = 20): Promise<{
             to: phone.e164, body: rendered, language: row.language,
             meta: {
               event_code: row.event_code,
+            template_name: (whatsappBundle.creds.extra as any)?.templates?.[row.event_code]?.[row.language],
               template_values: [(row.payload as any)?.order_number, (row.payload as any)?.order_total, (row.payload as any)?.currency].filter((v) => v != null),
             },
           })

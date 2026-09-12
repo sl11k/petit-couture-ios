@@ -11,7 +11,7 @@ describe("WhatsApp lifecycle", () => {
     expect(retryDisposition(429, "rate_limit", "too many").retry).toBe(true);
     expect(retryDisposition(undefined, "timeout", "network timeout").retry).toBe(true);
   });
-  it("bounds exponential retry delays", () => expect(retryDelayMs(20)).toBe(60 * 60_000));
+  it("bounds exponential retry delays", () => expect(retryDelayMs(20)).toBe(16 * 60_000));
   it("redacts secrets and phone numbers", () => {
     const safe = sanitizeProviderError("Bearer abc.def token=secret +966550167199");
     expect(safe).not.toContain("abc.def"); expect(safe).not.toContain("550167199");
