@@ -2978,18 +2978,26 @@ export type Database = {
       }
       notif_delivery_logs: {
         Row: {
+          accepted_at: string | null
           attempt: number
           audience: string | null
           channel: string | null
           created_at: string
+          delivered_at: string | null
           duration_ms: number | null
+          error_code: string | null
           error_message: string | null
           event_code: string | null
+          failed_at: string | null
           http_status: number | null
           id: string
           ip_address: string | null
+          is_manual: boolean
           provider_id: string | null
+          provider_message_id: string | null
+          provider_status_at: string | null
           queue_id: string | null
+          read_at: string | null
           recipient_phone: string | null
           request_snapshot: Json | null
           response_snapshot: Json | null
@@ -2998,18 +3006,26 @@ export type Database = {
           triggered_by_email: string | null
         }
         Insert: {
+          accepted_at?: string | null
           attempt?: number
           audience?: string | null
           channel?: string | null
           created_at?: string
+          delivered_at?: string | null
           duration_ms?: number | null
+          error_code?: string | null
           error_message?: string | null
           event_code?: string | null
+          failed_at?: string | null
           http_status?: number | null
           id?: string
           ip_address?: string | null
+          is_manual?: boolean
           provider_id?: string | null
+          provider_message_id?: string | null
+          provider_status_at?: string | null
           queue_id?: string | null
+          read_at?: string | null
           recipient_phone?: string | null
           request_snapshot?: Json | null
           response_snapshot?: Json | null
@@ -3018,18 +3034,26 @@ export type Database = {
           triggered_by_email?: string | null
         }
         Update: {
+          accepted_at?: string | null
           attempt?: number
           audience?: string | null
           channel?: string | null
           created_at?: string
+          delivered_at?: string | null
           duration_ms?: number | null
+          error_code?: string | null
           error_message?: string | null
           event_code?: string | null
+          failed_at?: string | null
           http_status?: number | null
           id?: string
           ip_address?: string | null
+          is_manual?: boolean
           provider_id?: string | null
+          provider_message_id?: string | null
+          provider_status_at?: string | null
           queue_id?: string | null
+          read_at?: string | null
           recipient_phone?: string | null
           request_snapshot?: Json | null
           response_snapshot?: Json | null
@@ -3220,6 +3244,48 @@ export type Database = {
           },
         ]
       }
+      notif_provider_webhook_events: {
+        Row: {
+          event_key: string
+          id: string
+          processed_at: string | null
+          processing_error: string | null
+          provider_code: string
+          provider_message_id: string | null
+          provider_status: string | null
+          provider_timestamp: string | null
+          received_at: string
+          sanitized_payload: Json
+          signature_valid: boolean
+        }
+        Insert: {
+          event_key: string
+          id?: string
+          processed_at?: string | null
+          processing_error?: string | null
+          provider_code: string
+          provider_message_id?: string | null
+          provider_status?: string | null
+          provider_timestamp?: string | null
+          received_at?: string
+          sanitized_payload?: Json
+          signature_valid?: boolean
+        }
+        Update: {
+          event_key?: string
+          id?: string
+          processed_at?: string | null
+          processing_error?: string | null
+          provider_code?: string
+          provider_message_id?: string | null
+          provider_status?: string | null
+          provider_timestamp?: string | null
+          received_at?: string
+          sanitized_payload?: Json
+          signature_valid?: boolean
+        }
+        Relationships: []
+      }
       notif_providers: {
         Row: {
           capabilities: Json
@@ -3270,13 +3336,18 @@ export type Database = {
       }
       notif_queue: {
         Row: {
+          accepted_at: string | null
           attempts: number
           audience: string
           channel: string
           created_at: string
           dedupe_key: string | null
+          delivered_at: string | null
+          error_code: string | null
           event_code: string
+          failed_at: string | null
           id: string
+          is_manual: boolean
           language: string
           last_error: string | null
           locked_at: string | null
@@ -3285,6 +3356,9 @@ export type Database = {
           payload: Json
           priority: number
           provider_id: string | null
+          provider_message_id: string | null
+          provider_status_at: string | null
+          read_at: string | null
           recipient_email: string | null
           recipient_phone: string | null
           recipient_user_id: string | null
@@ -3294,16 +3368,22 @@ export type Database = {
           scheduled_at: string
           sent_at: string | null
           status: string
+          terminal_at: string | null
           updated_at: string
         }
         Insert: {
+          accepted_at?: string | null
           attempts?: number
           audience?: string
           channel?: string
           created_at?: string
           dedupe_key?: string | null
+          delivered_at?: string | null
+          error_code?: string | null
           event_code: string
+          failed_at?: string | null
           id?: string
+          is_manual?: boolean
           language?: string
           last_error?: string | null
           locked_at?: string | null
@@ -3312,6 +3392,9 @@ export type Database = {
           payload?: Json
           priority?: number
           provider_id?: string | null
+          provider_message_id?: string | null
+          provider_status_at?: string | null
+          read_at?: string | null
           recipient_email?: string | null
           recipient_phone?: string | null
           recipient_user_id?: string | null
@@ -3321,16 +3404,22 @@ export type Database = {
           scheduled_at?: string
           sent_at?: string | null
           status?: string
+          terminal_at?: string | null
           updated_at?: string
         }
         Update: {
+          accepted_at?: string | null
           attempts?: number
           audience?: string
           channel?: string
           created_at?: string
           dedupe_key?: string | null
+          delivered_at?: string | null
+          error_code?: string | null
           event_code?: string
+          failed_at?: string | null
           id?: string
+          is_manual?: boolean
           language?: string
           last_error?: string | null
           locked_at?: string | null
@@ -3339,6 +3428,9 @@ export type Database = {
           payload?: Json
           priority?: number
           provider_id?: string | null
+          provider_message_id?: string | null
+          provider_status_at?: string | null
+          read_at?: string | null
           recipient_email?: string | null
           recipient_phone?: string | null
           recipient_user_id?: string | null
@@ -3348,6 +3440,7 @@ export type Database = {
           scheduled_at?: string
           sent_at?: string | null
           status?: string
+          terminal_at?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -7826,6 +7919,20 @@ export type Database = {
       }
     }
     Functions: {
+      apply_whatsapp_provider_status: {
+        Args: {
+          _error_code?: string
+          _error_message?: string
+          _event_key: string
+          _provider_code: string
+          _provider_message_id: string
+          _provider_timestamp: string
+          _sanitized_payload?: Json
+          _signature_valid: boolean
+          _status: string
+        }
+        Returns: boolean
+      }
       auto_cancel_expired_orders: { Args: never; Returns: number }
       check_account_lockout: {
         Args: { _email: string }
