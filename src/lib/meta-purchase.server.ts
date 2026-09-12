@@ -29,6 +29,7 @@ export async function emitMetaPurchaseForPaidOrder(orderId: string): Promise<{ o
     if (!pixelId) return { ok: false, skipped: "no_pixel_id" };
 
     const address = (order.shipping_address || {}) as Record<string, unknown>;
+    if (address.marketing_consent !== true) return { ok: false, skipped: "no_marketing_consent" };
     const { error: claimError } = await db.from("meta_capi_events").insert({ event_id: eventId, event_name: "Purchase", status: "sending", attempts: 1, order_id: order.id, last_attempt_at: new Date().toISOString() });
     if (claimError) return { ok: true, skipped: "duplicate" };
     const result = await sendMetaCapiEvents(pixelId, token, [{

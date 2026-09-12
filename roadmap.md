@@ -12,5 +12,5 @@
 - [x] Audit browser Pixel, server CAPI, consent, and verified Purchase paths
 - [x] Implement shared event identity, consent gating, enrichment, and idempotency
 - [x] Harden commerce payload validation, timeouts, and sanitized diagnostics
-- [ ] Add automated tests and run typecheck/build without sending live events
+- [x] Add automated tests and run typecheck/build without sending live events
 - [ ] Document event mapping and any remaining owner configuration

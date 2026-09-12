@@ -37,6 +37,7 @@ import {
 import { getCanonicalProductPrice } from "@/lib/pricing";
 import { dialCodeFor, toInternationalPhone, phonePlaceholderFor } from "@/lib/countryDialCodes";
 import type { CurrencyCode } from "@/i18n/currencies";
+import { getStoredCookieConsent } from "@/lib/privacy";
 
 // Map only loads on the client when entering step 2.
 const LocationPicker = lazy(() => import("@/components/checkout/LocationPicker"));
@@ -680,7 +681,7 @@ function CheckoutPage() {
     setPlacing(true);
     try {
       const { data: auth } = await supabase.auth.getSession();
-      const fullAddress: Address = {
+      const fullAddress: Address & { marketing_consent: boolean } = {
         fullName: contact.fullName.trim(),
         email: contact.email.trim(),
         phone: toInternationalPhone(contact.phone, countryCode),
@@ -695,6 +696,7 @@ function CheckoutPage() {
         lat: loc.lat,
         lng: loc.lng,
         geoAddress: loc.geoAddress,
+        marketing_consent: getStoredCookieConsent()?.marketing === true,
       };
       save(fullAddress);
 
