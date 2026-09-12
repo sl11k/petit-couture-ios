@@ -404,7 +404,7 @@ export async function processQueueBatch(limit = 20): Promise<{
       ? renderTemplate(template.subject, (row.payload as any) || {})
       : "";
 
-    let result: { ok: boolean; provider_message_id?: string; error_code?: string; retryable?: boolean;
+    let result: { ok: boolean; provider_message_id?: string | null; error_code?: string; retryable?: boolean;
       error_message?: string; http_status?: number; duration_ms?: number; request_snapshot?: any; response_snapshot?: any };
     let providerIdForLog: string | null = null;
 
@@ -513,7 +513,7 @@ export async function sendTestMessage(
     audience: "admin",
     channel: "whatsapp",
     recipient_phone: to,
-    status: res.ok && res.provider_message_id ? "sent" : "failed",
+    status: res.ok && res.provider_message_id ? "sent" : "dead_letter",
     provider_message_id: res.provider_message_id ?? null,
     accepted_at: res.ok && res.provider_message_id ? new Date().toISOString() : null,
     provider_status_at: new Date().toISOString(),
@@ -526,7 +526,7 @@ export async function sendTestMessage(
     attempt: 1,
   });
   return {
-    ok: res.ok,
+    ok: res.ok && !!res.provider_message_id,
     error: res.error_message,
     provider: bundle.provider.code,
     http_status: res.http_status,
