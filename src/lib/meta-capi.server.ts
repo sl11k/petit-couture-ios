@@ -33,25 +33,40 @@ export interface MetaCapiEvent {
 
 const encoder = new TextEncoder();
 
-async function sha256(value: string): Promise<string> {
+export async function sha256(value: string): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-256", encoder.encode(value));
   return Array.from(new Uint8Array(buf))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 }
 
-function normalizePhone(raw: string): string {
-  const digits = raw.replace(/[^\d]/g, "");
-  return digits.replace(/^0+/, "");
+const SHA256_HEX = /^[a-f0-9]{64}$/i;
+
+export function normalizeMetaEmail(raw: string): string {
+  return raw.trim().toLowerCase();
 }
 
-async function hashedUserData(user: MetaCapiUser): Promise<Record<string, unknown>> {
+export function normalizeMetaPhone(raw: string, country = "SA"): string {
+  let digits = raw.replace(/\D/g, "");
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  if (digits.startsWith("0")) {
+    const callingCode: Record<string, string> = { SA: "966", AE: "971", BH: "973", KW: "965", QA: "974" };
+    digits = `${callingCode[country.toUpperCase()] || ""}${digits.slice(1)}`;
+  }
+  return /^\d{8,15}$/.test(digits) ? digits : "";
+}
+
+async function hashUnlessHashed(value: string): Promise<string> {
+  return SHA256_HEX.test(value) ? value.toLowerCase() : sha256(value);
+}
+
+export async function hashedUserData(user: MetaCapiUser): Promise<Record<string, unknown>> {
   const out: Record<string, unknown> = {};
-  const email = user.email?.trim().toLowerCase();
-  if (email && email.includes("@")) out.em = [await sha256(email)];
-  const phone = user.phone ? normalizePhone(user.phone) : "";
-  if (phone.length >= 8) out.ph = [await sha256(phone)];
-  if (user.external_id) out.external_id = [await sha256(user.external_id.trim().toLowerCase())];
+  const email = user.email ? normalizeMetaEmail(user.email) : "";
+  if (SHA256_HEX.test(email) || email.includes("@")) out.em = [await hashUnlessHashed(email)];
+  const phone = user.phone && SHA256_HEX.test(user.phone) ? user.phone : normalizeMetaPhone(user.phone || "", user.country || "SA");
+  if (phone) out.ph = [await hashUnlessHashed(phone)];
+  if (user.external_id) out.external_id = [await hashUnlessHashed(user.external_id.trim().toLowerCase())];
   if (user.country) out.country = [await sha256(user.country.trim().toLowerCase())];
   if (user.city) out.ct = [await sha256(user.city.trim().toLowerCase().replace(/\s+/g, ""))];
   if (user.fbp) out.fbp = user.fbp;
@@ -66,6 +81,16 @@ export interface MetaCapiResult {
   skipped?: string;
   events_received?: number;
   error?: string;
+  error_code?: string;
+  http_status?: number;
+}
+
+function isTransientStatus(status: number): boolean {
+  return status === 408 || status === 429 || status >= 500;
+}
+
+async function retryPause(attempt: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, Math.min(250 * 2 ** attempt, 1_000)));
 }
 
 /** Posts one or more events to the Meta Conversions API. Never throws. */
@@ -111,20 +136,41 @@ export async function sendMetaCapiEvents(
       ...(testEventCode ? { test_event_code: testEventCode } : {}),
     };
 
-    const res = await fetch(
-      `https://graph.facebook.com/v21.0/${encodeURIComponent(pixelId)}/events?access_token=${encodeURIComponent(accessToken)}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      },
-    );
-    const json = (await res.json().catch(() => ({}))) as any;
-    if (!res.ok) {
-      return { ok: false, error: json?.error?.message || `HTTP ${res.status}` };
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const res = await fetch(
+          `https://graph.facebook.com/v21.0/${encodeURIComponent(pixelId)}/events`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+            body: JSON.stringify(payload),
+            signal: AbortSignal.timeout(8_000),
+          },
+        );
+        const json = (await res.json().catch(() => ({}))) as any;
+        if (res.ok) return { ok: true, events_received: json?.events_received ?? events.length };
+        if (isTransientStatus(res.status) && attempt < 2) {
+          await retryPause(attempt);
+          continue;
+        }
+        return {
+          ok: false,
+          error: String(json?.error?.message || `HTTP ${res.status}`).slice(0, 300),
+          error_code: String(json?.error?.code || "META_HTTP_ERROR").slice(0, 80),
+          http_status: res.status,
+        };
+      } catch (err) {
+        const timeout = err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
+        if (attempt < 2) {
+          await retryPause(attempt);
+          continue;
+        }
+        return { ok: false, error: timeout ? "Meta request timed out" : "Meta request failed", error_code: timeout ? "TIMEOUT" : "NETWORK_ERROR" };
+      }
     }
-    return { ok: true, events_received: json?.events_received ?? events.length };
+    return { ok: false, error: "Meta request failed", error_code: "NETWORK_ERROR" };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : "unknown error" };
+    const timeout = err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
+    return { ok: false, error: timeout ? "Meta request timed out" : "Meta request failed", error_code: timeout ? "TIMEOUT" : "NETWORK_ERROR" };
   }
 }

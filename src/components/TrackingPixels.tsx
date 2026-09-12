@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { captureMetaClickId, loadPixel, markPixelsReady, pixelPageView, type PixelRow } from "@/lib/pixels";
+import { COOKIE_CONSENT_CHANGED_EVENT, getStoredCookieConsent } from "@/lib/privacy";
 
 /**
  * Loads all enabled marketing pixels configured in the admin,
@@ -12,9 +13,12 @@ export function TrackingPixels() {
   const ready = useRef(false);
 
   useEffect(() => {
-    captureMetaClickId();
     let active = true;
-    void (async () => {
+    let loaded = false;
+    const enable = async () => {
+      if (loaded || !getStoredCookieConsent()?.marketing) return;
+      loaded = true;
+      captureMetaClickId();
       const { data } = await supabase
         .from("tracking_pixels")
         .select("id,provider,label,pixel_id,custom_script,enabled,placement,sort_order")
@@ -24,9 +28,14 @@ export function TrackingPixels() {
       ((data ?? []) as unknown as PixelRow[]).forEach(loadPixel);
       ready.current = true;
       markPixelsReady();
-    })();
+      pixelPageView();
+    };
+    void enable();
+    const onConsent = () => void enable();
+    window.addEventListener(COOKIE_CONSENT_CHANGED_EVENT, onConsent);
     return () => {
       active = false;
+      window.removeEventListener(COOKIE_CONSENT_CHANGED_EVENT, onConsent);
     };
   }, []);
 
@@ -36,7 +45,7 @@ export function TrackingPixels() {
       const path = window.location.pathname;
       if (path === last) return;
       last = path;
-      if (ready.current) pixelPageView();
+      if (ready.current && getStoredCookieConsent()?.marketing) pixelPageView();
     });
     return () => unsub();
   }, [router]);

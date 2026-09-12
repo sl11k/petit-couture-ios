@@ -1,4 +1,7 @@
 // Marketing pixels: provider catalog + script loaders.
+import { getStoredCookieConsent } from "@/lib/privacy";
+import { isIsoCurrency, stableMetaEventId, type MetaStandardEvent } from "@/lib/meta-events";
+
 // Pixels are configured from the admin (table: tracking_pixels) and injected
 // on the storefront only (never inside /admin).
 
@@ -191,7 +194,6 @@ function loadMeta(id: string) {
     injectScript("https://connect.facebook.net/en_US/fbevents.js");
   }
   w.fbq("init", id);
-  w.fbq("track", "PageView");
 }
 
 function loadSnap(id: string) {
@@ -349,23 +351,31 @@ export function loadPixel(row: PixelRow): void {
 let pixelsReady = false;
 const pending: { event: PixelEventName; payload: PixelEventPayload }[] = [];
 const recentEvents = new Map<string, number>();
+const META_SESSION_KEY = "lpp:meta-events:v2";
+
+export function hasMarketingConsent(): boolean {
+  return getStoredCookieConsent()?.marketing === true;
+}
 
 export function markPixelsReady(): void {
+  if (!hasMarketingConsent()) return;
   pixelsReady = true;
   const queued = pending.splice(0, pending.length);
   queued.forEach(({ event, payload }) => dispatchPixelEvent(event, payload));
 }
 
 export function pixelPageView(): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !hasMarketingConsent()) return;
+  const navigationKey = `${window.location.pathname}${window.location.search}:${Math.round(performance.timeOrigin)}`;
+  pixelTrack("PageView", { event_id: stableMetaEventId("PageView", navigationKey), content_type: "website" });
   const w = window as any;
   try { w.ttq?.page?.(); } catch { /* noop */ }
-  try { w.fbq?.("track", "PageView"); } catch { /* noop */ }
   try { w.snaptr?.("track", "PAGE_VIEW"); } catch { /* noop */ }
   try { w.pintrk?.("page"); } catch { /* noop */ }
 }
 
 export type PixelEventName =
+  | "PageView"
   | "ViewContent"
   | "AddToCart"
   | "InitiateCheckout"
@@ -374,6 +384,7 @@ export type PixelEventName =
   | "Search";
 
 export interface PixelEventPayload {
+  event_id?: string;
   content_name?: string;
   content_id?: string;
   content_type?: string;
@@ -387,7 +398,9 @@ export interface PixelEventPayload {
 
 /** Fires a specific ecommerce event to all configured pixels. */
 export function pixelTrack(event: PixelEventName, payload: PixelEventPayload = {}): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !hasMarketingConsent()) return;
+  const eventId = payload.event_id || crypto.randomUUID();
+  const eventPayload = { ...payload, event_id: eventId };
   // Drop accidental duplicates (re-renders, StrictMode double-effects):
   // same event + same content within 2s is the same user action.
   const dedupeKey = `${event}|${payload.content_id ?? ""}|${payload.order_id ?? ""}|${payload.value ?? ""}|${payload.quantity ?? ""}|${payload.search_string ?? ""}`;
@@ -395,12 +408,18 @@ export function pixelTrack(event: PixelEventName, payload: PixelEventPayload = {
   const seenAt = recentEvents.get(dedupeKey);
   if (seenAt && now - seenAt < 2000) return;
   recentEvents.set(dedupeKey, now);
+  try {
+    const sent = new Set<string>(JSON.parse(sessionStorage.getItem(META_SESSION_KEY) || "[]"));
+    if (sent.has(eventId)) return;
+    sent.add(eventId);
+    sessionStorage.setItem(META_SESSION_KEY, JSON.stringify(Array.from(sent).slice(-250)));
+  } catch { /* in-memory dedupe still applies */ }
 
   if (!pixelsReady) {
-    if (pending.length < 50) pending.push({ event, payload });
+    if (pending.length < 50) pending.push({ event, payload: eventPayload });
     return;
   }
-  dispatchPixelEvent(event, payload);
+  dispatchPixelEvent(event, eventPayload);
 }
 
 function dispatchPixelEvent(event: PixelEventName, payload: PixelEventPayload): void {
@@ -411,7 +430,8 @@ function dispatchPixelEvent(event: PixelEventName, payload: PixelEventPayload): 
   // Common mapping for currency / value. The value is always whatever the
   // caller measured for this specific event; if items are itemised we prefer
   // their sum so the reported value can never drift from the line items.
-  const currency = payload.currency || "SAR";
+  const requestedCurrency = (payload.currency || "SAR").toUpperCase();
+  const currency = isIsoCurrency(requestedCurrency) ? requestedCurrency : "SAR";
   const itemsSum = (payload.contents ?? []).reduce(
     (sum, c) => sum + (Number(c.price) || 0) * (Number(c.quantity) || 1),
     0,
@@ -452,7 +472,7 @@ function dispatchPixelEvent(event: PixelEventName, payload: PixelEventPayload): 
 
   // 2. Meta / Facebook — browser pixel + Conversions API with a shared
   //    event_id so Meta deduplicates the pair instead of double-counting.
-  const metaEventId = `${event.toLowerCase()}.${payload.order_id || payload.content_id || "x"}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}`;
+  const metaEventId = payload.event_id || stableMetaEventId(event as MetaStandardEvent, payload.order_id || payload.content_id || crypto.randomUUID());
   try {
     if (w.fbq) {
       if (event === "Search") {
@@ -494,6 +514,7 @@ function dispatchPixelEvent(event: PixelEventName, payload: PixelEventPayload): 
         w.snaptr("track", "SEARCH", { search_string: payload.search_string });
       } else {
         const snapMap: Record<PixelEventName, string> = {
+          PageView: "PAGE_VIEW",
           ViewContent: "VIEW_CONTENT",
           AddToCart: "ADD_CART",
           InitiateCheckout: "START_CHECKOUT",
@@ -529,7 +550,7 @@ function dispatchPixelEvent(event: PixelEventName, payload: PixelEventPayload): 
 const PIXEL_USER_KEY = "lpp:pixel_user:v1";
 
 export function setPixelUser(user: { email?: string | null; phone?: string | null; city?: string | null; country?: string | null }): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !hasMarketingConsent()) return;
   try {
     const prev = readPixelUser();
     const next = { ...prev, ...Object.fromEntries(Object.entries(user).filter(([, v]) => !!v)) };
@@ -608,12 +629,13 @@ function mirrorToMetaCapi(
   currency: string,
   value: number,
 ): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !hasMarketingConsent()) return;
   const user = readPixelUser();
   void import("@/lib/meta-capi.functions")
     .then(({ trackMetaConversion }) =>
       trackMetaConversion({
         data: {
+          marketing_consent: true,
           event_name: event,
           event_id: eventId,
           event_source_url: window.location.href.slice(0, 500),
