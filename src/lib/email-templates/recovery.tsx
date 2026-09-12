@@ -10,6 +10,7 @@ import {
   Preview,
   Text,
 } from '@react-email/components'
+import { EmailBrandHeader, emailBrandDarkModeCss } from './email-brand'
 
 interface RecoveryEmailProps {
   siteName: string
@@ -27,6 +28,7 @@ export const RecoveryEmail = ({
     <Preview>Reset your password for {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
+        <EmailBrandHeader />
         <Heading style={h1}>Reset your password</Heading>
         <Text style={text}>
           We received a request to reset your password for {siteName}. Click
@@ -72,6 +74,7 @@ const button = {
 const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
 // Rendered as a text child, which React may HTML-escape: keep this CSS free of >, &, and quotes.
 const darkModeCss = `
+  ${emailBrandDarkModeCss}
   @media (prefers-color-scheme: dark) {
     .dm-btn { background-color: #ffffff !important; color: #000000 !important; }
   }

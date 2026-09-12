@@ -232,7 +232,6 @@ function RequestsTab() {
   const [busy, setBusy] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [sendFor, setSendFor] = useState<CampaignRequest | null>(null);
-  const [senderName, setSenderName] = useState("le petit paradis");
   const [senderEmail, setSenderEmail] = useState("");
 
   const [form, setForm] = useState({
@@ -387,7 +386,7 @@ function RequestsTab() {
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>إرسال «{sendFor?.title}»</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>اسم المُرسِل</Label><Input value={senderName} onChange={(e) => setSenderName(e.target.value)} /></div>
+            <div><Label>اسم المُرسِل</Label><Input value="Le Petit Paradis" disabled /></div>
             <div><Label>بريد المُرسِل</Label><Input type="email" value={senderEmail} onChange={(e) => setSenderEmail(e.target.value)} placeholder="offers@lppme.com" /></div>
             <p className="text-[11px] text-muted-foreground">
               يجب أن يكون نطاق البريد موثّقاً لدى مزود التسويق، وتُرسل الحملة فقط للقائمة المتزامنة من العملاء الموافقين.
@@ -400,7 +399,7 @@ function RequestsTab() {
                 if (!sendFor) return;
                 setBusy("send");
                 try {
-                  const res = await send({ data: { id: sendFor.id, senderName, senderEmail } });
+                  const res = await send({ data: { id: sendFor.id, senderEmail } });
                   toast.success(res.scheduled ? "تمت جدولة الحملة" : "تم إرسال الحملة");
                   setSendFor(null);
                   qc.invalidateQueries({ queryKey: ["campaign-requests"] });
