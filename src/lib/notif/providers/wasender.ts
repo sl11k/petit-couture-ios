@@ -7,18 +7,10 @@ import type {
   SendMessageInput,
   SendMessageResult,
 } from "./types";
+import { normalizeWhatsAppPhone } from "../phone";
+import { retryDisposition, sanitizeProviderError } from "../lifecycle";
 
 const DEFAULT_BASE = "https://wasenderapi.com";
-
-function normalizePhone(p: string): string {
-  const digits = (p || "").replace(/[^\d]/g, "");
-  // WhatsApp JID requires the full international number (country code + local, digits only).
-  // Reject anything under 10 digits or with a leading zero (a local number without country code).
-  if (!digits) return "";
-  if (digits.length < 10) return "";
-  if (digits.startsWith("0")) return "";
-  return digits;
-}
 
 async function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return await Promise.race([
@@ -34,14 +26,14 @@ export const wasenderProvider: NotificationProvider = {
     const started = Date.now();
     const base = (creds.api_url || DEFAULT_BASE).replace(/\/+$/, "");
     const url = `${base}/api/send-message`;
-    const to = normalizePhone(input.to);
-    if (!to) {
-      return { ok: false, error_message: `Invalid WhatsApp recipient "${input.to}" — must be full international number with country code (e.g. 9665XXXXXXXX), no leading 0.` };
+    const normalized = normalizeWhatsAppPhone(input.to);
+    if (!normalized.ok) {
+      return { ok: false, error_code: normalized.error, error_message: normalized.error, retryable: false };
     }
     if (!creds.api_key) {
       return { ok: false, error_message: "Missing Wasender API key" };
     }
-    const body: Record<string, any> = { to, text: input.body };
+    const body: Record<string, any> = { to: normalized.digits, text: input.body };
     if (input.media_url) body.imageUrl = input.media_url;
     const requestSnapshot = { url, method: "POST", body: { ...body, text: `[${input.body.length} chars]` } };
     try {
@@ -66,26 +58,38 @@ export const wasenderProvider: NotificationProvider = {
           http_status: res.status,
           duration_ms: duration,
           request_snapshot: requestSnapshot,
-          response_snapshot: json ?? text,
-          error_message: (json && (json.message || json.error)) || `HTTP ${res.status}`,
+          response_snapshot: json ? { success: json.success, error: json.error, message: sanitizeProviderError(json.message) } : undefined,
+          error_code: String(json?.code ?? res.status),
+          error_message: sanitizeProviderError((json && (json.message || json.error)) || `HTTP ${res.status}`),
+          retryable: retryDisposition(res.status, String(json?.code ?? ""), json?.message).retry,
         };
       }
       const providerMessageId =
         json?.data?.msgId ?? json?.data?.id ?? json?.messageId ?? json?.id ?? null;
+      if (!providerMessageId) return {
+        ok: false,
+        error_code: "provider_message_id_missing",
+        error_message: "Provider returned success without a message ID",
+        retryable: false,
+        http_status: res.status,
+        duration_ms: duration,
+      };
       return {
         ok: true,
         provider_message_id: providerMessageId ? String(providerMessageId) : null,
         http_status: res.status,
         duration_ms: duration,
         request_snapshot: requestSnapshot,
-        response_snapshot: json ?? text,
+        response_snapshot: { message_id: String(providerMessageId), success: json?.success },
       };
     } catch (err: any) {
       return {
         ok: false,
         duration_ms: Date.now() - started,
         request_snapshot: requestSnapshot,
-        error_message: err?.message || "Network error",
+        error_code: "provider_network_error",
+        error_message: sanitizeProviderError(err?.message || "Network error"),
+        retryable: true,
       };
     }
   },
