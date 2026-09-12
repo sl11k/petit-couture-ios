@@ -11,6 +11,7 @@ import {
   Preview,
   Text,
 } from '@react-email/components'
+import { EmailBrandHeader, emailBrandDarkModeCss } from './email-brand'
 
 interface EmailChangeEmailProps {
   siteName: string
@@ -37,6 +38,7 @@ export const EmailChangeEmail = ({
     <Preview>Confirm your email change for {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
+        <EmailBrandHeader />
         <Heading style={h1}>Confirm your email change</Heading>
         <Text style={text}>
           You requested to change your email address for {siteName} from{' '}
@@ -93,6 +95,7 @@ const button = {
 const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
 // Rendered as a text child, which React may HTML-escape: keep this CSS free of >, &, and quotes.
 const darkModeCss = `
+  ${emailBrandDarkModeCss}
   @media (prefers-color-scheme: dark) {
     .dm-btn { background-color: #ffffff !important; color: #000000 !important; }
   }

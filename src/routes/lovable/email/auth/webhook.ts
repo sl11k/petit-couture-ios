@@ -7,12 +7,14 @@ import { MagicLinkEmail } from '@/lib/email-templates/magic-link'
 import { RecoveryEmail } from '@/lib/email-templates/recovery'
 import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
+import {
+  EMAIL_BRAND_NAME,
+  EMAIL_FROM_DOMAIN,
+  EMAIL_SENDER_DOMAIN,
+} from '@/lib/email-templates/email-brand'
 
 // Configuration
-const SITE_NAME = "le petit paradis"
-const SENDER_DOMAIN = "notify.lppme.com"
 const ROOT_DOMAIN = "lppme.com"
-const FROM_DOMAIN = "lppme.com"
 const SITE_URL = `https://${ROOT_DOMAIN}`
 
 // The SDK handler owns verification, dispatch, and retry semantics; this file
@@ -23,15 +25,15 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
       POST: ({ request }) => {
         const handler = createAuthEmailHandler({
           apiKey: process.env['LOVABLE_API_KEY']!,
-          from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-          senderDomain: SENDER_DOMAIN,
+          from: `${EMAIL_BRAND_NAME} <noreply@${EMAIL_FROM_DOMAIN}>`,
+          senderDomain: EMAIL_SENDER_DOMAIN,
           sendUrl: process.env['LOVABLE_SEND_URL'],
           emails: {
             signup: {
               subject: 'Confirm your email',
               render: (data) =>
                 React.createElement(SignupEmail, {
-                  siteName: SITE_NAME,
+                  siteName: EMAIL_BRAND_NAME,
                   siteUrl: SITE_URL,
                   recipient: data.email,
                   confirmationUrl: data.url,
@@ -41,7 +43,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
               subject: "You've been invited",
               render: (data) =>
                 React.createElement(InviteEmail, {
-                  siteName: SITE_NAME,
+                  siteName: EMAIL_BRAND_NAME,
                   siteUrl: SITE_URL,
                   confirmationUrl: data.url,
                 }),
@@ -50,7 +52,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
               subject: 'Your login link',
               render: (data) =>
                 React.createElement(MagicLinkEmail, {
-                  siteName: SITE_NAME,
+                  siteName: EMAIL_BRAND_NAME,
                   confirmationUrl: data.url,
                 }),
             },
@@ -58,7 +60,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
               subject: 'Reset your password',
               render: (data) =>
                 React.createElement(RecoveryEmail, {
-                  siteName: SITE_NAME,
+                  siteName: EMAIL_BRAND_NAME,
                   confirmationUrl: data.url,
                 }),
             },
@@ -66,7 +68,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
               subject: 'Confirm your new email',
               render: (data) =>
                 React.createElement(EmailChangeEmail, {
-                  siteName: SITE_NAME,
+                  siteName: EMAIL_BRAND_NAME,
                   oldEmail: data.old_email ?? '',
                   email: data.email,
                   newEmail: data.new_email ?? '',

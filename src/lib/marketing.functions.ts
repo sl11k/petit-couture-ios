@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { EMAIL_BRAND_NAME, wrapBrandedEmailHtml } from "@/lib/email-templates/email-brand";
 
 const uuid = z.string().uuid();
 
@@ -344,7 +345,6 @@ export const sendCampaignRequest = createServerFn({ method: "POST" })
   .inputValidator((d) =>
     z.object({
       id: uuid,
-      senderName: z.string().trim().min(2).max(70),
       senderEmail: z.string().trim().email().max(190),
     }).parse(d),
   )
@@ -380,8 +380,8 @@ export const sendCampaignRequest = createServerFn({ method: "POST" })
       body: JSON.stringify({
         name: `${req.title} — ${req.id.slice(0, 8)}`,
         subject: req.email_subject,
-        sender: { name: data.senderName, email: data.senderEmail },
-        htmlContent: req.email_body,
+        sender: { name: EMAIL_BRAND_NAME, email: data.senderEmail },
+        htmlContent: wrapBrandedEmailHtml(req.email_body),
         recipients: { listIds: [Number(audience.provider_list_id)] },
         ...(scheduled ? { scheduledAt: scheduled } : {}),
       }),

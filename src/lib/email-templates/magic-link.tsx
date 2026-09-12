@@ -10,6 +10,7 @@ import {
   Preview,
   Text,
 } from '@react-email/components'
+import { EmailBrandHeader, emailBrandDarkModeCss } from './email-brand'
 
 interface MagicLinkEmailProps {
   siteName: string
@@ -27,6 +28,7 @@ export const MagicLinkEmail = ({
     <Preview>Your login link for {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
+        <EmailBrandHeader />
         <Heading style={h1}>Your login link</Heading>
         <Text style={text}>
           Click the button below to log in to {siteName}. This link will expire
@@ -71,6 +73,7 @@ const button = {
 const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
 // Rendered as a text child, which React may HTML-escape: keep this CSS free of >, &, and quotes.
 const darkModeCss = `
+  ${emailBrandDarkModeCss}
   @media (prefers-color-scheme: dark) {
     .dm-btn { background-color: #ffffff !important; color: #000000 !important; }
   }

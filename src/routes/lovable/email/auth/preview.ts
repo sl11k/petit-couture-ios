@@ -7,6 +7,7 @@ import { MagicLinkEmail } from '@/lib/email-templates/magic-link'
 import { RecoveryEmail } from '@/lib/email-templates/recovery'
 import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
+import { EMAIL_BRAND_NAME } from '@/lib/email-templates/email-brand'
 
 const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
   signup: SignupEmail,
@@ -18,8 +19,6 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "le petit paradis"
-const ROOT_DOMAIN = "lppme.com"
 
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
@@ -30,26 +29,26 @@ const SAMPLE_PROJECT_URL = "https://petit-couture-ios.lovable.app"
 const SAMPLE_EMAIL = "user@example.test"
 const SAMPLE_DATA: Record<string, object> = {
   signup: {
-    siteName: SITE_NAME,
+    siteName: EMAIL_BRAND_NAME,
     siteUrl: SAMPLE_PROJECT_URL,
     recipient: SAMPLE_EMAIL,
     confirmationUrl: SAMPLE_PROJECT_URL,
   },
   magiclink: {
-    siteName: SITE_NAME,
+    siteName: EMAIL_BRAND_NAME,
     confirmationUrl: SAMPLE_PROJECT_URL,
   },
   recovery: {
-    siteName: SITE_NAME,
+    siteName: EMAIL_BRAND_NAME,
     confirmationUrl: SAMPLE_PROJECT_URL,
   },
   invite: {
-    siteName: SITE_NAME,
+    siteName: EMAIL_BRAND_NAME,
     siteUrl: SAMPLE_PROJECT_URL,
     confirmationUrl: SAMPLE_PROJECT_URL,
   },
   email_change: {
-    siteName: SITE_NAME,
+    siteName: EMAIL_BRAND_NAME,
     oldEmail: SAMPLE_EMAIL,
     email: SAMPLE_EMAIL,
     newEmail: SAMPLE_EMAIL,

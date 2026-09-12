@@ -6,6 +6,12 @@ import { decryptSecret } from "./crypto.server";
 import { getProvider } from "./providers";
 import type { ProviderCredentials } from "./providers/types";
 import { renderTemplate } from "./template";
+import {
+  EMAIL_BRAND_NAME,
+  EMAIL_FROM_DOMAIN,
+  EMAIL_SENDER_DOMAIN,
+  brandedEmailHeaderHtml,
+} from "@/lib/email-templates/email-brand";
 
 export type Audience = "customer" | "admin" | "both";
 export type Channel = "whatsapp" | "sms" | "email";
@@ -259,14 +265,6 @@ async function bumpAnalytics(
  * Process pending queue items. Returns number of processed rows.
  * Safe to call repeatedly (row-level lock via locked_at).
  */
-const SITE_NAME = "le petit paradis";
-const EMAIL_LOGO_URL = "https://lppme.com/__l5e/assets-v1/cb66358e-ed5c-4c3b-80df-2fe632dae397/lpp-logo.jpeg";
-const EMAIL_SENDER_DOMAIN = "notify.lppme.com";
-const EMAIL_FROM_DOMAIN = "lppme.com";
-
-
-
-
 function textToHtml(text: string, language: string): string {
   const isRtl = language === "ar";
   const dir = isRtl ? "rtl" : "ltr";
@@ -282,8 +280,7 @@ function textToHtml(text: string, language: string): string {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:32px 12px;">
 <tr><td align="center">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid #f3e8ff;border-radius:14px;overflow:hidden;">
-<tr><td style="background:#ffffff;padding:28px;text-align:center;border-bottom:1px solid #f3f4f6;">
-<img src="${EMAIL_LOGO_URL}" alt="${SITE_NAME}" width="110" height="110" style="display:block;margin:0 auto;width:110px;height:110px;border-radius:50%;background:#ffffff;object-fit:cover;border:0;" /></td></tr>
+<tr><td class="email-logo-shell" bgcolor="#FFFFFF" style="background-color:#FFFFFF!important;border-bottom:1px solid #f3f4f6;">${brandedEmailHeaderHtml()}</td></tr>
 <tr><td dir="${dir}" align="${align}" style="padding:26px 28px;">${paragraphs}</td></tr>
 <tr><td style="padding:16px 28px;background:#fafafa;color:#6b7280;font-size:12px;text-align:center;border-top:1px solid #f3f4f6;">© ${new Date().getFullYear()} LPPME</td></tr>
 </table></td></tr></table></body></html>`;
@@ -310,7 +307,7 @@ async function dispatchEmailRow(row: any, rendered: string, subject: string): Pr
     await sendLovableEmail(
       {
         to,
-        from: `${SITE_NAME} <noreply@${EMAIL_FROM_DOMAIN}>`,
+        from: `${EMAIL_BRAND_NAME} <noreply@${EMAIL_FROM_DOMAIN}>`,
         sender_domain: EMAIL_SENDER_DOMAIN,
         subject: subject || label,
         html,
