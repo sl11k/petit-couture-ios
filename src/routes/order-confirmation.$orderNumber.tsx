@@ -3,6 +3,7 @@ import { CheckCircle2, Package, Truck, Home, MapPin, Copy, Loader2 } from "lucid
 import { useEffect, useState, useRef } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { pixelTrack, setPixelUser } from "@/lib/pixels";
+import { stableMetaEventId } from "@/lib/meta-events";
 import { getOrderConfirmation } from "@/lib/orderConfirmation.functions";
 import { finalizeStripeOrder } from "@/lib/stripeFinalize.functions";
 import { reconcileReturnedPayment } from "@/lib/deferred-payment.functions";
@@ -158,7 +159,7 @@ function OrderConfirmationPage() {
 
   const pixelFired = useRef(false);
   useEffect(() => {
-    if (state === "ready" && order && !pixelFired.current) {
+    if (state === "ready" && order && ["paid", "captured", "succeeded"].includes(order.payment_status) && !pixelFired.current) {
       pixelFired.current = true;
       setPixelUser({ email: order.customer_email, phone: order.customer_phone });
       // Purchase value is the real amount charged for THIS order (items +
@@ -175,6 +176,7 @@ function OrderConfirmationPage() {
           quantity: Number(i.qty) || 1,
           price: Number(i.unit_price) || 0,
         })),
+        event_id: stableMetaEventId("Purchase", order.id),
       });
     }
   }, [state, order]);

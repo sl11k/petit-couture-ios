@@ -89,6 +89,7 @@ export async function buildSelfDataExport(userId: string) {
 // === Cookie consent ===
 export type CookieConsent = { necessary: boolean; analytics: boolean; marketing: boolean; preferences: boolean };
 const COOKIE_KEY = "cookie_consent_v1";
+export const COOKIE_CONSENT_CHANGED_EVENT = "lpp:cookie-consent-changed";
 
 export function getStoredCookieConsent(): CookieConsent | null {
   if (typeof localStorage === "undefined") return null;
@@ -97,6 +98,7 @@ export function getStoredCookieConsent(): CookieConsent | null {
 
 export async function saveCookieConsent(c: CookieConsent, userId?: string | null) {
   if (typeof localStorage !== "undefined") localStorage.setItem(COOKIE_KEY, JSON.stringify(c));
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(COOKIE_CONSENT_CHANGED_EVENT, { detail: c }));
   try {
     const ua = typeof navigator !== "undefined" ? navigator.userAgent : null;
     let visitor = localStorage.getItem("visitor_id");

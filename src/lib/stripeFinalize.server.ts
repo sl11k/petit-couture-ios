@@ -119,6 +119,13 @@ export async function finalizeStripeOrderOnServer(data: z.infer<typeof stripeFin
   if (rpcError) return { ok: false as const, reason: "rpc_failed", detail: rpcError.message };
 
   try {
+    const { emitMetaPurchaseForPaidOrder } = await import("@/lib/meta-purchase.server");
+    await emitMetaPurchaseForPaidOrder(order.id);
+  } catch {
+    console.warn("[finalizeStripeOrder] Meta Purchase scheduling failed");
+  }
+
+  try {
     const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
     const result = await createOtoShipmentForOrder(order.id, order.user_id ?? null);
     if (!result.ok) console.error("[finalizeStripeOrder] OTO create failed:", result.error);

@@ -2827,6 +2827,54 @@ export type Database = {
         }
         Relationships: []
       }
+      meta_capi_events: {
+        Row: {
+          attempts: number
+          created_at: string
+          error_code: string | null
+          error_message: string | null
+          event_id: string
+          event_name: string
+          http_status: number | null
+          last_attempt_at: string
+          order_id: string | null
+          provider_events_received: number | null
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          event_id: string
+          event_name: string
+          http_status?: number | null
+          last_attempt_at?: string
+          order_id?: string | null
+          provider_events_received?: number | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          event_id?: string
+          event_name?: string
+          http_status?: number | null
+          last_attempt_at?: string
+          order_id?: string | null
+          provider_events_received?: number | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       non_returnable_products: {
         Row: {
           created_at: string

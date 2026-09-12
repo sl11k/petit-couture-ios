@@ -215,6 +215,13 @@ export async function completeGatewayPayment(input: {
   if (error) throw new Error(`Could not finalize paid order: ${error.message}`);
 
   try {
+    const { emitMetaPurchaseForPaidOrder } = await import("@/lib/meta-purchase.server");
+    await emitMetaPurchaseForPaidOrder(input.order.id);
+  } catch {
+    console.warn(`[${input.gateway}-webhook] Meta Purchase scheduling failed`);
+  }
+
+  try {
     const { createOtoShipmentForOrder } = await import("@/lib/oto.server");
     const shipment = await createOtoShipmentForOrder(input.order.id, input.order.user_id ?? null);
     if (!shipment.ok) console.error(`[${input.gateway}-webhook] OTO auto-create failed:`, shipment.error);
