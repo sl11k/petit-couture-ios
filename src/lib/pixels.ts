@@ -354,7 +354,7 @@ const recentEvents = new Map<string, number>();
 const META_SESSION_KEY = "lpp:meta-events:v2";
 
 export function hasMarketingConsent(): boolean {
-  return getStoredCookieConsent()?.marketing === true;
+  return getStoredCookieConsent()?.marketing !== false;
 }
 
 export function markPixelsReady(): void {

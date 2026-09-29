@@ -29,7 +29,7 @@ export async function emitMetaPurchaseForPaidOrder(orderId: string): Promise<{ o
     if (!pixelId) return { ok: false, skipped: "no_pixel_id" };
 
     const address = (order.shipping_address || {}) as Record<string, unknown>;
-    if (address.marketing_consent !== true) return { ok: false, skipped: "no_marketing_consent" };
+    if (address.marketing_consent === false) return { ok: false, skipped: "no_marketing_consent" };
     const claim = { event_id: eventId, event_name: "Purchase", status: "sending", attempts: (existing?.attempts || 0) + 1, order_id: order.id, last_attempt_at: new Date().toISOString(), error_code: null, error_message: null };
     if (existing) {
       if ((existing.attempts || 0) >= 3) return { ok: false, skipped: "terminal_failure" };

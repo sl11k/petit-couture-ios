@@ -108,3 +108,8 @@ export async function saveCookieConsent(c: CookieConsent, userId?: string | null
     });
   } catch { /* ignore */ }
 }
+
+/** Marketing tracking is on unless the visitor explicitly rejected it (opt-out). */
+export function hasMarketingConsent(): boolean {
+  return getStoredCookieConsent()?.marketing !== false;
+}
