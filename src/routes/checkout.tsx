@@ -696,7 +696,7 @@ function CheckoutPage() {
         lat: loc.lat,
         lng: loc.lng,
         geoAddress: loc.geoAddress,
-        marketing_consent: getStoredCookieConsent()?.marketing !== false,
+        marketing_consent: true,
       };
       save(fullAddress);
 
