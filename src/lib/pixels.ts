@@ -1,5 +1,5 @@
 // Marketing pixels: provider catalog + script loaders.
-import { getStoredCookieConsent } from "@/lib/privacy";
+import { getStoredCookieConsent, hasMarketingConsent } from "@/lib/privacy";
 import { isIsoCurrency, stableMetaEventId, type MetaStandardEvent } from "@/lib/meta-events";
 
 // Pixels are configured from the admin (table: tracking_pixels) and injected
@@ -354,7 +354,7 @@ const recentEvents = new Map<string, number>();
 const META_SESSION_KEY = "lpp:meta-events:v2";
 
 export function hasMarketingConsent(): boolean {
-  return getStoredCookieConsent()?.marketing === true;
+  return hasMarketingConsent();
 }
 
 export function markPixelsReady(): void {

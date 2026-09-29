@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { captureMetaClickId, loadPixel, markPixelsReady, pixelPageView, type PixelRow } from "@/lib/pixels";
-import { COOKIE_CONSENT_CHANGED_EVENT, getStoredCookieConsent } from "@/lib/privacy";
+import { COOKIE_CONSENT_CHANGED_EVENT, hasMarketingConsent } from "@/lib/privacy";
 
 /**
  * Loads all enabled marketing pixels configured in the admin,
@@ -16,7 +16,7 @@ export function TrackingPixels() {
     let active = true;
     let loaded = false;
     const enable = async () => {
-      if (loaded || !getStoredCookieConsent()?.marketing) return;
+      if (loaded || !hasMarketingConsent()) return;
       loaded = true;
       captureMetaClickId();
       const { data } = await supabase
@@ -45,7 +45,7 @@ export function TrackingPixels() {
       const path = window.location.pathname;
       if (path === last) return;
       last = path;
-      if (ready.current && getStoredCookieConsent()?.marketing) pixelPageView();
+      if (ready.current && hasMarketingConsent()) pixelPageView();
     });
     return () => unsub();
   }, [router]);
